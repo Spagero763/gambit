@@ -7,6 +7,7 @@ import Link from "next/link";
 import { useAccount, useConnect } from "wagmi";
 import { injected } from "wagmi/connectors";
 import { Game } from "@/lib/games";
+import { GameCover } from "@/components/art/GameCover";
 import { cn } from "@/lib/cn";
 
 const FEE = 0.05;
@@ -39,8 +40,8 @@ export function MatchSetup({
       </Link>
 
       <div className="mt-6 flex items-center gap-3">
-        <span className="grid h-14 w-14 place-items-center rounded-2xl glass text-3xl">
-          {game.glyph}
+        <span className="h-14 w-14 overflow-hidden rounded-2xl border border-white/10">
+          <GameCover art={game.art} className="h-full w-full" />
         </span>
         <div>
           <h1 className="font-display text-2xl font-bold">{game.name}</h1>

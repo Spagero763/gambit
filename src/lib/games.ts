@@ -11,7 +11,7 @@ export interface Game {
   minStake: number; // in cUSD
   players: number; // live players, mock for now
   accent: "violet" | "teal" | "amber" | "rose";
-  glyph: string; // mark used in the card art
+  art: "chess" | "xo" | "snakes" | "blocks" | "runner"; // key for the cover/icon art
 }
 
 export const GAMES: Game[] = [
@@ -25,7 +25,7 @@ export const GAMES: Game[] = [
     minStake: 0.5,
     players: 128,
     accent: "violet",
-    glyph: "♞",
+    art: "chess",
   },
   {
     slug: "tic-tac-toe",
@@ -37,7 +37,7 @@ export const GAMES: Game[] = [
     minStake: 0.1,
     players: 214,
     accent: "teal",
-    glyph: "✕",
+    art: "xo",
   },
   {
     slug: "snakes",
@@ -49,7 +49,7 @@ export const GAMES: Game[] = [
     minStake: 0.25,
     players: 173,
     accent: "amber",
-    glyph: "🪜",
+    art: "snakes",
   },
   {
     slug: "blocks",
@@ -61,7 +61,7 @@ export const GAMES: Game[] = [
     minStake: 0.25,
     players: 96,
     accent: "rose",
-    glyph: "▦",
+    art: "blocks",
   },
   {
     slug: "runner",
@@ -73,7 +73,7 @@ export const GAMES: Game[] = [
     minStake: 0.25,
     players: 142,
     accent: "violet",
-    glyph: "🏃",
+    art: "runner",
   },
 ];
 

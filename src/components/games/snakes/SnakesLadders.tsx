@@ -154,8 +154,8 @@ export function SnakesLadders() {
           : "Opponent rolling"
       }
       players={[
-        { name: "You", mark: "🟣", active: turn === 0 && !result, accent: "text-violet-bright" },
-        { name: "Gambit AI", mark: "🟡", active: turn === 1 && !result, accent: "text-amber" },
+        { name: "You", mark: "●", active: turn === 0 && !result, accent: "text-violet-bright" },
+        { name: "Gambit AI", mark: "●", active: turn === 1 && !result, accent: "text-amber" },
       ]}
     >
       <div className="flex w-full max-w-[360px] flex-col items-center">

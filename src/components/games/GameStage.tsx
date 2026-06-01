@@ -8,6 +8,7 @@ import { ChessGame } from "./ChessGame";
 import { RunnerGame } from "./runner/RunnerGame";
 import { BlockBlitz } from "./blocks/BlockBlitz";
 import { SnakesLadders } from "./snakes/SnakesLadders";
+import { GameCover } from "@/components/art/GameCover";
 
 export function GameStage({ game }: { game: Game }) {
   switch (game.slug) {
@@ -36,7 +37,9 @@ function ComingSoon({ game }: { game: Game }) {
         <ArrowLeft className="h-4 w-4" /> Lobby
       </Link>
       <div className="mt-10 rounded-3xl glass p-8 text-center shadow-card">
-        <div className="text-6xl opacity-80">{game.glyph}</div>
+        <div className="mx-auto h-24 w-40 overflow-hidden rounded-xl border border-white/10">
+          <GameCover art={game.art} className="h-full w-full" />
+        </div>
         <h1 className="mt-4 font-display text-2xl font-bold">{game.name}</h1>
         <p className="mt-1 text-sm text-ink-dim">{game.tagline}</p>
         <p className="mx-auto mt-4 max-w-sm text-[13px] leading-relaxed text-ink-faint">
