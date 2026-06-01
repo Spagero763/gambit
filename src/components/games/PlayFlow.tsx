@@ -8,8 +8,11 @@ import { MatchSetup } from "./MatchSetup";
 export function PlayFlow({ game }: { game: Game }) {
   const [started, setStarted] = useState(false);
 
-  // Games that are not live skip setup and render their own placeholder.
   if (game.status !== "live") return <GameStage game={game} />;
+
+  // Solo and tournament games launch straight in; 1v1 games go through the
+  // free / staked match setup first.
+  if (game.mode !== "1v1") return <GameStage game={game} />;
 
   if (!started) return <MatchSetup game={game} onStart={() => setStarted(true)} />;
   return <GameStage game={game} />;
