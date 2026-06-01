@@ -5,6 +5,7 @@ import { ArrowLeft } from "lucide-react";
 import { Game } from "@/lib/games";
 import { TicTacToe } from "./TicTacToe";
 import { ChessGame } from "./ChessGame";
+import { RunnerGame } from "./runner/RunnerGame";
 
 export function GameStage({ game }: { game: Game }) {
   switch (game.slug) {
@@ -12,6 +13,8 @@ export function GameStage({ game }: { game: Game }) {
       return <TicTacToe />;
     case "chess":
       return <ChessGame />;
+    case "runner":
+      return <RunnerGame />;
     default:
       return <ComingSoon game={game} />;
   }
