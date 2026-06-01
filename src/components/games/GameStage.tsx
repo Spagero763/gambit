@@ -4,11 +4,14 @@ import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import { Game } from "@/lib/games";
 import { TicTacToe } from "./TicTacToe";
+import { ChessGame } from "./ChessGame";
 
 export function GameStage({ game }: { game: Game }) {
   switch (game.slug) {
     case "tic-tac-toe":
       return <TicTacToe />;
+    case "chess":
+      return <ChessGame />;
     default:
       return <ComingSoon game={game} />;
   }

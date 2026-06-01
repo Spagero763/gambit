@@ -11,6 +11,7 @@ export interface PlayerInfo {
   mark: string;
   active: boolean;
   accent: string; // tailwind text color class
+  clock?: string; // optional formatted time, e.g. "4:32"
 }
 
 export function MatchShell({
@@ -64,13 +65,25 @@ export function MatchShell({
                 {p.active ? "thinking…" : "waiting"}
               </p>
             </div>
-            {p.active && (
-              <motion.span
-                layoutId="turnDot"
-                className="ml-auto h-2 w-2 rounded-full bg-teal"
-                transition={{ type: "spring", stiffness: 400, damping: 28 }}
-              />
-            )}
+            <div className="ml-auto flex items-center gap-2">
+              {p.clock && (
+                <span
+                  className={cn(
+                    "rounded-md bg-white/5 px-2 py-1 font-mono text-xs tabular-nums",
+                    p.active ? "text-ink" : "text-ink-faint"
+                  )}
+                >
+                  {p.clock}
+                </span>
+              )}
+              {p.active && (
+                <motion.span
+                  layoutId="turnDot"
+                  className="h-2 w-2 rounded-full bg-teal"
+                  transition={{ type: "spring", stiffness: 400, damping: 28 }}
+                />
+              )}
+            </div>
           </div>
         ))}
       </div>
