@@ -8,7 +8,7 @@ import { cn } from "@/lib/cn";
 
 export interface PlayerInfo {
   name: string;
-  mark: string;
+  mark: ReactNode;
   active: boolean;
   accent: string; // tailwind text color class
   clock?: string; // optional formatted time, e.g. "4:32"
