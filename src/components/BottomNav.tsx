@@ -1,19 +1,20 @@
 "use client";
 
-import { useState } from "react";
 import { motion } from "framer-motion";
 import { Gamepad2, Trophy, Swords, User } from "lucide-react";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { cn } from "@/lib/cn";
 
 const TABS = [
-  { id: "play", label: "Play", icon: Gamepad2 },
-  { id: "ranks", label: "Ranks", icon: Trophy },
-  { id: "events", label: "Events", icon: Swords },
-  { id: "you", label: "You", icon: User },
+  { href: "/", label: "Play", icon: Gamepad2 },
+  { href: "/leaderboard", label: "Ranks", icon: Trophy },
+  { href: "/events", label: "Events", icon: Swords },
+  { href: "/profile", label: "You", icon: User },
 ];
 
 export function BottomNav() {
-  const [active, setActive] = useState("play");
+  const pathname = usePathname();
 
   return (
     <motion.nav
@@ -25,11 +26,12 @@ export function BottomNav() {
       <div className="flex items-center justify-between rounded-2xl glass px-2 py-2 shadow-card">
         {TABS.map((t) => {
           const Icon = t.icon;
-          const isActive = active === t.id;
+          const isActive =
+            t.href === "/" ? pathname === "/" : pathname.startsWith(t.href);
           return (
-            <button
-              key={t.id}
-              onClick={() => setActive(t.id)}
+            <Link
+              key={t.href}
+              href={t.href}
               className="relative flex flex-1 flex-col items-center gap-1 rounded-xl py-2"
             >
               {isActive && (
@@ -53,7 +55,7 @@ export function BottomNav() {
               >
                 {t.label}
               </span>
-            </button>
+            </Link>
           );
         })}
       </div>
