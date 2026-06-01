@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
 import { GAMES } from "@/lib/games";
 import { Backdrop } from "@/components/Backdrop";
-import { GameStage } from "@/components/games/GameStage";
+import { PlayFlow } from "@/components/games/PlayFlow";
 
 export function generateStaticParams() {
   return GAMES.map((g) => ({ slug: g.slug }));
@@ -14,7 +14,7 @@ export default function PlayPage({ params }: { params: { slug: string } }) {
   return (
     <main className="relative min-h-screen">
       <Backdrop />
-      <GameStage game={game!} />
+      <PlayFlow game={game!} />
     </main>
   );
 }
