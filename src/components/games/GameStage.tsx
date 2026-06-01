@@ -6,6 +6,7 @@ import { Game } from "@/lib/games";
 import { TicTacToe } from "./TicTacToe";
 import { ChessGame } from "./ChessGame";
 import { RunnerGame } from "./runner/RunnerGame";
+import { BlockBlitz } from "./blocks/BlockBlitz";
 
 export function GameStage({ game }: { game: Game }) {
   switch (game.slug) {
@@ -15,6 +16,8 @@ export function GameStage({ game }: { game: Game }) {
       return <ChessGame />;
     case "runner":
       return <RunnerGame />;
+    case "blocks":
+      return <BlockBlitz />;
     default:
       return <ComingSoon game={game} />;
   }
