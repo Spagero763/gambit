@@ -204,14 +204,15 @@ export function ChessGame() {
       ]}
     >
       <div className="relative w-full max-w-[360px]">
-        <div
-          ref={boardRef}
-          onPointerDown={onDown}
-          onPointerMove={onMove}
-          onPointerUp={onUp}
-          className="relative grid aspect-square grid-cols-8 overflow-hidden rounded-xl border border-white/10 shadow-card"
-          style={{ touchAction: "none" }}
-        >
+        <div className="rounded-2xl border border-white/10 bg-white/5 p-1.5 shadow-card">
+          <div
+            ref={boardRef}
+            onPointerDown={onDown}
+            onPointerMove={onMove}
+            onPointerUp={onUp}
+            className="relative grid aspect-square grid-cols-8 overflow-hidden rounded-md"
+            style={{ touchAction: "none" }}
+          >
           {board.map((row, r) =>
             row.map((piece, f) => {
               const square = (FILES[f] + (8 - r)) as Square;
@@ -288,6 +289,7 @@ export function ChessGame() {
               <ChessPiece type={drag.type} color="w" size={drag.cell} />
             </div>
           )}
+          </div>
         </div>
 
         {/* promotion picker */}
