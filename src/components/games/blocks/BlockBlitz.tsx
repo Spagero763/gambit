@@ -52,6 +52,7 @@ export function BlockBlitz() {
   const [selected, setSelected] = useState<string | null>(tray[0]?.id ?? null);
   const [hover, setHover] = useState<{ r: number; c: number } | null>(null);
   const [score, setScore] = useState(0);
+  const [best, setBest] = useState(0);
   const [combo, setCombo] = useState(0);
   const [flash, setFlash] = useState<string | null>(null);
   const [over, setOver] = useState(false);
@@ -103,34 +104,46 @@ export function BlockBlitz() {
     setSelected(nextTray[0]?.id ?? null);
     setHover(null);
 
-    if (!anyMove(cleared, nextTray)) setOver(true);
+    if (!anyMove(cleared, nextTray)) {
+      setBest((b) => Math.max(b, score + piece.cells.length + lines * 10 * (lines > 0 ? nextCombo : 1)));
+      setOver(true);
+    }
   };
 
   return (
-    <div className="mx-auto flex min-h-screen w-full max-w-2xl flex-col px-5 py-5">
+    <div className="mx-auto flex min-h-screen w-full max-w-md flex-col px-5 py-5">
       <div className="flex items-center justify-between">
         <Link href="/" className="inline-flex items-center gap-2 rounded-full glass px-3 py-1.5 text-sm text-ink-dim">
           <ArrowLeft className="h-4 w-4" /> Lobby
         </Link>
-        <div className="flex items-center gap-2">
+        <AnimatePresence>
           {combo > 1 && (
             <motion.span
-              initial={{ scale: 0.6, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
+              key="combo"
+              initial={{ scale: 0.6, opacity: 0, y: -6 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.6, opacity: 0 }}
               className="rounded-full bg-amber/15 px-3 py-1.5 text-xs font-bold text-amber"
             >
               Combo ×{combo}
             </motion.span>
           )}
-          <span className="rounded-full glass px-3 py-1.5 text-xs">
-            <span className="text-ink-faint">Score </span>
-            <span className="font-mono font-bold text-ink">{score}</span>
-          </span>
-        </div>
+        </AnimatePresence>
       </div>
 
-      <h1 className="mt-5 font-display text-2xl font-bold">Block Blitz</h1>
-      <p className="text-sm text-ink-dim">Fill rows and columns to clear them.</p>
+      {/* stat bar */}
+      <div className="mt-4 grid grid-cols-2 gap-3">
+        <div className="rounded-2xl glass px-4 py-3">
+          <p className="text-[10px] font-semibold uppercase tracking-wide text-ink-faint">Score</p>
+          <motion.p key={score} initial={{ scale: 1.15 }} animate={{ scale: 1 }} className="font-display text-2xl font-black text-ink">
+            {score.toLocaleString()}
+          </motion.p>
+        </div>
+        <div className="rounded-2xl glass px-4 py-3">
+          <p className="text-[10px] font-semibold uppercase tracking-wide text-ink-faint">Best</p>
+          <p className="font-display text-2xl font-black text-teal">{Math.max(best, score).toLocaleString()}</p>
+        </div>
+      </div>
 
       {/* board */}
       <div className="relative mx-auto mt-5 w-full max-w-[360px]">
