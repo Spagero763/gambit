@@ -9,6 +9,37 @@ interface Vm {
     function expectRevert() external;
 }
 
+contract NoReturnToken {
+    // USDT-style: transfer/transferFrom return nothing
+    mapping(address => uint256) public balanceOf;
+    mapping(address => mapping(address => uint256)) public allowance;
+
+    function mint(address to, uint256 amt) external {
+        balanceOf[to] += amt;
+    }
+
+    function approve(address spender, uint256 amt) external {
+        allowance[msg.sender][spender] = amt;
+    }
+
+    function transfer(address to, uint256 amt) external {
+        _xfer(msg.sender, to, amt);
+    }
+
+    function transferFrom(address from, address to, uint256 amt) external {
+        uint256 al = allowance[from][msg.sender];
+        require(al >= amt, "ALLOWANCE");
+        if (al != type(uint256).max) allowance[from][msg.sender] = al - amt;
+        _xfer(from, to, amt);
+    }
+
+    function _xfer(address from, address to, uint256 amt) internal {
+        require(balanceOf[from] >= amt, "BAL");
+        balanceOf[from] -= amt;
+        balanceOf[to] += amt;
+    }
+}
+
 contract MockERC20 {
     mapping(address => uint256) public balanceOf;
     mapping(address => mapping(address => uint256)) public allowance;
@@ -59,7 +90,8 @@ contract ArcadeEscrowTest {
 
     function setUp() public {
         token = new MockERC20();
-        escrow = new ArcadeEscrow(relayer, feeWallet, 500, 600); // 5% fee, 10 min window
+        escrow = new ArcadeEscrow(relayer, feeWallet, 500, 600, 3600); // 5% fee, 10 min join, 1h settle
+        escrow.setTokenAllowed(address(token), true);
         _fund(alice);
         _fund(bob);
         _fund(carol);
@@ -184,5 +216,96 @@ contract ArcadeEscrowTest {
         _assert(token.balanceOf(carol) == 10e18 - STAKE + 76e16, "3rd 20%");
         _assert(token.balanceOf(dave) == 10e18 - STAKE, "4th nothing");
         _assert(token.balanceOf(feeWallet) == 2e17, "fee 5%");
+    }
+
+    // pots require exactly three ranked winners
+    function testPotRejectsShortRanking() public {
+        vm.prank(alice);
+        uint256 id = escrow.createMatch(address(token), STAKE, 1, 4);
+        vm.prank(bob);
+        escrow.joinMatch(id);
+        vm.prank(carol);
+        escrow.joinMatch(id);
+        vm.prank(dave);
+        escrow.joinMatch(id);
+
+        address[] memory ranking = new address[](2);
+        ranking[0] = alice;
+        ranking[1] = bob;
+        vm.prank(relayer);
+        vm.expectRevert();
+        escrow.declareResult(id, ranking);
+    }
+
+    // stale filled match can be rescued by anyone after the settle window
+    function testReclaimStalledRefundsAll() public {
+        vm.prank(alice);
+        uint256 id = escrow.createMatch(address(token), STAKE, 0, 2);
+        vm.prank(bob);
+        escrow.joinMatch(id);
+
+        vm.warp(block.timestamp + 3601);
+        vm.prank(carol); // any third party
+        escrow.reclaimStalled(id);
+
+        _assert(token.balanceOf(alice) == 10e18, "alice refunded");
+        _assert(token.balanceOf(bob) == 10e18, "bob refunded");
+        _assert(token.balanceOf(feeWallet) == 0, "no fee");
+    }
+
+    // cannot rescue before the settle window elapses
+    function testCannotReclaimEarly() public {
+        vm.prank(alice);
+        uint256 id = escrow.createMatch(address(token), STAKE, 0, 2);
+        vm.prank(bob);
+        escrow.joinMatch(id);
+        vm.prank(carol);
+        vm.expectRevert();
+        escrow.reclaimStalled(id);
+    }
+
+    // relayer can abort a filled match and refund everyone
+    function testRelayerAbortRefunds() public {
+        vm.prank(alice);
+        uint256 id = escrow.createMatch(address(token), STAKE, 0, 2);
+        vm.prank(bob);
+        escrow.joinMatch(id);
+        vm.prank(relayer);
+        escrow.abortMatch(id);
+        _assert(token.balanceOf(alice) == 10e18, "alice refunded");
+        _assert(token.balanceOf(bob) == 10e18, "bob refunded");
+    }
+
+    // a non-allowlisted token is rejected
+    function testDisallowedTokenReverts() public {
+        MockERC20 other = new MockERC20();
+        other.mint(alice, 10e18);
+        vm.prank(alice);
+        other.approve(address(escrow), type(uint256).max);
+        vm.prank(alice);
+        vm.expectRevert();
+        escrow.createMatch(address(other), STAKE, 0, 2);
+    }
+
+    // no-return ERC20 (USDT-style) works once allowlisted
+    function testNoReturnTokenWorks() public {
+        NoReturnToken usdt = new NoReturnToken();
+        escrow.setTokenAllowed(address(usdt), true);
+        usdt.mint(alice, 10e18);
+        usdt.mint(bob, 10e18);
+        vm.prank(alice);
+        usdt.approve(address(escrow), type(uint256).max);
+        vm.prank(bob);
+        usdt.approve(address(escrow), type(uint256).max);
+
+        vm.prank(alice);
+        uint256 id = escrow.createMatch(address(usdt), STAKE, 0, 2);
+        vm.prank(bob);
+        escrow.joinMatch(id);
+        vm.prank(relayer);
+        escrow.declareResult(id, _one(alice));
+
+        _assert(usdt.balanceOf(alice) == 10e18 - STAKE + 19e17, "alice payout");
+        _assert(usdt.balanceOf(feeWallet) == 1e17, "fee");
     }
 }
