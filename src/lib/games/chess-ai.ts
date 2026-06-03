@@ -83,3 +83,21 @@ export function chooseMove(fen: string, depth = 2): Move | null {
   }
   return pick[Math.floor(Math.random() * pick.length)] ?? moves[0];
 }
+
+/**
+ * Difficulty-aware move selection.
+ * easy: shallow, often plays a random legal move (forgiving).
+ * normal: depth-2 search. hard: depth-3 search (sharper).
+ */
+export function chooseMoveByLevel(fen: string, level: "easy" | "normal" | "hard"): Move | null {
+  const game = new Chess(fen);
+  const moves = game.moves({ verbose: true }) as Move[];
+  if (moves.length === 0) return null;
+
+  if (level === "easy") {
+    // mostly random, occasionally takes a free capture
+    if (Math.random() < 0.6) return moves[Math.floor(Math.random() * moves.length)];
+    return chooseMove(fen, 1);
+  }
+  return chooseMove(fen, level === "hard" ? 3 : 2);
+}

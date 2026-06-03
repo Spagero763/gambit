@@ -9,17 +9,18 @@ import { BlockBlitz } from "./blocks/BlockBlitz";
 import { SnakesLadders } from "./snakes/SnakesLadders";
 import { WhotGame } from "./whot/WhotGame";
 import { GameCover } from "@/components/art/GameCover";
+import { Difficulty } from "@/lib/difficulty";
 
-export function GameStage({ game }: { game: Game }) {
+export function GameStage({ game, difficulty = "normal" }: { game: Game; difficulty?: Difficulty }) {
   switch (game.slug) {
     case "tic-tac-toe":
-      return <TicTacToe />;
+      return <TicTacToe difficulty={difficulty} />;
     case "chess":
-      return <ChessGame />;
+      return <ChessGame difficulty={difficulty} />;
     case "blocks":
       return <BlockBlitz />;
     case "snakes":
-      return <SnakesLadders />;
+      return <SnakesLadders difficulty={difficulty} />;
     case "whot":
       return <WhotGame />;
     default:

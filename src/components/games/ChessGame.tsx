@@ -5,8 +5,9 @@ import { Chess, Move, PieceSymbol, Square } from "chess.js";
 import { AnimatePresence, motion } from "framer-motion";
 import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
-import { chooseMove } from "@/lib/games/chess-ai";
+import { chooseMoveByLevel } from "@/lib/games/chess-ai";
 import { capturedOf, materialEdge } from "@/lib/games/chess-material";
+import { Difficulty } from "@/lib/difficulty";
 import { cn } from "@/lib/cn";
 import { ResultOverlay, ResultKind } from "./ResultOverlay";
 import { ChessPiece } from "./chess/ChessPiece";
@@ -31,7 +32,7 @@ interface Drag {
   moved: boolean;
 }
 
-export function ChessGame() {
+export function ChessGame({ difficulty = "normal" }: { difficulty?: Difficulty }) {
   const gameRef = useRef(new Chess());
   const boardRef = useRef<HTMLDivElement>(null);
   const [fen, setFen] = useState(gameRef.current.fen());
@@ -155,7 +156,7 @@ export function ChessGame() {
   useEffect(() => {
     if (turn !== "b" || result || promo) return;
     const t = setTimeout(() => {
-      const mv = chooseMove(game.fen(), 2);
+      const mv = chooseMoveByLevel(game.fen(), difficulty);
       if (mv) {
         game.move(mv);
         setLast({ from: mv.from as Square, to: mv.to as Square });
@@ -164,7 +165,7 @@ export function ChessGame() {
       }
     }, 480);
     return () => clearTimeout(t);
-  }, [turn, fen, result, promo, settle, game]);
+  }, [turn, fen, result, promo, settle, game, difficulty]);
 
   useEffect(() => {
     if (result || promo) return;

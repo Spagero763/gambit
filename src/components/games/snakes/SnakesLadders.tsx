@@ -6,10 +6,24 @@ import { Dices } from "lucide-react";
 import { MatchShell } from "../MatchShell";
 import { ResultOverlay, ResultKind } from "../ResultOverlay";
 import { THEMES, SnakeTheme } from "./themes";
+import { Difficulty } from "@/lib/difficulty";
 import { cn } from "@/lib/cn";
 
-const LADDERS: Record<number, number> = { 4: 14, 9: 31, 21: 42, 28: 84, 51: 67, 72: 91 };
-const SNAKES: Record<number, number> = { 17: 7, 54: 34, 62: 19, 64: 60, 87: 36, 93: 73, 99: 78 };
+// Layout shifts with difficulty: easy is ladder-heavy, hard is snake-heavy.
+const LAYOUTS: Record<Difficulty, { ladders: Record<number, number>; snakes: Record<number, number> }> = {
+  easy: {
+    ladders: { 3: 22, 5: 27, 9: 31, 21: 42, 28: 84, 36: 57, 51: 67, 71: 91, 80: 99 },
+    snakes: { 47: 26, 62: 19, 87: 36 },
+  },
+  normal: {
+    ladders: { 4: 14, 9: 31, 21: 42, 28: 84, 51: 67, 72: 91 },
+    snakes: { 17: 7, 54: 34, 62: 19, 64: 60, 87: 36, 93: 73, 99: 78 },
+  },
+  hard: {
+    ladders: { 8: 26, 36: 44, 51: 67 },
+    snakes: { 16: 6, 24: 5, 32: 10, 48: 30, 56: 19, 62: 18, 64: 60, 78: 39, 87: 36, 93: 73, 95: 56, 98: 79 },
+  },
+};
 
 function centerFrac(n: number) {
   const idx = Math.max(1, n) - 1;
@@ -20,13 +34,16 @@ function centerFrac(n: number) {
   return { x: (col + 0.5) / 10, y: (rowFromTop + 0.5) / 10 };
 }
 
-function jumpTo(n: number) {
-  return LADDERS[n] ?? SNAKES[n] ?? n;
+type Layout = { ladders: Record<number, number>; snakes: Record<number, number> };
+
+function jumpTo(n: number, layout: Layout) {
+  return layout.ladders[n] ?? layout.snakes[n] ?? n;
 }
 
 const OFFSET = (p: number) => (p === 0 ? -2.2 : 2.2);
 
-export function SnakesLadders() {
+export function SnakesLadders({ difficulty = "normal" }: { difficulty?: Difficulty }) {
+  const layout = LAYOUTS[difficulty];
   const [pos, setPos] = useState<[number, number]>([1, 1]);
   const [moving, setMoving] = useState<{ p: 0 | 1; frames: number[] } | null>(null);
   const [turn, setTurn] = useState<0 | 1>(0);
@@ -68,7 +85,7 @@ export function SnakesLadders() {
         setMoving({ p, frames });
         await sleep(Math.min(1300, (landing - from) * 130) + 120);
 
-        const dest = jumpTo(landing);
+        const dest = jumpTo(landing, layout);
         if (dest !== landing) {
           setMoving({ p, frames: [landing, dest] });
           await sleep(480);
@@ -91,7 +108,7 @@ export function SnakesLadders() {
       setTurn(p === 0 ? 1 : 0);
       busy.current = false;
     },
-    [pos, result]
+    [pos, result, layout]
   );
 
   useEffect(() => {
@@ -147,7 +164,7 @@ export function SnakesLadders() {
           ))}
         </div>
 
-        <Board theme={theme} tokenPos={tokenPos} />
+        <Board theme={theme} tokenPos={tokenPos} layout={layout} />
 
         <div className="mt-5 flex items-center gap-4">
           <Dice value={dice} rolling={rolling} />
@@ -184,10 +201,13 @@ function Token({ color }: { color: "violet" | "amber" }) {
 function Board({
   theme,
   tokenPos,
+  layout,
 }: {
   theme: SnakeTheme;
   tokenPos: (p: 0 | 1) => { left: string | string[]; top: string | string[] };
+  layout: Layout;
 }) {
+  const { ladders, snakes } = layout;
   const you = tokenPos(0);
   const ai = tokenPos(1);
   return (
@@ -203,8 +223,8 @@ function Board({
           const leftToRight = rowFromBottom % 2 === 0;
           const base = rowFromBottom * 10;
           const n = leftToRight ? base + colInRow + 1 : base + (10 - colInRow);
-          const isLadder = n in LADDERS;
-          const isSnake = n in SNAKES;
+          const isLadder = n in ladders;
+          const isSnake = n in snakes;
           return (
             <div
               key={i}
@@ -224,10 +244,10 @@ function Board({
       </div>
 
       <svg viewBox="0 0 100 100" preserveAspectRatio="none" className="pointer-events-none absolute inset-2" style={{ width: "calc(100% - 1rem)", height: "calc(100% - 1rem)" }}>
-        {Object.entries(LADDERS).map(([f, t]) => (
+        {Object.entries(ladders).map(([f, t]) => (
           <Ladder key={`l${f}`} from={+f} to={+t} color={theme.ladder} />
         ))}
-        {Object.entries(SNAKES).map(([f, t]) => (
+        {Object.entries(snakes).map(([f, t]) => (
           <SnakePath key={`s${f}`} from={+f} to={+t} color={theme.snake} />
         ))}
       </svg>

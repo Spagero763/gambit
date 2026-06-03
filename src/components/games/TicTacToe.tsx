@@ -2,7 +2,8 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { Board, Cell, bestMove, evaluate, LINES } from "@/lib/games/tictactoe";
+import { Board, Cell, bestMove, evaluate } from "@/lib/games/tictactoe";
+import { Difficulty } from "@/lib/difficulty";
 import { cn } from "@/lib/cn";
 import { MatchShell } from "./MatchShell";
 import { ResultOverlay, ResultKind } from "./ResultOverlay";
@@ -12,13 +13,21 @@ const EMPTY: Board = Array(9).fill(null);
 const HUMAN: Cell = "X";
 const AI: Cell = "O";
 
-// center coordinates per cell index, in a 0..300 grid, for the win line
-const C = [50, 150, 250];
-function cellCenter(i: number) {
-  return { x: C[i % 3], y: C[Math.floor(i / 3)] };
+function emptyIdx(b: Board) {
+  return b.map((c, i) => (c ? -1 : i)).filter((i) => i >= 0);
 }
 
-export function TicTacToe() {
+// AI move by difficulty: easy mostly random, normal half-optimal, hard perfect
+function aiPick(b: Board, level: Difficulty): number {
+  const open = emptyIdx(b);
+  if (open.length === 0) return -1;
+  const rand = () => open[Math.floor(Math.random() * open.length)];
+  if (level === "easy") return Math.random() < 0.75 ? rand() : bestMove(b, "O");
+  if (level === "normal") return Math.random() < 0.5 ? rand() : bestMove(b, "O");
+  return bestMove(b, "O");
+}
+
+export function TicTacToe({ difficulty = "normal" }: { difficulty?: Difficulty }) {
   const [board, setBoard] = useState<Board>(EMPTY);
   const [turn, setTurn] = useState<Cell>(HUMAN);
   const [result, setResult] = useState<ResultKind>(null);
@@ -37,9 +46,7 @@ export function TicTacToe() {
     if (o.winner) {
       setWinLine(o.line);
       setResult(o.winner === HUMAN ? "win" : "lose");
-      setScore((s) =>
-        o.winner === HUMAN ? { ...s, you: s.you + 1 } : { ...s, ai: s.ai + 1 }
-      );
+      setScore((s) => (o.winner === HUMAN ? { ...s, you: s.you + 1 } : { ...s, ai: s.ai + 1 }));
       return true;
     }
     if (o.draw) {
@@ -63,17 +70,13 @@ export function TicTacToe() {
     if (turn !== AI || result) return;
     const t = setTimeout(() => {
       const b = [...board];
-      const move = bestMove(b, "O");
+      const move = aiPick(b, difficulty);
       if (move >= 0) b[move] = AI;
       setBoard(b);
       if (!settle(b)) setTurn(HUMAN);
     }, 460);
     return () => clearTimeout(t);
-  }, [turn, board, result, settle]);
-
-  const lineCoords = winLine
-    ? { a: cellCenter(winLine[0]), b: cellCenter(winLine[2]) }
-    : null;
+  }, [turn, board, result, settle, difficulty]);
 
   return (
     <MatchShell
@@ -84,7 +87,7 @@ export function TicTacToe() {
         { name: "Gambit AI", mark: <Mark kind="O" />, active: turn === AI && !result, accent: "text-teal" },
       ]}
     >
-      <div className="flex w-full max-w-[340px] flex-col items-center">
+      <div className="flex w-full max-w-[330px] flex-col items-center">
         {/* scoreboard */}
         <div className="mb-4 flex w-full items-center justify-center gap-2 text-center">
           {[
@@ -99,42 +102,31 @@ export function TicTacToe() {
           ))}
         </div>
 
+        {/* board: grid lines come from cell borders so marks always sit dead-center */}
         <div className="relative aspect-square w-full rounded-3xl glass p-3 shadow-card">
-          {/* grid lines */}
-          <svg viewBox="0 0 300 300" className="pointer-events-none absolute inset-3 h-[calc(100%-1.5rem)] w-[calc(100%-1.5rem)]">
-            <g stroke="rgba(255,255,255,0.12)" strokeWidth="2.5" strokeLinecap="round">
-              <line x1="100" y1="14" x2="100" y2="286" />
-              <line x1="200" y1="14" x2="200" y2="286" />
-              <line x1="14" y1="100" x2="286" y2="100" />
-              <line x1="14" y1="200" x2="286" y2="200" />
-            </g>
-            {lineCoords && (
-              <motion.line
-                x1={lineCoords.a.x} y1={lineCoords.a.y}
-                x2={lineCoords.b.x} y2={lineCoords.b.y}
-                stroke="#ffc15e" strokeWidth="7" strokeLinecap="round"
-                initial={{ pathLength: 0 }}
-                animate={{ pathLength: 1 }}
-                transition={{ duration: 0.4, ease: "easeOut", delay: 0.1 }}
-                style={{ filter: "drop-shadow(0 0 8px rgba(255,193,94,0.6))" }}
-              />
-            )}
-          </svg>
-
-          {/* cells */}
-          <div className="grid h-full w-full grid-cols-3">
-            {board.map((cell, i) => (
-              <button
-                key={i}
-                onClick={() => play(i)}
-                className={cn(
-                  "relative grid place-items-center rounded-xl transition-colors",
-                  !cell && !result && turn === HUMAN && "hover:bg-white/[0.04]"
-                )}
-              >
-                <AnimatePresence>{cell && <Mark key={cell} kind={cell} />}</AnimatePresence>
-              </button>
-            ))}
+          <div className="grid h-full w-full grid-cols-3 grid-rows-3">
+            {board.map((cell, i) => {
+              const col = i % 3;
+              const row = Math.floor(i / 3);
+              const inWin = winLine?.includes(i);
+              return (
+                <button
+                  key={i}
+                  onClick={() => play(i)}
+                  className={cn(
+                    "relative grid place-items-center transition-colors",
+                    col < 2 && "border-r-2 border-white/10",
+                    row < 2 && "border-b-2 border-white/10",
+                    !cell && !result && turn === HUMAN && "hover:bg-white/[0.04]",
+                    inWin && "bg-amber/15"
+                  )}
+                >
+                  <div className="pointer-events-none h-full w-full">
+                    <AnimatePresence>{cell && <Mark key={cell} kind={cell} />}</AnimatePresence>
+                  </div>
+                </button>
+              );
+            })}
           </div>
 
           <ResultOverlay result={result} onRematch={reset} />

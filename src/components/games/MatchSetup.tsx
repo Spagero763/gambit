@@ -8,6 +8,7 @@ import { useAccount, useConnect } from "wagmi";
 import { injected } from "wagmi/connectors";
 import { Game } from "@/lib/games";
 import { GameCover } from "@/components/art/GameCover";
+import { Difficulty, DIFFICULTIES, SUPPORTS_DIFFICULTY } from "@/lib/difficulty";
 import { cn } from "@/lib/cn";
 
 const FEE = 0.05;
@@ -19,13 +20,15 @@ export function MatchSetup({
   onStart,
 }: {
   game: Game;
-  onStart: () => void;
+  onStart: (difficulty: Difficulty) => void;
 }) {
   const [mode, setMode] = useState<Mode>("free");
   const [stake, setStake] = useState<number>(game.minStake);
+  const [difficulty, setDifficulty] = useState<Difficulty>("normal");
   const [searching, setSearching] = useState(false);
   const { isConnected } = useAccount();
   const { connect } = useConnect();
+  const hasDifficulty = SUPPORTS_DIFFICULTY.has(game.slug);
 
   const chips = [0.1, 0.5, 1, 2, 5].filter((v) => v >= game.minStake);
   const payout = +(stake * 2 * (1 - FEE)).toFixed(2);
@@ -98,8 +101,37 @@ export function MatchSetup({
                 game. Learn the flow, then put something on the line.
               </p>
             </div>
+
+            {hasDifficulty && (
+              <div className="mt-4">
+                <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-ink-faint">
+                  Difficulty
+                </p>
+                <div className="grid grid-cols-3 gap-2">
+                  {DIFFICULTIES.map((d) => {
+                    const active = difficulty === d.id;
+                    return (
+                      <button
+                        key={d.id}
+                        onClick={() => setDifficulty(d.id)}
+                        className={cn(
+                          "rounded-2xl px-3 py-3 text-left transition-all",
+                          active ? "glass ring-1 ring-white/25" : "bg-white/[0.03]"
+                        )}
+                      >
+                        <p className={cn("text-sm font-bold", active ? "text-ink" : "text-ink-dim")}>
+                          {d.label}
+                        </p>
+                        <p className="mt-0.5 text-[10px] leading-tight text-ink-faint">{d.blurb}</p>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
             <button
-              onClick={onStart}
+              onClick={() => onStart(difficulty)}
               className="mt-4 w-full rounded-2xl bg-gradient-to-r from-violet-deep to-violet py-3.5 text-sm font-bold text-white shadow-glow"
             >
               Start match
