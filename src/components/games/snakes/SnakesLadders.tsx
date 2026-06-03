@@ -187,7 +187,14 @@ export function SnakesLadders() {
 
   function Board() {
     return (
-      <div className="relative aspect-square w-full overflow-hidden rounded-3xl glass p-2 shadow-card">
+      <div
+        className="relative aspect-square w-full overflow-hidden rounded-3xl border border-amber/15 p-2 shadow-card"
+        style={{
+          background:
+            "radial-gradient(circle at 50% 0%, #1c2a22, #0c1610 70%)",
+          boxShadow: "inset 0 2px 20px rgba(0,0,0,0.55), 0 20px 50px -20px rgba(0,0,0,0.8)",
+        }}
+      >
         {/* cells */}
         <div className="grid h-full w-full grid-cols-10 grid-rows-10 gap-px">
           {Array.from({ length: 100 }).map((_, i) => {
@@ -204,12 +211,12 @@ export function SnakesLadders() {
                 key={i}
                 className={cn(
                   "relative flex items-start justify-start rounded-[3px] text-[7px] leading-none",
-                  (rowFromTop + colInRow) % 2 === 0 ? "bg-white/[0.03]" : "bg-white/[0.015]",
-                  isLadder && "bg-teal/10",
-                  isSnake && "bg-rose/10"
+                  (rowFromTop + colInRow) % 2 === 0 ? "bg-white/[0.05]" : "bg-black/15",
+                  isLadder && "bg-teal/15",
+                  isSnake && "bg-rose/15"
                 )}
               >
-                <span className="m-[2px] text-ink-faint/70">{n}</span>
+                <span className="m-[2px] text-white/45">{n}</span>
               </div>
             );
           })}
@@ -237,8 +244,9 @@ export function SnakesLadders() {
           style={{
             left: `${start1.x * 100 + offset(0)}%`,
             top: `${start1.y * 100}%`,
+            background: "radial-gradient(circle at 35% 30%, #c9bfff, #5b4ee0)",
           }}
-          className="absolute z-10 h-3.5 w-3.5 -translate-x-1/2 -translate-y-1/2 rounded-full bg-violet-bright shadow-[0_0_10px_rgba(168,155,255,0.9)] ring-2 ring-white/40"
+          className="absolute z-10 h-4 w-4 -translate-x-1/2 -translate-y-1/2 rounded-full shadow-[0_2px_6px_rgba(0,0,0,0.6),0_0_10px_rgba(168,155,255,0.7)] ring-2 ring-white/50"
         />
         <motion.div
           animate={aiC}
@@ -246,8 +254,9 @@ export function SnakesLadders() {
           style={{
             left: `${start1.x * 100 + offset(1)}%`,
             top: `${start1.y * 100}%`,
+            background: "radial-gradient(circle at 35% 30%, #ffe1a8, #d99633)",
           }}
-          className="absolute z-10 h-3.5 w-3.5 -translate-x-1/2 -translate-y-1/2 rounded-full bg-amber shadow-[0_0_10px_rgba(255,193,94,0.9)] ring-2 ring-white/40"
+          className="absolute z-10 h-4 w-4 -translate-x-1/2 -translate-y-1/2 rounded-full shadow-[0_2px_6px_rgba(0,0,0,0.6),0_0_10px_rgba(255,193,94,0.7)] ring-2 ring-white/50"
         />
       </div>
     );
