@@ -30,8 +30,13 @@ abstract contract ReentrancyGuard {
  *         - capacity 3-8 -> the pool minus fee is split among the top three
  *                          finishers by `potSplitBps` (default 50/30/20).
  *
- *         The escrow does not know or care whether a player is a human or a
- *         funded bot wallet; it only moves ERC20 stake between funded addresses.
+ *         Liveness: if the relayer never settles, anyone can reclaim every
+ *         player's stake once `settleWindow` has elapsed since the match filled,
+ *         so funds can never be permanently frozen. The relayer can also abort
+ *         an Active match (refund all) for contested or indeterminate results.
+ *
+ *         The escrow does not know whether a player is a human or a funded bot
+ *         wallet; it only moves whitelisted ERC20 stake between funded addresses.
  */
 contract ArcadeEscrow is ReentrancyGuard {
     enum Status {
@@ -44,13 +49,15 @@ contract ArcadeEscrow is ReentrancyGuard {
 
     struct Match {
         address token;
+        address creator;
         uint128 stake;
+        uint64 createdAt;
+        uint64 joinDeadline; // frozen at creation
+        uint64 activatedAt; // set when the match fills
         uint8 gameType;
         uint8 capacity;
         uint8 joined;
         Status status;
-        uint64 createdAt;
-        address creator;
     }
 
     address public owner;
@@ -58,7 +65,8 @@ contract ArcadeEscrow is ReentrancyGuard {
     address public feeRecipient;
     uint16 public feeBps; // 500 = 5%
     uint16 public constant MAX_FEE_BPS = 1000; // 10% ceiling
-    uint64 public joinWindow; // seconds before an unfilled match can be refunded
+    uint64 public joinWindow; // seconds to fill an Open match
+    uint64 public settleWindow; // seconds the relayer has to settle a filled match
 
     uint16[3] public potSplitBps = [5000, 3000, 2000]; // 50 / 30 / 20
 
@@ -66,15 +74,18 @@ contract ArcadeEscrow is ReentrancyGuard {
     mapping(uint256 => Match) public matches;
     mapping(uint256 => address[]) private _players;
     mapping(uint256 => mapping(address => bool)) public seated;
+    mapping(address => bool) public allowedTokens;
 
     event MatchCreated(uint256 indexed id, address indexed creator, address token, uint256 stake, uint8 gameType, uint8 capacity);
     event MatchJoined(uint256 indexed id, address indexed player, uint8 joined);
+    event MatchActivated(uint256 indexed id, uint64 activatedAt);
     event MatchSettled(uint256 indexed id, address[] winners, uint256[] payouts, uint256 fee);
-    event MatchCancelled(uint256 indexed id);
+    event MatchCancelled(uint256 indexed id, string reason);
     event RelayerUpdated(address relayer);
     event FeeRecipientUpdated(address feeRecipient);
     event FeeBpsUpdated(uint16 feeBps);
     event PotSplitUpdated(uint16 first, uint16 second, uint16 third);
+    event TokenAllowed(address token, bool allowed);
 
     modifier onlyOwner() {
         require(msg.sender == owner, "NOT_OWNER");
@@ -85,7 +96,7 @@ contract ArcadeEscrow is ReentrancyGuard {
         _;
     }
 
-    constructor(address _relayer, address _feeRecipient, uint16 _feeBps, uint64 _joinWindow) {
+    constructor(address _relayer, address _feeRecipient, uint16 _feeBps, uint64 _joinWindow, uint64 _settleWindow) {
         require(_relayer != address(0) && _feeRecipient != address(0), "ZERO_ADDR");
         require(_feeBps <= MAX_FEE_BPS, "FEE_TOO_HIGH");
         owner = msg.sender;
@@ -93,6 +104,7 @@ contract ArcadeEscrow is ReentrancyGuard {
         feeRecipient = _feeRecipient;
         feeBps = _feeBps;
         joinWindow = _joinWindow;
+        settleWindow = _settleWindow;
     }
 
     // ---------------------------------------------------------------- play
@@ -102,19 +114,20 @@ contract ArcadeEscrow is ReentrancyGuard {
         nonReentrant
         returns (uint256 id)
     {
+        require(allowedTokens[token], "TOKEN_NOT_ALLOWED");
         require(stake > 0, "ZERO_STAKE");
         require(capacity >= 2 && capacity <= 8, "BAD_CAPACITY");
         id = nextMatchId++;
-        matches[id] = Match({
-            token: token,
-            stake: stake,
-            gameType: gameType,
-            capacity: capacity,
-            joined: 1,
-            status: Status.Open,
-            createdAt: uint64(block.timestamp),
-            creator: msg.sender
-        });
+        Match storage m = matches[id];
+        m.token = token;
+        m.creator = msg.sender;
+        m.stake = stake;
+        m.createdAt = uint64(block.timestamp);
+        m.joinDeadline = uint64(block.timestamp) + joinWindow;
+        m.gameType = gameType;
+        m.capacity = capacity;
+        m.joined = 1;
+        m.status = Status.Open;
         _players[id].push(msg.sender);
         seated[id][msg.sender] = true;
         _pull(token, msg.sender, stake);
@@ -124,25 +137,29 @@ contract ArcadeEscrow is ReentrancyGuard {
     function joinMatch(uint256 id) external nonReentrant {
         Match storage m = matches[id];
         require(m.status == Status.Open, "NOT_OPEN");
-        require(block.timestamp <= m.createdAt + joinWindow, "EXPIRED");
+        require(block.timestamp <= m.joinDeadline, "EXPIRED");
         require(!seated[id][msg.sender], "ALREADY_IN");
         m.joined += 1;
         _players[id].push(msg.sender);
         seated[id][msg.sender] = true;
         _pull(m.token, msg.sender, m.stake);
-        if (m.joined == m.capacity) m.status = Status.Active;
+        if (m.joined == m.capacity) {
+            m.status = Status.Active;
+            m.activatedAt = uint64(block.timestamp);
+            emit MatchActivated(id, m.activatedAt);
+        }
         emit MatchJoined(id, msg.sender, m.joined);
     }
 
     /// @notice Relayer reports the outcome. `ranking` is top finisher first.
-    ///         For a 1v1 draw pass a single entry of address(0).
+    ///         1v1: pass [winner], or [address(0)] for a draw (refund both).
+    ///         pots: pass exactly the top three.
     function declareResult(uint256 id, address[] calldata ranking) external onlyRelayer nonReentrant {
         Match storage m = matches[id];
         require(m.status == Status.Active, "NOT_ACTIVE");
 
         uint256 pool = uint256(m.stake) * m.joined;
 
-        // 1v1 draw -> refund both, no fee
         if (m.capacity == 2 && ranking.length == 1 && ranking[0] == address(0)) {
             _refundAll(id, m);
             m.status = Status.Settled;
@@ -163,12 +180,11 @@ contract ArcadeEscrow is ReentrancyGuard {
             winners[0] = ranking[0];
             payouts[0] = distributable;
         } else {
-            uint256 k = ranking.length;
-            require(k >= 1 && k <= 3, "BAD_RANKING");
-            winners = new address[](k);
-            payouts = new uint256[](k);
+            require(ranking.length == 3, "BAD_RANKING"); // pots always pay exactly top three
+            winners = new address[](3);
+            payouts = new uint256[](3);
             uint256 paid;
-            for (uint256 i = 0; i < k; i++) {
+            for (uint256 i = 0; i < 3; i++) {
                 require(seated[id][ranking[i]], "BAD_WINNER");
                 for (uint256 j = 0; j < i; j++) require(ranking[j] != ranking[i], "DUP_WINNER");
                 winners[i] = ranking[i];
@@ -187,15 +203,35 @@ contract ArcadeEscrow is ReentrancyGuard {
         emit MatchSettled(id, winners, payouts, fee);
     }
 
+    /// @notice Relayer aborts a filled match (contested/indeterminate), refunding all stakes.
+    function abortMatch(uint256 id) external onlyRelayer nonReentrant {
+        Match storage m = matches[id];
+        require(m.status == Status.Active, "NOT_ACTIVE");
+        _refundAll(id, m);
+        m.status = Status.Cancelled;
+        emit MatchCancelled(id, "aborted");
+    }
+
+    /// @notice Permissionless rescue: if a filled match is never settled within
+    ///         `settleWindow`, anyone can refund every player's stake.
+    function reclaimStalled(uint256 id) external nonReentrant {
+        Match storage m = matches[id];
+        require(m.status == Status.Active, "NOT_ACTIVE");
+        require(block.timestamp > uint256(m.activatedAt) + settleWindow, "TOO_EARLY");
+        _refundAll(id, m);
+        m.status = Status.Cancelled;
+        emit MatchCancelled(id, "stalled");
+    }
+
     /// @notice Refund an unfilled match. Creator may cancel anytime while Open;
-    ///         anyone may trigger a refund once the join window has passed.
+    ///         anyone may trigger a refund once the join deadline has passed.
     function cancelMatch(uint256 id) external nonReentrant {
         Match storage m = matches[id];
         require(m.status == Status.Open, "NOT_OPEN");
-        require(msg.sender == m.creator || block.timestamp > m.createdAt + joinWindow, "NOT_ALLOWED");
+        require(msg.sender == m.creator || block.timestamp > m.joinDeadline, "NOT_ALLOWED");
         _refundAll(id, m);
         m.status = Status.Cancelled;
-        emit MatchCancelled(id);
+        emit MatchCancelled(id, "cancelled");
     }
 
     function players(uint256 id) external view returns (address[] memory) {
@@ -212,14 +248,27 @@ contract ArcadeEscrow is ReentrancyGuard {
     }
 
     function _pull(address token, address from, uint256 amount) internal {
-        require(IERC20(token).transferFrom(from, address(this), amount), "PULL_FAIL");
+        uint256 balBefore = IERC20(token).balanceOf(address(this));
+        _safeCall(token, abi.encodeWithSelector(IERC20.transferFrom.selector, from, address(this), amount));
+        require(IERC20(token).balanceOf(address(this)) - balBefore == amount, "PULL_AMOUNT");
     }
 
     function _push(address token, address to, uint256 amount) internal {
-        require(IERC20(token).transfer(to, amount), "PUSH_FAIL");
+        _safeCall(token, abi.encodeWithSelector(IERC20.transfer.selector, to, amount));
+    }
+
+    /// @dev Tolerates no-return ERC20s (USDT-style) and requires true when a bool is returned.
+    function _safeCall(address token, bytes memory data) internal {
+        (bool ok, bytes memory ret) = token.call(data);
+        require(ok && (ret.length == 0 || abi.decode(ret, (bool))), "TRANSFER_FAIL");
     }
 
     // ----------------------------------------------------------------- admin
+
+    function setTokenAllowed(address token, bool allowed) external onlyOwner {
+        allowedTokens[token] = allowed;
+        emit TokenAllowed(token, allowed);
+    }
 
     function setRelayer(address r) external onlyOwner {
         require(r != address(0), "ZERO_ADDR");
@@ -247,6 +296,10 @@ contract ArcadeEscrow is ReentrancyGuard {
 
     function setJoinWindow(uint64 w) external onlyOwner {
         joinWindow = w;
+    }
+
+    function setSettleWindow(uint64 w) external onlyOwner {
+        settleWindow = w;
     }
 
     function transferOwnership(address n) external onlyOwner {

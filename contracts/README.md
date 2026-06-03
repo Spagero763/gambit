@@ -16,16 +16,22 @@ result after the game ends, and the contract pays out.
   - capacity 3–8: the pool minus fee is split among the top three by
     `potSplitBps` (default 50 / 30 / 20).
 - **cancelMatch(id)** refunds an unfilled match. The creator may cancel while it
-  is still open; anyone may trigger the refund once `joinWindow` has elapsed.
+  is still open; anyone may trigger the refund once the join deadline passes.
+- **reclaimStalled(id)** is permissionless: if a filled match is not settled
+  within `settleWindow`, anyone can refund every player's stake. Funds can never
+  be permanently frozen.
+- **abortMatch(id)** lets the relayer refund all stakes on a contested or
+  indeterminate result.
 
 ## Notes
 
 - The escrow does not distinguish humans from funded bot wallets; it only moves
-  ERC20 stake between funded addresses.
+  whitelisted ERC20 stake between funded addresses.
 - Non-reentrant on every fund-moving entry point. Only the relayer can settle.
-- Stake token is any ERC20 (cUSD or USDC on Celo). Gas can be paid in cUSD via
-  the wallet's fee-currency support; that is a transaction concern, not a
-  contract one.
+- Stake tokens are owner-allowlisted (cUSD, USDC on Celo). Transfers tolerate
+  no-return ERC20s (USDT-style) and reject fee-on-transfer shortfalls. Gas can be
+  paid in cUSD via the wallet's fee-currency support; that is a transaction
+  concern, not a contract one.
 
 ## Develop
 
