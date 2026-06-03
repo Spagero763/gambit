@@ -11,8 +11,8 @@ export function PlayFlow({ game }: { game: Game }) {
 
   if (game.status !== "live") return <GameStage game={game} />;
 
-  // Solo / tournament games launch straight in; 1v1 games go through setup.
-  if (game.mode !== "1v1") return <GameStage game={game} />;
+  // Whot has its own multi-player setup; solo/tournament games launch straight in.
+  if (game.slug === "whot" || game.mode !== "1v1") return <GameStage game={game} />;
 
   if (!opts) return <MatchSetup game={game} onStart={(difficulty) => setOpts({ difficulty })} />;
   return <GameStage game={game} difficulty={opts.difficulty} />;
