@@ -5,7 +5,6 @@ import { ArrowLeft } from "lucide-react";
 import { Game } from "@/lib/games";
 import { TicTacToe } from "./TicTacToe";
 import { ChessGame } from "./ChessGame";
-import { RunnerGame } from "./runner/RunnerGame";
 import { BlockBlitz } from "./blocks/BlockBlitz";
 import { SnakesLadders } from "./snakes/SnakesLadders";
 import { GameCover } from "@/components/art/GameCover";
@@ -16,8 +15,6 @@ export function GameStage({ game }: { game: Game }) {
       return <TicTacToe />;
     case "chess":
       return <ChessGame />;
-    case "runner":
-      return <RunnerGame />;
     case "blocks":
       return <BlockBlitz />;
     case "snakes":

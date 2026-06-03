@@ -13,8 +13,8 @@ export function GameCover({ art, className }: { art: Game["art"]; className?: st
       return <SnakesCover className={className} />;
     case "blocks":
       return <BlocksCover className={className} />;
-    case "runner":
-      return <RunnerCover className={className} />;
+    case "whot":
+      return <WhotCover className={className} />;
   }
 }
 
@@ -249,51 +249,72 @@ function BlocksCover({ className }: { className?: string }) {
   );
 }
 
-function RunnerCover({ className }: { className?: string }) {
+function WhotCover({ className }: { className?: string }) {
+  // a fanned hand of Whot cards, each showing a shape
+  const cards = [
+    { rot: -28, x: 96, shape: "circle", c: "#8b7dff" },
+    { rot: -14, x: 124, shape: "triangle", c: "#27e1a6" },
+    { rot: 0, x: 154, shape: "cross", c: "#ffc15e" },
+    { rot: 14, x: 184, shape: "square", c: "#ff6b9a" },
+    { rot: 28, x: 212, shape: "star", c: "#a89bff" },
+  ];
   return (
     <svg viewBox={VB} preserveAspectRatio={SLICE} className={className}>
       <defs>
-        <linearGradient id="rbg" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0" stopColor="#1a1840" />
-          <stop offset="0.55" stopColor="#0e0d24" />
-          <stop offset="1" stopColor="#070612" />
-        </linearGradient>
-        <linearGradient id="rfloor" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0" stopColor="#211d52" />
-          <stop offset="1" stopColor="#0c0a22" />
-        </linearGradient>
-        <radialGradient id="rsun" cx="0.5" cy="0.3" r="0.5">
-          <stop offset="0" stopColor="rgba(168,155,255,0.6)" />
-          <stop offset="1" stopColor="rgba(168,155,255,0)" />
+        <radialGradient id="wbg" cx="0.5" cy="0.2" r="0.95">
+          <stop offset="0" stopColor="#23224d" />
+          <stop offset="1" stopColor="#0a0918" />
+        </radialGradient>
+        <radialGradient id="wfelt" cx="0.5" cy="1" r="0.8">
+          <stop offset="0" stopColor="rgba(39,225,166,0.18)" />
+          <stop offset="1" stopColor="rgba(39,225,166,0)" />
         </radialGradient>
       </defs>
-      <rect width="320" height="200" fill="url(#rbg)" />
-      <circle cx="160" cy="62" r="60" fill="url(#rsun)" />
-      {/* track: trapezoid converging to a vanishing point */}
-      <polygon points="160,60 196,60 300,200 20,200" fill="url(#rfloor)" />
-      {/* lane lines */}
-      <g stroke="rgba(168,155,255,0.5)" strokeWidth="2">
-        <line x1="173" y1="60" x2="113" y2="200" />
-        <line x1="183" y1="60" x2="207" y2="200" />
-      </g>
-      {/* rails */}
-      <g stroke="rgba(39,225,166,0.45)" strokeWidth="2.5">
-        <line x1="166" y1="60" x2="60" y2="200" />
-        <line x1="190" y1="60" x2="260" y2="200" />
-      </g>
-      {/* a train in the right lane, receding */}
-      <g>
-        <polygon points="196,96 214,92 214,150 196,158" fill="#ff6b9a" />
-        <polygon points="214,92 230,96 230,150 214,150" fill="#cf4f78" />
-        <rect x="200" y="104" width="9" height="12" rx="1" fill="#2a0e1a" opacity="0.8" />
-      </g>
-      {/* runner silhouette in foreground */}
-      <g transform="translate(120 150)" fill="#0a0814" stroke="#a89bff" strokeWidth="2.4" strokeLinecap="round">
-        <circle cx="0" cy="-30" r="7" fill="#a89bff" stroke="none" />
-        <path d="M0 -22 L-4 -4 M0 -22 L7 -8" />
-        <path d="M-4 -4 L-12 8 M-4 -4 L4 6 L1 22" />
-        <path d="M2 -16 L-12 -12 M2 -16 L14 -20" />
-      </g>
+      <rect width="320" height="200" fill="url(#wbg)" />
+      <rect width="320" height="200" fill="url(#wfelt)" />
+      {cards.map((card, i) => (
+        <g key={i} transform={`translate(${card.x} 150) rotate(${card.rot})`}>
+          <rect x="-26" y="-46" width="52" height="74" rx="8" fill="#f7f4ec" stroke="#d8d2c4" strokeWidth="1.2" />
+          <rect x="-26" y="-46" width="52" height="74" rx="8" fill="none" stroke={card.c} strokeWidth="2" opacity="0.35" />
+          <g fill={card.c}>
+            <WhotShape shape={card.shape} cx={0} cy={-9} s={1.15} />
+            <WhotShape shape={card.shape} cx={-18} cy={-37} s={0.5} />
+            <WhotShape shape={card.shape} cx={18} cy={19} s={0.5} />
+          </g>
+        </g>
+      ))}
     </svg>
   );
+}
+
+function WhotShape({ shape, cx, cy, s }: { shape: string; cx: number; cy: number; s: number }) {
+  const r = 11 * s;
+  switch (shape) {
+    case "circle":
+      return <circle cx={cx} cy={cy} r={r} />;
+    case "triangle":
+      return <path d={`M ${cx} ${cy - r} L ${cx + r} ${cy + r * 0.8} L ${cx - r} ${cy + r * 0.8} Z`} />;
+    case "cross":
+      return (
+        <path
+          d={`M ${cx - r * 0.34} ${cy - r} h ${r * 0.68} v ${r * 0.66} h ${r * 0.66} v ${r * 0.68} h ${-r * 0.66} v ${r * 0.66} h ${-r * 0.68} v ${-r * 0.66} h ${-r * 0.66} v ${-r * 0.68} h ${r * 0.66} Z`}
+        />
+      );
+    case "square":
+      return <rect x={cx - r * 0.85} y={cy - r * 0.85} width={r * 1.7} height={r * 1.7} rx={r * 0.18} />;
+    case "star":
+      return <Star cx={cx} cy={cy} r={r} />;
+    default:
+      return null;
+  }
+}
+
+function Star({ cx, cy, r }: { cx: number; cy: number; r: number }) {
+  const pts: string[] = [];
+  for (let i = 0; i < 10; i++) {
+    const ang = (Math.PI / 5) * i - Math.PI / 2;
+    const rad = i % 2 === 0 ? r : r * 0.45;
+    pts.push(`${cx + Math.cos(ang) * rad},${cy + Math.sin(ang) * rad}`);
+  }
+  return <polygon points={pts.join(" ")} />;
 }

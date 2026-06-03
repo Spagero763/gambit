@@ -57,12 +57,12 @@ export function GameIcon({
           <rect x="13" y="13" width="7" height="7" rx="1.2" />
         </svg>
       );
-    case "runner":
+    case "whot":
       return (
         <svg {...common}>
-          <circle cx="14" cy="5.5" r="1.6" />
-          <path d="M14 8l-2 4 2 2 1 4M12 12l-3 1M14 8l3 2 3-1" />
-          <path d="M4 20l3-3" opacity=".5" />
+          <rect x="4" y="6" width="10" height="13" rx="1.6" transform="rotate(-10 9 12)" />
+          <rect x="11" y="5" width="10" height="13" rx="1.6" transform="rotate(10 16 11)" />
+          <circle cx="16" cy="11" r="2.2" />
         </svg>
       );
   }

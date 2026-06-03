@@ -11,7 +11,7 @@ export interface Game {
   minStake: number; // in cUSD
   players: number; // live players, mock for now
   accent: "violet" | "teal" | "amber" | "rose";
-  art: "chess" | "xo" | "snakes" | "blocks" | "runner"; // key for the cover/icon art
+  art: "chess" | "xo" | "snakes" | "blocks" | "whot"; // key for the cover/icon art
 }
 
 export const GAMES: Game[] = [
@@ -64,16 +64,16 @@ export const GAMES: Game[] = [
     art: "blocks",
   },
   {
-    slug: "runner",
-    name: "Dash Runner",
-    tagline: "Three lanes. No brakes.",
-    description: "Dodge, jump and slide down the line. The longer you last, the bigger the score.",
-    mode: "tournament",
+    slug: "whot",
+    name: "Naija Whot",
+    tagline: "Call your shape. Shed your hand.",
+    description: "The classic shape-and-number card game. Match, hit with specials, call a shape on Whot, and empty your hand first.",
+    mode: "1v1",
     status: "live",
     minStake: 0.25,
-    players: 142,
+    players: 187,
     accent: "violet",
-    art: "runner",
+    art: "whot",
   },
 ];
 
