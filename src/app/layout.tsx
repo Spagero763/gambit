@@ -22,9 +22,13 @@ const mono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Gambit — play your move",
+  title: "Gambit · play your move",
   description:
-    "A skill-game arcade where every move counts. Play classic games free, or put real stakes on the line and take the pot.",
+    "A MiniPay-native arcade of classic skill games on Celo. Play chess, Naija Whot, tic-tac-toe and snakes & ladders for free, or stake cUSD head to head where the winner takes the pot.",
+  other: {
+    "talentapp:project_verification":
+      "060e9ad6da16fa013747b61aff42762a8e4d4b686ac1a3cd9f97c7f7c6ba636c637d44c302176dc808f47c858da1fdfe740265c2bef7505452c634ab94320b40",
+  },
 };
 
 export const viewport: Viewport = {
