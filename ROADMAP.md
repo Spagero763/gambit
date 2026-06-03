@@ -18,8 +18,8 @@ Status tracker for the build. Updated as work lands.
 
 ## In progress
 
-- **Contract hardening** before deploy (see checklist below).
 - **Live deploy** of the app for a public URL.
+- Wiring **Reown + staking UI** into the first game.
 
 ## Next
 
@@ -32,11 +32,11 @@ Status tracker for the build. Updated as work lands.
 
 From the security review:
 
-- [ ] **(high)** Add a time-bounded, permissionless stale-match refund: anyone can reclaim stakes from an Active match if it is not settled within a settle window. Use a dedicated `activatedAt` timestamp.
-- [ ] **(med)** Token allowlist (owner-curated: cUSD, USDC on Celo) and safe transfer handling so no-return tokens (USDT-style) and fee-on-transfer tokens cannot break accounting.
-- [ ] **(med)** Move the relayer to a multisig and add a delay on `setRelayer`.
-- [ ] **(low)** Require an exact-length ranking for pot settlement.
-- [ ] **(low)** Freeze each match's join deadline at creation instead of reading a mutable window.
+- [x] **(high)** Time-bounded, permissionless stale-match refund (`reclaimStalled`) plus relayer `abortMatch`, using a dedicated `activatedAt` timestamp.
+- [x] **(med)** Token allowlist (owner-curated) and safe transfer handling for no-return (USDT-style) and fee-on-transfer tokens.
+- [x] **(low)** Exact-length ranking required for pot settlement.
+- [x] **(low)** Join deadline frozen at creation.
+- [ ] **(med, deploy-time)** Use a multisig as the relayer; consider a delay on `setRelayer`.
 
 ## Principles
 
