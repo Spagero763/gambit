@@ -7,6 +7,7 @@ import { TicTacToe } from "./TicTacToe";
 import { ChessGame } from "./ChessGame";
 import { BlockBlitz } from "./blocks/BlockBlitz";
 import { SnakesLadders } from "./snakes/SnakesLadders";
+import { WhotGame } from "./whot/WhotGame";
 import { GameCover } from "@/components/art/GameCover";
 
 export function GameStage({ game }: { game: Game }) {
@@ -19,6 +20,8 @@ export function GameStage({ game }: { game: Game }) {
       return <BlockBlitz />;
     case "snakes":
       return <SnakesLadders />;
+    case "whot":
+      return <WhotGame />;
     default:
       return <ComingSoon game={game} />;
   }
