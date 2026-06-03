@@ -25,6 +25,21 @@ const FILL: Record<Accent, string> = {
   rose: "bg-gradient-to-br from-rose to-[#d6437a]",
 };
 
+/** A glossy, beveled block tile. */
+function Block({ accent, className }: { accent: Accent; className?: string }) {
+  return (
+    <span
+      className={cn("absolute inset-0 overflow-hidden rounded-[6px]", FILL[accent], className)}
+      style={{
+        boxShadow:
+          "inset 0 2px 1px rgba(255,255,255,0.45), inset 0 -3px 4px rgba(0,0,0,0.35), 0 1px 2px rgba(0,0,0,0.4)",
+      }}
+    >
+      <span className="absolute inset-x-0 top-0 h-1/3 rounded-t-[6px] bg-white/25" />
+    </span>
+  );
+}
+
 export function BlockBlitz() {
   const seed = useRef(7);
   const rng = useCallback(() => {
@@ -120,7 +135,8 @@ export function BlockBlitz() {
       {/* board */}
       <div className="relative mx-auto mt-5 w-full max-w-[360px]">
         <div
-          className="relative grid aspect-square grid-cols-8 gap-1 rounded-3xl glass p-2 shadow-card"
+          className="relative grid aspect-square grid-cols-8 gap-1 rounded-3xl border border-white/10 bg-[#0c0b18] p-2.5 shadow-card"
+          style={{ boxShadow: "inset 0 2px 14px rgba(0,0,0,0.6), 0 20px 50px -20px rgba(0,0,0,0.8)" }}
           onPointerLeave={() => setHover(null)}
         >
           {Array.from({ length: GRID * GRID }).map((_, i) => {
@@ -150,8 +166,10 @@ export function BlockBlitz() {
                       animate={{ scale: 1, opacity: 1 }}
                       exit={{ scale: 0.2, opacity: 0 }}
                       transition={{ type: "spring", stiffness: 360, damping: 22 }}
-                      className={cn("absolute inset-0 rounded-[6px] shadow-inner", FILL[fill])}
-                    />
+                      className="absolute inset-0"
+                    >
+                      <Block accent={fill} />
+                    </motion.span>
                   )}
                 </AnimatePresence>
                 {inPreview && !fill && (
@@ -206,13 +224,9 @@ export function BlockBlitz() {
                     const c = i % p.w;
                     const on = p.cells.some(([cr, cc]) => cr === r && cc === c);
                     return (
-                      <span
-                        key={i}
-                        className={cn(
-                          "h-3.5 w-3.5 rounded-[4px]",
-                          on ? FILL[p.color] : "bg-transparent"
-                        )}
-                      />
+                      <span key={i} className="relative h-3.5 w-3.5">
+                        {on && <Block accent={p.color} />}
+                      </span>
                     );
                   })}
                 </div>
