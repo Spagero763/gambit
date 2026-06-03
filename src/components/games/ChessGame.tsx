@@ -209,14 +209,21 @@ export function ChessGame({ difficulty = "normal" }: { difficulty?: Difficulty }
 
       {/* board */}
       <div className="relative mt-3">
-        <div className="rounded-2xl border border-white/10 bg-gradient-to-b from-white/[0.06] to-white/[0.02] p-2 shadow-card">
+        <div
+          className="rounded-[20px] p-2.5"
+          style={{
+            background: "linear-gradient(155deg, #2e2945, #17142a)",
+            boxShadow:
+              "inset 0 1px 0 rgba(255,255,255,0.14), inset 0 -4px 10px rgba(0,0,0,0.5), 0 26px 60px -26px rgba(0,0,0,0.95)",
+          }}
+        >
           <div
             ref={boardRef}
             onPointerDown={onDown}
             onPointerMove={onMove}
             onPointerUp={onUp}
-            className="relative grid aspect-square grid-cols-8 overflow-hidden rounded-lg"
-            style={{ touchAction: "none" }}
+            className="relative grid aspect-square grid-cols-8 grid-rows-8 overflow-hidden rounded-md ring-1 ring-black/40"
+            style={{ touchAction: "none", boxShadow: "inset 0 2px 10px rgba(0,0,0,0.45)" }}
           >
             {board.map((row, r) =>
               row.map((piece, f) => {
