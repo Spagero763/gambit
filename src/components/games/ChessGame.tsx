@@ -3,11 +3,14 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Chess, Move, PieceSymbol, Square } from "chess.js";
 import { AnimatePresence, motion } from "framer-motion";
+import { ArrowLeft } from "lucide-react";
+import Link from "next/link";
 import { chooseMove } from "@/lib/games/chess-ai";
+import { capturedOf, materialEdge } from "@/lib/games/chess-material";
 import { cn } from "@/lib/cn";
-import { MatchShell } from "./MatchShell";
 import { ResultOverlay, ResultKind } from "./ResultOverlay";
 import { ChessPiece } from "./chess/ChessPiece";
+import { PlayerBar } from "./chess/PlayerBar";
 
 const FILES = ["a", "b", "c", "d", "e", "f", "g", "h"];
 const START_TIME = 300;
@@ -85,9 +88,7 @@ export function ChessGame() {
 
   const tryMove = useCallback(
     (from: Square, to: Square) => {
-      const mv = (game.moves({ square: from, verbose: true }) as Move[]).find(
-        (m) => m.to === to
-      );
+      const mv = (game.moves({ square: from, verbose: true }) as Move[]).find((m) => m.to === to);
       if (!mv) return;
       if (mv.promotion) setPromo({ from, to });
       else commit(from, to);
@@ -151,7 +152,6 @@ export function ChessGame() {
     setDrag(null);
   };
 
-  // AI plays black
   useEffect(() => {
     if (turn !== "b" || result || promo) return;
     const t = setTimeout(() => {
@@ -166,12 +166,10 @@ export function ChessGame() {
     return () => clearTimeout(t);
   }, [turn, fen, result, promo, settle, game]);
 
-  // clocks
   useEffect(() => {
     if (result || promo) return;
     const id = setInterval(() => {
-      if (turn === "w")
-        setWTime((t) => (t <= 1 ? (setResult("lose"), 0) : t - 1));
+      if (turn === "w") setWTime((t) => (t <= 1 ? (setResult("lose"), 0) : t - 1));
       else setBTime((t) => (t <= 1 ? (setResult("win"), 0) : t - 1));
     }, 1000);
     return () => clearInterval(id);
@@ -179,120 +177,128 @@ export function ChessGame() {
 
   const board = game.board();
   const inCheck = game.inCheck();
+  const edge = materialEdge(game); // +white
+  // captured BY you (white) = black pieces gone; BY ai = white pieces gone
+  const youCaptured = capturedOf(game, "b").list;
+  const aiCaptured = capturedOf(game, "w").list;
 
   return (
-    <MatchShell
-      title="Chess"
-      status={
-        result ? "Game over" : inCheck ? "Check" : turn === "w" ? "Your move" : "Opponent is thinking"
-      }
-      players={[
-        {
-          name: "You",
-          mark: <ChessPiece type="k" color="w" size={20} />,
-          active: turn === "w" && !result,
-          accent: "text-violet-bright",
-          clock: fmt(wTime),
-        },
-        {
-          name: "Gambit AI",
-          mark: <ChessPiece type="q" color="b" size={20} />,
-          active: turn === "b" && !result,
-          accent: "text-teal",
-          clock: fmt(bTime),
-        },
-      ]}
-    >
-      <div className="relative w-full max-w-[360px]">
-        <div className="rounded-2xl border border-white/10 bg-white/5 p-1.5 shadow-card">
+    <div className="mx-auto flex min-h-screen w-full max-w-md flex-col px-4 py-4">
+      <div className="flex items-center justify-between">
+        <Link href="/" className="inline-flex items-center gap-2 rounded-full glass px-3 py-1.5 text-sm text-ink-dim">
+          <ArrowLeft className="h-4 w-4" /> Lobby
+        </Link>
+        <span className="rounded-full glass px-3 py-1.5 text-xs font-semibold text-ink-dim">
+          {inCheck && !result ? "Check" : "Free play"}
+        </span>
+      </div>
+
+      {/* opponent (top) */}
+      <div className="mt-4">
+        <PlayerBar
+          name="Gambit AI"
+          pieceColor="b"
+          active={turn === "b" && !result}
+          clock={fmt(bTime)}
+          lowTime={bTime <= 30}
+          captured={aiCaptured}
+          edge={Math.max(0, -edge)}
+        />
+      </div>
+
+      {/* board */}
+      <div className="relative mt-3">
+        <div className="rounded-2xl border border-white/10 bg-gradient-to-b from-white/[0.06] to-white/[0.02] p-2 shadow-card">
           <div
             ref={boardRef}
             onPointerDown={onDown}
             onPointerMove={onMove}
             onPointerUp={onUp}
-            className="relative grid aspect-square grid-cols-8 overflow-hidden rounded-md"
+            className="relative grid aspect-square grid-cols-8 overflow-hidden rounded-lg"
             style={{ touchAction: "none" }}
           >
-          {board.map((row, r) =>
-            row.map((piece, f) => {
-              const square = (FILES[f] + (8 - r)) as Square;
-              const light = (r + f) % 2 === 0;
-              const isSel = selected === square;
-              const isTarget = targets.has(square);
-              const isLast = last && (last.from === square || last.to === square);
-              const isCheckSq = inCheck && piece?.type === "k" && piece.color === turn;
-              const lifted = drag?.moved && drag.from === square;
+            {board.map((row, r) =>
+              row.map((piece, f) => {
+                const square = (FILES[f] + (8 - r)) as Square;
+                const lightSq = (r + f) % 2 === 0;
+                const isSel = selected === square;
+                const isTarget = targets.has(square);
+                const isLast = last && (last.from === square || last.to === square);
+                const isCheckSq = inCheck && piece?.type === "k" && piece.color === turn;
+                const lifted = drag?.moved && drag.from === square;
 
-              return (
-                <div
-                  key={square}
-                  className={cn(
-                    "relative flex items-center justify-center",
-                    light ? "bg-[#ece7d7]" : "bg-[#6b6498]"
-                  )}
-                >
-                  {isLast && <span className="absolute inset-0 bg-amber/35" />}
-                  {isSel && <span className="absolute inset-0 bg-teal/40" />}
-                  {isCheckSq && (
-                    <span className="absolute inset-0 bg-[radial-gradient(circle,rgba(255,107,154,0.85),transparent_70%)]" />
-                  )}
+                return (
+                  <div
+                    key={square}
+                    className={cn(
+                      "relative flex items-center justify-center",
+                      lightSq ? "bg-[#e9e2d0]" : "bg-[#7c74a8]"
+                    )}
+                  >
+                    {isLast && <span className="absolute inset-0 bg-amber/35" />}
+                    {isSel && <span className="absolute inset-0 bg-teal/35" />}
+                    {isCheckSq && (
+                      <span className="absolute inset-0 bg-[radial-gradient(circle,rgba(255,107,154,0.9),transparent_70%)]" />
+                    )}
 
-                  {/* coordinates */}
-                  {f === 0 && (
-                    <span
-                      className={cn(
-                        "absolute left-0.5 top-0.5 text-[8px] font-bold",
-                        light ? "text-[#6b6498]" : "text-[#ece7d7]"
-                      )}
-                    >
-                      {8 - r}
-                    </span>
-                  )}
-                  {r === 7 && (
-                    <span
-                      className={cn(
-                        "absolute bottom-0 right-0.5 text-[8px] font-bold",
-                        light ? "text-[#6b6498]" : "text-[#ece7d7]"
-                      )}
-                    >
-                      {FILES[f]}
-                    </span>
-                  )}
+                    {f === 0 && (
+                      <span
+                        className={cn(
+                          "absolute left-0.5 top-0.5 text-[8px] font-bold",
+                          lightSq ? "text-[#7c74a8]" : "text-[#e9e2d0]"
+                        )}
+                      >
+                        {8 - r}
+                      </span>
+                    )}
+                    {r === 7 && (
+                      <span
+                        className={cn(
+                          "absolute bottom-0 right-0.5 text-[8px] font-bold",
+                          lightSq ? "text-[#7c74a8]" : "text-[#e9e2d0]"
+                        )}
+                      >
+                        {FILES[f]}
+                      </span>
+                    )}
 
-                  {piece && !lifted && (
-                    <ChessPiece type={piece.type} color={piece.color} size={42} className="relative z-10 select-none" />
-                  )}
+                    {piece && !lifted && (
+                      <motion.div
+                        initial={false}
+                        className="relative z-10"
+                      >
+                        <ChessPiece type={piece.type} color={piece.color} size={42} className="select-none" />
+                      </motion.div>
+                    )}
 
-                  {isTarget &&
-                    (piece ? (
-                      <span className="absolute inset-1 rounded-full ring-[3px] ring-teal/80" />
-                    ) : (
-                      <span className="absolute h-1/4 w-1/4 rounded-full bg-teal/70" />
-                    ))}
-                </div>
-              );
-            })
-          )}
+                    {isTarget &&
+                      (piece ? (
+                        <span className="absolute inset-1 rounded-full ring-[3px] ring-teal/80" />
+                      ) : (
+                        <span className="absolute h-1/4 w-1/4 rounded-full bg-teal/70" />
+                      ))}
+                  </div>
+                );
+              })
+            )}
 
-          {/* floating dragged piece */}
-          {drag?.moved && (
-            <div
-              className="pointer-events-none absolute z-30"
-              style={{
-                left: drag.lx,
-                top: drag.ly,
-                width: drag.cell,
-                height: drag.cell,
-                transform: "translate(-50%, -50%) scale(1.12)",
-              }}
-            >
-              <ChessPiece type={drag.type} color="w" size={drag.cell} />
-            </div>
-          )}
+            {drag?.moved && (
+              <div
+                className="pointer-events-none absolute z-30"
+                style={{
+                  left: drag.lx,
+                  top: drag.ly,
+                  width: drag.cell,
+                  height: drag.cell,
+                  transform: "translate(-50%, -50%) scale(1.14)",
+                }}
+              >
+                <ChessPiece type={drag.type} color="w" size={drag.cell} />
+              </div>
+            )}
           </div>
         </div>
 
-        {/* promotion picker */}
         <AnimatePresence>
           {promo && (
             <motion.div
@@ -328,6 +334,25 @@ export function ChessGame() {
 
         <ResultOverlay result={result} onRematch={reset} />
       </div>
-    </MatchShell>
+
+      {/* status strip */}
+      <p className="mt-3 text-center text-sm text-ink-dim">
+        {result ? "Game over" : turn === "w" ? "Your move" : "Opponent is thinking"}
+      </p>
+
+      {/* you (bottom) */}
+      <div className="mt-3">
+        <PlayerBar
+          name="You"
+          pieceColor="w"
+          active={turn === "w" && !result}
+          clock={fmt(wTime)}
+          lowTime={wTime <= 30}
+          captured={youCaptured}
+          edge={Math.max(0, edge)}
+          you
+        />
+      </div>
+    </div>
   );
 }
