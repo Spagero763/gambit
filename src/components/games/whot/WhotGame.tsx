@@ -5,15 +5,24 @@ import { AnimatePresence, motion } from "framer-motion";
 import { ArrowLeft, Bot, Trophy, Users, RotateCcw, Crown } from "lucide-react";
 import Link from "next/link";
 import { WhotTable, Seat } from "./WhotTable";
+import { WhotRules, DEFAULT_RULES } from "@/lib/games/whot";
 import { GameCover } from "@/components/art/GameCover";
 import { cn } from "@/lib/cn";
 
 const BOT_NAMES = ["Ada", "Tunde", "Chidi", "Zino", "Bola", "Emeka", "Ngozi", "Kola"];
 
+const RULE_ITEMS: { key: keyof WhotRules; label: string; note: string }[] = [
+  { key: "holdOn", label: "Hold On (1)", note: "Play again" },
+  { key: "pickTwo", label: "Pick Two (2)", note: "Next draws 2" },
+  { key: "pickThree", label: "Pick Three (5)", note: "Next draws 3" },
+  { key: "suspension", label: "Suspension (8)", note: "Skip next" },
+  { key: "generalMarket", label: "General Market (14)", note: "All draw 1" },
+];
+
 type Mode = "free" | "tournament";
 type Phase =
   | { kind: "setup" }
-  | { kind: "play"; mode: Mode; seats: Seat[]; round: number; match: number }
+  | { kind: "play"; mode: Mode; seats: Seat[]; round: number; match: number; rules: WhotRules }
   | { kind: "result"; champion: string; youWon: boolean; mode: Mode };
 
 const TOURNEY_ROUNDS = ["Semi-final", "Final"];
@@ -26,15 +35,16 @@ export function WhotGame() {
   const [phase, setPhase] = useState<Phase>({ kind: "setup" });
   const [mode, setMode] = useState<Mode>("free");
   const [count, setCount] = useState(4);
+  const [rules, setRules] = useState<WhotRules>(DEFAULT_RULES);
 
   const startFree = () => {
     const seats: Seat[] = [{ name: "You", isBot: false }, ...bots(count - 1)];
-    setPhase({ kind: "play", mode: "free", seats, round: 0, match: 0 });
+    setPhase({ kind: "play", mode: "free", seats, round: 0, match: 0, rules });
   };
 
   const startTournament = () => {
     const seats: Seat[] = [{ name: "You", isBot: false }, ...bots(3)];
-    setPhase({ kind: "play", mode: "tournament", seats, round: 0, match: 0 });
+    setPhase({ kind: "play", mode: "tournament", seats, round: 0, match: 0, rules });
   };
 
   const handleEnd = (winnerName: string, youWon: boolean) => {
@@ -54,7 +64,7 @@ export function WhotGame() {
     }
     // advance to next round
     const seats: Seat[] = [{ name: "You", isBot: false }, ...bots(3, phase.round + 1)];
-    setPhase({ kind: "play", mode: "tournament", seats, round: phase.round + 1, match: phase.match + 1 });
+    setPhase({ kind: "play", mode: "tournament", seats, round: phase.round + 1, match: phase.match + 1, rules: phase.rules });
   };
 
   if (phase.kind === "play") {
@@ -62,7 +72,7 @@ export function WhotGame() {
       phase.mode === "tournament"
         ? `Tournament · ${TOURNEY_ROUNDS[phase.round]}`
         : `Free play · ${phase.seats.length} players`;
-    return <WhotTable key={phase.match} seats={phase.seats} title={title} onEnd={handleEnd} />;
+    return <WhotTable key={phase.match} seats={phase.seats} title={title} rules={phase.rules} onEnd={handleEnd} />;
   }
 
   if (phase.kind === "result") {
@@ -78,7 +88,7 @@ export function WhotGame() {
 
   // setup
   return (
-    <div className="mx-auto flex min-h-screen w-full max-w-md flex-col px-5 py-5">
+    <div className="mx-auto flex min-h-[100dvh] w-full max-w-md flex-col px-5 py-5">
       <Link href="/" className="inline-flex w-fit items-center gap-2 rounded-full glass px-3 py-1.5 text-sm text-ink-dim">
         <ArrowLeft className="h-4 w-4" /> Lobby
       </Link>
@@ -127,6 +137,29 @@ export function WhotGame() {
                 </button>
               ))}
             </div>
+
+            <p className="mb-2 mt-5 text-xs font-semibold uppercase tracking-wide text-ink-faint">House rules</p>
+            <div className="space-y-2">
+              {RULE_ITEMS.map((r) => {
+                const on = rules[r.key];
+                return (
+                  <button
+                    key={r.key}
+                    onClick={() => setRules((prev) => ({ ...prev, [r.key]: !prev[r.key] }))}
+                    className="flex w-full items-center justify-between rounded-2xl bg-white/[0.03] px-4 py-2.5 text-left"
+                  >
+                    <span>
+                      <span className="text-sm font-semibold text-ink">{r.label}</span>
+                      <span className="ml-2 text-[11px] text-ink-faint">{r.note}</span>
+                    </span>
+                    <span className={cn("relative h-5 w-9 rounded-full transition-colors", on ? "bg-teal" : "bg-white/15")}>
+                      <span className={cn("absolute top-0.5 h-4 w-4 rounded-full bg-white transition-all", on ? "left-[1.125rem]" : "left-0.5")} />
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+
             <button onClick={startFree} className="mt-5 w-full rounded-2xl bg-gradient-to-r from-violet-deep to-violet py-3.5 text-sm font-bold text-white shadow-glow">
               Start table
             </button>
@@ -171,7 +204,7 @@ function Celebration({
   const colors = ["#8b7dff", "#27e1a6", "#ffc15e", "#ff6b9a", "#a89bff"];
 
   return (
-    <div className="relative mx-auto grid min-h-screen w-full max-w-md place-items-center overflow-hidden px-6">
+    <div className="relative mx-auto grid min-h-[100dvh] w-full max-w-md place-items-center overflow-hidden px-6">
       {youWon &&
         confetti.map((_, i) => {
           const x = Math.random() * 100;

@@ -5,7 +5,7 @@ import { BottomNav } from "@/components/BottomNav";
 
 export default function EventsPage() {
   return (
-    <main className="relative min-h-screen">
+    <main className="relative min-h-[100dvh]">
       <Backdrop />
       <Header />
       <section className="mx-auto w-full max-w-2xl px-5 pb-28 pt-2">

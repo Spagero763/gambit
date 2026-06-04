@@ -34,7 +34,7 @@ export function MatchSetup({
   const payout = +(stake * 2 * (1 - FEE)).toFixed(2);
 
   return (
-    <div className="mx-auto flex min-h-screen w-full max-w-2xl flex-col px-5 py-5">
+    <div className="mx-auto flex min-h-[100dvh] w-full max-w-2xl flex-col px-5 py-5">
       <Link
         href="/"
         className="inline-flex w-fit items-center gap-2 rounded-full glass px-3 py-1.5 text-sm text-ink-dim"
@@ -97,8 +97,9 @@ export function MatchSetup({
           >
             <div className="rounded-3xl glass p-5 shadow-card">
               <p className="text-sm leading-relaxed text-ink-dim">
-                Warm up against the Gambit engine. No wallet, no stake, just the
-                game. Learn the flow, then put something on the line.
+                Play against the engine. No wallet needed, no stake, just the
+                board. See how the game feels, then switch to staked when you
+                want to put cUSD on the line.
               </p>
             </div>
 

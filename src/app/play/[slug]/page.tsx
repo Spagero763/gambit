@@ -12,7 +12,7 @@ export default function PlayPage({ params }: { params: { slug: string } }) {
   if (!game) notFound();
 
   return (
-    <main className="relative min-h-screen">
+    <main className="relative min-h-[100dvh]">
       <Backdrop />
       <PlayFlow game={game!} />
     </main>

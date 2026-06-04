@@ -16,7 +16,7 @@ export function Hero() {
         className="inline-flex items-center gap-2 rounded-full glass px-3 py-1 text-xs text-ink-dim"
       >
         <Sparkles className="h-3.5 w-3.5 text-amber" />
-        Play free. Stake when you are ready.
+        Free to play. Stake to compete.
       </motion.div>
 
       <motion.h1
@@ -25,9 +25,9 @@ export function Hero() {
         transition={{ duration: 0.7, ease, delay: 0.05 }}
         className="mt-4 font-display text-[2.6rem] font-bold leading-[1.05] tracking-tight"
       >
-        Every move
+        Five games.
         <br />
-        <span className="text-gradient">is worth something.</span>
+        <span className="text-gradient">One arcade.</span>
       </motion.h1>
 
       <motion.p
@@ -36,8 +36,9 @@ export function Hero() {
         transition={{ duration: 0.7, ease, delay: 0.12 }}
         className="mt-3 max-w-md text-[15px] leading-relaxed text-ink-dim"
       >
-        Classic games of skill, head to head. Jump in for free, or back yourself
-        with cUSD and the winner takes the pot.
+        Chess, Naija Whot, tic-tac-toe, snakes & ladders and a block puzzle.
+        Play free against the engine, or put cUSD on a 1v1 room and the winner
+        collects.
       </motion.p>
 
       <motion.div

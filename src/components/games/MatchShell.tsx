@@ -26,7 +26,7 @@ export function MatchShell({
   children: ReactNode;
 }) {
   return (
-    <div className="mx-auto flex min-h-screen w-full max-w-2xl flex-col px-5 py-5">
+    <div className="mx-auto flex min-h-[100dvh] w-full max-w-2xl flex-col px-5 py-5">
       <div className="flex items-center justify-between">
         <Link
           href="/"
@@ -62,7 +62,7 @@ export function MatchShell({
             <div className="leading-tight">
               <p className="text-sm font-semibold text-ink">{p.name}</p>
               <p className="text-[10px] text-ink-faint">
-                {p.active ? "thinking…" : "waiting"}
+                {p.active ? "to play" : "waiting"}
               </p>
             </div>
             <div className="ml-auto flex items-center gap-2">

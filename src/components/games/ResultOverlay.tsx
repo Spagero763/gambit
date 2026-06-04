@@ -11,9 +11,9 @@ const COPY: Record<
   Exclude<ResultKind, null>,
   { title: string; sub: string; tone: string }
 > = {
-  win: { title: "You win", sub: "Clean read. The pot is yours.", tone: "text-teal" },
-  lose: { title: "You lose", sub: "Run it back and take it.", tone: "text-rose" },
-  draw: { title: "Stalemate", sub: "Nobody blinked. Go again.", tone: "text-amber" },
+  win: { title: "You take it", sub: "Round yours.", tone: "text-teal" },
+  lose: { title: "Not this one", sub: "Deal again.", tone: "text-rose" },
+  draw: { title: "Deadlock", sub: "Nobody breaks it. Re-rack.", tone: "text-amber" },
 };
 
 export function ResultOverlay({
