@@ -51,6 +51,16 @@ export const ESCROW_ABI = [
   },
   {
     type: "function",
+    name: "declareResult",
+    stateMutability: "nonpayable",
+    inputs: [
+      { name: "id", type: "uint256" },
+      { name: "ranking", type: "address[]" },
+    ],
+    outputs: [],
+  },
+  {
+    type: "function",
     name: "matches",
     stateMutability: "view",
     inputs: [{ name: "", type: "uint256" }],
