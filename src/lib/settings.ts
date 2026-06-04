@@ -24,12 +24,12 @@ const KEY = "gambit:settings";
 
 export const AVATARS = ["violet", "teal", "amber", "rose", "sky", "lime"] as const;
 
-// Royalty-free background tracks. Files live in /public/audio.
+// Original, self-hosted looping tracks (generated, royalty-free, we own them).
 export const TRACKS = [
-  { id: "lofi", label: "Lo-fi", file: "/audio/lofi.mp3" },
-  { id: "arcade", label: "Arcade", file: "/audio/arcade.mp3" },
-  { id: "ambient", label: "Ambient", file: "/audio/ambient.mp3" },
-  { id: "synth", label: "Synthwave", file: "/audio/synth.mp3" },
+  { id: "lofi", label: "Lo-fi", file: "/audio/lofi.wav" },
+  { id: "arcade", label: "Arcade", file: "/audio/arcade.wav" },
+  { id: "ambient", label: "Ambient", file: "/audio/ambient.wav" },
+  { id: "synth", label: "Synthwave", file: "/audio/synth.wav" },
 ] as const;
 
 export function loadSettings(): GambitSettings {
