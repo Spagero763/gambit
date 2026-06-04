@@ -2,16 +2,27 @@
 
 import { useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { ArrowLeft, Bot, Swords, Wallet, Loader2, ShieldCheck } from "lucide-react";
+import { ArrowLeft, Bot, Swords, Wallet, Loader2, ShieldCheck, Copy, Check, AlertTriangle } from "lucide-react";
 import Link from "next/link";
-import { useAccount, useConnect } from "wagmi";
+import { useAccount, useConnect, useSwitchChain } from "wagmi";
 import { injected } from "wagmi/connectors";
 import { Game } from "@/lib/games";
 import { GameCover } from "@/components/art/GameCover";
 import { Difficulty, DIFFICULTIES, SUPPORTS_DIFFICULTY } from "@/lib/difficulty";
+import { useStakeMatch, useMatchState } from "@/hooks/useStakeMatch";
+import { ACTIVE_CHAIN_ID } from "@/lib/wagmi";
 import { cn } from "@/lib/cn";
 
 const FEE = 0.05;
+
+// Map game slug to the contract gameType byte.
+const GAME_TYPE: Record<string, number> = {
+  chess: 0,
+  "tic-tac-toe": 1,
+  snakes: 2,
+  whot: 3,
+  blocks: 4,
+};
 
 type Mode = "free" | "staked";
 
@@ -25,13 +36,21 @@ export function MatchSetup({
   const [mode, setMode] = useState<Mode>("free");
   const [stake, setStake] = useState<number>(game.minStake);
   const [difficulty, setDifficulty] = useState<Difficulty>("normal");
-  const [searching, setSearching] = useState(false);
+  const [joinId, setJoinId] = useState("");
+  const [copied, setCopied] = useState(false);
   const { isConnected } = useAccount();
   const { connect } = useConnect();
+  const { switchChain } = useSwitchChain();
+  const { createMatch, joinMatch, step, error, matchId, ready, onActiveChain } = useStakeMatch();
+  const { data: created } = useMatchState(matchId ?? undefined);
   const hasDifficulty = SUPPORTS_DIFFICULTY.has(game.slug);
 
   const chips = [0.1, 0.5, 1, 2, 5].filter((v) => v >= game.minStake);
   const payout = +(stake * 2 * (1 - FEE)).toFixed(2);
+
+  const busy = step === "approving" || step === "creating" || step === "joining";
+  // tuple index 9 = status (2 = Active, both seats filled)
+  const opponentJoined = created ? Number((created as readonly unknown[])[9]) === 2 : false;
 
   return (
     <div className="mx-auto flex min-h-[100dvh] w-full max-w-2xl flex-col px-5 py-5">
@@ -186,26 +205,81 @@ export function MatchSetup({
               >
                 <Wallet className="h-4 w-4" /> Connect to stake
               </button>
-            ) : (
+            ) : !onActiveChain ? (
               <button
-                onClick={() => {
-                  setSearching(true);
-                  setTimeout(() => setSearching(false), 2600);
-                }}
-                disabled={searching}
-                className="mt-4 flex w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-teal-deep to-teal py-3.5 text-sm font-bold text-void shadow-glow-teal disabled:opacity-70"
+                onClick={() => switchChain({ chainId: ACTIVE_CHAIN_ID })}
+                className="mt-4 flex w-full items-center justify-center gap-2 rounded-2xl bg-amber py-3.5 text-sm font-bold text-void"
               >
-                {searching ? (
+                <AlertTriangle className="h-4 w-4" /> Switch network to play
+              </button>
+            ) : matchId ? (
+              // room created: show id to share + opponent status
+              <div className="mt-4 rounded-2xl glass p-4 text-center">
+                {opponentJoined ? (
                   <>
-                    <Loader2 className="h-4 w-4 animate-spin" /> Finding an opponent…
+                    <p className="text-sm font-bold text-teal">Opponent joined</p>
+                    <button
+                      onClick={() => onStart(difficulty)}
+                      className="mt-3 w-full rounded-xl bg-gradient-to-r from-teal-deep to-teal py-3 text-sm font-bold text-void shadow-glow-teal"
+                    >
+                      Start match
+                    </button>
                   </>
                 ) : (
                   <>
-                    <Swords className="h-4 w-4" /> Find match
+                    <p className="text-xs text-ink-faint">Room created. Share this ID with your opponent.</p>
+                    <button
+                      onClick={() => {
+                        navigator.clipboard?.writeText(matchId.toString());
+                        setCopied(true);
+                        setTimeout(() => setCopied(false), 1500);
+                      }}
+                      className="mx-auto mt-2 flex items-center gap-2 rounded-lg bg-white/5 px-4 py-2 font-mono text-lg font-bold text-ink"
+                    >
+                      #{matchId.toString()}
+                      {copied ? <Check className="h-4 w-4 text-teal" /> : <Copy className="h-4 w-4 text-ink-faint" />}
+                    </button>
+                    <p className="mt-3 flex items-center justify-center gap-1.5 text-[11px] text-ink-faint">
+                      <Loader2 className="h-3.5 w-3.5 animate-spin" /> Waiting for opponent to join
+                    </p>
                   </>
                 )}
-              </button>
+              </div>
+            ) : (
+              <div className="mt-4 space-y-3">
+                <button
+                  onClick={() => createMatch(stake, GAME_TYPE[game.slug] ?? 0, 2)}
+                  disabled={busy || !ready}
+                  className="flex w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-teal-deep to-teal py-3.5 text-sm font-bold text-void shadow-glow-teal disabled:opacity-70"
+                >
+                  {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Swords className="h-4 w-4" />}
+                  {step === "approving" ? "Approving cUSD…" : step === "creating" ? "Creating room…" : "Create staked room"}
+                </button>
+
+                <div className="flex items-center gap-2">
+                  <input
+                    value={joinId}
+                    onChange={(e) => setJoinId(e.target.value.replace(/\D/g, ""))}
+                    placeholder="Join by room ID"
+                    inputMode="numeric"
+                    className="flex-1 rounded-xl bg-white/[0.04] px-4 py-2.5 text-sm text-ink outline-none ring-1 ring-white/10 placeholder:text-ink-faint focus:ring-teal/50"
+                  />
+                  <button
+                    onClick={async () => {
+                      if (!joinId) return;
+                      const ok = await joinMatch(BigInt(joinId), stake);
+                      if (ok) onStart(difficulty);
+                    }}
+                    disabled={busy || !joinId}
+                    className="rounded-xl bg-white/10 px-4 py-2.5 text-sm font-bold text-ink disabled:opacity-50"
+                  >
+                    {step === "joining" ? <Loader2 className="h-4 w-4 animate-spin" /> : "Join"}
+                  </button>
+                </div>
+              </div>
             )}
+
+            {error && <p className="mt-2 text-center text-[11px] text-rose">{error}</p>}
 
             <p className="mt-3 flex items-center justify-center gap-1.5 text-center text-[11px] text-ink-faint">
               <ShieldCheck className="h-3.5 w-3.5" />
