@@ -1,22 +1,13 @@
-import { http, createConfig } from "wagmi";
-import { celo } from "wagmi/chains";
-import { injected } from "wagmi/connectors";
+import { WagmiAdapter } from "@reown/appkit-adapter-wagmi";
+import { celo } from "@reown/appkit/networks";
 
-// cUSD on Celo mainnet (18 decimals). Used as a fee currency and stake token.
 export const CUSD_ADDRESS = "0x765DE816845861e75A25fCA122bb6898B8B1282a" as const;
 
-// Injected connector first so MiniPay's injected provider is picked up implicitly.
-export const config = createConfig({
-  chains: [celo],
-  connectors: [injected()],
-  transports: {
-    [celo.id]: http(),
-  },
-  ssr: true,
+const projectId = process.env.NEXT_PUBLIC_REOWN_PROJECT_ID ?? "0b1cfff79855c73f2ec77409f402908b";
+
+export const wagmiAdapter = new WagmiAdapter({
+  projectId,
+  networks: [celo],
 });
 
-declare module "wagmi" {
-  interface Register {
-    config: typeof config;
-  }
-}
+export const config = wagmiAdapter.wagmiConfig;
