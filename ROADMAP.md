@@ -18,13 +18,13 @@ Status tracker for the build. Updated as work lands.
 
 ## In progress
 
-- **Live deploy** of the app for a public URL.
-- Wiring **Reown + staking UI** into the first game.
+- Wiring the **stake -> play -> payout** loop into one game (tic-tac-toe rooms) end to end.
 
 ## Next
 
-- Wire **Reown** connect for desktop/mobile browsers alongside MiniPay.
 - Wire the **stake -> play -> payout** loop into one game (tic-tac-toe rooms) end to end.
+- Deploy ArcadeEscrow to mainnet (need fee wallet + relayer addresses).
+- Verify on Talent Protocol (done: URL + meta tag live).
 - Deploy `ArcadeEscrow` after hardening; wire the rest of the staked modes (Whot pots, Block Blitz same-seed pools).
 - Online human-vs-human play (real-time sync) so staked 1v1 has a real opponent.
 
