@@ -5,7 +5,7 @@ import { Profile } from "@/components/Profile";
 
 export default function ProfilePage() {
   return (
-    <main className="relative min-h-screen">
+    <main className="relative min-h-[100dvh]">
       <Backdrop />
       <Header />
       <Profile />

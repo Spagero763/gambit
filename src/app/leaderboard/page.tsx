@@ -5,7 +5,7 @@ import { Leaderboard } from "@/components/Leaderboard";
 
 export default function LeaderboardPage() {
   return (
-    <main className="relative min-h-screen">
+    <main className="relative min-h-[100dvh]">
       <Backdrop />
       <Header />
       <Leaderboard />

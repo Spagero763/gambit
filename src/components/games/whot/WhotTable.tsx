@@ -2,19 +2,23 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { Card, Shape, SHAPE_LABEL, buildDeck, isLegal, shuffle } from "@/lib/games/whot";
+import {
+  Card,
+  Shape,
+  SHAPE_LABEL,
+  WhotRules,
+  DEFAULT_RULES,
+  activeSpecials,
+  buildDeck,
+  isLegal,
+  shuffle,
+} from "@/lib/games/whot";
 import { WhotCardBack, WhotCardFace, WhotShape } from "./WhotCard";
 import { cn } from "@/lib/cn";
 
 export interface Seat {
   name: string;
   isBot: boolean;
-}
-
-interface Player {
-  name: string;
-  isBot: boolean;
-  hand: Card[];
 }
 
 type Pending = { amount: number; num: number } | null;
@@ -31,35 +35,43 @@ const AVATAR_BG = [
 export function WhotTable({
   seats,
   title,
+  rules = DEFAULT_RULES,
   onEnd,
 }: {
   seats: Seat[];
   title: string;
+  rules?: WhotRules;
   onEnd: (winnerName: string, youWon: boolean) => void;
 }) {
   const n = seats.length;
+  const specials = useMemo(() => activeSpecials(rules), [rules]);
   const seed = useRef(0);
   const rng = useCallback(() => {
     seed.current = (seed.current * 1103515245 + 12345) & 0x7fffffff;
     return seed.current / 0x7fffffff;
   }, []);
 
-  const [players, setPlayers] = useState<Player[]>([]);
-  const [market, setMarket] = useState<Card[]>([]);
-  const [pile, setPile] = useState<Card[]>([]);
-  const [activeShape, setActiveShape] = useState<Shape>("circle");
-  const [turn, setTurn] = useState(0);
-  const [pending, setPending] = useState<Pending>(null);
-  const [calling, setCalling] = useState<Card | null>(null);
-  const [log, setLog] = useState<{ text: string; who: number }[]>([]);
-  const [winner, setWinner] = useState<number | null>(null);
+  // ----- mutable game state lives in refs so logic is synchronous and correct -----
+  const hands = useRef<Card[][]>([]);
+  const market = useRef<Card[]>([]);
+  const pile = useRef<Card[]>([]);
+  const active = useRef<Shape>("circle");
+  const pendingRef = useRef<Pending>(null);
   const busy = useRef(false);
   const dealt = useRef(false);
 
-  const top = pile[pile.length - 1];
-  const topNum = top?.num ?? 0;
+  // mirror into state purely for rendering
+  const [, force] = useState(0);
+  const sync = () => force((x) => x + 1);
+
+  const [turn, setTurn] = useState(0);
+  const [calling, setCalling] = useState<Card | null>(null);
+  const [log, setLog] = useState<{ text: string; who: number }[]>([]);
+  const [winner, setWinner] = useState<number | null>(null);
 
   const pushLog = (text: string, who: number) => setLog((l) => [{ text, who }, ...l].slice(0, 5));
+
+  const top = () => pile.current[pile.current.length - 1];
 
   // deal once
   useEffect(() => {
@@ -67,136 +79,128 @@ export function WhotTable({
     dealt.current = true;
     seed.current = (Date.now() % 100000) + 17;
     const deck = shuffle(buildDeck(), rng);
-    const hands: Player[] = seats.map((s) => ({ name: s.name, isBot: s.isBot, hand: [] }));
+    const h: Card[][] = seats.map(() => []);
     let idx = 0;
-    for (let k = 0; k < 6; k++) for (let p = 0; p < n; p++) hands[p].hand.push(deck[idx++]);
+    for (let k = 0; k < 6; k++) for (let p = 0; p < n; p++) h[p].push(deck[idx++]);
     let rest = deck.slice(idx);
-    let startI = rest.findIndex((c) => c.shape !== "whot" && ![1, 2, 5, 8, 14].includes(c.num));
+    let startI = rest.findIndex((c) => c.shape !== "whot" && !specials.has(c.num));
     if (startI < 0) startI = 0;
     const start = rest[startI];
     rest = rest.filter((_, i) => i !== startI);
-    setPlayers(hands);
-    setMarket(rest);
-    setPile([start]);
-    setActiveShape(start.shape);
+    hands.current = h;
+    market.current = rest;
+    pile.current = [start];
+    active.current = start.shape;
+    pendingRef.current = null;
     setTurn(0);
     setLog([{ text: "Cards dealt.", who: -1 }]);
-  }, [seats, n, rng]);
+    sync();
+  }, [seats, n, rng, specials]);
 
+  const nextIndex = (from: number, step = 1) => (from + step) % n;
+
+  // draw `count` cards from the market; reshuffle the discard pile in when empty
   const draw = useCallback(
     (count: number): Card[] => {
       const taken: Card[] = [];
-      setMarket((m) => {
-        let pool = m;
-        for (let i = 0; i < count; i++) {
-          if (pool.length === 0) {
-            setPile((p) => {
-              if (p.length <= 1) return p;
-              pool = shuffle(p.slice(0, -1), rng);
-              return [p[p.length - 1]];
-            });
+      for (let i = 0; i < count; i++) {
+        if (market.current.length === 0) {
+          // reshuffle everything below the top discard back into the market
+          if (pile.current.length > 1) {
+            const keep = pile.current[pile.current.length - 1];
+            market.current = shuffle(pile.current.slice(0, -1), rng);
+            pile.current = [keep];
+            pushLog("Market reshuffled.", -1);
+          } else {
+            break; // nothing left anywhere
           }
-          if (pool.length === 0) break;
-          taken.push(pool[0]);
-          pool = pool.slice(1);
         }
-        return pool;
-      });
+        if (market.current.length === 0) break;
+        taken.push(market.current[0]);
+        market.current = market.current.slice(1);
+      }
       return taken;
     },
     [rng]
   );
 
-  const giveCards = (pi: number, cards: Card[]) =>
-    setPlayers((ps) => ps.map((p, i) => (i === pi ? { ...p, hand: [...p.hand, ...cards] } : p)));
-
-  const nextIndex = (from: number, step = 1) => (from + step) % n;
-
+  // play a card from player `by`. Returns true if it ended the game.
   const resolvePlay = useCallback(
-    (card: Card, by: number, called?: Shape) => {
+    (card: Card, by: number, called?: Shape): boolean => {
       const newShape = card.shape === "whot" ? called ?? "circle" : card.shape;
-      setPile((p) => [...p, card]);
-      setActiveShape(newShape);
-
-      let emptied = false;
-      setPlayers((ps) =>
-        ps.map((p, i) => {
-          if (i !== by) return p;
-          const hand = p.hand.filter((c) => c.id !== card.id);
-          if (hand.length === 0) emptied = true;
-          return { ...p, hand };
-        })
-      );
+      hands.current[by] = hands.current[by].filter((c) => c.id !== card.id);
+      pile.current = [...pile.current, card];
+      active.current = newShape;
 
       const label = card.shape === "whot" ? `Whot, called ${SHAPE_LABEL[newShape]}` : `${card.num} ${SHAPE_LABEL[card.shape]}`;
       pushLog(`${seats[by].name}: ${label}`, by);
 
-      if (emptied) {
+      // WIN: hand empty after a legal play
+      if (hands.current[by].length === 0) {
         setWinner(by);
+        sync();
         onEnd(seats[by].name, by === 0 && !seats[0].isBot);
-        busy.current = false;
-        return;
+        return true;
       }
 
-      // effects
+      // effects (only those enabled by the active rules)
       let next = nextIndex(by);
-      switch (card.num) {
-        case 1: // hold on
+      if (specials.has(card.num)) {
+        if (card.num === 1) {
           next = by;
-          break;
-        case 8: // suspension -> skip one
+        } else if (card.num === 8) {
           next = nextIndex(by, 2);
-          break;
-        case 14: { // general market: everyone else draws 1, play again
+        } else if (card.num === 14) {
           for (let i = 0; i < n; i++) {
             if (i === by) continue;
-            const d = draw(1);
-            giveCards(i, d);
+            hands.current[i] = [...hands.current[i], ...draw(1)];
           }
           next = by;
-          break;
+        } else if (card.num === 2) {
+          pendingRef.current = { amount: 2, num: 2 };
+        } else if (card.num === 5) {
+          pendingRef.current = { amount: 3, num: 5 };
         }
-        case 2:
-          setPending({ amount: 2, num: 2 });
-          break;
-        case 5:
-          setPending({ amount: 3, num: 5 });
-          break;
       }
       setTurn(next);
-      busy.current = false;
+      sync();
+      return false;
     },
-    [n, seats, draw, onEnd]
+    [n, seats, specials, draw, onEnd]
   );
 
-  // human plays a card
+  // ---- human actions ----
   const playHuman = (card: Card) => {
     if (turn !== 0 || winner !== null || busy.current || calling) return;
+    const pending = pendingRef.current;
     if (pending) {
       if (card.num === pending.num) {
-        busy.current = true;
-        setPlayers((ps) => ps.map((p, i) => (i === 0 ? { ...p, hand: p.hand.filter((c) => c.id !== card.id) } : p)));
-        setPile((p) => [...p, card]);
-        setActiveShape(card.shape);
-        setPending({ amount: pending.amount + (pending.num === 2 ? 2 : 3), num: pending.num });
+        hands.current[0] = hands.current[0].filter((c) => c.id !== card.id);
+        pile.current = [...pile.current, card];
+        active.current = card.shape;
         pushLog(`${seats[0].name} stacked ${card.num}`, 0);
+        if (hands.current[0].length === 0) {
+          setWinner(0);
+          sync();
+          onEnd(seats[0].name, !seats[0].isBot);
+          return;
+        }
+        pendingRef.current = { amount: pending.amount + (pending.num === 2 ? 2 : 3), num: pending.num };
         setTurn(nextIndex(0));
-        busy.current = false;
+        sync();
       }
       return;
     }
-    if (!isLegal(card, topNum, activeShape)) return;
+    if (!isLegal(card, top()?.num ?? 0, active.current)) return;
     if (card.shape === "whot") {
       setCalling(card);
       return;
     }
-    busy.current = true;
     resolvePlay(card, 0);
   };
 
   const callShape = (shape: Shape) => {
     if (!calling) return;
-    busy.current = true;
     const card = calling;
     setCalling(null);
     resolvePlay(card, 0, shape);
@@ -204,87 +208,97 @@ export function WhotTable({
 
   const humanMarket = () => {
     if (turn !== 0 || winner !== null || busy.current || calling) return;
-    busy.current = true;
+    const pending = pendingRef.current;
     if (pending) {
-      giveCards(0, draw(pending.amount));
+      hands.current[0] = [...hands.current[0], ...draw(pending.amount)];
       pushLog(`${seats[0].name} drew ${pending.amount}`, 0);
-      setPending(null);
+      pendingRef.current = null;
     } else {
-      giveCards(0, draw(1));
+      hands.current[0] = [...hands.current[0], ...draw(1)];
       pushLog(`${seats[0].name} went to market`, 0);
     }
     setTurn(nextIndex(0));
-    busy.current = false;
+    sync();
   };
 
-  // bot turns
+  // ---- bot turns ----
   useEffect(() => {
     if (winner !== null) return;
     if (!seats[turn]?.isBot) return;
     const t = setTimeout(() => {
       busy.current = true;
-      const me = players[turn];
-      if (!me) {
-        busy.current = false;
-        return;
-      }
+      const hand = hands.current[turn];
+      const pending = pendingRef.current;
+
       if (pending) {
-        const match = me.hand.find((c) => c.num === pending.num);
+        const match = hand.find((c) => c.num === pending.num);
         if (match) {
-          setPlayers((ps) => ps.map((p, i) => (i === turn ? { ...p, hand: p.hand.filter((c) => c.id !== match.id) } : p)));
-          setPile((p) => [...p, match]);
-          setActiveShape(match.shape);
-          setPending({ amount: pending.amount + (pending.num === 2 ? 2 : 3), num: pending.num });
+          hands.current[turn] = hand.filter((c) => c.id !== match.id);
+          pile.current = [...pile.current, match];
+          active.current = match.shape;
           pushLog(`${seats[turn].name} stacked ${match.num}`, turn);
+          if (hands.current[turn].length === 0) {
+            setWinner(turn);
+            sync();
+            onEnd(seats[turn].name, false);
+            busy.current = false;
+            return;
+          }
+          pendingRef.current = { amount: pending.amount + (pending.num === 2 ? 2 : 3), num: pending.num };
           setTurn(nextIndex(turn));
         } else {
-          giveCards(turn, draw(pending.amount));
+          hands.current[turn] = [...hand, ...draw(pending.amount)];
           pushLog(`${seats[turn].name} drew ${pending.amount}`, turn);
-          setPending(null);
+          pendingRef.current = null;
           setTurn(nextIndex(turn));
         }
         busy.current = false;
+        sync();
         return;
       }
 
-      const legal = me.hand.filter((c) => isLegal(c, topNum, activeShape));
+      const legal = hand.filter((c) => isLegal(c, top()?.num ?? 0, active.current));
       const nonWhot = legal.filter((c) => c.shape !== "whot");
       let choice: Card | undefined;
       if (nonWhot.length) {
-        const special = nonWhot.find((c) => [1, 2, 5, 8, 14].includes(c.num));
+        const special = nonWhot.find((c) => specials.has(c.num));
         choice = special ?? nonWhot.sort((a, b) => b.num - a.num)[0];
       } else {
         choice = legal[0];
       }
       if (!choice) {
-        giveCards(turn, draw(1));
+        hands.current[turn] = [...hand, ...draw(1)];
         pushLog(`${seats[turn].name} went to market`, turn);
         setTurn(nextIndex(turn));
         busy.current = false;
+        sync();
         return;
       }
       if (choice.shape === "whot") {
         const counts: Record<string, number> = {};
-        me.hand.forEach((c) => c.shape !== "whot" && (counts[c.shape] = (counts[c.shape] ?? 0) + 1));
+        hand.forEach((c) => c.shape !== "whot" && (counts[c.shape] = (counts[c.shape] ?? 0) + 1));
         const best = (Object.entries(counts).sort((a, b) => b[1] - a[1])[0]?.[0] ?? "circle") as Shape;
         resolvePlay(choice, turn, best);
       } else {
         resolvePlay(choice, turn);
       }
+      busy.current = false;
     }, 640);
     return () => clearTimeout(t);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [turn, winner, pending, players, topNum, activeShape]);
+  }, [turn, winner]);
 
-  const you = players[0];
+  const youHand = hands.current[0] ?? [];
+  const pending = pendingRef.current;
   const youLegal = useMemo(() => {
-    if (turn !== 0 || !you) return new Set<string>();
+    if (turn !== 0) return new Set<string>();
     const s = new Set<string>();
-    you.hand.forEach((c) => {
-      if (pending ? c.num === pending.num : isLegal(c, topNum, activeShape)) s.add(c.id);
+    youHand.forEach((c) => {
+      if (pending ? c.num === pending.num : isLegal(c, top()?.num ?? 0, active.current)) s.add(c.id);
     });
     return s;
-  }, [you, turn, pending, topNum, activeShape]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [turn, youHand, pending]);
 
   const fan = (i: number, total: number) => {
     const spread = Math.min(7, 40 / Math.max(1, total));
@@ -292,24 +306,25 @@ export function WhotTable({
     return { rot: (i - mid) * spread, y: Math.abs(i - mid) * 4 };
   };
 
-  if (!you) return null;
-  const opponents = players.slice(1);
+  if (hands.current.length === 0) return null;
+  const t = top();
 
   return (
-    <div className="mx-auto flex min-h-screen w-full max-w-md flex-col px-4 py-4">
+    <div className="mx-auto flex min-h-[100dvh] w-full max-w-md flex-col overflow-x-hidden px-4 py-4">
       <p className="text-center text-xs font-semibold uppercase tracking-wider text-ink-faint">{title}</p>
 
       {/* opponents */}
       <div className="mt-3 flex flex-wrap items-start justify-center gap-2">
-        {opponents.map((op, oi) => {
+        {seats.slice(1).map((op, oi) => {
           const pi = oi + 1;
-          const active = turn === pi && winner === null;
+          const isActive = turn === pi && winner === null;
+          const hand = hands.current[pi] ?? [];
           return (
             <div
               key={pi}
               className={cn(
                 "flex flex-col items-center gap-1 rounded-2xl px-3 py-2 transition-all",
-                active ? "glass ring-1 ring-teal/40" : "bg-white/[0.02]"
+                isActive ? "glass ring-1 ring-teal/40" : "bg-white/[0.02]"
               )}
             >
               <div className="flex items-center gap-2">
@@ -318,11 +333,11 @@ export function WhotTable({
                 </span>
                 <div className="leading-tight">
                   <p className="text-[11px] font-bold text-ink">{op.name}</p>
-                  <p className="text-[9px] text-ink-faint">{op.hand.length} cards</p>
+                  <p className="text-[9px] text-ink-faint">{hand.length} cards</p>
                 </div>
               </div>
               <div className="flex -space-x-3.5">
-                {op.hand.slice(0, 6).map((c, i) => (
+                {hand.slice(0, 6).map((c, i) => (
                   <div key={c.id} className="h-8 w-[22px]" style={{ transform: `rotate(${(i - 2.5) * 5}deg)` }}>
                     <WhotCardBack />
                   </div>
@@ -340,21 +355,21 @@ export function WhotTable({
             <div className="absolute inset-0 translate-x-1 translate-y-1"><WhotCardBack /></div>
             <div className="absolute inset-0"><WhotCardBack /></div>
           </div>
-          <span className="text-[10px] font-semibold text-ink-dim">Market · {market.length}</span>
+          <span className="text-[10px] font-semibold text-ink-dim">Market · {market.current.length}</span>
         </button>
 
         <div className="flex flex-col items-center gap-1.5">
           <div className="relative h-24 w-16">
             <AnimatePresence mode="popLayout">
-              {top && (
-                <motion.div key={top.id} initial={{ scale: 0.6, opacity: 0, rotate: -12 }} animate={{ scale: 1, opacity: 1, rotate: 0 }} exit={{ opacity: 0 }} transition={{ type: "spring", stiffness: 300, damping: 22 }} className="absolute inset-0">
-                  <WhotCardFace shape={top.shape} num={top.num} />
+              {t && (
+                <motion.div key={t.id} initial={{ scale: 0.6, opacity: 0, rotate: -12 }} animate={{ scale: 1, opacity: 1, rotate: 0 }} exit={{ opacity: 0 }} transition={{ type: "spring", stiffness: 300, damping: 22 }} className="absolute inset-0">
+                  <WhotCardFace shape={t.shape} num={t.num} />
                 </motion.div>
               )}
             </AnimatePresence>
           </div>
           <span className="flex items-center gap-1 text-[10px] font-semibold text-ink-dim">
-            <WhotShape shape={activeShape} size={12} /> {SHAPE_LABEL[activeShape]}
+            <WhotShape shape={active.current} size={12} /> {SHAPE_LABEL[active.current]}
           </span>
         </div>
       </div>
@@ -362,16 +377,16 @@ export function WhotTable({
       {/* status */}
       <div className="mb-2 text-center">
         {pending ? (
-          <span className="rounded-full bg-rose/15 px-3 py-1 text-xs font-bold text-rose">Pick {pending.amount} or stack a {pending.num}</span>
+          <span className="rounded-full bg-rose/15 px-3 py-1 text-xs font-bold text-rose">Draw {pending.amount} or stack a {pending.num}</span>
         ) : (
-          <span className="text-sm text-ink-dim">{turn === 0 ? "Your move" : `${seats[turn]?.name} is playing`}</span>
+          <span className="text-sm text-ink-dim">{turn === 0 ? "Your turn" : `${seats[turn]?.name} plays`}</span>
         )}
       </div>
 
       {/* your hand */}
       <div className="relative flex h-32 items-end justify-center">
-        {you.hand.map((c, i) => {
-          const { rot, y } = fan(i, you.hand.length);
+        {youHand.map((c, i) => {
+          const { rot, y } = fan(i, youHand.length);
           const legal = youLegal.has(c.id);
           return (
             <motion.button

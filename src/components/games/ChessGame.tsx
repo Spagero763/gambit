@@ -184,7 +184,7 @@ export function ChessGame({ difficulty = "normal" }: { difficulty?: Difficulty }
   const aiCaptured = capturedOf(game, "w").list;
 
   return (
-    <div className="mx-auto flex min-h-screen w-full max-w-md flex-col px-4 py-4">
+    <div className="mx-auto flex min-h-[100dvh] w-full max-w-md flex-col px-4 py-4">
       <div className="flex items-center justify-between">
         <Link href="/" className="inline-flex items-center gap-2 rounded-full glass px-3 py-1.5 text-sm text-ink-dim">
           <ArrowLeft className="h-4 w-4" /> Lobby

@@ -70,3 +70,32 @@ export const SHAPE_LABEL: Record<Shape, string> = {
   star: "Star",
   whot: "Whot",
 };
+
+/** House rules a player can toggle before a game. */
+export interface WhotRules {
+  holdOn: boolean; // 1 = play again
+  pickTwo: boolean; // 2 = next draws two (stackable)
+  pickThree: boolean; // 5 = next draws three (stackable)
+  suspension: boolean; // 8 = skip next
+  generalMarket: boolean; // 14 = all others draw one, play again
+}
+
+export const DEFAULT_RULES: WhotRules = {
+  holdOn: true,
+  pickTwo: true,
+  pickThree: true,
+  suspension: true,
+  generalMarket: true,
+};
+
+/** The action numbers currently active given a rules config. */
+export function activeSpecials(rules: WhotRules): Set<number> {
+  const s = new Set<number>();
+  if (rules.holdOn) s.add(1);
+  if (rules.pickTwo) s.add(2);
+  if (rules.pickThree) s.add(5);
+  if (rules.suspension) s.add(8);
+  if (rules.generalMarket) s.add(14);
+  return s;
+}
+
