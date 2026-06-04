@@ -1,6 +1,8 @@
 "use client";
 
 import { motion } from "framer-motion";
+import { Settings as SettingsIcon } from "lucide-react";
+import Link from "next/link";
 import { Logo } from "./Logo";
 import { WalletPill } from "./WalletPill";
 
@@ -14,7 +16,16 @@ export function Header() {
     >
       <div className="absolute inset-x-0 top-0 h-full -z-10 bg-void/60 backdrop-blur-md mask-fade-b" />
       <Logo />
-      <WalletPill />
+      <div className="flex items-center gap-2">
+        <Link
+          href="/settings"
+          aria-label="Settings"
+          className="grid h-10 w-10 place-items-center rounded-full glass text-ink-dim transition-colors hover:text-ink"
+        >
+          <SettingsIcon className="h-4 w-4" />
+        </Link>
+        <WalletPill />
+      </div>
     </motion.header>
   );
 }

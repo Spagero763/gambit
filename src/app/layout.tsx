@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Sora, Space_Grotesk, JetBrains_Mono } from "next/font/google";
 import { Providers } from "./providers";
+import { MusicPlayer } from "@/components/audio/MusicPlayer";
 import "./globals.css";
 
 const sans = Sora({
@@ -46,7 +47,10 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${sans.variable} ${display.variable} ${mono.variable}`}>
       <body className="grain min-h-screen font-sans antialiased">
-        <Providers>{children}</Providers>
+        <Providers>
+          {children}
+          <MusicPlayer />
+        </Providers>
       </body>
     </html>
   );
