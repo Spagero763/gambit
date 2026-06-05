@@ -19,7 +19,6 @@ body {
 
 body {
   min-height: 100dvh;
-  overscroll-behavior-y: none;
   font-feature-settings: "ss01", "cv01", "cv11";
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
