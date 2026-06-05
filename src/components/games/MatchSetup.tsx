@@ -31,14 +31,14 @@ export function MatchSetup({
   onStart,
 }: {
   game: Game;
-  onStart: (difficulty: Difficulty) => void;
+  onStart: (difficulty: Difficulty, stake?: { matchId: bigint; you: `0x${string}` }) => void;
 }) {
   const [mode, setMode] = useState<Mode>("free");
   const [stake, setStake] = useState<number>(game.minStake);
   const [difficulty, setDifficulty] = useState<Difficulty>("normal");
   const [joinId, setJoinId] = useState("");
   const [copied, setCopied] = useState(false);
-  const { isConnected } = useAccount();
+  const { address, isConnected } = useAccount();
   const { connect } = useConnect();
   const { switchChain } = useSwitchChain();
   const { createMatch, joinMatch, step, error, matchId, ready, onActiveChain } = useStakeMatch();
@@ -219,7 +219,7 @@ export function MatchSetup({
                   <>
                     <p className="text-sm font-bold text-teal">Opponent joined</p>
                     <button
-                      onClick={() => onStart(difficulty)}
+                      onClick={() => onStart(difficulty, matchId && address ? { matchId, you: address } : undefined)}
                       className="mt-3 w-full rounded-xl bg-gradient-to-r from-teal-deep to-teal py-3 text-sm font-bold text-void shadow-glow-teal"
                     >
                       Start match
@@ -268,7 +268,7 @@ export function MatchSetup({
                     onClick={async () => {
                       if (!joinId) return;
                       const ok = await joinMatch(BigInt(joinId), stake);
-                      if (ok) onStart(difficulty);
+                      if (ok && address) onStart(difficulty, { matchId: BigInt(joinId), you: address });
                     }}
                     disabled={busy || !joinId}
                     className="rounded-xl bg-white/10 px-4 py-2.5 text-sm font-bold text-ink disabled:opacity-50"
