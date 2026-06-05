@@ -10,8 +10,16 @@ import { SnakesLadders } from "./snakes/SnakesLadders";
 import { WhotGame } from "./whot/WhotGame";
 import { GameCover } from "@/components/art/GameCover";
 import { Difficulty } from "@/lib/difficulty";
+import type { StakeCtx } from "./PlayFlow";
 
-export function GameStage({ game, difficulty = "normal" }: { game: Game; difficulty?: Difficulty }) {
+export function GameStage({
+  game,
+  difficulty = "normal",
+}: {
+  game: Game;
+  difficulty?: Difficulty;
+  stake?: StakeCtx;
+}) {
   switch (game.slug) {
     case "tic-tac-toe":
       return <TicTacToe difficulty={difficulty} />;
