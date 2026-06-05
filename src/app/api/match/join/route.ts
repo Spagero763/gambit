@@ -1,0 +1,57 @@
+import { NextRequest, NextResponse } from "next/server";
+import { supabaseAdmin } from "@/lib/supabase";
+import { newTtt } from "@/lib/server/ttt";
+
+export const runtime = "nodejs";
+
+/**
+ * Mark a match as joined and initialise authoritative game state. Called after
+ * the opponent's on-chain joinMatch succeeds.
+ *
+ * Body: { id, opponent }
+ */
+export async function POST(req: NextRequest) {
+  try {
+    const { id, opponent } = await req.json();
+    if (id === undefined || !opponent) {
+      return NextResponse.json({ error: "Bad request" }, { status: 400 });
+    }
+    const db = supabaseAdmin();
+
+    const { data: match, error: readErr } = await db
+      .from("matches")
+      .select("*")
+      .eq("id", Number(id))
+      .single();
+    if (readErr || !match) {
+      return NextResponse.json({ error: "Match not found" }, { status: 404 });
+    }
+    if (match.status !== "open") {
+      return NextResponse.json({ error: "Match not open" }, { status: 409 });
+    }
+
+    const opp = String(opponent).toLowerCase();
+    if (opp === match.creator) {
+      return NextResponse.json({ error: "Cannot join your own match" }, { status: 400 });
+    }
+
+    // initialise per-game state (tic-tac-toe for now)
+    let state: unknown = {};
+    let turn: string | null = null;
+    if (match.game === "tic-tac-toe") {
+      const s = newTtt(match.creator, opp);
+      state = s;
+      turn = s.turn;
+    }
+
+    const { error: upErr } = await db
+      .from("matches")
+      .update({ opponent: opp, status: "active", state, turn })
+      .eq("id", Number(id));
+    if (upErr) throw upErr;
+
+    return NextResponse.json({ ok: true });
+  } catch (e: any) {
+    return NextResponse.json({ error: e?.message ?? "Failed" }, { status: 500 });
+  }
+}
