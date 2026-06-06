@@ -8,6 +8,7 @@ import { supabase } from "@/lib/supabase";
 import { submitMove } from "@/lib/matchClient";
 import { Mark } from "./xo/Mark";
 import { SettleOverlay } from "./SettleOverlay";
+import { TimeoutClaim } from "./TimeoutClaim";
 import { cn } from "@/lib/cn";
 
 interface MatchRow {
@@ -21,6 +22,8 @@ interface MatchRow {
   winner: string | null;
   settle_tx: string | null;
   settle_error: string | null;
+  turn: string | null;
+  updated_at: string;
 }
 
 const EXPLORER: Record<number, string> = {
@@ -121,6 +124,8 @@ export function StakedTicTacToe({ matchId, you }: { matchId: bigint; you: `0x${s
       </div>
 
       <p className="mt-3 text-center text-sm text-ink-dim">{status}</p>
+
+      <TimeoutClaim matchId={matchId} me={me} turn={match?.state?.turn} updatedAt={match?.updated_at} status={match?.status} />
 
       {/* board */}
       <div className="relative mx-auto mt-4 aspect-square w-full max-w-[330px] rounded-3xl glass p-3 shadow-card">

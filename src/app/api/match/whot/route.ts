@@ -30,6 +30,7 @@ function view(match: any, priv: WhotPrivate | null, player: string) {
     order: pub.order ?? [],
     yourHand: priv?.hands?.[addr] ?? [],
     settleError: (match.settle_error as string | null) ?? null,
+    updatedAt: (match.updated_at as string | null) ?? null,
   };
 }
 
