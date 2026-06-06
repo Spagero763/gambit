@@ -28,6 +28,28 @@ function setToken(address: string, token: string) {
   if (typeof window !== "undefined") localStorage.setItem(tokenKey(address), token);
 }
 
+export function hasToken(address?: string | null): boolean {
+  return !!(address && getToken(address));
+}
+
+/** Sign in (prove wallet ownership) to get a session token for playing. */
+export async function signIn(
+  address: string,
+  signMessageAsync: (args: { message: string }) => Promise<string>
+): Promise<string> {
+  const message = profileMessage(address);
+  const signature = await signMessageAsync({ message });
+  const res = await fetch("/api/auth", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ address, message, signature }),
+  });
+  const json = await res.json();
+  if (!res.ok) throw new Error(json.error ?? "Sign-in failed");
+  setToken(address, json.token);
+  return json.token;
+}
+
 export async function fetchProfile(address: string): Promise<ServerProfile | null> {
   try {
     const res = await fetch(`/api/profile?address=${address.toLowerCase()}`);

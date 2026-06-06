@@ -4,13 +4,13 @@ import { useEffect, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { ArrowLeft, Bot, Swords, Wallet, Loader2, ShieldCheck, Copy, Check, AlertTriangle } from "lucide-react";
 import Link from "next/link";
-import { useAccount, useConnect, useSwitchChain } from "wagmi";
+import { useAccount, useConnect, useSwitchChain, useSignMessage } from "wagmi";
 import { injected } from "wagmi/connectors";
 import { Game } from "@/lib/games";
 import { GameCover } from "@/components/art/GameCover";
 import { Difficulty, DIFFICULTIES, SUPPORTS_DIFFICULTY } from "@/lib/difficulty";
 import { useStakeMatch, useMatchState } from "@/hooks/useStakeMatch";
-import { useProfile } from "@/lib/profile";
+import { hasToken, signIn } from "@/lib/profile";
 import { registerMatch, joinServerMatch } from "@/lib/matchClient";
 import { ACTIVE_CHAIN_ID } from "@/lib/wagmi";
 import { parseUnits } from "viem";
@@ -46,7 +46,11 @@ export function MatchSetup({
   const { connect } = useConnect();
   const { switchChain } = useSwitchChain();
   const { createMatch, joinMatch, step, error, matchId, ready, onActiveChain } = useStakeMatch();
-  const { hasProfile } = useProfile();
+  const { signMessageAsync } = useSignMessage();
+  const [authed, setAuthed] = useState(false);
+  useEffect(() => {
+    setAuthed(hasToken(address));
+  }, [address]);
   const { data: created } = useMatchState(matchId ?? undefined);
   const hasDifficulty = SUPPORTS_DIFFICULTY.has(game.slug);
 
@@ -269,13 +273,26 @@ export function MatchSetup({
               >
                 <AlertTriangle className="h-4 w-4" /> Switch network to play
               </button>
-            ) : !hasProfile ? (
-              <Link
-                href="/profile"
-                className="btn-primary mt-4 flex w-full items-center justify-center gap-2 rounded-2xl py-3.5 text-sm shadow-glow"
-              >
-                <ShieldCheck className="h-4 w-4" /> Create a profile to stake
-              </Link>
+            ) : !authed ? (
+              <div className="mt-4">
+                <button
+                  onClick={async () => {
+                    if (!address) return;
+                    try {
+                      await signIn(address, (a) => signMessageAsync({ message: a.message }));
+                      setAuthed(true);
+                    } catch {
+                      /* user rejected or failed; button stays */
+                    }
+                  }}
+                  className="btn-primary flex w-full items-center justify-center gap-2 rounded-2xl py-3.5 text-sm shadow-glow"
+                >
+                  <ShieldCheck className="h-4 w-4" /> Sign in to stake (free, no gas)
+                </button>
+                <p className="mt-2 text-center text-[11px] text-ink-faint">
+                  One free signature proves it&apos;s you — so only you can play your moves.
+                </p>
+              </div>
             ) : matchId ? (
               // room created: show id to share + opponent status
               <div className="mt-4 rounded-2xl border border-line bg-void-700 p-4 text-center shadow-card">
