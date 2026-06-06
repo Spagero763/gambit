@@ -4,6 +4,7 @@ import { applyTtt, TttState } from "@/lib/server/ttt";
 import { applyChessMove, ChessState } from "@/lib/server/chess";
 import { applySnakesRoll, SnakesState } from "@/lib/server/snakes";
 import { settleOnChain, relayerConfigured } from "@/lib/server/settle";
+import { verifyToken } from "@/lib/server/profileToken";
 
 interface MoveOutcome {
   state: { turn: string };
@@ -23,9 +24,14 @@ export const runtime = "nodejs";
  */
 export async function POST(req: NextRequest) {
   try {
-    const { id, player, move } = await req.json();
+    const { id, player, move, token } = await req.json();
     if (id === undefined || !player || !move) {
       return NextResponse.json({ error: "Bad request" }, { status: 400 });
+    }
+    // authenticate: the caller must hold a session token for `player`, so an
+    // opponent can't submit moves on your behalf.
+    if (!token || verifyToken(String(token)) !== String(player).toLowerCase()) {
+      return NextResponse.json({ error: "Sign in to play (authentication required)" }, { status: 401 });
     }
     const db = supabaseAdmin();
 
