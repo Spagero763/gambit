@@ -11,7 +11,7 @@ export const runtime = "nodejs";
  */
 export async function POST(req: NextRequest) {
   try {
-    const { id, game, chainId, stake, creator } = await req.json();
+    const { id, game, chainId, stake, creator, token, decimals } = await req.json();
     if (id === undefined || !game || !creator) {
       return NextResponse.json({ error: "Bad request" }, { status: 400 });
     }
@@ -24,6 +24,8 @@ export async function POST(req: NextRequest) {
         stake: String(stake),
         creator: String(creator).toLowerCase(),
         status: "open",
+        token: token ? String(token).toLowerCase() : null,
+        decimals: Number.isFinite(Number(decimals)) ? Number(decimals) : 18,
       },
       { onConflict: "id", ignoreDuplicates: true }
     );
