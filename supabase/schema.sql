@@ -99,3 +99,14 @@ create policy "profiles readable" on profiles for select using (true);
 drop trigger if exists profiles_touch on profiles;
 create trigger profiles_touch before update on profiles
   for each row execute function touch_updated_at();
+
+-- match_private: hidden game state (e.g. Whot hands + market). RLS denies all
+-- client reads; ONLY the server (service_role, which bypasses RLS) ever reads
+-- or writes it. Clients receive a redacted, per-player view via the API.
+create table if not exists match_private (
+  match_id  bigint primary key references matches (id) on delete cascade,
+  state     jsonb not null default '{}'
+);
+
+alter table match_private enable row level security;
+-- (intentionally NO select/insert/update policies => anon clients get nothing)
