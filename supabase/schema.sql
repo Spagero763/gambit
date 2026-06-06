@@ -92,11 +92,13 @@ create table if not exists profiles (
   last_played  text,                         -- YYYY-MM-DD
   played       integer not null default 0,
   wins         integer not null default 0,
+  referred_by  text,                          -- wallet that invited them (set once)
   created_at   timestamptz not null default now(),
   updated_at   timestamptz not null default now()
 );
 
 create index if not exists profiles_xp_idx on profiles (xp desc);
+alter table profiles add column if not exists referred_by text;
 
 alter table profiles enable row level security;
 drop policy if exists "profiles readable" on profiles;

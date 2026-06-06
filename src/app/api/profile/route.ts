@@ -34,7 +34,7 @@ export async function GET(req: NextRequest) {
 /** POST /api/profile  { address, message, signature, profile } -> { profile, token } */
 export async function POST(req: NextRequest) {
   try {
-    const { address, message, signature, profile } = await req.json();
+    const { address, message, signature, profile, referredBy } = await req.json();
     if (!address || !message || !signature) {
       return NextResponse.json({ error: "Bad request" }, { status: 400 });
     }
@@ -48,6 +48,16 @@ export async function POST(req: NextRequest) {
     }
 
     const img = typeof profile?.avatarImage === "string" && profile.avatarImage.length < 120000 ? profile.avatarImage : null;
+    const db = supabaseAdmin();
+
+    // referral is set once, on first creation, and never to yourself
+    const { data: existing } = await db.from("profiles").select("referred_by").eq("address", addr).maybeSingle();
+    let referred_by: string | null = (existing?.referred_by as string | null) ?? null;
+    if (!referred_by && typeof referredBy === "string") {
+      const r = referredBy.toLowerCase();
+      if (r !== addr && /^0x[0-9a-f]{40}$/.test(r)) referred_by = r;
+    }
+
     const row = {
       address: addr,
       name: String(profile?.name ?? "").slice(0, 24),
@@ -58,9 +68,9 @@ export async function POST(req: NextRequest) {
       last_played: typeof profile?.lastPlayed === "string" ? profile.lastPlayed.slice(0, 10) : null,
       played: clampInt(profile?.played),
       wins: clampInt(profile?.wins),
+      referred_by,
     };
 
-    const db = supabaseAdmin();
     const { data, error } = await db.from("profiles").upsert(row, { onConflict: "address" }).select("*").maybeSingle();
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
