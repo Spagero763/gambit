@@ -74,6 +74,7 @@ export interface WhotView {
   counts: Record<string, number>;
   order: string[];
   yourHand: Card[];
+  updatedAt: string | null;
 }
 
 export type WhotAction = { type: "play"; cardId: string; called?: Shape } | { type: "draw" };
@@ -102,6 +103,20 @@ export async function retrySettle(id: bigint): Promise<{ settled: boolean; settl
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ id: id.toString() }),
+  });
+  return res.json();
+}
+
+/** Win-by-forfeit window: if the player to move is idle this long, the
+ *  opponent may claim the win. Mirrors the server's TURN_TIMEOUT_MS. */
+export const TURN_TIMEOUT_MS = 120_000;
+
+/** Claim the win when the opponent has abandoned (timed out). */
+export async function claimWin(id: bigint, player: string): Promise<{ ok: boolean; settled?: boolean; error?: string; remainingMs?: number }> {
+  const res = await fetch("/api/match/claim", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ id: id.toString(), player }),
   });
   return res.json();
 }
