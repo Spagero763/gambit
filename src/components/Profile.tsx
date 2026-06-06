@@ -28,6 +28,7 @@ interface MatchRow {
   status: string;
   winner: string | null;
   created_at: string;
+  decimals: number | null;
 }
 
 interface Played {
@@ -68,7 +69,7 @@ export function Profile() {
     (async () => {
       const { data } = await supabase!
         .from("matches")
-        .select("id,game,stake,creator,opponent,status,winner,created_at")
+        .select("id,game,stake,creator,opponent,status,winner,created_at,decimals")
         .or(`creator.eq.${me},opponent.eq.${me}`)
         .in("status", ["settling", "settled"])
         .order("created_at", { ascending: false })
@@ -83,7 +84,7 @@ export function Profile() {
   const played = useMemo<Played[]>(() => {
     if (!rows || !me) return [];
     return rows.map((m) => {
-      const stake = Number(formatUnits(BigInt(m.stake || "0"), 18));
+      const stake = Number(formatUnits(BigInt(m.stake || "0"), m.decimals ?? 18));
       const isDraw = !m.winner;
       const won = m.winner?.toLowerCase() === me;
       const delta = isDraw ? 0 : won ? +(stake * (1 - FEE)).toFixed(4) : -stake;

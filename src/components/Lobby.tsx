@@ -8,6 +8,7 @@ import { useAccount } from "wagmi";
 import { supabase } from "@/lib/supabase";
 import { GAMES } from "@/lib/games";
 import { GameCover } from "@/components/art/GameCover";
+import { symbolForToken } from "@/lib/tokens";
 import { cn } from "@/lib/cn";
 
 const GAME = Object.fromEntries(GAMES.map((g) => [g.slug, g]));
@@ -19,6 +20,8 @@ interface Room {
   creator: string;
   chain_id: number;
   created_at: string;
+  token: string | null;
+  decimals: number | null;
 }
 
 function short(a: string) {
@@ -47,7 +50,7 @@ export function Lobby() {
     setRefreshing(true);
     const { data } = await supabase
       .from("matches")
-      .select("id,game,stake,creator,chain_id,created_at")
+      .select("id,game,stake,creator,chain_id,created_at,token,decimals")
       .eq("status", "open")
       .order("created_at", { ascending: false })
       .limit(50);
@@ -104,12 +107,13 @@ export function Lobby() {
         <ul className="mt-4 space-y-2.5">
           {rooms.map((r) => {
             const g = GAME[r.game];
-            const stake = Number(formatUnits(BigInt(r.stake || "0"), 18));
+            const stake = Number(formatUnits(BigInt(r.stake || "0"), r.decimals ?? 18));
+            const sym = symbolForToken(r.token);
             const mine = r.creator?.toLowerCase() === me;
             return (
               <li key={r.id}>
                 <Link
-                  href={`/play/${r.game}?room=${r.id}&stake=${stake}`}
+                  href={`/play/${r.game}?room=${r.id}&stake=${stake}&token=${r.token ?? ""}`}
                   className="flex items-center gap-3 rounded-2xl border border-line bg-void-700 p-3 shadow-card transition-colors hover:border-line-strong"
                 >
                   <span className="h-12 w-16 shrink-0 overflow-hidden rounded-lg border border-line">
@@ -124,7 +128,7 @@ export function Lobby() {
                   <div className="text-right">
                     <p className="nums flex items-center gap-1 text-sm font-semibold text-teal">
                       <Coins className="h-3.5 w-3.5" />
-                      {stake.toFixed(2)}
+                      {stake.toFixed(2)} <span className="text-[10px] text-ink-faint">{sym}</span>
                     </p>
                     <span className="text-[10px] text-ink-faint">{mine ? "open" : "join →"}</span>
                   </div>
