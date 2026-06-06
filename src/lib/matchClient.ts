@@ -65,6 +65,7 @@ export interface WhotView {
   status: string;
   winner: string | null;
   settleTx: string | null;
+  settleError: string | null;
   chainId: number;
   turn: string | null;
   top: Card | null;
@@ -93,4 +94,14 @@ export async function whotAction(id: bigint, player: string, action: WhotAction)
   const data = await res.json();
   if (!res.ok) throw new Error(data.error ?? "move failed");
   return data;
+}
+
+/** Re-drive a stuck on-chain settlement (payout). */
+export async function retrySettle(id: bigint): Promise<{ settled: boolean; settleTx?: string; error?: string }> {
+  const res = await fetch("/api/match/settle", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ id: id.toString() }),
+  });
+  return res.json();
 }
