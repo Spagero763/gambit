@@ -11,6 +11,7 @@ import {
 } from "@/lib/profile";
 import { useProgress, hydrateProgress } from "@/lib/progress";
 import { loadSettings, saveSettings } from "@/lib/settings";
+import { captureRef } from "@/lib/share";
 
 /**
  * Mounts once in the root layout. On wallet connect it loads the saved profile
@@ -20,6 +21,11 @@ import { loadSettings, saveSettings } from "@/lib/settings";
 export function ProfileSync() {
   const { address } = useAccount();
   const progress = useProgress();
+
+  // remember who invited this visitor (?ref=0x…) until they sign up
+  useEffect(() => {
+    captureRef();
+  }, []);
 
   // load + hydrate on connect
   useEffect(() => {
