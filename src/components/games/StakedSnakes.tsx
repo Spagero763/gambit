@@ -7,6 +7,7 @@ import { ArrowLeft, Loader2, ExternalLink, Dices } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { submitMove } from "@/lib/matchClient";
 import { SNAKES_LADDERS, centerFrac } from "@/lib/games/snakesLayout";
+import { SettleOverlay } from "./SettleOverlay";
 import { cn } from "@/lib/cn";
 
 interface SnakesState {
@@ -26,6 +27,7 @@ interface MatchRow {
   state: SnakesState;
   winner: string | null;
   settle_tx: string | null;
+  settle_error: string | null;
 }
 
 const EXPLORER: Record<number, string> = {
@@ -183,37 +185,14 @@ export function StakedSnakes({ matchId, you }: { matchId: bigint; you: `0x${stri
               animate={{ opacity: 1 }}
               className="absolute inset-0 z-30 grid place-items-center rounded-3xl bg-void/80 backdrop-blur-sm"
             >
-              <div className="text-center">
-                <p className={cn("text-3xl font-black tracking-tight", draw ? "text-amber" : iWon ? "text-teal" : "text-rose")}>
-                  {draw ? "Draw" : iWon ? "You win" : "You lose"}
-                </p>
-                <p className="mt-1 text-sm text-ink-dim">
-                  {match?.status === "settling" ? (
-                    <span className="inline-flex items-center gap-1.5">
-                      <Loader2 className="h-3.5 w-3.5 animate-spin" /> Paying out
-                    </span>
-                  ) : iWon ? (
-                    "Pot paid to your wallet"
-                  ) : (
-                    "Pot paid to opponent"
-                  )}
-                </p>
-                {match?.settle_tx && (
-                  <a
-                    href={`${EXPLORER[match.chain_id] ?? ""}${match.settle_tx}`}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="mt-3 inline-flex items-center gap-1.5 rounded-full bg-white/10 px-3 py-1.5 text-xs font-semibold text-ink"
-                  >
-                    View payout <ExternalLink className="h-3 w-3" />
-                  </a>
-                )}
-                <div className="mt-4">
-                  <Link href="/" className="btn-primary inline-block rounded-xl px-5 py-2.5 text-sm shadow-glow">
-                    Back to lobby
-                  </Link>
-                </div>
-              </div>
+              <SettleOverlay
+                result={iWon ? "win" : "lose"}
+                status={match?.status ?? "settling"}
+                settleTx={match?.settle_tx}
+                settleError={match?.settle_error}
+                chainId={match?.chain_id}
+                matchId={matchId}
+              />
             </motion.div>
           )}
         </AnimatePresence>
