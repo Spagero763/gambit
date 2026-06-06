@@ -5,15 +5,16 @@ import { settleOnChain, relayerConfigured } from "@/lib/server/settle";
 export const runtime = "nodejs";
 
 /**
- * Re-drive settlement for a match stuck in `settling` (e.g. the relayer was out
- * of gas, or settling on the wrong chain). Idempotent-ish: succeeds once the
- * on-chain declareResult lands; otherwise records the latest error.
+ * Re-drive settlement for a stuck match.
+ *   - normal:  re-runs the recorded result (winner takes the pot).
+ *   - refund:  pass { refund: true } to refund BOTH players (winner = none).
+ *              Use for draws or any match that's stuck without a clear winner.
  *
- * Body: { id }
+ * Body: { id, refund? }
  */
 export async function POST(req: NextRequest) {
   try {
-    const { id } = await req.json();
+    const { id, refund } = await req.json();
     if (id === undefined) return NextResponse.json({ error: "Bad request" }, { status: 400 });
     const db = supabaseAdmin();
 
@@ -23,17 +24,21 @@ export async function POST(req: NextRequest) {
     if (match.status === "settled") {
       return NextResponse.json({ ok: true, settled: true, settleTx: match.settle_tx });
     }
-    if (match.status !== "settling") {
+    // normal retry needs a match already in `settling`; a forced refund can also
+    // recover one stuck in `active` (e.g. a draw that never finalised).
+    const recoverable = match.status === "settling" || (refund && match.status === "active");
+    if (!recoverable) {
       return NextResponse.json({ error: "Match is not awaiting settlement" }, { status: 409 });
     }
     if (!relayerConfigured()) {
       return NextResponse.json({ error: "Relayer not configured" }, { status: 500 });
     }
 
+    const winner = refund ? null : match.winner ?? null;
     try {
-      const settleTx = await settleOnChain(BigInt(id), match.winner ?? null, Number(match.chain_id));
-      await db.from("matches").update({ status: "settled", settle_tx: settleTx, settle_error: null }).eq("id", Number(id));
-      return NextResponse.json({ ok: true, settled: true, settleTx });
+      const settleTx = await settleOnChain(BigInt(id), winner, Number(match.chain_id));
+      await db.from("matches").update({ status: "settled", settle_tx: settleTx, winner, settle_error: null }).eq("id", Number(id));
+      return NextResponse.json({ ok: true, settled: true, refunded: !winner, settleTx });
     } catch (e: any) {
       const settle_error = String(e?.shortMessage ?? e?.message ?? "settle failed").slice(0, 300);
       await db.from("matches").update({ settle_error }).eq("id", Number(id));
