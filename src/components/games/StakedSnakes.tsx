@@ -8,6 +8,7 @@ import { supabase } from "@/lib/supabase";
 import { submitMove } from "@/lib/matchClient";
 import { SNAKES_LADDERS, centerFrac } from "@/lib/games/snakesLayout";
 import { SettleOverlay } from "./SettleOverlay";
+import { TimeoutClaim } from "./TimeoutClaim";
 import { cn } from "@/lib/cn";
 
 interface SnakesState {
@@ -28,6 +29,7 @@ interface MatchRow {
   winner: string | null;
   settle_tx: string | null;
   settle_error: string | null;
+  updated_at: string;
 }
 
 const EXPLORER: Record<number, string> = {
@@ -124,6 +126,8 @@ export function StakedSnakes({ matchId, you }: { matchId: bigint; you: `0x${stri
       </div>
 
       <p className="mt-3 text-center text-sm text-ink-dim">{status}</p>
+
+      <TimeoutClaim matchId={matchId} me={me} turn={match?.state?.turn} updatedAt={match?.updated_at} status={match?.status} />
 
       <div className="relative mx-auto mt-3 w-full max-w-[360px]">
         <div
