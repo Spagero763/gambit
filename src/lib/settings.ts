@@ -8,7 +8,8 @@ export interface GambitSettings {
   volume: number; // 0..1
   track: string; // current music track id
   name: string;
-  avatar: string; // avatar id
+  avatar: string; // avatar colour id (fallback when no photo)
+  avatarImage: string; // uploaded photo as a data URL ("" = none)
 }
 
 export const DEFAULT_SETTINGS: GambitSettings = {
@@ -17,19 +18,31 @@ export const DEFAULT_SETTINGS: GambitSettings = {
   volume: 0.5,
   track: "lofi",
   name: "",
-  avatar: "violet",
+  avatar: "teal",
+  avatarImage: "",
 };
 
 const KEY = "gambit:settings";
 
-export const AVATARS = ["violet", "teal", "amber", "rose", "sky", "lime"] as const;
+export const AVATARS = ["teal", "violet", "amber", "rose", "sky", "lime"] as const;
 
-// Original, self-hosted looping tracks (generated, royalty-free, we own them).
+// Solid avatar tints (matte, no gradients) shared by Profile + Settings.
+export const AVATAR_HEX: Record<string, string> = {
+  teal: "#3ecf8e",
+  violet: "#8e8bf0",
+  amber: "#e3b341",
+  rose: "#e06c8b",
+  sky: "#5fb7e6",
+  lime: "#9bd154",
+};
+
+// Music styles, generated live in the browser (see lib/music). Ids map to
+// generative styles — no audio files to ship.
 export const TRACKS = [
-  { id: "lofi", label: "Lo-fi", file: "/audio/lofi.wav" },
-  { id: "arcade", label: "Arcade", file: "/audio/arcade.wav" },
-  { id: "ambient", label: "Ambient", file: "/audio/ambient.wav" },
-  { id: "synth", label: "Synthwave", file: "/audio/synth.wav" },
+  { id: "lofi", label: "Lo-fi" },
+  { id: "arcade", label: "Arcade" },
+  { id: "ambient", label: "Ambient" },
+  { id: "synth", label: "Synthwave" },
 ] as const;
 
 export function loadSettings(): GambitSettings {
