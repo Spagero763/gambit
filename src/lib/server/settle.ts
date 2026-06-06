@@ -17,13 +17,21 @@ export function relayerConfigured() {
   return !!process.env.RELAYER_PRIVATE_KEY;
 }
 
+/** Normalise the relayer key: trim, strip quotes, ensure 0x-prefix. */
+function relayerKey(): `0x${string}` {
+  let k = process.env.RELAYER_PRIVATE_KEY?.trim();
+  if (!k) throw new Error("Relayer not configured");
+  k = k.replace(/^["']|["']$/g, "").trim();
+  if (!k.startsWith("0x")) k = "0x" + k;
+  return k as `0x${string}`;
+}
+
 /**
  * Settle a match on-chain with the relayer key. `winner` null = draw.
  * Server-only; the key never leaves the server env.
  */
 export async function settleOnChain(matchId: bigint, winner: string | null, chainId: number) {
-  const key = process.env.RELAYER_PRIVATE_KEY as `0x${string}` | undefined;
-  if (!key) throw new Error("Relayer not configured");
+  const key = relayerKey();
   const cfg = CHAINS[chainId];
   if (!cfg) throw new Error(`Unsupported chain ${chainId}`);
   const escrow = ESCROW_ADDRESS[chainId];
