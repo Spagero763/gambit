@@ -6,6 +6,7 @@ import { Game } from "@/lib/games";
 import { TicTacToe } from "./TicTacToe";
 import { StakedTicTacToe } from "./StakedTicTacToe";
 import { ChessGame } from "./ChessGame";
+import { StakedChess } from "./StakedChess";
 import { BlockBlitz } from "./blocks/BlockBlitz";
 import { SnakesLadders } from "./snakes/SnakesLadders";
 import { WhotGame } from "./whot/WhotGame";
@@ -31,7 +32,12 @@ export function GameStage({
         <TicTacToe difficulty={difficulty} />
       );
     case "chess":
-      return <ChessGame difficulty={difficulty} />;
+      // staked = real-time human vs human (server-authoritative); free = vs engine
+      return stake ? (
+        <StakedChess matchId={stake.matchId} you={stake.you} />
+      ) : (
+        <ChessGame difficulty={difficulty} />
+      );
     case "blocks":
       return <BlockBlitz />;
     case "snakes":
