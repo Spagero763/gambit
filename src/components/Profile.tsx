@@ -2,13 +2,15 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { motion } from "framer-motion";
-import { Wallet } from "lucide-react";
+import { Wallet, ShieldCheck, Check, Loader2 } from "lucide-react";
 import { formatUnits } from "viem";
-import { useAccount, useBalance, useConnect } from "wagmi";
+import { useAccount, useBalance, useConnect, useSignMessage } from "wagmi";
 import { injected } from "wagmi/connectors";
 import { CUSD_ADDRESS } from "@/lib/wagmi";
 import { supabase } from "@/lib/supabase";
 import { useSettings, AVATAR_HEX } from "@/lib/settings";
+import { useProgress } from "@/lib/progress";
+import { useProfile, createProfile, setProfile } from "@/lib/profile";
 import { Avatar } from "@/components/Avatar";
 import { ProgressCard } from "@/components/Daily";
 import { GAMES } from "@/lib/games";
@@ -54,6 +56,9 @@ export function Profile() {
   const { data: bal } = useBalance({ address, token: CUSD_ADDRESS, query: { enabled: !!address } });
   const [settings] = useSettings();
   const [rows, setRows] = useState<MatchRow[] | null>(null);
+  const prog = useProgress();
+  const { hasProfile, loading: profileLoading } = useProfile();
+  const { signMessageAsync } = useSignMessage();
 
   const me = address?.toLowerCase();
 
@@ -153,6 +158,23 @@ export function Profile() {
         </div>
       </motion.div>
 
+      {isConnected && address && !hasProfile && !profileLoading && (
+        <ProfileSaveCard
+          onSave={() =>
+            createProfile(address, (a) => signMessageAsync({ message: a.message }), {
+              name: settings.name,
+              avatar: settings.avatar,
+              avatarImage: settings.avatarImage,
+              xp: prog.xp,
+              streak: prog.streak,
+              lastPlayed: prog.lastPlayed,
+              played: prog.played,
+              wins: prog.wins,
+            }).then((res) => setProfile(address, res.profile))
+          }
+        />
+      )}
+
       <div className="mt-5 grid grid-cols-3 gap-3">
         <Stat label="Net P/L" value={`${net >= 0 ? "+" : ""}${net.toFixed(2)}`} accent={net > 0 ? "text-teal" : net < 0 ? "text-rose" : "text-ink"} sub="cUSD" />
         <Stat label="Record" value={`${wins}–${losses}`} accent="text-ink" sub="W–L" />
@@ -225,6 +247,45 @@ function Stat({ label, value, sub, accent }: { label: string; value: string; sub
       <p className="text-[11px] text-ink-faint">{label}</p>
       <p className={cn("nums mt-2 text-xl font-semibold tracking-tight", accent)}>{value}</p>
       <p className="mt-0.5 text-[10px] text-ink-faint">{sub}</p>
+    </div>
+  );
+}
+
+function ProfileSaveCard({ onSave }: { onSave: () => Promise<unknown> }) {
+  const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState<string | null>(null);
+  return (
+    <div className="mt-5 rounded-2xl border border-teal/40 bg-teal/[0.06] p-4">
+      <div className="flex items-start gap-3">
+        <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-void-700 text-teal">
+          <ShieldCheck className="h-5 w-5" />
+        </span>
+        <div className="min-w-0 flex-1">
+          <p className="text-sm font-semibold text-ink">Save your profile</p>
+          <p className="mt-0.5 text-[12px] text-ink-dim">
+            Sign once (free, no gas) to save your name, photo and streak to this wallet — synced across devices.
+          </p>
+          <button
+            disabled={busy}
+            onClick={async () => {
+              setBusy(true);
+              setErr(null);
+              try {
+                await onSave();
+              } catch (e: any) {
+                setErr(e?.shortMessage ?? e?.message ?? "Could not save profile");
+              } finally {
+                setBusy(false);
+              }
+            }}
+            className="btn-primary mt-3 inline-flex items-center gap-2 rounded-xl px-4 py-2 text-sm shadow-glow disabled:opacity-60"
+          >
+            {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />}
+            {busy ? "Check your wallet…" : "Sign & save profile"}
+          </button>
+          {err && <p className="mt-2 text-[11px] text-rose">{err}</p>}
+        </div>
+      </div>
     </div>
   );
 }
