@@ -1,0 +1,204 @@
+"use client";
+
+import { useEffect, useMemo, useState } from "react";
+import { formatUnits } from "viem";
+import { Users, Activity, Swords, Coins, Trophy, Flame } from "lucide-react";
+import { supabase } from "@/lib/supabase";
+import { symbolForToken, decimalsForToken } from "@/lib/tokens";
+import { GAMES } from "@/lib/games";
+import { cn } from "@/lib/cn";
+
+const NAME: Record<string, string> = Object.fromEntries(GAMES.map((g) => [g.slug, g.name]));
+const FEE = 0.05;
+
+interface MatchRow {
+  game: string;
+  stake: string;
+  creator: string;
+  opponent: string | null;
+  winner: string | null;
+  status: string;
+  token: string | null;
+  decimals: number | null;
+  created_at: string;
+}
+interface ProfileRow {
+  address: string;
+  last_played: string | null;
+  xp: number;
+  streak: number;
+}
+
+function short(a: string) {
+  return `${a.slice(0, 6)}…${a.slice(-4)}`;
+}
+function relTime(iso: string) {
+  const d = (Date.now() - new Date(iso).getTime()) / 1000;
+  if (d < 60) return "just now";
+  if (d < 3600) return `${Math.floor(d / 60)}m`;
+  if (d < 86400) return `${Math.floor(d / 3600)}h`;
+  return `${Math.floor(d / 86400)}d`;
+}
+const money = (n: number) => (n >= 1000 ? `${(n / 1000).toFixed(1)}k` : n.toFixed(n < 10 ? 2 : 0));
+
+export function Stats() {
+  const [matches, setMatches] = useState<MatchRow[] | null>(null);
+  const [profiles, setProfiles] = useState<ProfileRow[] | null>(null);
+
+  useEffect(() => {
+    if (!supabase) {
+      setMatches([]);
+      setProfiles([]);
+      return;
+    }
+    let active = true;
+    (async () => {
+      const [m, p] = await Promise.all([
+        supabase!
+          .from("matches")
+          .select("game,stake,creator,opponent,winner,status,token,decimals,created_at")
+          .in("status", ["active", "settling", "settled"])
+          .order("created_at", { ascending: false })
+          .limit(2000),
+        supabase!.from("profiles").select("address,last_played,xp,streak").limit(5000),
+      ]);
+      if (!active) return;
+      setMatches((m.data as MatchRow[]) ?? []);
+      setProfiles((p.data as ProfileRow[]) ?? []);
+    })();
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  const s = useMemo(() => {
+    const today = new Date().toISOString().slice(0, 10);
+    const ms = matches ?? [];
+    const ps = profiles ?? [];
+
+    const volume: Record<string, number> = {};
+    const paid: Record<string, number> = {};
+    const players = new Set<string>();
+    let settled = 0;
+
+    for (const m of ms) {
+      const dec = m.decimals ?? decimalsForToken(m.token);
+      const sym = symbolForToken(m.token);
+      const stake = Number(formatUnits(BigInt(m.stake || "0"), dec));
+      volume[sym] = (volume[sym] ?? 0) + stake * 2; // both seats
+      if (m.creator) players.add(m.creator.toLowerCase());
+      if (m.opponent) players.add(m.opponent.toLowerCase());
+      if (m.status === "settled") {
+        settled += 1;
+        if (m.winner) paid[sym] = (paid[sym] ?? 0) + stake * 2 * (1 - FEE);
+      }
+    }
+
+    const dau = ps.filter((p) => p.last_played === today).length;
+    const topStreak = ps.reduce((mx, p) => Math.max(mx, p.streak || 0), 0);
+    const recent = ms.filter((m) => m.status === "settled").slice(0, 8);
+
+    return {
+      totalPlayers: ps.length || players.size,
+      stakedPlayers: players.size,
+      dau,
+      matches: ms.length,
+      settled,
+      topStreak,
+      volume,
+      paid,
+      recent,
+    };
+  }, [matches, profiles]);
+
+  const loading = matches === null || profiles === null;
+  const volEntries = Object.entries(s.volume);
+  const paidEntries = Object.entries(s.paid);
+
+  return (
+    <section className="mx-auto w-full max-w-2xl px-5 pb-28 pt-2">
+      <h1 className="text-2xl font-semibold tracking-tight">Stats</h1>
+      <p className="mt-1 text-sm text-ink-dim">Live activity across Gambit.</p>
+
+      {loading ? (
+        <p className="mt-6 rounded-2xl border border-line bg-void-700 px-4 py-10 text-center text-sm text-ink-faint">Loading…</p>
+      ) : (
+        <>
+          <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-3">
+            <Card icon={Users} label="Players" value={s.totalPlayers.toLocaleString()} />
+            <Card icon={Activity} label="Active today" value={s.dau.toLocaleString()} accent="text-teal" />
+            <Card icon={Swords} label="Staked matches" value={s.matches.toLocaleString()} />
+            <Card icon={Trophy} label="Settled" value={s.settled.toLocaleString()} />
+            <Card icon={Flame} label="Top streak" value={`${s.topStreak}`} accent="text-amber" />
+            <Card icon={Users} label="Stakers" value={s.stakedPlayers.toLocaleString()} />
+          </div>
+
+          <div className="mt-3 grid grid-cols-2 gap-3">
+            <TokenCard label="Volume staked" entries={volEntries} />
+            <TokenCard label="Paid to winners" entries={paidEntries} accent="text-teal" />
+          </div>
+
+          <h2 className="mb-3 mt-7 text-[15px] font-semibold tracking-tight">Recent results</h2>
+          {s.recent.length === 0 ? (
+            <p className="rounded-2xl border border-line bg-void-700 px-4 py-8 text-center text-sm text-ink-faint">
+              No settled staked matches yet.
+            </p>
+          ) : (
+            <ul className="space-y-2">
+              {s.recent.map((m, i) => {
+                const dec = m.decimals ?? decimalsForToken(m.token);
+                const stake = Number(formatUnits(BigInt(m.stake || "0"), dec));
+                const sym = symbolForToken(m.token);
+                const draw = !m.winner;
+                return (
+                  <li key={i} className="flex items-center justify-between rounded-xl border border-line bg-void-800 px-4 py-3">
+                    <div>
+                      <p className="text-sm font-medium text-ink">{NAME[m.game] ?? m.game}</p>
+                      <p className="text-[11px] text-ink-faint">
+                        {draw ? "Draw · refunded" : `${short(m.winner!)} won`} · {relTime(m.created_at)} ago
+                      </p>
+                    </div>
+                    <p className="nums text-sm font-semibold text-teal">
+                      {(draw ? stake : stake * 2 * (1 - FEE)).toFixed(2)} <span className="text-[10px] text-ink-faint">{sym}</span>
+                    </p>
+                  </li>
+                );
+              })}
+            </ul>
+          )}
+        </>
+      )}
+    </section>
+  );
+}
+
+function Card({ icon: Icon, label, value, accent }: { icon: any; label: string; value: string; accent?: string }) {
+  return (
+    <div className="rounded-2xl border border-line bg-void-700 p-4 shadow-card">
+      <Icon className="h-4 w-4 text-ink-faint" />
+      <p className={cn("nums mt-2 text-2xl font-semibold tracking-tight", accent ?? "text-ink")}>{value}</p>
+      <p className="mt-0.5 text-[11px] text-ink-faint">{label}</p>
+    </div>
+  );
+}
+
+function TokenCard({ label, entries, accent }: { label: string; entries: [string, number][]; accent?: string }) {
+  return (
+    <div className="rounded-2xl border border-line bg-void-700 p-4 shadow-card">
+      <span className="flex items-center gap-1.5 text-[11px] text-ink-faint">
+        <Coins className="h-3.5 w-3.5" /> {label}
+      </span>
+      {entries.length === 0 ? (
+        <p className="nums mt-2 text-2xl font-semibold text-ink">0</p>
+      ) : (
+        <div className="mt-2 space-y-0.5">
+          {entries.map(([sym, n]) => (
+            <p key={sym} className={cn("nums text-xl font-semibold tracking-tight", accent ?? "text-ink")}>
+              {money(n)} <span className="text-[11px] text-ink-faint">{sym}</span>
+            </p>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
