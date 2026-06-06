@@ -8,6 +8,11 @@ import Link from "next/link";
 import { chooseMoveByLevel } from "@/lib/games/chess-ai";
 import { capturedOf, materialEdge } from "@/lib/games/chess-material";
 import { Difficulty } from "@/lib/difficulty";
+import { play } from "@/lib/sfx";
+import { randomBot } from "@/lib/bots";
+import { recordResult } from "@/lib/progress";
+import { useSettings, AVATAR_HEX } from "@/lib/settings";
+import { Avatar, BotFace } from "@/components/Avatar";
 import { cn } from "@/lib/cn";
 import { ResultOverlay, ResultKind } from "./ResultOverlay";
 import { ChessPiece } from "./chess/ChessPiece";
@@ -46,6 +51,9 @@ export function ChessGame({ difficulty = "normal" }: { difficulty?: Difficulty }
 
   const game = gameRef.current;
   const turn = game.turn();
+  const bot = useMemo(() => randomBot(), []);
+  const [settings] = useSettings();
+  const youName = settings.name || "You";
 
   const reset = useCallback(() => {
     gameRef.current = new Chess();
@@ -62,8 +70,15 @@ export function ChessGame({ difficulty = "normal" }: { difficulty?: Difficulty }
   const settle = useCallback(() => {
     const g = gameRef.current;
     if (!g.isGameOver()) return;
-    if (g.isCheckmate()) setResult(g.turn() === "w" ? "lose" : "win");
-    else setResult("draw");
+    if (g.isCheckmate()) {
+      const youLost = g.turn() === "w";
+      setResult(youLost ? "lose" : "win");
+      play(youLost ? "lose" : "win");
+      recordResult("chess", youLost ? "lose" : "win");
+    } else {
+      setResult("draw");
+      recordResult("chess", "draw");
+    }
   }, []);
 
   const targets = useMemo(() => {
@@ -78,10 +93,13 @@ export function ChessGame({ difficulty = "normal" }: { difficulty?: Difficulty }
 
   const commit = useCallback(
     (from: Square, to: Square, promotion?: PieceSymbol) => {
-      game.move({ from, to, promotion });
+      const m = game.move({ from, to, promotion });
       setLast({ from, to });
       setSelected(null);
       setFen(game.fen());
+      if (m?.captured) play("capture");
+      else play("place");
+      if (game.inCheck() && !game.isGameOver()) play("check");
       settle();
     },
     [game, settle]
@@ -158,9 +176,12 @@ export function ChessGame({ difficulty = "normal" }: { difficulty?: Difficulty }
     const t = setTimeout(() => {
       const mv = chooseMoveByLevel(game.fen(), difficulty);
       if (mv) {
-        game.move(mv);
+        const m = game.move(mv);
         setLast({ from: mv.from as Square, to: mv.to as Square });
         setFen(game.fen());
+        if (m?.captured) play("capture");
+        else play("place");
+        if (game.inCheck() && !game.isGameOver()) play("check");
         settle();
       }
     }, 480);
@@ -186,10 +207,15 @@ export function ChessGame({ difficulty = "normal" }: { difficulty?: Difficulty }
   return (
     <div className="mx-auto flex min-h-[100dvh] w-full max-w-md flex-col px-4 py-4">
       <div className="flex items-center justify-between">
-        <Link href="/" className="inline-flex items-center gap-2 rounded-full glass px-3 py-1.5 text-sm text-ink-dim">
+        <Link href="/" className="inline-flex items-center gap-2 rounded-full border border-line bg-void-700 px-3 py-1.5 text-sm text-ink-dim transition-colors hover:text-ink">
           <ArrowLeft className="h-4 w-4" /> Lobby
         </Link>
-        <span className="rounded-full glass px-3 py-1.5 text-xs font-semibold text-ink-dim">
+        <span
+          className={cn(
+            "rounded-full border px-3 py-1.5 text-xs font-semibold",
+            inCheck && !result ? "border-rose/40 bg-rose/10 text-rose" : "border-line bg-void-700 text-ink-dim"
+          )}
+        >
           {inCheck && !result ? "Check" : "Free play"}
         </span>
       </div>
@@ -197,13 +223,14 @@ export function ChessGame({ difficulty = "normal" }: { difficulty?: Difficulty }
       {/* opponent (top) */}
       <div className="mt-4">
         <PlayerBar
-          name="Gambit AI"
+          name={bot.name}
           pieceColor="b"
           active={turn === "b" && !result}
           clock={fmt(bTime)}
           lowTime={bTime <= 30}
           captured={aiCaptured}
           edge={Math.max(0, -edge)}
+          avatar={<BotFace bot={bot} size={40} />}
         />
       </div>
 
@@ -212,9 +239,9 @@ export function ChessGame({ difficulty = "normal" }: { difficulty?: Difficulty }
         <div
           className="rounded-[20px] p-2.5"
           style={{
-            background: "linear-gradient(155deg, #2e2945, #17142a)",
+            background: "linear-gradient(160deg, #2b2620, #1a1611)",
             boxShadow:
-              "inset 0 1px 0 rgba(255,255,255,0.14), inset 0 -4px 10px rgba(0,0,0,0.5), 0 26px 60px -26px rgba(0,0,0,0.95)",
+              "inset 0 1px 0 rgba(255,255,255,0.1), inset 0 -4px 10px rgba(0,0,0,0.5), 0 26px 60px -26px rgba(0,0,0,0.95)",
           }}
         >
           <div
@@ -240,20 +267,20 @@ export function ChessGame({ difficulty = "normal" }: { difficulty?: Difficulty }
                     key={square}
                     className={cn(
                       "relative flex items-center justify-center",
-                      lightSq ? "bg-[#e9e2d0]" : "bg-[#7c74a8]"
+                      lightSq ? "bg-[#eeeed2]" : "bg-[#769656]"
                     )}
                   >
-                    {isLast && <span className="absolute inset-0 bg-amber/35" />}
-                    {isSel && <span className="absolute inset-0 bg-teal/35" />}
+                    {isLast && <span className="absolute inset-0 bg-[#f6d66b]/45" />}
+                    {isSel && <span className="absolute inset-0 bg-[#f6d66b]/55" />}
                     {isCheckSq && (
-                      <span className="absolute inset-0 bg-[radial-gradient(circle,rgba(255,107,154,0.9),transparent_70%)]" />
+                      <span className="absolute inset-0 bg-[radial-gradient(circle,rgba(224,108,139,0.95),transparent_72%)]" />
                     )}
 
                     {f === 0 && (
                       <span
                         className={cn(
                           "absolute left-0.5 top-0.5 text-[8px] font-bold",
-                          lightSq ? "text-[#7c74a8]" : "text-[#e9e2d0]"
+                          lightSq ? "text-[#769656]" : "text-[#eeeed2]"
                         )}
                       >
                         {8 - r}
@@ -263,7 +290,7 @@ export function ChessGame({ difficulty = "normal" }: { difficulty?: Difficulty }
                       <span
                         className={cn(
                           "absolute bottom-0 right-0.5 text-[8px] font-bold",
-                          lightSq ? "text-[#7c74a8]" : "text-[#e9e2d0]"
+                          lightSq ? "text-[#769656]" : "text-[#eeeed2]"
                         )}
                       >
                         {FILES[f]}
@@ -281,9 +308,9 @@ export function ChessGame({ difficulty = "normal" }: { difficulty?: Difficulty }
 
                     {isTarget &&
                       (piece ? (
-                        <span className="absolute inset-1 rounded-full ring-[3px] ring-teal/80" />
+                        <span className="absolute inset-1 rounded-full ring-[3px] ring-black/30" />
                       ) : (
-                        <span className="absolute h-1/4 w-1/4 rounded-full bg-teal/70" />
+                        <span className="absolute h-[28%] w-[28%] rounded-full bg-black/25" />
                       ))}
                   </div>
                 );
@@ -351,7 +378,7 @@ export function ChessGame({ difficulty = "normal" }: { difficulty?: Difficulty }
       {/* you (bottom) */}
       <div className="mt-3">
         <PlayerBar
-          name="You"
+          name={youName}
           pieceColor="w"
           active={turn === "w" && !result}
           clock={fmt(wTime)}
@@ -359,6 +386,15 @@ export function ChessGame({ difficulty = "normal" }: { difficulty?: Difficulty }
           captured={youCaptured}
           edge={Math.max(0, edge)}
           you
+          avatar={
+            <Avatar
+              image={settings.avatarImage || undefined}
+              color={AVATAR_HEX[settings.avatar] ?? AVATAR_HEX.violet}
+              name={youName}
+              size={40}
+              rounded="rounded-xl"
+            />
+          }
         />
       </div>
     </div>
