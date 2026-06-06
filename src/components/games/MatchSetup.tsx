@@ -48,7 +48,8 @@ export function MatchSetup({
   const { address, isConnected } = useAccount();
   const { connect } = useConnect();
   const { switchChain } = useSwitchChain();
-  const { createMatch, joinMatch, step, error, matchId, ready, onActiveChain } = useStakeMatch();
+  const { createMatch, joinMatch, cancelMatch, step, error, matchId, ready, onActiveChain, reset } = useStakeMatch();
+  const [cancelling, setCancelling] = useState(false);
   const { signMessageAsync } = useSignMessage();
   const [authed, setAuthed] = useState(false);
   useEffect(() => {
@@ -341,6 +342,20 @@ export function MatchSetup({
                     <p className="mt-3 flex items-center justify-center gap-1.5 text-[11px] text-ink-faint">
                       <Loader2 className="h-3.5 w-3.5 animate-spin" /> Waiting for opponent to join
                     </p>
+                    <button
+                      onClick={async () => {
+                        if (!matchId) return;
+                        setCancelling(true);
+                        const ok = await cancelMatch(matchId);
+                        setCancelling(false);
+                        if (ok) reset();
+                      }}
+                      disabled={cancelling}
+                      className="mx-auto mt-3 flex items-center justify-center gap-1.5 rounded-lg border border-line bg-void-800 px-3 py-1.5 text-[12px] font-medium text-ink-dim transition-colors hover:text-rose disabled:opacity-60"
+                    >
+                      {cancelling ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : null}
+                      Cancel room &amp; refund my stake
+                    </button>
                   </>
                 )}
               </div>
