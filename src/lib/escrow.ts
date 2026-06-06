@@ -9,8 +9,8 @@ const ENV_SEPOLIA = process.env.NEXT_PUBLIC_ESCROW_CELO_SEPOLIA as `0x${string}`
 
 export const ESCROW_ADDRESS: Record<number, `0x${string}`> = {
   [celoSepolia.id]: ENV_SEPOLIA ?? "0x28825CB6a2D9f13947e4023317904A38Bd35dB9e",
+  [celo.id]: ENV_CELO ?? "0xB34548Ad3A45C2a571f99341e5fb32abB4FACd05",
 };
-if (ENV_CELO) ESCROW_ADDRESS[celo.id] = ENV_CELO;
 
 // cUSD is the same address on Celo Sepolia and mainnet.
 export const STAKE_TOKEN: Record<number, `0x${string}`> = {
