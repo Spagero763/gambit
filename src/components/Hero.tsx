@@ -1,62 +1,68 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { Sparkles } from "lucide-react";
-import { Counter } from "./Counter";
+import { ShieldCheck, Coins, Cpu } from "lucide-react";
 
 const ease = [0.22, 1, 0.36, 1] as const;
 
+const FACTS = [
+  { icon: Cpu, label: "Free vs the engine" },
+  { icon: Coins, label: "95% to the winner" },
+  { icon: ShieldCheck, label: "Settled on-chain" },
+];
+
 export function Hero() {
   return (
-    <section className="mx-auto w-full max-w-2xl px-5 pt-6">
+    <section className="mx-auto w-full max-w-2xl px-5 pt-5">
       <motion.div
-        initial={{ opacity: 0, y: 14 }}
+        initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6, ease }}
-        className="inline-flex items-center gap-2 rounded-full glass px-3 py-1 text-xs text-ink-dim"
+        transition={{ duration: 0.4, ease }}
+        className="inline-flex items-center gap-2 rounded-full border border-line bg-void-700 px-3 py-1 text-xs text-ink-dim"
       >
-        <Sparkles className="h-3.5 w-3.5 text-amber" />
-        Free to play. Stake to compete.
+        <span className="h-1.5 w-1.5 rounded-full bg-teal" />
+        Skill games on Celo
       </motion.div>
 
       <motion.h1
-        initial={{ opacity: 0, y: 18 }}
+        initial={{ opacity: 0, y: 12 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.7, ease, delay: 0.05 }}
-        className="mt-4 font-display text-[2.6rem] font-bold leading-[1.05] tracking-tight"
+        transition={{ duration: 0.45, ease, delay: 0.04 }}
+        className="mt-4 text-[2.1rem] font-semibold leading-[1.08] tracking-[-0.02em] text-ink"
       >
-        Five games.
+        Play classic games.
         <br />
-        <span className="text-gradient">One arcade.</span>
+        Back yourself for cUSD.
       </motion.h1>
 
       <motion.p
-        initial={{ opacity: 0, y: 18 }}
+        initial={{ opacity: 0, y: 12 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.7, ease, delay: 0.12 }}
+        transition={{ duration: 0.45, ease, delay: 0.1 }}
         className="mt-3 max-w-md text-[15px] leading-relaxed text-ink-dim"
       >
-        Chess, Naija Whot, tic-tac-toe, snakes & ladders and a block puzzle.
-        Play free against the engine, or put cUSD on a 1v1 room and the winner
-        collects.
+        Chess, Whot, tic-tac-toe, snakes &amp; ladders and a block puzzle. Practise
+        free against the engine, or put cUSD on a 1v1 — the winner takes the pot.
       </motion.p>
 
       <motion.div
-        initial={{ opacity: 0, y: 18 }}
+        initial={{ opacity: 0, y: 12 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.7, ease, delay: 0.2 }}
-        className="mt-6 grid grid-cols-3 gap-3"
+        transition={{ duration: 0.45, ease, delay: 0.16 }}
+        className="mt-5 flex flex-wrap gap-2"
       >
-        {[
-          { label: "Players online", node: <Counter to={552} /> },
-          { label: "Matches today", node: <Counter to={1840} /> },
-          { label: "Paid out", node: <Counter to={9.2} prefix="$" suffix="k" decimals={1} /> },
-        ].map((s) => (
-          <div key={s.label} className="rounded-2xl glass px-3 py-3">
-            <p className="font-display text-xl font-bold text-ink">{s.node}</p>
-            <p className="mt-0.5 text-[11px] text-ink-faint">{s.label}</p>
-          </div>
-        ))}
+        {FACTS.map((f) => {
+          const Icon = f.icon;
+          return (
+            <span
+              key={f.label}
+              className="inline-flex items-center gap-1.5 rounded-lg border border-line bg-void-800 px-2.5 py-1.5 text-[12px] text-ink-dim"
+            >
+              <Icon className="h-3.5 w-3.5 text-ink-faint" />
+              {f.label}
+            </span>
+          );
+        })}
       </motion.div>
     </section>
   );

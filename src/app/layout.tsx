@@ -1,16 +1,18 @@
 import type { Metadata, Viewport } from "next";
-import { Sora, Space_Grotesk, JetBrains_Mono } from "next/font/google";
+import { Inter, JetBrains_Mono } from "next/font/google";
 import { Providers } from "./providers";
 import { MusicPlayer } from "@/components/audio/MusicPlayer";
 import "./globals.css";
 
-const sans = Sora({
+// One restrained typeface family. Inter for UI + display (tracked tighter in
+// components), JetBrains Mono for money, scores and addresses.
+const sans = Inter({
   subsets: ["latin"],
   variable: "--font-sans",
   display: "swap",
 });
 
-const display = Space_Grotesk({
+const display = Inter({
   subsets: ["latin"],
   variable: "--font-display",
   display: "swap",
@@ -46,7 +48,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" className={`${sans.variable} ${display.variable} ${mono.variable}`}>
-      <body className="grain min-h-screen font-sans antialiased">
+      <body className="min-h-screen font-sans antialiased">
         <Providers>
           {children}
           <MusicPlayer />
