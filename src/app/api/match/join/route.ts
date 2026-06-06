@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase";
 import { newTtt } from "@/lib/server/ttt";
 import { newChess } from "@/lib/server/chess";
+import { newSnakes } from "@/lib/server/snakes";
 
 export const runtime = "nodejs";
 
@@ -45,6 +46,10 @@ export async function POST(req: NextRequest) {
       turn = s.turn;
     } else if (match.game === "chess") {
       const s = newChess(match.creator, opp);
+      state = s;
+      turn = s.turn;
+    } else if (match.game === "snakes") {
+      const s = newSnakes(match.creator, opp);
       state = s;
       turn = s.turn;
     }
