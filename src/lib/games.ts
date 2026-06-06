@@ -94,7 +94,7 @@ export const accentMap: Record<
     glow: "shadow-glow",
     dot: "bg-violet",
     grad: "from-violet/40 to-violet-deep/10",
-    hex: "#8b7dff",
+    hex: "#8e8bf0",
   },
   teal: {
     text: "text-teal",
@@ -102,7 +102,7 @@ export const accentMap: Record<
     glow: "shadow-glow-teal",
     dot: "bg-teal",
     grad: "from-teal/40 to-teal-deep/10",
-    hex: "#27e1a6",
+    hex: "#3ecf8e",
   },
   amber: {
     text: "text-amber",
@@ -110,7 +110,7 @@ export const accentMap: Record<
     glow: "shadow-glow",
     dot: "bg-amber",
     grad: "from-amber/40 to-amber/5",
-    hex: "#ffc15e",
+    hex: "#e3b341",
   },
   rose: {
     text: "text-rose",
@@ -118,6 +118,6 @@ export const accentMap: Record<
     glow: "shadow-glow",
     dot: "bg-rose",
     grad: "from-rose/40 to-rose/5",
-    hex: "#ff6b9a",
+    hex: "#e06c8b",
   },
 };

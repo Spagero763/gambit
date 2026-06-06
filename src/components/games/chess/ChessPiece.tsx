@@ -17,11 +17,6 @@ export function ChessPiece({
   size?: number;
   className?: string;
 }) {
-  const white = color === "w";
-  const body = white ? "#f5f0e6" : "#2b2836";
-  const line = white ? "#2b2836" : "#08070d";
-  const shade = white ? "#e4dccb" : "#403b54";
-
   return (
     <svg
       viewBox="0 0 45 45"
@@ -30,25 +25,44 @@ export function ChessPiece({
       className={className}
       style={{ filter: "drop-shadow(0 2px 2px rgba(0,0,0,0.45))" }}
     >
-      <g
-        fill={body}
-        stroke={line}
-        strokeWidth={1.5}
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      >
-        {SHAPES[type](shade, line)}
-      </g>
+      <ChessGlyph type={type} color={color} />
     </svg>
   );
 }
 
+/**
+ * Just the piece <g> (no <svg> wrapper) so it can be dropped into any SVG
+ * scene — board art, the homepage demo, etc. — at an arbitrary transform.
+ */
+export function ChessGlyph({ type, color }: { type: PieceSymbol; color: Color }) {
+  const white = color === "w";
+  const body = white ? "#f5f0e6" : "#2b2836";
+  const line = white ? "#2b2836" : "#08070d";
+  const shade = white ? "#e4dccb" : "#403b54";
+
+  return (
+    <g
+      fill={body}
+      stroke={line}
+      strokeWidth={1.5}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      {SHAPES[type](shade, line)}
+    </g>
+  );
+}
+
 const SHAPES: Record<PieceSymbol, (shade: string, line: string) => JSX.Element> = {
-  p: () => (
+  p: (shade) => (
     <>
-      <circle cx="22.5" cy="15.5" r="4.8" />
-      <path d="M22.5 19c3.8 0 4.8 4.3 1.9 6.9 2.4 1.3 3.9 3.4 3.9 6.1H16.2c0-2.7 1.5-4.8 3.9-6.1-2.9-2.6-1.9-6.9 2.4-6.9Z" />
-      <path d="M13.5 32h18c1.6 0 2.7 1.6 2.7 3.3H10.8c0-1.7 1.1-3.3 2.7-3.3Z" />
+      {/* stepped base */}
+      <path d="M12 35.8h21c1.6 0 2.6 1.4 2.6 3.2H9.4c0-1.8 1-3.2 2.6-3.2Z" />
+      <path d="M14.6 35.8l1-3.3h13.8l1 3.3Z" fill={shade} />
+      {/* body with the classic pawn neck pinch */}
+      <path d="M22.5 16.2c3.3 0 4.9 3.5 2.5 6.2 2.9 2 4.4 5 4.9 8.5H15.1c.5-3.5 2-6.5 4.9-8.5-2.4-2.7-.8-6.2 2.5-6.2Z" />
+      {/* spherical head */}
+      <circle cx="22.5" cy="12" r="5" />
     </>
   ),
   r: (shade) => (
