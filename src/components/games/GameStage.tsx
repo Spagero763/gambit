@@ -9,6 +9,7 @@ import { ChessGame } from "./ChessGame";
 import { StakedChess } from "./StakedChess";
 import { BlockBlitz } from "./blocks/BlockBlitz";
 import { SnakesLadders } from "./snakes/SnakesLadders";
+import { StakedSnakes } from "./StakedSnakes";
 import { WhotGame } from "./whot/WhotGame";
 import { GameCover } from "@/components/art/GameCover";
 import { Difficulty } from "@/lib/difficulty";
@@ -41,7 +42,12 @@ export function GameStage({
     case "blocks":
       return <BlockBlitz />;
     case "snakes":
-      return <SnakesLadders difficulty={difficulty} />;
+      // staked = real-time human vs human with server-rolled dice; free = vs bot
+      return stake ? (
+        <StakedSnakes matchId={stake.matchId} you={stake.you} />
+      ) : (
+        <SnakesLadders difficulty={difficulty} />
+      );
     case "whot":
       return <WhotGame />;
     default:
