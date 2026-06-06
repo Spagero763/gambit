@@ -2,6 +2,7 @@
 
 import { motion } from "framer-motion";
 import { ShieldCheck, Coins, Cpu } from "lucide-react";
+import { HowItWorks } from "./HowItWorks";
 
 const ease = [0.22, 1, 0.36, 1] as const;
 
@@ -63,6 +64,7 @@ export function Hero() {
             </span>
           );
         })}
+        <HowItWorks />
       </motion.div>
     </section>
   );
