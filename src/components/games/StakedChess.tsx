@@ -9,6 +9,7 @@ import { supabase } from "@/lib/supabase";
 import { submitMove } from "@/lib/matchClient";
 import { ChessPiece } from "./chess/ChessPiece";
 import { SettleOverlay } from "./SettleOverlay";
+import { TimeoutClaim } from "./TimeoutClaim";
 import { cn } from "@/lib/cn";
 
 const FILES = ["a", "b", "c", "d", "e", "f", "g", "h"];
@@ -30,6 +31,7 @@ interface MatchRow {
   winner: string | null;
   settle_tx: string | null;
   settle_error: string | null;
+  updated_at: string;
 }
 
 const EXPLORER: Record<number, string> = {
@@ -162,6 +164,8 @@ export function StakedChess({ matchId, you }: { matchId: bigint; you: `0x${strin
       <PlayerStrip label="Opponent" color={myColor === "w" ? "b" : "w"} active={match?.status === "active" && !myTurn} />
 
       <p className="mt-3 text-center text-sm text-ink-dim">{status}</p>
+
+      <TimeoutClaim matchId={matchId} me={me} turn={match?.state?.turn} updatedAt={match?.updated_at} status={match?.status} />
 
       <div className="relative mt-3">
         <div
