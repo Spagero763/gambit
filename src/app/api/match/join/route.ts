@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase";
 import { newTtt } from "@/lib/server/ttt";
+import { newChess } from "@/lib/server/chess";
 
 export const runtime = "nodejs";
 
@@ -35,11 +36,15 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Cannot join your own match" }, { status: 400 });
     }
 
-    // initialise per-game state (tic-tac-toe for now)
+    // initialise per-game authoritative state
     let state: unknown = {};
     let turn: string | null = null;
     if (match.game === "tic-tac-toe") {
       const s = newTtt(match.creator, opp);
+      state = s;
+      turn = s.turn;
+    } else if (match.game === "chess") {
+      const s = newChess(match.creator, opp);
       state = s;
       turn = s.turn;
     }
