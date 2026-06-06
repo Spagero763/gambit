@@ -2,8 +2,9 @@
 
 import { useEffect, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { ArrowLeft, Bot, Swords, Wallet, Loader2, ShieldCheck, Copy, Check, AlertTriangle } from "lucide-react";
+import { ArrowLeft, Bot, Swords, Wallet, Loader2, ShieldCheck, Copy, Check, AlertTriangle, HelpCircle } from "lucide-react";
 import Link from "next/link";
+import { StakeRules } from "./StakeRules";
 import { useAccount, useConnect, useSwitchChain, useSignMessage } from "wagmi";
 import { injected } from "wagmi/connectors";
 import { Game } from "@/lib/games";
@@ -37,6 +38,8 @@ export function MatchSetup({
   onStart: (difficulty: Difficulty, stake?: { matchId: bigint; you: `0x${string}` }) => void;
 }) {
   const [mode, setMode] = useState<Mode>("free");
+  const [rulesOpen, setRulesOpen] = useState(false);
+  const [rulesSeen, setRulesSeen] = useState(false);
   const [stake, setStake] = useState<number>(game.minStake);
   const [custom, setCustom] = useState("");
   const [difficulty, setDifficulty] = useState<Difficulty>("normal");
@@ -51,6 +54,13 @@ export function MatchSetup({
   useEffect(() => {
     setAuthed(hasToken(address));
   }, [address]);
+  // show the rules the first time a player opens the staked tab
+  useEffect(() => {
+    if (mode === "staked" && !rulesSeen) {
+      setRulesOpen(true);
+      setRulesSeen(true);
+    }
+  }, [mode, rulesSeen]);
   const { data: created } = useMatchState(matchId ?? undefined);
   const hasDifficulty = SUPPORTS_DIFFICULTY.has(game.slug);
 
@@ -195,9 +205,17 @@ export function MatchSetup({
             exit={{ opacity: 0, y: -10 }}
             className="mt-6"
           >
-            <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-ink-faint">
-              Your stake
-            </p>
+            <StakeRules game={game} open={rulesOpen} onClose={() => setRulesOpen(false)} />
+
+            <div className="mb-2 flex items-center justify-between">
+              <p className="text-xs font-semibold uppercase tracking-wide text-ink-faint">Your stake</p>
+              <button
+                onClick={() => setRulesOpen(true)}
+                className="inline-flex items-center gap-1 text-[12px] font-medium text-teal transition-opacity hover:opacity-80"
+              >
+                <HelpCircle className="h-3.5 w-3.5" /> How it works
+              </button>
+            </div>
             <div className="flex flex-wrap gap-2">
               {chips.map((v) => (
                 <button
