@@ -58,3 +58,30 @@ $$ language plpgsql;
 drop trigger if exists matches_touch on matches;
 create trigger matches_touch before update on matches
   for each row execute function touch_updated_at();
+
+-- profiles: one per wallet (lowercased address). Identity (name/avatar/photo)
+-- + synced progression (xp/streak). Writes go through the server after a
+-- wallet-signature check; reads are public.
+create table if not exists profiles (
+  address      text primary key,            -- lowercased wallet address
+  name         text,
+  avatar       text not null default 'teal',-- colour id (fallback when no photo)
+  avatar_image text,                         -- small data URL ('' / null = none)
+  xp           integer not null default 0,
+  streak       integer not null default 0,
+  last_played  text,                         -- YYYY-MM-DD
+  played       integer not null default 0,
+  wins         integer not null default 0,
+  created_at   timestamptz not null default now(),
+  updated_at   timestamptz not null default now()
+);
+
+create index if not exists profiles_xp_idx on profiles (xp desc);
+
+alter table profiles enable row level security;
+drop policy if exists "profiles readable" on profiles;
+create policy "profiles readable" on profiles for select using (true);
+
+drop trigger if exists profiles_touch on profiles;
+create trigger profiles_touch before update on profiles
+  for each row execute function touch_updated_at();
