@@ -32,9 +32,23 @@ create table if not exists moves (
 
 create index if not exists moves_match_idx on moves (match_id, ply);
 
--- Realtime: clients subscribe to match + move changes
-alter publication supabase_realtime add table matches;
-alter publication supabase_realtime add table moves;
+-- Realtime: clients subscribe to match + move changes.
+-- Guarded so the whole file stays safely re-runnable (ADD TABLE is not idempotent).
+do $$
+begin
+  if not exists (
+    select 1 from pg_publication_tables
+    where pubname = 'supabase_realtime' and schemaname = 'public' and tablename = 'matches'
+  ) then
+    alter publication supabase_realtime add table matches;
+  end if;
+  if not exists (
+    select 1 from pg_publication_tables
+    where pubname = 'supabase_realtime' and schemaname = 'public' and tablename = 'moves'
+  ) then
+    alter publication supabase_realtime add table moves;
+  end if;
+end $$;
 
 -- RLS: clients may READ matches/moves (public game state) but never write
 -- directly. All writes go through the server (service_role) which bypasses RLS.
