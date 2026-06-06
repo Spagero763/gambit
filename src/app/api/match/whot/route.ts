@@ -9,6 +9,7 @@ import {
   applyWhotDraw,
 } from "@/lib/server/whot";
 import { settleOnChain, relayerConfigured } from "@/lib/server/settle";
+import { verifyToken } from "@/lib/server/profileToken";
 
 export const runtime = "nodejs";
 
@@ -58,9 +59,12 @@ export async function GET(req: NextRequest) {
 /** POST /api/match/whot  { id, player, action } -> redacted view */
 export async function POST(req: NextRequest) {
   try {
-    const { id, player, action } = await req.json();
+    const { id, player, action, token } = await req.json();
     if (id === undefined || !player || !action) {
       return NextResponse.json({ error: "Bad request" }, { status: 400 });
+    }
+    if (!token || verifyToken(String(token)) !== String(player).toLowerCase()) {
+      return NextResponse.json({ error: "Sign in to play (authentication required)" }, { status: 401 });
     }
     const db = supabaseAdmin();
     const { data: match, error } = await db.from("matches").select("*").eq("id", Number(id)).single();
