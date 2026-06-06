@@ -134,6 +134,52 @@ export function useStakeMatch() {
     [chainId, ensureAllowance, publicClient, writeContractAsync]
   );
 
+  /** Refund an unfilled room you created (creator may cancel anytime while open). */
+  const cancelMatch = useCallback(
+    async (matchId: bigint) => {
+      try {
+        setError(null);
+        const { address: escrow } = escrowFor(chainId);
+        if (!escrow || !publicClient) throw new Error("Wrong network");
+        const hash = await writeContractAsync({
+          address: escrow,
+          abi: ESCROW_ABI,
+          functionName: "cancelMatch",
+          args: [matchId],
+        });
+        await publicClient.waitForTransactionReceipt({ hash });
+        return true;
+      } catch (e: any) {
+        setError(e?.shortMessage ?? e?.message ?? "Cancel failed");
+        return false;
+      }
+    },
+    [chainId, publicClient, writeContractAsync]
+  );
+
+  /** Permissionless refund of a filled match that never settled (after the settle window). */
+  const reclaimStalled = useCallback(
+    async (matchId: bigint) => {
+      try {
+        setError(null);
+        const { address: escrow } = escrowFor(chainId);
+        if (!escrow || !publicClient) throw new Error("Wrong network");
+        const hash = await writeContractAsync({
+          address: escrow,
+          abi: ESCROW_ABI,
+          functionName: "reclaimStalled",
+          args: [matchId],
+        });
+        await publicClient.waitForTransactionReceipt({ hash });
+        return true;
+      } catch (e: any) {
+        setError(e?.shortMessage ?? e?.message ?? "Reclaim failed");
+        return false;
+      }
+    },
+    [chainId, publicClient, writeContractAsync]
+  );
+
   const reset = useCallback(() => {
     setStep("idle");
     setError(null);
@@ -143,7 +189,7 @@ export function useStakeMatch() {
   const ready = !!escrowFor(chainId).address;
   const onActiveChain = chainId === ACTIVE_CHAIN_ID;
 
-  return { createMatch, joinMatch, step, error, matchId, reset, ready, onActiveChain };
+  return { createMatch, joinMatch, cancelMatch, reclaimStalled, step, error, matchId, reset, ready, onActiveChain };
 }
 
 /** Read a match's on-chain state (status, joined, stake). */
