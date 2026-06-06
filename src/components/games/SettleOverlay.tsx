@@ -58,7 +58,7 @@ export function SettleOverlay({
       {settling ? (
         <div className="mt-2">
           <p className="inline-flex items-center gap-1.5 text-sm text-ink-dim">
-            <Loader2 className="h-3.5 w-3.5 animate-spin" /> Paying out…
+            <Loader2 className="h-3.5 w-3.5 animate-spin" /> {result === "draw" ? "Refunding…" : "Paying out…"}
           </p>
           {(settleError || msg) && (
             <p className="mx-auto mt-2 max-w-[16rem] text-[11px] leading-snug text-rose">{msg || settleError}</p>
