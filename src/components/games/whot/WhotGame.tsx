@@ -7,9 +7,12 @@ import Link from "next/link";
 import { WhotTable, Seat } from "./WhotTable";
 import { WhotRules, DEFAULT_RULES } from "@/lib/games/whot";
 import { GameCover } from "@/components/art/GameCover";
+import { BOTS } from "@/lib/bots";
+import { recordResult } from "@/lib/progress";
 import { cn } from "@/lib/cn";
 
-const BOT_NAMES = ["Ada", "Tunde", "Chidi", "Zino", "Bola", "Emeka", "Ngozi", "Kola"];
+// Names line up with the bot roster so each opponent shows its matching face.
+const BOT_NAMES = BOTS.map((b) => b.name);
 
 const RULE_ITEMS: { key: keyof WhotRules; label: string; note: string }[] = [
   { key: "holdOn", label: "Hold On (1)", note: "Play again" },
@@ -49,6 +52,7 @@ export function WhotGame() {
 
   const handleEnd = (winnerName: string, youWon: boolean) => {
     if (phase.kind !== "play") return;
+    recordResult("whot", youWon ? "win" : "lose");
     if (phase.mode === "free") {
       setPhase({ kind: "result", champion: winnerName, youWon, mode: "free" });
       return;
@@ -160,7 +164,7 @@ export function WhotGame() {
               })}
             </div>
 
-            <button onClick={startFree} className="mt-5 w-full rounded-2xl bg-gradient-to-r from-violet-deep to-violet py-3.5 text-sm font-bold text-white shadow-glow">
+            <button onClick={startFree} className="btn-primary mt-5 w-full rounded-2xl py-3.5 text-sm shadow-glow">
               Start table
             </button>
           </motion.div>
@@ -179,7 +183,7 @@ export function WhotGame() {
                 <span className="rounded-full bg-amber/15 px-3 py-1 text-amber">Champion</span>
               </div>
             </div>
-            <button onClick={startTournament} className="mt-5 w-full rounded-2xl bg-gradient-to-r from-amber to-[#d9892f] py-3.5 text-sm font-bold text-void shadow-glow">
+            <button onClick={startTournament} className="mt-5 w-full rounded-2xl bg-amber py-3.5 text-sm font-semibold text-void shadow-glow transition-opacity hover:opacity-90">
               Enter tournament
             </button>
           </motion.div>
@@ -247,10 +251,10 @@ function Celebration({
         </p>
 
         <div className="mt-6 flex gap-2.5">
-          <button onClick={onAgain} className="flex flex-1 items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-violet-deep to-violet py-3 text-sm font-bold text-white shadow-glow">
+          <button onClick={onAgain} className="btn-primary flex flex-1 items-center justify-center gap-2 rounded-2xl py-3 text-sm shadow-glow">
             <RotateCcw className="h-4 w-4" /> Play again
           </button>
-          <Link href="/" className="flex items-center justify-center rounded-2xl glass px-4 py-3 text-sm font-semibold text-ink-dim">
+          <Link href="/" className="flex items-center justify-center rounded-2xl border border-line bg-void-600 px-4 py-3 text-sm font-semibold text-ink-dim transition-colors hover:text-ink">
             Lobby
           </Link>
         </div>
