@@ -78,10 +78,16 @@ export async function createProfile(
 ): Promise<{ profile: ServerProfile; token: string }> {
   const message = profileMessage(address);
   const signature = await signMessageAsync({ message });
+  let referredBy: string | undefined;
+  try {
+    referredBy = localStorage.getItem("gambit:ref") || undefined;
+  } catch {
+    /* ignore */
+  }
   const res = await fetch("/api/profile", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ address, message, signature, profile: data }),
+    body: JSON.stringify({ address, message, signature, profile: data, referredBy }),
   });
   const json = await res.json();
   if (!res.ok) throw new Error(json.error ?? "Could not save profile");

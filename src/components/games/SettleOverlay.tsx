@@ -1,10 +1,11 @@
 "use client";
 
 import { useState } from "react";
-import { Loader2, ExternalLink, RotateCcw } from "lucide-react";
+import { Loader2, ExternalLink, RotateCcw, Share2 } from "lucide-react";
 import Link from "next/link";
 import { retrySettle } from "@/lib/matchClient";
 import { useStakeMatch } from "@/hooks/useStakeMatch";
+import { inviteUrl, shareOrCopy } from "@/lib/share";
 import { cn } from "@/lib/cn";
 
 const EXPLORER: Record<number, string> = {
@@ -24,6 +25,7 @@ export function SettleOverlay({
   settleError,
   chainId,
   matchId,
+  shareAddress,
 }: {
   result: "win" | "lose" | "draw";
   status: string; // "settling" | "settled"
@@ -31,6 +33,7 @@ export function SettleOverlay({
   settleError?: string | null;
   chainId?: number;
   matchId: bigint;
+  shareAddress?: string;
 }) {
   const settling = status === "settling";
   const [busy, setBusy] = useState(false);
@@ -105,7 +108,21 @@ export function SettleOverlay({
               View payout <ExternalLink className="h-3 w-3" />
             </a>
           )}
-          <div className="mt-4">
+          <div className="mt-4 flex items-center justify-center gap-2">
+            {result === "win" && (
+              <button
+                onClick={() =>
+                  shareOrCopy({
+                    title: "Gambit",
+                    text: "I just won a staked match on Gambit ♟ — come play me.",
+                    url: inviteUrl(shareAddress),
+                  })
+                }
+                className="inline-flex items-center gap-1.5 rounded-xl border border-line bg-void-600 px-4 py-2.5 text-sm font-semibold text-ink transition-colors hover:border-line-strong"
+              >
+                <Share2 className="h-4 w-4" /> Share
+              </button>
+            )}
             <Link href="/" className="btn-primary inline-block rounded-xl px-5 py-2.5 text-sm shadow-glow">
               Back to lobby
             </Link>
