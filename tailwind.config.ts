@@ -8,31 +8,33 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
+        // Near-black, slightly cool base + elevated surfaces.
         void: {
-          DEFAULT: "#08080f",
-          800: "#0c0c16",
-          700: "#11111f",
-          600: "#171728",
+          DEFAULT: "#0a0a0c",
+          800: "#101013",
+          700: "#16161a",
+          600: "#1e1e23",
         },
         ink: {
-          DEFAULT: "#f3f1ff",
-          dim: "#a7a3c4",
-          faint: "#6c6890",
+          DEFAULT: "#f4f4f5",
+          dim: "#9a9aa3",
+          faint: "#646470",
         },
+        // Matured, low-neon hues. Emerald (`teal`) is the brand / money accent.
         violet: {
-          DEFAULT: "#8b7dff",
-          bright: "#a89bff",
-          deep: "#5b4ee0",
+          DEFAULT: "#8e8bf0",
+          bright: "#aaa7ff",
+          deep: "#5d58c9",
         },
         teal: {
-          DEFAULT: "#27e1a6",
-          deep: "#10b886",
+          DEFAULT: "#3ecf8e",
+          deep: "#1f9d6b",
         },
         amber: {
-          DEFAULT: "#ffc15e",
+          DEFAULT: "#e3b341",
         },
         rose: {
-          DEFAULT: "#ff6b9a",
+          DEFAULT: "#e06c8b",
         },
       },
       fontFamily: {
@@ -44,35 +46,25 @@ const config: Config = {
         "4xl": "2rem",
       },
       boxShadow: {
-        glow: "0 0 0 1px rgba(139,125,255,0.15), 0 8px 40px -8px rgba(139,125,255,0.35)",
-        "glow-teal": "0 0 0 1px rgba(39,225,166,0.15), 0 8px 40px -8px rgba(39,225,166,0.35)",
-        card: "0 1px 0 0 rgba(255,255,255,0.04) inset, 0 20px 50px -20px rgba(0,0,0,0.8)",
-      },
-      backgroundImage: {
-        "grid-fade":
-          "radial-gradient(circle at 50% 0%, rgba(139,125,255,0.12), transparent 60%)",
+        // Realistic, grounded shadows — no neon bloom.
+        card: "0 1px 2px rgba(0,0,0,0.4), 0 12px 28px -16px rgba(0,0,0,0.8)",
+        pop: "0 2px 6px rgba(0,0,0,0.5), 0 24px 48px -24px rgba(0,0,0,0.9)",
+        // Subtle green lift reserved for the single primary action.
+        glow: "0 1px 2px rgba(0,0,0,0.5), 0 10px 26px -14px rgba(31,157,107,0.5)",
+        "glow-teal": "0 1px 2px rgba(0,0,0,0.5), 0 10px 26px -14px rgba(31,157,107,0.5)",
       },
       keyframes: {
-        float: {
-          "0%, 100%": { transform: "translateY(0px)" },
-          "50%": { transform: "translateY(-12px)" },
-        },
-        "pulse-glow": {
-          "0%, 100%": { opacity: "0.6" },
+        "pulse-soft": {
+          "0%, 100%": { opacity: "0.5" },
           "50%": { opacity: "1" },
         },
         shimmer: {
           "100%": { transform: "translateX(100%)" },
         },
-        "spin-slow": {
-          to: { transform: "rotate(360deg)" },
-        },
       },
       animation: {
-        float: "float 6s ease-in-out infinite",
-        "pulse-glow": "pulse-glow 3s ease-in-out infinite",
+        "pulse-soft": "pulse-soft 2.4s ease-in-out infinite",
         shimmer: "shimmer 2.5s infinite",
-        "spin-slow": "spin-slow 18s linear infinite",
       },
     },
   },
