@@ -5,31 +5,35 @@ import { ESCROW_ABI, ESCROW_ADDRESS } from "@/lib/escrow";
 
 const ZERO = "0x0000000000000000000000000000000000000000" as const;
 
-const CHAIN = process.env.NEXT_PUBLIC_CHAIN === "mainnet" ? celo : celoSepolia;
-const RPC =
-  CHAIN.id === celo.id
-    ? "https://forno.celo.org"
-    : "https://forno.celo-sepolia.celo-testnet.org";
+// Settle on the chain the match was actually created on — derived from the
+// match's stored chain_id, NOT a global env var. This makes payouts robust to
+// env drift (e.g. NEXT_PUBLIC_CHAIN being wrong on the server).
+const CHAINS: Record<number, { chain: typeof celo | typeof celoSepolia; rpc: string }> = {
+  [celo.id]: { chain: celo, rpc: "https://forno.celo.org" },
+  [celoSepolia.id]: { chain: celoSepolia, rpc: "https://forno.celo-sepolia.celo-testnet.org" },
+};
 
 export function relayerConfigured() {
-  return !!process.env.RELAYER_PRIVATE_KEY && !!ESCROW_ADDRESS[CHAIN.id];
+  return !!process.env.RELAYER_PRIVATE_KEY;
 }
 
 /**
  * Settle a match on-chain with the relayer key. `winner` null = draw.
  * Server-only; the key never leaves the server env.
  */
-export async function settleOnChain(matchId: bigint, winner: string | null) {
+export async function settleOnChain(matchId: bigint, winner: string | null, chainId: number) {
   const key = process.env.RELAYER_PRIVATE_KEY as `0x${string}` | undefined;
-  const escrow = ESCROW_ADDRESS[CHAIN.id];
   if (!key) throw new Error("Relayer not configured");
-  if (!escrow) throw new Error("No escrow on this chain");
+  const cfg = CHAINS[chainId];
+  if (!cfg) throw new Error(`Unsupported chain ${chainId}`);
+  const escrow = ESCROW_ADDRESS[chainId];
+  if (!escrow) throw new Error(`No escrow on chain ${chainId}`);
 
   const ranking = (winner ? [getAddress(winner)] : [ZERO]) as `0x${string}`[];
 
   const account = privateKeyToAccount(key);
-  const wallet = createWalletClient({ account, chain: CHAIN, transport: http(RPC) });
-  const pub = createPublicClient({ chain: CHAIN, transport: http(RPC) });
+  const wallet = createWalletClient({ account, chain: cfg.chain, transport: http(cfg.rpc) });
+  const pub = createPublicClient({ chain: cfg.chain, transport: http(cfg.rpc) });
 
   const hash = await wallet.writeContract({
     address: escrow,

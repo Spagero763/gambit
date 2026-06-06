@@ -8,6 +8,7 @@ import { supabase } from "@/lib/supabase";
 import { fetchWhot, whotAction, WhotView } from "@/lib/matchClient";
 import { Card, Shape, SHAPE_LABEL, isLegal } from "@/lib/games/whot";
 import { WhotCardBack, WhotCardFace, WhotShape } from "./whot/WhotCard";
+import { SettleOverlay } from "./SettleOverlay";
 import { play } from "@/lib/sfx";
 import { cn } from "@/lib/cn";
 
@@ -229,30 +230,14 @@ export function StakedWhot({ matchId, you }: { matchId: bigint; you: `0x${string
       <AnimatePresence>
         {finished && (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="fixed inset-0 z-40 grid place-items-center bg-void/80 backdrop-blur-sm">
-            <div className="text-center">
-              <p className={cn("text-3xl font-black tracking-tight", iWon ? "text-teal" : "text-rose")}>{iWon ? "You win" : "You lose"}</p>
-              <p className="mt-1 text-sm text-ink-dim">
-                {view?.status === "settling" ? (
-                  <span className="inline-flex items-center gap-1.5">
-                    <Loader2 className="h-3.5 w-3.5 animate-spin" /> Paying out
-                  </span>
-                ) : iWon ? (
-                  "Pot paid to your wallet"
-                ) : (
-                  "Pot paid to opponent"
-                )}
-              </p>
-              {view?.settleTx && (
-                <a href={`${EXPLORER[view.chainId] ?? ""}${view.settleTx}`} target="_blank" rel="noreferrer" className="mt-3 inline-flex items-center gap-1.5 rounded-full bg-white/10 px-3 py-1.5 text-xs font-semibold text-ink">
-                  View payout <ExternalLink className="h-3 w-3" />
-                </a>
-              )}
-              <div className="mt-4">
-                <Link href="/" className="btn-primary inline-block rounded-xl px-5 py-2.5 text-sm shadow-glow">
-                  Back to lobby
-                </Link>
-              </div>
-            </div>
+            <SettleOverlay
+              result={iWon ? "win" : "lose"}
+              status={view?.status ?? "settling"}
+              settleTx={view?.settleTx}
+              settleError={view?.settleError}
+              chainId={view?.chainId}
+              matchId={matchId}
+            />
           </motion.div>
         )}
       </AnimatePresence>
