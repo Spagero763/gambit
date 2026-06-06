@@ -10,6 +10,7 @@ import {
 } from "@/lib/server/whot";
 import { settleOnChain, relayerConfigured } from "@/lib/server/settle";
 import { verifyToken } from "@/lib/server/profileToken";
+import { limited } from "@/lib/server/rateLimit";
 
 export const runtime = "nodejs";
 
@@ -59,6 +60,8 @@ export async function GET(req: NextRequest) {
 /** POST /api/match/whot  { id, player, action } -> redacted view */
 export async function POST(req: NextRequest) {
   try {
+    const rl = limited(req, "whot", 60, 10_000);
+    if (rl) return rl;
     const { id, player, action, token } = await req.json();
     if (id === undefined || !player || !action) {
       return NextResponse.json({ error: "Bad request" }, { status: 400 });

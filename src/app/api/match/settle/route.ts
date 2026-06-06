@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase";
 import { settleOnChain, relayerConfigured } from "@/lib/server/settle";
+import { limited } from "@/lib/server/rateLimit";
 
 export const runtime = "nodejs";
 
@@ -14,6 +15,8 @@ export const runtime = "nodejs";
  */
 export async function POST(req: NextRequest) {
   try {
+    const rl = limited(req, "settle", 12, 10_000);
+    if (rl) return rl;
     const { id, refund, secret } = await req.json();
     if (id === undefined) return NextResponse.json({ error: "Bad request" }, { status: 400 });
     const db = supabaseAdmin();
