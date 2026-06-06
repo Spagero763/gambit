@@ -1,7 +1,12 @@
 import { Game } from "@/lib/games";
+import { ChessGlyph } from "@/components/games/chess/ChessPiece";
+import type { PieceSymbol } from "chess.js";
 
 const VB = "0 0 320 200";
 const SLICE = "xMidYMid slice";
+
+const MEEPLE_PATH =
+  "M50 5C40 5 33 13 33 22C33 28 36 33 41 36C30 39 22 47 17 58C15 62 17 67 22 67L36 67C36 67 33 75 33 82C33 90 40 95 50 95C60 95 67 90 67 82C67 75 64 67 64 67L78 67C83 67 85 62 83 58C78 47 70 39 59 36C64 33 67 28 67 22C67 13 60 5 50 5Z";
 
 export function GameCover({ art, className }: { art: Game["art"]; className?: string }) {
   switch (art) {
@@ -18,268 +23,330 @@ export function GameCover({ art, className }: { art: Game["art"]; className?: st
   }
 }
 
-/* ---------- isometric helpers ---------- */
-function iso(i: number, j: number, cx: number, cy: number, w: number, h: number) {
-  return { x: cx + (i - j) * w, y: cy + (i + j) * h };
-}
-
+/* ============================ CHESS ============================ */
+/* A real 2D board (chess.com-style light/green squares) seen top-down with the
+   genuine Staunton pieces in a 1.e4 e5 opening. */
 function ChessCover({ className }: { className?: string }) {
-  const cx = 160;
-  const cy = 36;
-  const w = 22;
-  const h = 11;
-  const N = 6;
-  const cells = [];
-  for (let i = 0; i < N; i++) {
-    for (let j = 0; j < N; j++) {
-      const a = iso(i, j, cx, cy, w, h);
-      const b = iso(i + 1, j, cx, cy, w, h);
-      const c = iso(i + 1, j + 1, cx, cy, w, h);
-      const d = iso(i, j + 1, cx, cy, w, h);
-      cells.push(
-        <polygon
-          key={`${i}-${j}`}
-          points={`${a.x},${a.y} ${b.x},${b.y} ${c.x},${c.y} ${d.x},${d.y}`}
-          fill={(i + j) % 2 === 0 ? "#241f4d" : "#15122e"}
-          stroke="rgba(168,155,255,0.12)"
-          strokeWidth={0.5}
+  const COLS = 8;
+  const ROWS = 5;
+  const S = 40; // square size → 8*40=320 wide, 5*40=200 tall, exact fill
+  const LIGHT = "#eeeed2";
+  const DARK = "#6f9b55";
+
+  // 5 visible ranks of a 1.e4 e5 position
+  const board: (PieceSymbol | null)[][] = [
+    ["r", "n", "b", "q", "k", "b", "n", "r"],
+    ["p", "p", "p", "p", null, "p", "p", "p"],
+    [null, null, null, null, "p", null, null, null],
+    [null, null, null, null, "p", null, null, null],
+    ["p", "p", "p", "p", null, "p", "p", "p"],
+  ];
+  const colorOf = (r: number): "w" | "b" => (r <= 2 ? "b" : "w");
+
+  const squares: JSX.Element[] = [];
+  for (let r = 0; r < ROWS; r++) {
+    for (let c = 0; c < COLS; c++) {
+      squares.push(
+        <rect
+          key={`s${r}-${c}`}
+          x={c * S}
+          y={r * S}
+          width={S}
+          height={S}
+          fill={(r + c) % 2 === 0 ? LIGHT : DARK}
         />
       );
     }
   }
-  const k = iso(3, 3, cx, cy, w, h); // king base
-  const p = iso(1.4, 4.2, cx, cy, w, h); // pawn base
+
+  const pieces: JSX.Element[] = [];
+  for (let r = 0; r < ROWS; r++) {
+    for (let c = 0; c < COLS; c++) {
+      const t = board[r][c];
+      if (!t) continue;
+      const k = S / 45;
+      pieces.push(
+        <g key={`p${r}-${c}`} transform={`translate(${c * S + (S - 45 * k) / 2} ${r * S + (S - 45 * k) / 2}) scale(${k})`}>
+          <ChessGlyph type={t} color={colorOf(r)} />
+        </g>
+      );
+    }
+  }
+
   return (
     <svg viewBox={VB} preserveAspectRatio={SLICE} className={className}>
+      {squares}
+      {/* last-move highlight on the e-file */}
+      <rect x={4 * S} y={2 * S} width={S} height={S} fill="#f6d66b" opacity="0.4" />
+      <rect x={4 * S} y={3 * S} width={S} height={S} fill="#f6d66b" opacity="0.4" />
+      {pieces}
+      {/* soft top light + bottom scrim are added by the card itself */}
+      <rect width="320" height="200" fill="url(#chessSheen)" />
       <defs>
-        <linearGradient id="cbg" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0" stopColor="#15132b" />
-          <stop offset="1" stopColor="#0a0918" />
-        </linearGradient>
-        <radialGradient id="cglow" cx="0.5" cy="0.1" r="0.8">
-          <stop offset="0" stopColor="rgba(139,125,255,0.45)" />
-          <stop offset="1" stopColor="rgba(139,125,255,0)" />
-        </radialGradient>
-        <linearGradient id="king" x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0" stopColor="#fbfaff" />
-          <stop offset="0.5" stopColor="#cfc7ff" />
-          <stop offset="1" stopColor="#8b7dff" />
-        </linearGradient>
-        <linearGradient id="pawn" x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0" stopColor="#b9b0ff" />
-          <stop offset="1" stopColor="#5b4ee0" />
+        <linearGradient id="chessSheen" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stopColor="rgba(255,255,255,0.10)" />
+          <stop offset="0.4" stopColor="rgba(255,255,255,0)" />
         </linearGradient>
       </defs>
-      <rect width="320" height="200" fill="url(#cbg)" />
-      <rect width="320" height="200" fill="url(#cglow)" />
-      {cells}
-      {/* pawn */}
-      <ellipse cx={p.x} cy={p.y + 2} rx="11" ry="4" fill="rgba(0,0,0,0.45)" />
-      <circle cx={p.x} cy={p.y - 18} r="7" fill="url(#pawn)" />
-      <path d={`M${p.x - 9},${p.y} Q${p.x},${p.y - 16} ${p.x + 9},${p.y} Z`} fill="url(#pawn)" />
-      {/* king */}
-      <ellipse cx={k.x} cy={k.y + 3} rx="16" ry="5.5" fill="rgba(0,0,0,0.5)" />
-      <path
-        d={`M${k.x - 13},${k.y} Q${k.x - 9},${k.y - 30} ${k.x},${k.y - 34} Q${k.x + 9},${k.y - 30} ${k.x + 13},${k.y} Z`}
-        fill="url(#king)"
-      />
-      <ellipse cx={k.x} cy={k.y - 36} rx="9" ry="6" fill="url(#king)" />
-      <rect x={k.x - 2} y={k.y - 56} width="4" height="16" rx="1.5" fill="#fbfaff" />
-      <rect x={k.x - 6} y={k.y - 50} width="12" height="4" rx="1.5" fill="#fbfaff" />
     </svg>
   );
 }
 
+/* ============================ TIC-TAC-TOE ============================ */
 function XOCover({ className }: { className?: string }) {
-  return (
-    <svg viewBox={VB} preserveAspectRatio={SLICE} className={className}>
-      <defs>
-        <linearGradient id="xbg" x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0" stopColor="#0a1c19" />
-          <stop offset="1" stopColor="#06120f" />
-        </linearGradient>
-        <radialGradient id="xglow" cx="0.5" cy="0.2" r="0.9">
-          <stop offset="0" stopColor="rgba(39,225,166,0.4)" />
-          <stop offset="1" stopColor="rgba(39,225,166,0)" />
-        </radialGradient>
-        <linearGradient id="xo-x" x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0" stopColor="#7defc4" />
-          <stop offset="1" stopColor="#10b886" />
-        </linearGradient>
-      </defs>
-      <rect width="320" height="200" fill="url(#xbg)" />
-      <rect width="320" height="200" fill="url(#xglow)" />
-      <g transform="translate(160 104) skewX(-12) scale(1 0.86)">
-        {/* grid */}
-        <g stroke="rgba(39,225,166,0.5)" strokeWidth="4" strokeLinecap="round">
-          <line x1="-26" y1="-78" x2="-26" y2="78" />
-          <line x1="26" y1="-78" x2="26" y2="78" />
-          <line x1="-78" y1="-26" x2="78" y2="-26" />
-          <line x1="-78" y1="26" x2="78" y2="26" />
-        </g>
-        {/* X top-left */}
-        <g transform="translate(-52 -52)" stroke="url(#xo-x)" strokeWidth="8" strokeLinecap="round">
-          <line x1="-12" y1="-12" x2="12" y2="12" />
-          <line x1="12" y1="-12" x2="-12" y2="12" />
-        </g>
-        {/* O center */}
-        <circle cx="0" cy="0" r="14" fill="none" stroke="#e9fff7" strokeWidth="7" />
-        {/* X bottom-right */}
-        <g transform="translate(52 52)" stroke="url(#xo-x)" strokeWidth="8" strokeLinecap="round">
-          <line x1="-12" y1="-12" x2="12" y2="12" />
-          <line x1="12" y1="-12" x2="-12" y2="12" />
-        </g>
-        {/* O bottom-left */}
-        <circle cx="-52" cy="52" r="13" fill="none" stroke="#7defc4" strokeWidth="6" opacity="0.7" />
-      </g>
-    </svg>
-  );
-}
+  const O = "#3ecf8e";
+  const X = "#c7c2ff";
+  // centered 3x3, square 46, board 138, origin so it's centred
+  const cell = 46;
+  const ox = (320 - cell * 3) / 2;
+  const oy = (200 - cell * 3) / 2;
+  const center = (r: number, c: number) => ({ x: ox + c * cell + cell / 2, y: oy + r * cell + cell / 2 });
 
-function SnakesCover({ className }: { className?: string }) {
-  const cx = 120;
-  const cy = 70;
-  const w = 24;
-  const h = 12;
-  const N = 4;
-  const cells = [];
-  for (let i = 0; i < N; i++) {
-    for (let j = 0; j < N; j++) {
-      const a = iso(i, j, cx, cy, w, h);
-      const b = iso(i + 1, j, cx, cy, w, h);
-      const c = iso(i + 1, j + 1, cx, cy, w, h);
-      const d = iso(i, j + 1, cx, cy, w, h);
-      cells.push(
-        <polygon
-          key={`${i}-${j}`}
-          points={`${a.x},${a.y} ${b.x},${b.y} ${c.x},${c.y} ${d.x},${d.y}`}
-          fill={(i + j) % 2 === 0 ? "#3a2c10" : "#241a08"}
-          stroke="rgba(255,193,94,0.14)"
-          strokeWidth={0.5}
-        />
-      );
-    }
-  }
-  return (
-    <svg viewBox={VB} preserveAspectRatio={SLICE} className={className}>
-      <defs>
-        <linearGradient id="sbg" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0" stopColor="#1c1606" />
-          <stop offset="1" stopColor="#0c0a04" />
-        </linearGradient>
-        <radialGradient id="sglow" cx="0.5" cy="0.15" r="0.9">
-          <stop offset="0" stopColor="rgba(255,193,94,0.32)" />
-          <stop offset="1" stopColor="rgba(255,193,94,0)" />
-        </radialGradient>
-      </defs>
-      <rect width="320" height="200" fill="url(#sbg)" />
-      <rect width="320" height="200" fill="url(#sglow)" />
-      {cells}
-      {/* ladder */}
-      <g stroke="#27e1a6" strokeWidth="3.5" strokeLinecap="round">
-        <line x1="150" y1="150" x2="186" y2="58" />
-        <line x1="168" y1="154" x2="204" y2="62" />
-        {[0, 1, 2, 3, 4].map((t) => (
-          <line
-            key={t}
-            x1={150 + (186 - 150) * (t / 4) + 9}
-            y1={150 + (58 - 150) * (t / 4) + 2}
-            x2={150 + (186 - 150) * (t / 4) + 18}
-            y2={150 + (58 - 150) * (t / 4) - 2}
-          />
-        ))}
-      </g>
-      {/* snake */}
-      <path
-        d="M232 60 Q200 84 236 104 Q272 124 240 150"
-        fill="none"
-        stroke="#ff6b9a"
-        strokeWidth="9"
-        strokeLinecap="round"
-      />
-      <circle cx="232" cy="58" r="8" fill="#ff6b9a" />
-      <circle cx="230" cy="56" r="1.6" fill="#0c0a04" />
-      {/* die */}
-      <g transform="translate(70 150)">
-        <rect x="-12" y="-12" width="24" height="24" rx="5" fill="#f3f1ff" />
-        <circle cx="-5" cy="-5" r="2" fill="#1c1606" />
-        <circle cx="5" cy="5" r="2" fill="#1c1606" />
-        <circle cx="0" cy="0" r="2" fill="#1c1606" />
-      </g>
-    </svg>
-  );
-}
-
-function BlocksCover({ className }: { className?: string }) {
-  const cube = (x: number, y: number, s: number, top: string, left: string, right: string) => {
-    const h = s * 0.5;
+  const drawX = (r: number, c: number, key: string) => {
+    const { x, y } = center(r, c);
+    const d = 13;
     return (
-      <g>
-        <polygon points={`${x},${y} ${x + s},${y - h} ${x + 2 * s},${y} ${x + s},${y + h}`} fill={top} />
-        <polygon points={`${x},${y} ${x + s},${y + h} ${x + s},${y + h + s} ${x},${y + s}`} fill={left} />
-        <polygon
-          points={`${x + 2 * s},${y} ${x + s},${y + h} ${x + s},${y + h + s} ${x + 2 * s},${y + s}`}
-          fill={right}
-        />
+      <g key={key} stroke={X} strokeWidth="7" strokeLinecap="round">
+        <line x1={x - d} y1={y - d} x2={x + d} y2={y + d} />
+        <line x1={x + d} y1={y - d} x2={x - d} y2={y + d} />
       </g>
     );
   };
+  const drawO = (r: number, c: number, key: string) => {
+    const { x, y } = center(r, c);
+    return <circle key={key} cx={x} cy={y} r="14" fill="none" stroke={O} strokeWidth="7" />;
+  };
+
   return (
     <svg viewBox={VB} preserveAspectRatio={SLICE} className={className}>
+      <rect width="320" height="200" fill="#101319" />
+      <rect width="320" height="200" fill="url(#xoGlow)" />
       <defs>
-        <linearGradient id="bbg" x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0" stopColor="#1f0c17" />
-          <stop offset="1" stopColor="#0d050b" />
-        </linearGradient>
-        <radialGradient id="bglow" cx="0.5" cy="0.2" r="0.9">
-          <stop offset="0" stopColor="rgba(255,107,154,0.35)" />
-          <stop offset="1" stopColor="rgba(255,107,154,0)" />
+        <radialGradient id="xoGlow" cx="0.5" cy="0.32" r="0.7">
+          <stop offset="0" stopColor="rgba(62,207,142,0.16)" />
+          <stop offset="1" stopColor="rgba(62,207,142,0)" />
         </radialGradient>
       </defs>
-      <rect width="320" height="200" fill="url(#bbg)" />
-      <rect width="320" height="200" fill="url(#bglow)" />
-      <g transform="translate(96 70)">
-        {cube(0, 60, 30, "#5b4ee0", "#3a3196", "#2a2475")}
-        {cube(60, 60, 30, "#27e1a6", "#179c72", "#0f6e51")}
-        {cube(30, 30, 30, "#ffc15e", "#cf9636", "#9c7026")}
-        {cube(30, 90, 30, "#ff6b9a", "#cf4f78", "#9c3a59")}
-        {cube(30, 0, 30, "#a89bff", "#7a6fd6", "#5b51a8")}
+      {/* grid */}
+      <g stroke="rgba(255,255,255,0.16)" strokeWidth="3" strokeLinecap="round">
+        <line x1={ox + cell} y1={oy} x2={ox + cell} y2={oy + cell * 3} />
+        <line x1={ox + cell * 2} y1={oy} x2={ox + cell * 2} y2={oy + cell * 3} />
+        <line x1={ox} y1={oy + cell} x2={ox + cell * 3} y2={oy + cell} />
+        <line x1={ox} y1={oy + cell * 2} x2={ox + cell * 3} y2={oy + cell * 2} />
+      </g>
+      {/* a near-finished game: X wins the main diagonal */}
+      {drawX(0, 0, "x1")}
+      {drawO(0, 1, "o1")}
+      {drawO(0, 2, "o2")}
+      {drawX(1, 1, "x2")}
+      {drawO(1, 0, "o3")}
+      {drawX(2, 2, "x3")}
+      {drawX(2, 0, "x4")}
+      {/* winning line */}
+      <line
+        x1={center(0, 0).x}
+        y1={center(0, 0).y}
+        x2={center(2, 2).x}
+        y2={center(2, 2).y}
+        stroke="#f6d66b"
+        strokeWidth="4"
+        strokeLinecap="round"
+        opacity="0.85"
+      />
+    </svg>
+  );
+}
+
+/* ============================ SNAKES & LADDERS ============================ */
+function SnakesCover({ className }: { className?: string }) {
+  const COLS = 6;
+  const ROWS = 4;
+  const pad = 12;
+  const cw = (320 - pad * 2) / COLS;
+  const ch = (200 - pad * 2) / ROWS;
+  const cellX = (c: number) => pad + c * cw;
+  const cellY = (r: number) => pad + r * ch;
+  const tint = ["#2a2418", "#332b1b"];
+
+  const cells: JSX.Element[] = [];
+  for (let r = 0; r < ROWS; r++) {
+    for (let c = 0; c < COLS; c++) {
+      // boustrophedon numbering from bottom-left = 1
+      const fromBottom = ROWS - 1 - r;
+      const leftToRight = fromBottom % 2 === 0;
+      const col = leftToRight ? c : COLS - 1 - c;
+      const n = fromBottom * COLS + col + 1;
+      cells.push(
+        <g key={`${r}-${c}`}>
+          <rect
+            x={cellX(c) + 1.5}
+            y={cellY(r) + 1.5}
+            width={cw - 3}
+            height={ch - 3}
+            rx="5"
+            fill={tint[(r + c) % 2]}
+            stroke="rgba(227,179,65,0.18)"
+            strokeWidth="1"
+          />
+          <text x={cellX(c) + 6} y={cellY(r) + 15} fontSize="9" fill="rgba(255,255,255,0.32)" fontFamily="monospace">
+            {n}
+          </text>
+        </g>
+      );
+    }
+  }
+
+  const lx1 = cellX(1) + cw / 2;
+  const ly1 = cellY(3) + ch / 2;
+  const lx2 = cellX(1) + cw / 2 + 8;
+  const ly2 = cellY(0) + ch / 2;
+
+  return (
+    <svg viewBox={VB} preserveAspectRatio={SLICE} className={className}>
+      <rect width="320" height="200" fill="#171206" />
+      {cells}
+
+      {/* ladder */}
+      <g stroke="#46c08a" strokeWidth="3" strokeLinecap="round">
+        <line x1={lx1 - 7} y1={ly1} x2={lx2 - 7} y2={ly2} />
+        <line x1={lx1 + 7} y1={ly1} x2={lx2 + 7} y2={ly2} />
+        {[0, 1, 2, 3, 4].map((t) => {
+          const f = t / 4;
+          return (
+            <line
+              key={t}
+              x1={lx1 - 7 + (lx2 - lx1) * f}
+              y1={ly1 + (ly2 - ly1) * f}
+              x2={lx1 + 7 + (lx2 - lx1) * f}
+              y2={ly1 + (ly2 - ly1) * f}
+            />
+          );
+        })}
+      </g>
+
+      {/* snake */}
+      <path
+        d={`M${cellX(4) + cw / 2} ${cellY(0) + ch / 2} q ${cw * 0.9} ${ch} 0 ${ch * 1.3} q ${-cw} ${ch * 0.6} 6 ${ch * 1.4}`}
+        fill="none"
+        stroke="#e06c8b"
+        strokeWidth="9"
+        strokeLinecap="round"
+      />
+      <circle cx={cellX(4) + cw / 2} cy={cellY(0) + ch / 2} r="8" fill="#e06c8b" />
+      <circle cx={cellX(4) + cw / 2 - 2.5} cy={cellY(0) + ch / 2 - 2} r="1.5" fill="#171206" />
+      <circle cx={cellX(4) + cw / 2 + 2.5} cy={cellY(0) + ch / 2 - 2} r="1.5" fill="#171206" />
+
+      {/* player token (meeple) */}
+      <g transform={`translate(${cellX(3) + cw / 2} ${cellY(2) + ch / 2})`}>
+        <ellipse cx="0" cy="9" rx="9" ry="3" fill="rgba(0,0,0,0.45)" />
+        <g transform="translate(-10 -13) scale(0.2)">
+          <path d={MEEPLE_PATH} fill="#3ecf8e" stroke="#0a0a0c" strokeWidth={6} strokeLinejoin="round" />
+        </g>
       </g>
     </svg>
   );
 }
 
-function WhotCover({ className }: { className?: string }) {
-  // a fanned hand of Whot cards, each showing a shape
-  const cards = [
-    { rot: -28, x: 96, shape: "circle", c: "#8b7dff" },
-    { rot: -14, x: 124, shape: "triangle", c: "#27e1a6" },
-    { rot: 0, x: 154, shape: "cross", c: "#ffc15e" },
-    { rot: 14, x: 184, shape: "square", c: "#ff6b9a" },
-    { rot: 28, x: 212, shape: "star", c: "#a89bff" },
+/* ============================ BLOCK BLITZ ============================ */
+function BlocksCover({ className }: { className?: string }) {
+  const N = 8;
+  const size = 168;
+  const cell = size / N;
+  const ox = (320 - size) / 2;
+  const oy = (200 - size) / 2;
+
+  // 0 = empty, otherwise palette index
+  const C = ["", "#5d58c9", "#3ecf8e", "#e3b341", "#e06c8b", "#8e8bf0"];
+  // a believable mid-game board (rows from top to bottom)
+  const grid = [
+    [0, 0, 0, 0, 0, 0, 0, 0],
+    [0, 0, 5, 5, 0, 0, 0, 0],
+    [0, 0, 0, 5, 0, 0, 2, 2],
+    [3, 0, 0, 0, 0, 0, 0, 2],
+    [3, 3, 1, 1, 0, 4, 4, 0],
+    [1, 1, 1, 0, 2, 2, 4, 4],
+    [1, 3, 3, 3, 2, 0, 4, 1],
+    [1, 1, 3, 2, 2, 2, 1, 1],
   ];
+
+  const cells: JSX.Element[] = [];
+  for (let r = 0; r < N; r++) {
+    for (let c = 0; c < N; c++) {
+      const v = grid[r][c];
+      const x = ox + c * cell;
+      const y = oy + r * cell;
+      cells.push(
+        <rect
+          key={`bg${r}-${c}`}
+          x={x + 1.5}
+          y={y + 1.5}
+          width={cell - 3}
+          height={cell - 3}
+          rx="3.5"
+          fill={v ? C[v] : "rgba(255,255,255,0.04)"}
+        />
+      );
+      if (v) {
+        cells.push(
+          <rect
+            key={`hi${r}-${c}`}
+            x={x + 1.5}
+            y={y + 1.5}
+            width={cell - 3}
+            height={(cell - 3) / 2}
+            rx="3.5"
+            fill="rgba(255,255,255,0.18)"
+          />
+        );
+      }
+    }
+  }
+
+  return (
+    <svg viewBox={VB} preserveAspectRatio={SLICE} className={className}>
+      <rect width="320" height="200" fill="#120a14" />
+      <rect x={ox - 6} y={oy - 6} width={size + 12} height={size + 12} rx="14" fill="#1a1320" stroke="rgba(255,255,255,0.06)" />
+      {cells}
+    </svg>
+  );
+}
+
+/* ============================ NAIJA WHOT ============================ */
+const WHOT = [
+  { shape: "circle", num: 3, c: "#8e8bf0" },
+  { shape: "triangle", num: 5, c: "#3ecf8e" },
+  { shape: "cross", num: 2, c: "#e3b341" },
+  { shape: "square", num: 7, c: "#e06c8b" },
+  { shape: "star", num: 8, c: "#aaa7ff" },
+] as const;
+
+function WhotCover({ className }: { className?: string }) {
+  const fan = [-26, -13, 0, 13, 26];
+  const baseX = [120, 142, 160, 178, 200];
   return (
     <svg viewBox={VB} preserveAspectRatio={SLICE} className={className}>
       <defs>
-        <radialGradient id="wbg" cx="0.5" cy="0.2" r="0.95">
-          <stop offset="0" stopColor="#23224d" />
-          <stop offset="1" stopColor="#0a0918" />
-        </radialGradient>
-        <radialGradient id="wfelt" cx="0.5" cy="1" r="0.8">
-          <stop offset="0" stopColor="rgba(39,225,166,0.18)" />
-          <stop offset="1" stopColor="rgba(39,225,166,0)" />
+        <radialGradient id="whotFelt" cx="0.5" cy="0.95" r="0.9">
+          <stop offset="0" stopColor="#1c3a2d" />
+          <stop offset="1" stopColor="#0c130f" />
         </radialGradient>
       </defs>
-      <rect width="320" height="200" fill="url(#wbg)" />
-      <rect width="320" height="200" fill="url(#wfelt)" />
-      {cards.map((card, i) => (
-        <g key={i} transform={`translate(${card.x} 150) rotate(${card.rot})`}>
-          <rect x="-26" y="-46" width="52" height="74" rx="8" fill="#f7f4ec" stroke="#d8d2c4" strokeWidth="1.2" />
-          <rect x="-26" y="-46" width="52" height="74" rx="8" fill="none" stroke={card.c} strokeWidth="2" opacity="0.35" />
+      <rect width="320" height="200" fill="url(#whotFelt)" />
+      {WHOT.map((card, i) => (
+        <g key={i} transform={`translate(${baseX[i]} 150) rotate(${fan[i]})`}>
+          <rect x="-28" y="-50" width="56" height="80" rx="9" fill="#f7f4ec" stroke="#cfc7b6" strokeWidth="1.2" />
+          <rect x="-28" y="-50" width="56" height="6" rx="3" fill={card.c} />
+          {/* corner index */}
+          <text x="-22" y="-33" fontSize="13" fontWeight="800" fill={card.c} fontFamily="ui-sans-serif, system-ui">
+            {card.num}
+          </text>
+          {/* center shape */}
           <g fill={card.c}>
-            <WhotShape shape={card.shape} cx={0} cy={-9} s={1.15} />
-            <WhotShape shape={card.shape} cx={-18} cy={-37} s={0.5} />
-            <WhotShape shape={card.shape} cx={18} cy={19} s={0.5} />
+            <WhotShape shape={card.shape} cx={0} cy={-6} r={13} />
+          </g>
+          {/* bottom-right mini */}
+          <g fill={card.c} opacity="0.9">
+            <WhotShape shape={card.shape} cx={20} cy={22} r={5} />
           </g>
         </g>
       ))}
@@ -287,8 +354,7 @@ function WhotCover({ className }: { className?: string }) {
   );
 }
 
-function WhotShape({ shape, cx, cy, s }: { shape: string; cx: number; cy: number; s: number }) {
-  const r = 11 * s;
+function WhotShape({ shape, cx, cy, r }: { shape: string; cx: number; cy: number; r: number }) {
   switch (shape) {
     case "circle":
       return <circle cx={cx} cy={cy} r={r} />;
