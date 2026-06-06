@@ -14,6 +14,10 @@ import {
   shuffle,
 } from "@/lib/games/whot";
 import { WhotCardBack, WhotCardFace, WhotShape } from "./WhotCard";
+import { play } from "@/lib/sfx";
+import { BOTS } from "@/lib/bots";
+import { useSettings, AVATAR_HEX } from "@/lib/settings";
+import { Avatar, BotFace } from "@/components/Avatar";
 import { cn } from "@/lib/cn";
 
 export interface Seat {
@@ -23,14 +27,7 @@ export interface Seat {
 
 type Pending = { amount: number; num: number } | null;
 
-const AVATAR_BG = [
-  "from-violet to-violet-deep",
-  "from-teal-deep to-[#0b5e46]",
-  "from-amber to-[#b9742a]",
-  "from-rose to-[#b13a63]",
-  "from-[#7fd7ff] to-[#2a6f9e]",
-  "from-[#c08bff] to-[#6a3aa8]",
-];
+const AVATAR_BG = ["#8e8bf0", "#3ecf8e", "#e3b341", "#e06c8b", "#5fb7e6", "#9bd154"];
 
 export function WhotTable({
   seats,
@@ -60,14 +57,19 @@ export function WhotTable({
   const busy = useRef(false);
   const dealt = useRef(false);
 
-  // mirror into state purely for rendering
-  const [, force] = useState(0);
+  // mirror into state purely for rendering. `seq` also lets the bot effect
+  // re-fire when an action keeps the same player on turn (Hold On, General
+  // Market, Suspension in 1v1) — otherwise setTurn(sameValue) is a no-op and
+  // the bot would freeze after playing one of those.
+  const [seq, force] = useState(0);
   const sync = () => force((x) => x + 1);
 
   const [turn, setTurn] = useState(0);
   const [calling, setCalling] = useState<Card | null>(null);
   const [log, setLog] = useState<{ text: string; who: number }[]>([]);
   const [winner, setWinner] = useState<number | null>(null);
+  const [settings] = useSettings();
+  const youName = settings.name || seats[0]?.name || "You";
 
   const pushLog = (text: string, who: number) => setLog((l) => [{ text, who }, ...l].slice(0, 5));
 
@@ -94,6 +96,7 @@ export function WhotTable({
     pendingRef.current = null;
     setTurn(0);
     setLog([{ text: "Cards dealt.", who: -1 }]);
+    play("deal");
     sync();
   }, [seats, n, rng, specials]);
 
@@ -131,6 +134,7 @@ export function WhotTable({
       hands.current[by] = hands.current[by].filter((c) => c.id !== card.id);
       pile.current = [...pile.current, card];
       active.current = newShape;
+      play("place");
 
       const label = card.shape === "whot" ? `Whot, called ${SHAPE_LABEL[newShape]}` : `${card.num} ${SHAPE_LABEL[card.shape]}`;
       pushLog(`${seats[by].name}: ${label}`, by);
@@ -139,7 +143,9 @@ export function WhotTable({
       if (hands.current[by].length === 0) {
         setWinner(by);
         sync();
-        onEnd(seats[by].name, by === 0 && !seats[0].isBot);
+        const youWon = by === 0 && !seats[0].isBot;
+        play(youWon ? "win" : "lose");
+        onEnd(seats[by].name, youWon);
         return true;
       }
 
@@ -217,6 +223,7 @@ export function WhotTable({
       hands.current[0] = [...hands.current[0], ...draw(1)];
       pushLog(`${seats[0].name} went to market`, 0);
     }
+    play("deal");
     setTurn(nextIndex(0));
     sync();
   };
@@ -286,7 +293,7 @@ export function WhotTable({
     }, 640);
     return () => clearTimeout(t);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [turn, winner]);
+  }, [turn, winner, seq]);
 
   const youHand = hands.current[0] ?? [];
   const pending = pendingRef.current;
@@ -319,18 +326,23 @@ export function WhotTable({
           const pi = oi + 1;
           const isActive = turn === pi && winner === null;
           const hand = hands.current[pi] ?? [];
+          const persona = BOTS.find((b) => b.name === op.name);
           return (
             <div
               key={pi}
               className={cn(
-                "flex flex-col items-center gap-1 rounded-2xl px-3 py-2 transition-all",
-                isActive ? "glass ring-1 ring-teal/40" : "bg-white/[0.02]"
+                "flex flex-col items-center gap-1 rounded-2xl border px-3 py-2 transition-all",
+                isActive ? "border-teal/40 bg-void-700" : "border-line bg-void-800"
               )}
             >
               <div className="flex items-center gap-2">
-                <span className={cn("grid h-7 w-7 place-items-center rounded-lg bg-gradient-to-br text-[11px] font-bold text-white", AVATAR_BG[pi % AVATAR_BG.length])}>
-                  {op.name.slice(0, 1)}
-                </span>
+                {persona ? (
+                  <BotFace bot={persona} size={28} rounded="rounded-lg" />
+                ) : (
+                  <span className="grid h-7 w-7 place-items-center rounded-lg text-[11px] font-semibold text-void" style={{ background: AVATAR_BG[pi % AVATAR_BG.length] }}>
+                    {op.name.slice(0, 1)}
+                  </span>
+                )}
                 <div className="leading-tight">
                   <p className="text-[11px] font-bold text-ink">{op.name}</p>
                   <p className="text-[9px] text-ink-faint">{hand.length} cards</p>
@@ -383,6 +395,18 @@ export function WhotTable({
         )}
       </div>
 
+      {/* you */}
+      <div className="mb-1 flex items-center justify-center gap-2">
+        <Avatar
+          image={settings.avatarImage || undefined}
+          color={AVATAR_HEX[settings.avatar] ?? AVATAR_HEX.teal}
+          name={youName}
+          size={22}
+          rounded="rounded-md"
+        />
+        <span className={cn("text-[11px] font-medium", turn === 0 && winner === null ? "text-teal" : "text-ink-dim")}>{youName}</span>
+      </div>
+
       {/* your hand */}
       <div className="relative flex h-32 items-end justify-center">
         {youHand.map((c, i) => {
@@ -422,11 +446,11 @@ export function WhotTable({
       <AnimatePresence>
         {calling && (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-50 grid place-items-center bg-void/75 backdrop-blur-sm">
-            <motion.div initial={{ scale: 0.85, y: 14 }} animate={{ scale: 1, y: 0 }} className="w-[86%] max-w-xs rounded-3xl glass p-5 text-center shadow-card">
-              <p className="mb-4 text-sm font-bold text-ink">Call a shape</p>
+            <motion.div initial={{ scale: 0.85, y: 14 }} animate={{ scale: 1, y: 0 }} className="w-[86%] max-w-xs rounded-3xl border border-line bg-void-700 p-5 text-center shadow-pop">
+              <p className="mb-4 text-sm font-semibold text-ink">Call a shape</p>
               <div className="grid grid-cols-2 gap-3">
                 {(["circle", "triangle", "cross", "square", "star"] as Shape[]).map((sh) => (
-                  <button key={sh} onClick={() => callShape(sh)} className="flex items-center justify-center gap-2 rounded-2xl bg-white/5 py-4 ring-1 ring-white/10 transition-colors hover:bg-white/10">
+                  <button key={sh} onClick={() => callShape(sh)} className="flex items-center justify-center gap-2 rounded-2xl border border-line bg-void-800 py-4 transition-colors hover:bg-void-600">
                     <WhotShape shape={sh} size={22} />
                     <span className="text-sm font-semibold text-ink">{SHAPE_LABEL[sh]}</span>
                   </button>

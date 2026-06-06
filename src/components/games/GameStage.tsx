@@ -4,6 +4,7 @@ import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import { Game } from "@/lib/games";
 import { TicTacToe } from "./TicTacToe";
+import { StakedTicTacToe } from "./StakedTicTacToe";
 import { ChessGame } from "./ChessGame";
 import { BlockBlitz } from "./blocks/BlockBlitz";
 import { SnakesLadders } from "./snakes/SnakesLadders";
@@ -15,6 +16,7 @@ import type { StakeCtx } from "./PlayFlow";
 export function GameStage({
   game,
   difficulty = "normal",
+  stake,
 }: {
   game: Game;
   difficulty?: Difficulty;
@@ -22,7 +24,12 @@ export function GameStage({
 }) {
   switch (game.slug) {
     case "tic-tac-toe":
-      return <TicTacToe difficulty={difficulty} />;
+      // staked = real-time human vs human (server-authoritative); free = vs engine
+      return stake ? (
+        <StakedTicTacToe matchId={stake.matchId} you={stake.you} />
+      ) : (
+        <TicTacToe difficulty={difficulty} />
+      );
     case "chess":
       return <ChessGame difficulty={difficulty} />;
     case "blocks":
