@@ -20,6 +20,9 @@ create table if not exists matches (
 create index if not exists matches_status_idx on matches (status);
 create index if not exists matches_game_idx on matches (game);
 
+-- last settlement error (so a stuck payout surfaces the real revert reason)
+alter table matches add column if not exists settle_error text;
+
 -- moves: append-only log, lets the server replay and validate
 create table if not exists moves (
   id          bigserial primary key,
