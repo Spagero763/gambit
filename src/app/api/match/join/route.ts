@@ -3,6 +3,7 @@ import { supabaseAdmin } from "@/lib/supabase";
 import { newTtt } from "@/lib/server/ttt";
 import { newChess } from "@/lib/server/chess";
 import { newSnakes } from "@/lib/server/snakes";
+import { newWhot, splitWhot } from "@/lib/server/whot";
 
 export const runtime = "nodejs";
 
@@ -52,6 +53,14 @@ export async function POST(req: NextRequest) {
       const s = newSnakes(match.creator, opp);
       state = s;
       turn = s.turn;
+    } else if (match.game === "whot") {
+      const { pub, priv } = splitWhot(newWhot(match.creator, opp));
+      state = pub; // public row holds only top/counts/active/turn — never hands
+      turn = pub.turn;
+      const { error: privErr } = await db
+        .from("match_private")
+        .upsert({ match_id: Number(id), state: priv }, { onConflict: "match_id" });
+      if (privErr) throw privErr;
     }
 
     const { error: upErr } = await db
