@@ -10,6 +10,7 @@ import { Game } from "@/lib/games";
 import { GameCover } from "@/components/art/GameCover";
 import { Difficulty, DIFFICULTIES, SUPPORTS_DIFFICULTY } from "@/lib/difficulty";
 import { useStakeMatch, useMatchState } from "@/hooks/useStakeMatch";
+import { useProfile } from "@/lib/profile";
 import { registerMatch, joinServerMatch } from "@/lib/matchClient";
 import { ACTIVE_CHAIN_ID } from "@/lib/wagmi";
 import { parseUnits } from "viem";
@@ -45,6 +46,7 @@ export function MatchSetup({
   const { connect } = useConnect();
   const { switchChain } = useSwitchChain();
   const { createMatch, joinMatch, step, error, matchId, ready, onActiveChain } = useStakeMatch();
+  const { hasProfile } = useProfile();
   const { data: created } = useMatchState(matchId ?? undefined);
   const hasDifficulty = SUPPORTS_DIFFICULTY.has(game.slug);
 
@@ -267,6 +269,13 @@ export function MatchSetup({
               >
                 <AlertTriangle className="h-4 w-4" /> Switch network to play
               </button>
+            ) : !hasProfile ? (
+              <Link
+                href="/profile"
+                className="btn-primary mt-4 flex w-full items-center justify-center gap-2 rounded-2xl py-3.5 text-sm shadow-glow"
+              >
+                <ShieldCheck className="h-4 w-4" /> Create a profile to stake
+              </Link>
             ) : matchId ? (
               // room created: show id to share + opponent status
               <div className="mt-4 rounded-2xl border border-line bg-void-700 p-4 text-center shadow-card">
