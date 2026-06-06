@@ -14,6 +14,7 @@ import {
   ERC20_ABI,
   STAKE_TOKEN,
 } from "@/lib/escrow";
+import { StakeToken } from "@/lib/tokens";
 import { ACTIVE_CHAIN_ID } from "@/lib/wagmi";
 
 export type StakeStep =
@@ -42,11 +43,11 @@ export function useStakeMatch() {
   const [matchId, setMatchId] = useState<bigint | null>(null);
 
   const ensureAllowance = useCallback(
-    async (amount: bigint) => {
-      const { address: escrow, token } = escrowFor(chainId);
+    async (amount: bigint, tokenAddress: `0x${string}`) => {
+      const { address: escrow } = escrowFor(chainId);
       if (!escrow || !address || !publicClient) throw new Error("Not ready");
       const allowance = (await publicClient.readContract({
-        address: token,
+        address: tokenAddress,
         abi: ERC20_ABI,
         functionName: "allowance",
         args: [address, escrow],
@@ -54,7 +55,7 @@ export function useStakeMatch() {
       if (allowance < amount) {
         setStep("approving");
         const hash = await writeContractAsync({
-          address: token,
+          address: tokenAddress,
           abi: ERC20_ABI,
           functionName: "approve",
           args: [escrow, amount],
@@ -67,20 +68,20 @@ export function useStakeMatch() {
 
   /** Create a staked room. Returns the new match id parsed from the event. */
   const createMatch = useCallback(
-    async (stakeCusd: number, gameType: number, capacity: number) => {
+    async (stakeAmount: number, gameType: number, capacity: number, stakeToken: StakeToken) => {
       try {
         setError(null);
-        const { address: escrow, token } = escrowFor(chainId);
+        const { address: escrow } = escrowFor(chainId);
         if (!escrow || !publicClient) throw new Error("Wrong network");
-        const amount = parseUnits(stakeCusd.toString(), CUSD_DECIMALS);
-        await ensureAllowance(amount);
+        const amount = parseUnits(stakeAmount.toString(), stakeToken.decimals);
+        await ensureAllowance(amount, stakeToken.address);
 
         setStep("creating");
         const hash = await writeContractAsync({
           address: escrow,
           abi: ESCROW_ABI,
           functionName: "createMatch",
-          args: [token, amount, gameType, capacity],
+          args: [stakeToken.address, amount, gameType, capacity],
         });
         const receipt = await publicClient.waitForTransactionReceipt({ hash });
 
@@ -106,13 +107,13 @@ export function useStakeMatch() {
 
   /** Join an existing staked room by id. */
   const joinMatch = useCallback(
-    async (id: bigint, stakeCusd: number) => {
+    async (id: bigint, stakeAmount: number, stakeToken: StakeToken) => {
       try {
         setError(null);
         const { address: escrow } = escrowFor(chainId);
         if (!escrow || !publicClient) throw new Error("Wrong network");
-        const amount = parseUnits(stakeCusd.toString(), CUSD_DECIMALS);
-        await ensureAllowance(amount);
+        const amount = parseUnits(stakeAmount.toString(), stakeToken.decimals);
+        await ensureAllowance(amount, stakeToken.address);
 
         setStep("joining");
         const hash = await writeContractAsync({
