@@ -5,6 +5,7 @@ import { applyChessMove, ChessState } from "@/lib/server/chess";
 import { applySnakesRoll, SnakesState } from "@/lib/server/snakes";
 import { settleOnChain, relayerConfigured } from "@/lib/server/settle";
 import { verifyToken } from "@/lib/server/profileToken";
+import { limited } from "@/lib/server/rateLimit";
 
 interface MoveOutcome {
   state: { turn: string };
@@ -24,6 +25,8 @@ export const runtime = "nodejs";
  */
 export async function POST(req: NextRequest) {
   try {
+    const rl = limited(req, "move", 60, 10_000);
+    if (rl) return rl;
     const { id, player, move, token } = await req.json();
     if (id === undefined || !player || !move) {
       return NextResponse.json({ error: "Bad request" }, { status: 400 });

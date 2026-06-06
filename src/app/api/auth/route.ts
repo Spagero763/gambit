@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { recoverMessageAddress } from "viem";
 import { createToken } from "@/lib/server/profileToken";
+import { limited } from "@/lib/server/rateLimit";
 
 export const runtime = "nodejs";
 
@@ -13,6 +14,8 @@ export const runtime = "nodejs";
  */
 export async function POST(req: NextRequest) {
   try {
+    const rl = limited(req, "auth", 10, 30_000);
+    if (rl) return rl;
     const { address, message, signature } = await req.json();
     if (!address || !message || !signature) {
       return NextResponse.json({ error: "Bad request" }, { status: 400 });

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase";
 import { settleOnChain, relayerConfigured } from "@/lib/server/settle";
+import { limited } from "@/lib/server/rateLimit";
 
 export const runtime = "nodejs";
 
@@ -17,6 +18,8 @@ const TURN_TIMEOUT_MS = 120_000;
  */
 export async function POST(req: NextRequest) {
   try {
+    const rl = limited(req, "claim", 12, 10_000);
+    if (rl) return rl;
     const { id, player } = await req.json();
     if (id === undefined || !player) return NextResponse.json({ error: "Bad request" }, { status: 400 });
     const db = supabaseAdmin();
