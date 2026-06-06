@@ -1,7 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase";
 import { applyTtt, TttState } from "@/lib/server/ttt";
+import { applyChessMove, ChessState } from "@/lib/server/chess";
 import { settleOnChain, relayerConfigured } from "@/lib/server/settle";
+
+interface MoveOutcome {
+  state: { turn: string };
+  finished: boolean;
+  winner: string | null;
+  draw: boolean;
+}
 
 export const runtime = "nodejs";
 
@@ -32,14 +40,16 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Match not active" }, { status: 409 });
     }
 
-    if (match.game !== "tic-tac-toe") {
-      return NextResponse.json({ error: "Unsupported game" }, { status: 400 });
-    }
-
-    // validate + apply
-    let outcome;
+    // validate + apply (per-game authoritative rules)
+    let outcome: MoveOutcome;
     try {
-      outcome = applyTtt(match.state as TttState, String(player), Number(move.cell));
+      if (match.game === "tic-tac-toe") {
+        outcome = applyTtt(match.state as TttState, String(player), Number(move.cell));
+      } else if (match.game === "chess") {
+        outcome = applyChessMove(match.state as ChessState, String(player), move);
+      } else {
+        return NextResponse.json({ error: "Unsupported game" }, { status: 400 });
+      }
     } catch (e: any) {
       return NextResponse.json({ error: e?.message ?? "Illegal move" }, { status: 422 });
     }
