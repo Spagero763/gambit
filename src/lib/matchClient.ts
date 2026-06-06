@@ -11,6 +11,8 @@ export async function registerMatch(args: {
   chainId: number;
   stake: bigint;
   creator: string;
+  token?: string;
+  decimals?: number;
 }) {
   const res = await fetch("/api/match/register", {
     method: "POST",
@@ -21,6 +23,8 @@ export async function registerMatch(args: {
       chainId: args.chainId,
       stake: args.stake.toString(),
       creator: args.creator,
+      token: args.token,
+      decimals: args.decimals,
     }),
   });
   if (!res.ok) throw new Error((await res.json()).error ?? "register failed");

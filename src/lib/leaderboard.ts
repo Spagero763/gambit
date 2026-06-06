@@ -12,6 +12,7 @@ interface SettledMatch {
   opponent: string | null;
   winner: string | null;
   stake: string;
+  decimals?: number | null;
 }
 
 const FEE = 0.05;
@@ -24,7 +25,7 @@ export function aggregateStandings(matches: SettledMatch[]): Standing[] {
 
   for (const m of matches) {
     if (!m.winner) continue; // draws are refunded — no effect on standings
-    const stake = Number(formatUnits(BigInt(m.stake || "0"), 18));
+    const stake = Number(formatUnits(BigInt(m.stake || "0"), m.decimals ?? 18));
     const winner = m.winner.toLowerCase();
     const players = [m.creator?.toLowerCase(), m.opponent?.toLowerCase()].filter(Boolean) as string[];
     for (const p of players) {
