@@ -1,5 +1,6 @@
 "use client";
 
+import { ReactNode } from "react";
 import { PieceSymbol } from "chess.js";
 import { motion } from "framer-motion";
 import { ChessPiece } from "./ChessPiece";
@@ -14,6 +15,7 @@ export function PlayerBar({
   captured,
   edge,
   you,
+  avatar,
 }: {
   name: string;
   pieceColor: "w" | "b";
@@ -23,26 +25,29 @@ export function PlayerBar({
   captured: PieceSymbol[];
   edge: number; // positive if this player is ahead
   you?: boolean;
+  avatar?: ReactNode;
 }) {
   return (
     <div
       className={cn(
-        "flex items-center gap-3 rounded-2xl px-3 py-2.5 transition-all",
-        active ? "glass ring-1 ring-white/20" : "bg-white/[0.03]"
+        "flex items-center gap-3 rounded-2xl border px-3 py-2.5 transition-all",
+        active ? "border-line-strong bg-void-700" : "border-line bg-void-800"
       )}
     >
       {/* avatar */}
       <div className="relative">
-        <span
-          className={cn(
-            "grid h-10 w-10 place-items-center rounded-xl text-base font-bold",
-            you
-              ? "bg-gradient-to-br from-violet to-violet-deep text-white"
-              : "bg-gradient-to-br from-teal-deep to-[#0b5e46] text-white"
-          )}
-        >
-          {name.slice(0, 1)}
-        </span>
+        {avatar ? (
+          <span className="block h-10 w-10 overflow-hidden rounded-xl ring-1 ring-line">{avatar}</span>
+        ) : (
+          <span
+            className={cn(
+              "grid h-10 w-10 place-items-center rounded-xl bg-void-600 text-base font-semibold ring-1 ring-line",
+              you ? "text-violet-bright" : "text-teal"
+            )}
+          >
+            {name.slice(0, 1)}
+          </span>
+        )}
         {active && (
           <motion.span
             layoutId="chessTurn"

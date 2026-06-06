@@ -16,6 +16,8 @@ import {
   makePieces,
   place,
 } from "@/lib/games/blocks";
+import { play } from "@/lib/sfx";
+import { recordResult } from "@/lib/progress";
 import { cn } from "@/lib/cn";
 
 const FILL: Record<Accent, string> = {
@@ -90,8 +92,10 @@ export function BlockBlitz() {
       nextCombo = Math.min(8, combo + 1);
       setFlash(`+${lines * 10 * nextCombo}${lines > 1 ? `  ×${lines}` : ""}`);
       setTimeout(() => setFlash(null), 700);
+      play("clear");
     } else {
       nextCombo = 0;
+      play("place");
     }
     setCombo(nextCombo);
     setScore((s) => s + piece.cells.length + lines * 10 * (lines > 0 ? nextCombo : 1));
@@ -107,13 +111,15 @@ export function BlockBlitz() {
     if (!anyMove(cleared, nextTray)) {
       setBest((b) => Math.max(b, score + piece.cells.length + lines * 10 * (lines > 0 ? nextCombo : 1)));
       setOver(true);
+      play("lose");
+      recordResult("blocks", "draw"); // solo run — counts as a match played
     }
   };
 
   return (
     <div className="mx-auto flex min-h-[100dvh] w-full max-w-md flex-col px-5 py-5">
       <div className="flex items-center justify-between">
-        <Link href="/" className="inline-flex items-center gap-2 rounded-full glass px-3 py-1.5 text-sm text-ink-dim">
+        <Link href="/" className="inline-flex items-center gap-2 rounded-full border border-line bg-void-700 px-3 py-1.5 text-sm text-ink-dim transition-colors hover:text-ink">
           <ArrowLeft className="h-4 w-4" /> Lobby
         </Link>
         <AnimatePresence>
@@ -133,15 +139,15 @@ export function BlockBlitz() {
 
       {/* stat bar */}
       <div className="mt-4 grid grid-cols-2 gap-3">
-        <div className="rounded-2xl glass px-4 py-3">
+        <div className="rounded-2xl border border-line bg-void-700 px-4 py-3">
           <p className="text-[10px] font-semibold uppercase tracking-wide text-ink-faint">Score</p>
-          <motion.p key={score} initial={{ scale: 1.15 }} animate={{ scale: 1 }} className="font-display text-2xl font-black text-ink">
+          <motion.p key={score} initial={{ scale: 1.15 }} animate={{ scale: 1 }} className="nums text-2xl font-semibold tracking-tight text-ink">
             {score.toLocaleString()}
           </motion.p>
         </div>
-        <div className="rounded-2xl glass px-4 py-3">
+        <div className="rounded-2xl border border-line bg-void-700 px-4 py-3">
           <p className="text-[10px] font-semibold uppercase tracking-wide text-ink-faint">Best</p>
-          <p className="font-display text-2xl font-black text-teal">{Math.max(best, score).toLocaleString()}</p>
+          <p className="nums text-2xl font-semibold tracking-tight text-teal">{Math.max(best, score).toLocaleString()}</p>
         </div>
       </div>
 
@@ -222,8 +228,8 @@ export function BlockBlitz() {
                 key={p.id}
                 onPointerDown={() => setSelected(p.id)}
                 className={cn(
-                  "flex items-center justify-center rounded-2xl py-4 transition-all",
-                  active ? "glass ring-1 ring-white/20" : "bg-white/[0.03]"
+                  "flex items-center justify-center rounded-2xl border py-4 transition-all",
+                  active ? "border-line-strong bg-void-700" : "border-line bg-void-800"
                 )}
               >
                 <div
@@ -262,13 +268,13 @@ export function BlockBlitz() {
               <motion.div
                 initial={{ scale: 0.85, y: 14 }}
                 animate={{ scale: 1, y: 0 }}
-                className="w-[78%] rounded-3xl glass p-6 text-center shadow-card"
+                className="w-[78%] rounded-3xl border border-line bg-void-700 p-6 text-center shadow-pop"
               >
-                <p className="font-display text-2xl font-bold text-rose">No moves left</p>
+                <p className="text-2xl font-semibold tracking-tight text-rose">No moves left</p>
                 <p className="mt-1 text-sm text-ink-dim">Final score {score}</p>
                 <button
                   onClick={reset}
-                  className="mt-5 inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-violet-deep to-violet py-3 text-sm font-bold text-white shadow-glow"
+                  className="btn-primary mt-5 inline-flex w-full items-center justify-center gap-2 rounded-2xl py-3 text-sm shadow-glow"
                 >
                   <RotateCcw className="h-4 w-4" /> Play again
                 </button>
