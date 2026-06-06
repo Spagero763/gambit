@@ -37,6 +37,7 @@ export function MatchSetup({
 }) {
   const [mode, setMode] = useState<Mode>("free");
   const [stake, setStake] = useState<number>(game.minStake);
+  const [custom, setCustom] = useState("");
   const [difficulty, setDifficulty] = useState<Difficulty>("normal");
   const [joinId, setJoinId] = useState("");
   const [copied, setCopied] = useState(false);
@@ -49,6 +50,7 @@ export function MatchSetup({
 
   const chips = [0.1, 0.5, 1, 2, 5].filter((v) => v >= game.minStake);
   const payout = +(stake * 2 * (1 - FEE)).toFixed(2);
+  const validStake = Number.isFinite(stake) && stake >= game.minStake;
 
   const busy = step === "approving" || step === "creating" || step === "joining";
   // tuple index 9 = status (2 = Active, both seats filled)
@@ -174,10 +176,13 @@ export function MatchSetup({
               {chips.map((v) => (
                 <button
                   key={v}
-                  onClick={() => setStake(v)}
+                  onClick={() => {
+                    setStake(v);
+                    setCustom("");
+                  }}
                   className={cn(
                     "nums rounded-xl border px-4 py-2 text-sm font-semibold transition-colors",
-                    stake === v
+                    !custom && stake === v
                       ? "border-teal/50 bg-teal/[0.1] text-ink"
                       : "border-line bg-void-800 text-ink-dim hover:text-ink"
                   )}
@@ -187,15 +192,43 @@ export function MatchSetup({
               ))}
             </div>
 
-            <div className="mt-4 rounded-3xl glass p-5 shadow-card">
-              <Row label="Your stake" value={`${stake.toFixed(2)} cUSD`} />
-              <Row label="Opponent matches" value={`${stake.toFixed(2)} cUSD`} />
+            {/* custom amount */}
+            <div
+              className={cn(
+                "mt-2 flex items-center gap-2 rounded-xl border bg-void-800 px-3 py-2 transition-colors",
+                custom ? "border-teal/50" : "border-line"
+              )}
+            >
+              <span className="text-xs text-ink-faint">Custom</span>
+              <input
+                value={custom}
+                onChange={(e) => {
+                  const raw = e.target.value.replace(/[^0-9.]/g, "");
+                  setCustom(raw);
+                  const n = parseFloat(raw);
+                  if (Number.isFinite(n)) setStake(n);
+                }}
+                inputMode="decimal"
+                placeholder="Enter amount"
+                className="nums flex-1 bg-transparent text-right text-sm font-semibold text-ink outline-none placeholder:text-ink-faint"
+              />
+              <span className="text-xs text-ink-faint">cUSD</span>
+            </div>
+            {custom && !validStake && (
+              <p className="mt-1.5 text-[11px] text-rose">
+                Minimum stake is {game.minStake.toFixed(2)} cUSD.
+              </p>
+            )}
+
+            <div className="mt-4 rounded-3xl border border-line bg-void-700 p-5 shadow-card">
+              <Row label="Your stake" value={`${(validStake ? stake : 0).toFixed(2)} cUSD`} />
+              <Row label="Opponent matches" value={`${(validStake ? stake : 0).toFixed(2)} cUSD`} />
               <Row label="Protocol fee" value="5%" muted />
-              <div className="my-3 h-px bg-white/8" />
+              <div className="my-3 h-px bg-line" />
               <div className="flex items-center justify-between">
                 <span className="text-sm text-ink-dim">Winner takes</span>
-                <span className="font-display text-xl font-bold text-teal">
-                  {payout.toFixed(2)} cUSD
+                <span className="nums text-xl font-bold text-teal">
+                  {(validStake ? payout : 0).toFixed(2)} cUSD
                 </span>
               </div>
             </div>
@@ -266,7 +299,7 @@ export function MatchSetup({
                       }
                     }
                   }}
-                  disabled={busy || !ready}
+                  disabled={busy || !ready || !validStake}
                   className="btn-primary flex w-full items-center justify-center gap-2 rounded-2xl py-3.5 text-sm shadow-glow disabled:opacity-60"
                 >
                   {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Swords className="h-4 w-4" />}
