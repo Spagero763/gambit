@@ -17,6 +17,7 @@ interface Raw {
   winner: string | null;
   stake: string;
   created_at: string;
+  decimals: number | null;
 }
 
 function short(a: string) {
@@ -39,7 +40,7 @@ export function Leaderboard() {
     (async () => {
       const { data } = await supabase!
         .from("matches")
-        .select("creator,opponent,winner,stake,created_at")
+        .select("creator,opponent,winner,stake,created_at,decimals")
         .in("status", ["settling", "settled"])
         .limit(1000);
       if (active) setRaw((data as Raw[]) ?? []);
