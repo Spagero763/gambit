@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase";
 import { applyTtt, TttState } from "@/lib/server/ttt";
 import { applyChessMove, ChessState } from "@/lib/server/chess";
+import { applySnakesRoll, SnakesState } from "@/lib/server/snakes";
 import { settleOnChain, relayerConfigured } from "@/lib/server/settle";
 
 interface MoveOutcome {
@@ -47,6 +48,8 @@ export async function POST(req: NextRequest) {
         outcome = applyTtt(match.state as TttState, String(player), Number(move.cell));
       } else if (match.game === "chess") {
         outcome = applyChessMove(match.state as ChessState, String(player), move);
+      } else if (match.game === "snakes") {
+        outcome = applySnakesRoll(match.state as SnakesState, String(player));
       } else {
         return NextResponse.json({ error: "Unsupported game" }, { status: 400 });
       }
