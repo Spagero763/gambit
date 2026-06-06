@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Loader2, ExternalLink, RotateCcw } from "lucide-react";
 import Link from "next/link";
 import { retrySettle } from "@/lib/matchClient";
+import { useStakeMatch } from "@/hooks/useStakeMatch";
 import { cn } from "@/lib/cn";
 
 const EXPLORER: Record<number, string> = {
@@ -34,6 +35,8 @@ export function SettleOverlay({
   const settling = status === "settling";
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState<string | null>(null);
+  const { reclaimStalled, error: reclaimError } = useStakeMatch();
+  const [reclaiming, setReclaiming] = useState(false);
 
   const retry = async () => {
     setBusy(true);
@@ -74,6 +77,18 @@ export function SettleOverlay({
           <p className="mx-auto mt-3 max-w-[16rem] text-[10px] leading-snug text-ink-faint">
             Your stake is safe in escrow until this settles.
           </p>
+          <button
+            onClick={async () => {
+              setReclaiming(true);
+              await reclaimStalled(matchId);
+              setReclaiming(false);
+            }}
+            disabled={reclaiming}
+            className="mx-auto mt-2 block text-[11px] font-medium text-ink-faint underline-offset-2 transition-colors hover:text-ink hover:underline disabled:opacity-60"
+          >
+            {reclaiming ? "Reclaiming…" : "Still stuck? Reclaim stakes (refund both, after 1h)"}
+          </button>
+          {reclaimError && <p className="mx-auto mt-1 max-w-[16rem] text-[10px] text-rose">{reclaimError}</p>}
         </div>
       ) : (
         <div className="mt-1">
