@@ -22,6 +22,9 @@ create index if not exists matches_game_idx on matches (game);
 
 -- last settlement error (so a stuck payout surfaces the real revert reason)
 alter table matches add column if not exists settle_error text;
+-- stake token (address) + its decimals, so amounts format correctly (cUSD=18, USDC=6)
+alter table matches add column if not exists token text;
+alter table matches add column if not exists decimals integer not null default 18;
 
 -- moves: append-only log, lets the server replay and validate
 create table if not exists moves (
