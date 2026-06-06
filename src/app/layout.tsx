@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Inter, JetBrains_Mono } from "next/font/google";
 import { Providers } from "./providers";
 import { MusicPlayer } from "@/components/audio/MusicPlayer";
+import { ProfileSync } from "@/components/ProfileSync";
 import "./globals.css";
 
 // One restrained typeface family. Inter for UI + display (tracked tighter in
@@ -52,6 +53,7 @@ export default function RootLayout({
         <Providers>
           {children}
           <MusicPlayer />
+          <ProfileSync />
         </Providers>
       </body>
     </html>
