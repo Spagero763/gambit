@@ -5,7 +5,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { ArrowLeft, Bot, Swords, Wallet, Loader2, ShieldCheck, Copy, Check, AlertTriangle, HelpCircle } from "lucide-react";
 import Link from "next/link";
 import { StakeRules } from "./StakeRules";
-import { useAccount, useConnect, useSwitchChain, useSignMessage } from "wagmi";
+import { useAccount, useConnect, useSwitchChain, useSignMessage, useBalance } from "wagmi";
 import { injected } from "wagmi/connectors";
 import { Game } from "@/lib/games";
 import { GameCover } from "@/components/art/GameCover";
@@ -14,7 +14,8 @@ import { useStakeMatch, useMatchState } from "@/hooks/useStakeMatch";
 import { hasToken, signIn } from "@/lib/profile";
 import { registerMatch, joinServerMatch } from "@/lib/matchClient";
 import { ACTIVE_CHAIN_ID } from "@/lib/wagmi";
-import { parseUnits } from "viem";
+import { tokensFor, StakeToken } from "@/lib/tokens";
+import { parseUnits, formatUnits } from "viem";
 import { cn } from "@/lib/cn";
 
 const FEE = 0.05;
@@ -42,6 +43,8 @@ export function MatchSetup({
   const [rulesSeen, setRulesSeen] = useState(false);
   const [stake, setStake] = useState<number>(game.minStake);
   const [custom, setCustom] = useState("");
+  const tokens = tokensFor(ACTIVE_CHAIN_ID);
+  const [token, setToken] = useState<StakeToken>(tokens[0]);
   const [difficulty, setDifficulty] = useState<Difficulty>("normal");
   const [joinId, setJoinId] = useState("");
   const [copied, setCopied] = useState(false);
@@ -63,6 +66,7 @@ export function MatchSetup({
     }
   }, [mode, rulesSeen]);
   const { data: created } = useMatchState(matchId ?? undefined);
+  const { data: tokenBal } = useBalance({ address, token: token.address, query: { enabled: !!address } });
   const hasDifficulty = SUPPORTS_DIFFICULTY.has(game.slug);
 
   const chips = [0.1, 0.5, 1, 2, 5].filter((v) => v >= game.minStake);
@@ -79,9 +83,14 @@ export function MatchSetup({
     const params = new URLSearchParams(window.location.search);
     const room = params.get("room");
     const s = params.get("stake");
+    const tok = params.get("token");
     if (room) {
       setMode("staked");
       setJoinId(room.replace(/\D/g, ""));
+    }
+    if (tok) {
+      const found = tokens.find((t) => t.address.toLowerCase() === tok.toLowerCase());
+      if (found) setToken(found);
     }
     if (s) {
       const n = parseFloat(s);
@@ -208,8 +217,30 @@ export function MatchSetup({
           >
             <StakeRules game={game} open={rulesOpen} onClose={() => setRulesOpen(false)} />
 
+            {tokens.length > 1 && (
+              <div className="mb-3">
+                <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-ink-faint">Token</p>
+                <div className="grid grid-cols-2 gap-2">
+                  {tokens.map((t) => (
+                    <button
+                      key={t.address}
+                      onClick={() => setToken(t)}
+                      className={cn(
+                        "rounded-xl border px-3 py-2 text-sm font-semibold transition-colors",
+                        token.address === t.address ? "border-teal/50 bg-teal/[0.1] text-ink" : "border-line bg-void-800 text-ink-dim hover:text-ink"
+                      )}
+                    >
+                      {t.symbol}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
             <div className="mb-2 flex items-center justify-between">
-              <p className="text-xs font-semibold uppercase tracking-wide text-ink-faint">Your stake</p>
+              <p className="text-xs font-semibold uppercase tracking-wide text-ink-faint">
+                Your stake{tokenBal ? <span className="ml-1.5 normal-case text-ink-faint">· bal {Number(tokenBal.formatted).toFixed(2)} {token.symbol}</span> : null}
+              </p>
               <button
                 onClick={() => setRulesOpen(true)}
                 className="inline-flex items-center gap-1 text-[12px] font-medium text-teal transition-opacity hover:opacity-80"
@@ -257,23 +288,23 @@ export function MatchSetup({
                 placeholder="Enter amount"
                 className="nums flex-1 bg-transparent text-right text-sm font-semibold text-ink outline-none placeholder:text-ink-faint"
               />
-              <span className="text-xs text-ink-faint">cUSD</span>
+              <span className="text-xs text-ink-faint">{token.symbol}</span>
             </div>
             {custom && !validStake && (
               <p className="mt-1.5 text-[11px] text-rose">
-                Minimum stake is {game.minStake.toFixed(2)} cUSD.
+                Minimum stake is {game.minStake.toFixed(2)} {token.symbol}.
               </p>
             )}
 
             <div className="mt-4 rounded-3xl border border-line bg-void-700 p-5 shadow-card">
-              <Row label="Your stake" value={`${(validStake ? stake : 0).toFixed(2)} cUSD`} />
-              <Row label="Opponent matches" value={`${(validStake ? stake : 0).toFixed(2)} cUSD`} />
+              <Row label="Your stake" value={`${(validStake ? stake : 0).toFixed(2)} ${token.symbol}`} />
+              <Row label="Opponent matches" value={`${(validStake ? stake : 0).toFixed(2)} ${token.symbol}`} />
               <Row label="Protocol fee" value="5%" muted />
               <div className="my-3 h-px bg-line" />
               <div className="flex items-center justify-between">
                 <span className="text-sm text-ink-dim">Winner takes</span>
                 <span className="nums text-xl font-bold text-teal">
-                  {(validStake ? payout : 0).toFixed(2)} cUSD
+                  {(validStake ? payout : 0).toFixed(2)} {token.symbol}
                 </span>
               </div>
             </div>
@@ -363,15 +394,17 @@ export function MatchSetup({
               <div className="mt-4 space-y-3">
                 <button
                   onClick={async () => {
-                    const id = await createMatch(stake, GAME_TYPE[game.slug] ?? 0, 2);
+                    const id = await createMatch(stake, GAME_TYPE[game.slug] ?? 0, 2, token);
                     if (id !== null && address) {
                       try {
                         await registerMatch({
                           id,
                           game: game.slug,
                           chainId: ACTIVE_CHAIN_ID,
-                          stake: parseUnits(stake.toString(), 18),
+                          stake: parseUnits(stake.toString(), token.decimals),
                           creator: address,
+                          token: token.address,
+                          decimals: token.decimals,
                         });
                       } catch {
                         /* registration retried server-side on join */
@@ -382,7 +415,7 @@ export function MatchSetup({
                   className="btn-primary flex w-full items-center justify-center gap-2 rounded-2xl py-3.5 text-sm shadow-glow disabled:opacity-60"
                 >
                   {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Swords className="h-4 w-4" />}
-                  {step === "approving" ? "Approving cUSD…" : step === "creating" ? "Creating room…" : "Create staked room"}
+                  {step === "approving" ? `Approving ${token.symbol}…` : step === "creating" ? "Creating room…" : "Create staked room"}
                 </button>
 
                 <div className="flex items-center gap-2">
@@ -396,7 +429,7 @@ export function MatchSetup({
                   <button
                     onClick={async () => {
                       if (!joinId) return;
-                      const ok = await joinMatch(BigInt(joinId), stake);
+                      const ok = await joinMatch(BigInt(joinId), stake, token);
                       if (ok && address) {
                         try {
                           await joinServerMatch(BigInt(joinId), address);
