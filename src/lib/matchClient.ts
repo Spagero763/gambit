@@ -1,6 +1,7 @@
 "use client";
 
 import type { Card, Shape } from "@/lib/games/whot";
+import { getToken } from "@/lib/profile";
 
 /** Client helpers that talk to the authoritative match server. */
 
@@ -51,7 +52,7 @@ export async function submitMove(id: bigint, player: string, move: unknown): Pro
   const res = await fetch("/api/match/move", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ id: id.toString(), player, move }),
+    body: JSON.stringify({ id: id.toString(), player, move, token: getToken(player) }),
   });
   const data = await res.json();
   if (!res.ok) throw new Error(data.error ?? "move failed");
@@ -90,7 +91,7 @@ export async function whotAction(id: bigint, player: string, action: WhotAction)
   const res = await fetch("/api/match/whot", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ id: id.toString(), player, action }),
+    body: JSON.stringify({ id: id.toString(), player, action, token: getToken(player) }),
   });
   const data = await res.json();
   if (!res.ok) throw new Error(data.error ?? "move failed");
