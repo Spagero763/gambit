@@ -14,7 +14,7 @@ export const runtime = "nodejs";
  */
 export async function POST(req: NextRequest) {
   try {
-    const { id, refund } = await req.json();
+    const { id, refund, secret } = await req.json();
     if (id === undefined) return NextResponse.json({ error: "Bad request" }, { status: 400 });
     const db = supabaseAdmin();
 
@@ -24,7 +24,16 @@ export async function POST(req: NextRequest) {
     if (match.status === "settled") {
       return NextResponse.json({ ok: true, settled: true, settleTx: match.settle_tx });
     }
-    // normal retry needs a match already in `settling`; a forced refund can also
+    // A forced refund (winner = none) is admin-only — otherwise anyone could
+    // grief an in-progress match by refunding it. Players abandon-recover via
+    // /api/match/claim (timeout forfeit) or the on-chain reclaimStalled instead.
+    if (refund) {
+      if (!process.env.ADMIN_SECRET || secret !== process.env.ADMIN_SECRET) {
+        return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+      }
+    }
+
+    // normal retry needs a match already in `settling`; an admin refund can also
     // recover one stuck in `active` (e.g. a draw that never finalised).
     const recoverable = match.status === "settling" || (refund && match.status === "active");
     if (!recoverable) {
