@@ -80,15 +80,19 @@ export async function POST(req: NextRequest) {
     // finished: mark settling, settle on-chain, record result
     await db
       .from("matches")
-      .update({ state: outcome.state, status: "settling", winner: outcome.winner })
+      .update({ state: outcome.state, status: "settling", winner: outcome.winner, settle_error: null })
       .eq("id", Number(id));
 
     let settleTx: string | null = null;
     if (relayerConfigured()) {
       try {
-        settleTx = await settleOnChain(BigInt(id), outcome.winner);
-      } catch (e) {
-        // leave as 'settling' so it can be retried; surface the error
+        settleTx = await settleOnChain(BigInt(id), outcome.winner, Number(match.chain_id));
+      } catch (e: any) {
+        // leave as 'settling' so it can be retried; record the real reason
+        await db
+          .from("matches")
+          .update({ settle_error: String(e?.shortMessage ?? e?.message ?? "settle failed").slice(0, 300) })
+          .eq("id", Number(id));
         return NextResponse.json(
           { ok: true, finished: true, winner: outcome.winner, settled: false, state: outcome.state },
           { status: 200 }
@@ -98,7 +102,7 @@ export async function POST(req: NextRequest) {
 
     await db
       .from("matches")
-      .update({ status: "settled", settle_tx: settleTx })
+      .update({ status: "settled", settle_tx: settleTx, settle_error: null })
       .eq("id", Number(id));
 
     return NextResponse.json({

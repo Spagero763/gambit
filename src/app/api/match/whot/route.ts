@@ -29,6 +29,7 @@ function view(match: any, priv: WhotPrivate | null, player: string) {
     counts: pub.counts ?? {},
     order: pub.order ?? [],
     yourHand: priv?.hands?.[addr] ?? [],
+    settleError: (match.settle_error as string | null) ?? null,
   };
 }
 
@@ -91,19 +92,21 @@ export async function POST(req: NextRequest) {
       return NextResponse.json(view({ ...match, state: pub }, nextPriv, String(player)));
     }
 
-    // finished: settle on-chain
-    await db.from("matches").update({ state: pub, status: "settling", winner: outcome.winner }).eq("id", Number(id));
+    // finished: settle on-chain (on the match's own chain)
+    await db.from("matches").update({ state: pub, status: "settling", winner: outcome.winner, settle_error: null }).eq("id", Number(id));
     let settleTx: string | null = null;
     if (relayerConfigured()) {
       try {
-        settleTx = await settleOnChain(BigInt(id), outcome.winner);
-      } catch {
+        settleTx = await settleOnChain(BigInt(id), outcome.winner, Number(match.chain_id));
+      } catch (e: any) {
+        const settle_error = String(e?.shortMessage ?? e?.message ?? "settle failed").slice(0, 300);
+        await db.from("matches").update({ settle_error }).eq("id", Number(id));
         return NextResponse.json(
-          view({ ...match, state: pub, status: "settling", winner: outcome.winner }, nextPriv, String(player))
+          view({ ...match, state: pub, status: "settling", winner: outcome.winner, settle_error }, nextPriv, String(player))
         );
       }
     }
-    await db.from("matches").update({ status: "settled", settle_tx: settleTx }).eq("id", Number(id));
+    await db.from("matches").update({ status: "settled", settle_tx: settleTx, settle_error: null }).eq("id", Number(id));
     return NextResponse.json(
       view({ ...match, state: pub, status: "settled", winner: outcome.winner, settle_tx: settleTx }, nextPriv, String(player))
     );
