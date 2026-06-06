@@ -1,10 +1,16 @@
 import { celo, celoSepolia } from "@reown/appkit/networks";
 
-// ArcadeEscrow deployments. Sepolia is live; mainnet is filled in after deploy.
+// ArcadeEscrow deployments. Addresses can be overridden per-chain via env so
+// going to mainnet is a config-only step (no code change / redeploy of the app):
+//   NEXT_PUBLIC_ESCROW_CELO=0x...      (mainnet, after you deploy ArcadeEscrow)
+//   NEXT_PUBLIC_ESCROW_CELO_SEPOLIA=0x... (optional override for testnet)
+const ENV_CELO = process.env.NEXT_PUBLIC_ESCROW_CELO as `0x${string}` | undefined;
+const ENV_SEPOLIA = process.env.NEXT_PUBLIC_ESCROW_CELO_SEPOLIA as `0x${string}` | undefined;
+
 export const ESCROW_ADDRESS: Record<number, `0x${string}`> = {
-  [celoSepolia.id]: "0x28825CB6a2D9f13947e4023317904A38Bd35dB9e",
-  // [celo.id]: "0x...",
+  [celoSepolia.id]: ENV_SEPOLIA ?? "0x28825CB6a2D9f13947e4023317904A38Bd35dB9e",
 };
+if (ENV_CELO) ESCROW_ADDRESS[celo.id] = ENV_CELO;
 
 // cUSD is the same address on Celo Sepolia and mainnet.
 export const STAKE_TOKEN: Record<number, `0x${string}`> = {
