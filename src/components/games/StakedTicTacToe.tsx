@@ -168,6 +168,7 @@ export function StakedTicTacToe({ matchId, you }: { matchId: bigint; you: `0x${s
                 settleError={match?.settle_error}
                 chainId={match?.chain_id}
                 matchId={matchId}
+                shareAddress={me}
               />
             </motion.div>
           )}

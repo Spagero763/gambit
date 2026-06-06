@@ -196,6 +196,7 @@ export function StakedSnakes({ matchId, you }: { matchId: bigint; you: `0x${stri
                 settleError={match?.settle_error}
                 chainId={match?.chain_id}
                 matchId={matchId}
+                shareAddress={me}
               />
             </motion.div>
           )}

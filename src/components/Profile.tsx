@@ -2,7 +2,8 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { motion } from "framer-motion";
-import { Wallet, ShieldCheck, Check, Loader2 } from "lucide-react";
+import { Wallet, ShieldCheck, Check, Loader2, Share2 } from "lucide-react";
+import { inviteUrl, shareOrCopy } from "@/lib/share";
 import { formatUnits } from "viem";
 import { useAccount, useBalance, useConnect, useSignMessage } from "wagmi";
 import { injected } from "wagmi/connectors";
@@ -186,6 +187,10 @@ export function Profile() {
         <ProgressCard />
       </div>
 
+      <div className="mt-4">
+        <InviteCard address={address} />
+      </div>
+
       <h2 className="mb-3 mt-7 text-[15px] font-semibold tracking-tight">Recent matches</h2>
 
       {rows === null && supabase ? (
@@ -239,6 +244,35 @@ export function Profile() {
         </ul>
       )}
     </section>
+  );
+}
+
+function InviteCard({ address }: { address: string }) {
+  const url = inviteUrl(address);
+  const [copied, setCopied] = useState(false);
+  return (
+    <div className="rounded-2xl border border-line bg-void-700 p-5 shadow-card">
+      <p className="text-sm font-semibold text-ink">Invite friends</p>
+      <p className="mt-0.5 text-[12px] text-ink-dim">Share your link — challenge friends to a staked 1v1.</p>
+      <div className="mt-3 flex items-center gap-2">
+        <div className="flex-1 truncate rounded-xl border border-line bg-void-800 px-3 py-2.5 text-[12px] text-ink-dim">
+          {url.replace(/^https?:\/\//, "")}
+        </div>
+        <button
+          onClick={async () => {
+            const r = await shareOrCopy({ title: "Gambit", text: "Play classic games and stake cUSD on Gambit", url });
+            if (r === "copied") {
+              setCopied(true);
+              setTimeout(() => setCopied(false), 1600);
+            }
+          }}
+          className="btn-primary flex shrink-0 items-center gap-1.5 rounded-xl px-3.5 py-2.5 text-sm shadow-glow"
+        >
+          {copied ? <Check className="h-4 w-4" /> : <Share2 className="h-4 w-4" />}
+          {copied ? "Copied" : "Share"}
+        </button>
+      </div>
+    </div>
   );
 }
 
