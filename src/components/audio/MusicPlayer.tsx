@@ -1,56 +1,39 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import { useSettings, TRACKS } from "@/lib/settings";
+import { useSettings } from "@/lib/settings";
+import { startMusic, stopMusic, setMusicVolume } from "@/lib/music";
 
 /**
- * Background music. Mounts once (in the root layout) and follows the user's
- * settings: which track, whether music is on, and volume. Browsers block
- * autoplay until a user gesture, so playback starts on the first interaction.
+ * Background music driver. Mounts once in the root layout and follows the
+ * user's settings. Music is generated live (see lib/music). Browsers block
+ * audio until a user gesture, so playback starts on the first interaction.
  */
 export function MusicPlayer() {
   const [settings] = useSettings();
-  const audioRef = useRef<HTMLAudioElement | null>(null);
-  const startedRef = useRef(false);
-
-  // create the audio element once
-  useEffect(() => {
-    const a = new Audio();
-    a.loop = true;
-    a.preload = "none";
-    audioRef.current = a;
-    return () => {
-      a.pause();
-      audioRef.current = null;
-    };
-  }, []);
+  const started = useRef(false);
 
   // react to settings
   useEffect(() => {
-    const a = audioRef.current;
-    if (!a) return;
-    const track = TRACKS.find((t) => t.id === settings.track) ?? TRACKS[0];
-    const src = new URL(track.file, window.location.origin).toString();
-    if (a.src !== src) a.src = src;
-    a.volume = settings.volume;
-
-    if (settings.musicOn && startedRef.current) {
-      a.play().catch(() => {});
+    if (settings.musicOn && started.current) {
+      startMusic(settings.track, settings.volume);
     } else {
-      a.pause();
+      stopMusic();
     }
+    setMusicVolume(settings.volume);
   }, [settings.musicOn, settings.track, settings.volume]);
 
-  // unlock audio + start on first user gesture
+  // unlock + start on first user gesture
   useEffect(() => {
     const onGesture = () => {
-      startedRef.current = true;
-      const a = audioRef.current;
-      if (a && settings.musicOn) a.play().catch(() => {});
+      started.current = true;
+      if (settings.musicOn) startMusic(settings.track, settings.volume);
     };
     window.addEventListener("pointerdown", onGesture, { once: true });
     return () => window.removeEventListener("pointerdown", onGesture);
-  }, [settings.musicOn]);
+  }, [settings.musicOn, settings.track, settings.volume]);
+
+  useEffect(() => () => stopMusic(), []);
 
   return null;
 }
