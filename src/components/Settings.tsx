@@ -1,7 +1,12 @@
 "use client";
 
-import { Volume2, Music, User as UserIcon, Check, Camera, Trash2 } from "lucide-react";
+import { useState } from "react";
+import { Volume2, Music, User as UserIcon, Check, Camera, Trash2, ShieldCheck, Loader2, Wallet } from "lucide-react";
+import { useAccount, useConnect, useSignMessage } from "wagmi";
+import { injected } from "wagmi/connectors";
 import { useSettings, TRACKS, AVATARS, AVATAR_HEX } from "@/lib/settings";
+import { useProgress } from "@/lib/progress";
+import { useProfile, createProfile, setProfile } from "@/lib/profile";
 import { Avatar } from "@/components/Avatar";
 import { play } from "@/lib/sfx";
 import { cn } from "@/lib/cn";
@@ -32,6 +37,11 @@ function fileToAvatar(file: File): Promise<string> {
 
 export function Settings() {
   const [s, update] = useSettings();
+  const { address, isConnected } = useAccount();
+  const { connect } = useConnect();
+  const { signMessageAsync } = useSignMessage();
+  const { hasProfile } = useProfile();
+  const prog = useProgress();
 
   return (
     <section className="mx-auto w-full max-w-2xl px-5 pb-28 pt-2">
@@ -118,6 +128,37 @@ export function Settings() {
             </button>
           ))}
         </div>
+
+        {/* Save profile to wallet */}
+        <div className="mt-5 border-t border-line pt-4">
+          {!isConnected || !address ? (
+            <button
+              onClick={() => connect({ connector: injected() })}
+              className="flex w-full items-center justify-center gap-2 rounded-xl border border-line bg-void-800 py-2.5 text-sm font-medium text-ink-dim transition-colors hover:text-ink"
+            >
+              <Wallet className="h-4 w-4" /> Connect wallet to save your profile
+            </button>
+          ) : (
+            <SaveProfileButton
+              hasProfile={hasProfile}
+              onSave={() =>
+                createProfile(address, (a) => signMessageAsync({ message: a.message }), {
+                  name: s.name,
+                  avatar: s.avatar,
+                  avatarImage: s.avatarImage,
+                  xp: prog.xp,
+                  streak: prog.streak,
+                  lastPlayed: prog.lastPlayed,
+                  played: prog.played,
+                  wins: prog.wins,
+                }).then((res) => setProfile(address, res.profile))
+              }
+            />
+          )}
+          <p className="mt-2 text-[11px] text-ink-faint">
+            Signing is free (no gas). Saves your name, photo and streak to your wallet, synced across devices.
+          </p>
+        </div>
       </div>
 
       {/* Sound */}
@@ -182,6 +223,38 @@ export function Settings() {
         </div>
       </div>
     </section>
+  );
+}
+
+function SaveProfileButton({ hasProfile, onSave }: { hasProfile: boolean; onSave: () => Promise<unknown> }) {
+  const [busy, setBusy] = useState(false);
+  const [saved, setSaved] = useState(false);
+  const [err, setErr] = useState<string | null>(null);
+  return (
+    <div>
+      <button
+        disabled={busy}
+        onClick={async () => {
+          setBusy(true);
+          setErr(null);
+          setSaved(false);
+          try {
+            await onSave();
+            setSaved(true);
+            setTimeout(() => setSaved(false), 2500);
+          } catch (e: any) {
+            setErr(e?.shortMessage ?? e?.message ?? "Could not save profile");
+          } finally {
+            setBusy(false);
+          }
+        }}
+        className="btn-primary flex w-full items-center justify-center gap-2 rounded-xl py-2.5 text-sm shadow-glow disabled:opacity-60"
+      >
+        {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : saved ? <Check className="h-4 w-4" /> : <ShieldCheck className="h-4 w-4" />}
+        {busy ? "Check your wallet…" : saved ? "Saved" : hasProfile ? "Update profile" : "Sign & save profile"}
+      </button>
+      {err && <p className="mt-1.5 text-[11px] text-rose">{err}</p>}
+    </div>
   );
 }
 
