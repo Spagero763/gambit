@@ -11,6 +11,7 @@ import { BlockBlitz } from "./blocks/BlockBlitz";
 import { SnakesLadders } from "./snakes/SnakesLadders";
 import { StakedSnakes } from "./StakedSnakes";
 import { WhotGame } from "./whot/WhotGame";
+import { StakedWhot } from "./StakedWhot";
 import { GameCover } from "@/components/art/GameCover";
 import { Difficulty } from "@/lib/difficulty";
 import type { StakeCtx } from "./PlayFlow";
@@ -49,7 +50,8 @@ export function GameStage({
         <SnakesLadders difficulty={difficulty} />
       );
     case "whot":
-      return <WhotGame />;
+      // staked = real-time 1v1 with hidden hands (server-authoritative); free = WhotGame (2-6 + tournament)
+      return stake ? <StakedWhot matchId={stake.matchId} you={stake.you} /> : <WhotGame />;
     default:
       return <ComingSoon game={game} />;
   }
