@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { ArrowLeft, Bot, Swords, Wallet, Loader2, ShieldCheck, Copy, Check, AlertTriangle } from "lucide-react";
 import Link from "next/link";
@@ -55,6 +55,26 @@ export function MatchSetup({
   const busy = step === "approving" || step === "creating" || step === "joining";
   // tuple index 9 = status (2 = Active, both seats filled)
   const opponentJoined = created ? Number((created as readonly unknown[])[9]) === 2 : false;
+
+  // Deep-link from the lobby: /play/<slug>?room=<id>&stake=<cusd> → prefill join.
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const params = new URLSearchParams(window.location.search);
+    const room = params.get("room");
+    const s = params.get("stake");
+    if (room) {
+      setMode("staked");
+      setJoinId(room.replace(/\D/g, ""));
+    }
+    if (s) {
+      const n = parseFloat(s);
+      if (Number.isFinite(n) && n > 0) {
+        setStake(n);
+        setCustom(s);
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   return (
     <div className="mx-auto flex min-h-[100dvh] w-full max-w-2xl flex-col px-5 py-5">
