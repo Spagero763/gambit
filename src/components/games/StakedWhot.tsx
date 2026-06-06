@@ -241,6 +241,7 @@ export function StakedWhot({ matchId, you }: { matchId: bigint; you: `0x${string
               settleError={view?.settleError}
               chainId={view?.chainId}
               matchId={matchId}
+              shareAddress={me}
             />
           </motion.div>
         )}
