@@ -1,10 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { HelpCircle, Gamepad2, Coins, Trophy, ShieldCheck } from "lucide-react";
 import { Modal } from "./Modal";
-
-const KEY = "gambit:seen-how";
 
 const STEPS = [
   { icon: Gamepad2, title: "Pick a game", body: "Chess, Whot, tic-tac-toe, snakes & ladders or a block puzzle." },
@@ -13,29 +11,10 @@ const STEPS = [
   { icon: ShieldCheck, title: "Safe & on-chain", body: "Stakes sit in an audited escrow contract on Celo and pay out automatically. If a game stalls, funds are always reclaimable." },
 ];
 
-/** "How it works" button + modal. Auto-opens once for first-time visitors. */
+/** "How it works" button + modal. Manual only — the first-run tour is Onboarding. */
 export function HowItWorks() {
   const [open, setOpen] = useState(false);
-
-  useEffect(() => {
-    try {
-      if (!localStorage.getItem(KEY)) {
-        const t = setTimeout(() => setOpen(true), 900);
-        return () => clearTimeout(t);
-      }
-    } catch {
-      /* ignore */
-    }
-  }, []);
-
-  const close = () => {
-    setOpen(false);
-    try {
-      localStorage.setItem(KEY, "1");
-    } catch {
-      /* ignore */
-    }
-  };
+  const close = () => setOpen(false);
 
   return (
     <>
