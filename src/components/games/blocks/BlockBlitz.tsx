@@ -16,8 +16,10 @@ import {
   makePieces,
   place,
 } from "@/lib/games/blocks";
+import { useAccount } from "wagmi";
 import { play } from "@/lib/sfx";
 import { recordResult } from "@/lib/progress";
+import { submitScore } from "@/lib/scores";
 import { cn } from "@/lib/cn";
 
 const FILL: Record<Accent, string> = {
@@ -58,6 +60,7 @@ export function BlockBlitz() {
   const [combo, setCombo] = useState(0);
   const [flash, setFlash] = useState<string | null>(null);
   const [over, setOver] = useState(false);
+  const { address } = useAccount();
 
   const piece = useMemo(() => tray.find((p) => p.id === selected) ?? null, [tray, selected]);
 
@@ -109,10 +112,12 @@ export function BlockBlitz() {
     setHover(null);
 
     if (!anyMove(cleared, nextTray)) {
-      setBest((b) => Math.max(b, score + piece.cells.length + lines * 10 * (lines > 0 ? nextCombo : 1)));
+      const finalScore = score + piece.cells.length + lines * 10 * (lines > 0 ? nextCombo : 1);
+      setBest((b) => Math.max(b, finalScore));
       setOver(true);
       play("lose");
       recordResult("blocks", "draw"); // solo run — counts as a match played
+      submitScore(address, "blocks", finalScore); // weekly events board
     }
   };
 
