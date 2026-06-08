@@ -108,6 +108,21 @@ drop trigger if exists profiles_touch on profiles;
 create trigger profiles_touch before update on profiles
   for each row execute function touch_updated_at();
 
+-- scores: free-play results for weekly events (e.g. Block Blitz Showdown).
+-- Public read; writes go through the server. Casual board (no funds at stake).
+create table if not exists scores (
+  id          bigserial primary key,
+  address     text not null,               -- player wallet (lowercase)
+  game        text not null,               -- game slug
+  score       integer not null default 0,
+  created_at  timestamptz not null default now()
+);
+create index if not exists scores_game_time_idx on scores (game, created_at desc);
+
+alter table scores enable row level security;
+drop policy if exists "scores readable" on scores;
+create policy "scores readable" on scores for select using (true);
+
 -- match_private: hidden game state (e.g. Whot hands + market). RLS denies all
 -- client reads; ONLY the server (service_role, which bypasses RLS) ever reads
 -- or writes it. Clients receive a redacted, per-player view via the API.
