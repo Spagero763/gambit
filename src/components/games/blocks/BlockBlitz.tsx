@@ -44,8 +44,20 @@ function Block({ accent, className }: { accent: Accent; className?: string }) {
   );
 }
 
-export function BlockBlitz() {
-  const seed = useRef(7);
+export function BlockBlitz({
+  seed: seedProp,
+  onSubmit,
+  onExit,
+}: {
+  /** When set, everyone plays this exact board (tournament mode). */
+  seed?: number;
+  /** Fired with the final score each time a run ends (tournament mode). */
+  onSubmit?: (score: number) => void;
+  /** Replaces the "Lobby" link with a custom back action (tournament mode). */
+  onExit?: () => void;
+} = {}) {
+  const tournament = seedProp !== undefined;
+  const seed = useRef(seedProp ?? 7);
   const rng = useCallback(() => {
     seed.current = (seed.current * 1103515245 + 12345) & 0x7fffffff;
     return seed.current / 0x7fffffff;
@@ -72,7 +84,8 @@ export function BlockBlitz() {
   }, [piece, hover, grid]);
 
   const reset = () => {
-    seed.current = (Date.now() % 90000) + 11;
+    // tournament: replay the SAME board; free play: a fresh random board.
+    seed.current = tournament ? (seedProp as number) : (Date.now() % 90000) + 11;
     const t = makePieces(rng);
     setGrid(emptyGrid());
     setTray(t);
@@ -116,17 +129,27 @@ export function BlockBlitz() {
       setBest((b) => Math.max(b, finalScore));
       setOver(true);
       play("lose");
-      recordResult("blocks", "draw"); // solo run — counts as a match played
-      submitScore(address, "blocks", finalScore); // weekly events board
+      if (tournament) {
+        onSubmit?.(finalScore); // server keeps each player's best run
+      } else {
+        recordResult("blocks", "draw"); // solo run — counts as a match played
+        submitScore(address, "blocks", finalScore); // weekly events board
+      }
     }
   };
 
   return (
     <div className="mx-auto flex min-h-[100dvh] w-full max-w-md flex-col px-5 py-5">
       <div className="flex items-center justify-between">
-        <Link href="/" className="inline-flex items-center gap-2 rounded-full border border-line bg-void-700 px-3 py-1.5 text-sm text-ink-dim transition-colors hover:text-ink">
-          <ArrowLeft className="h-4 w-4" /> Lobby
-        </Link>
+        {onExit ? (
+          <button onClick={onExit} className="inline-flex items-center gap-2 rounded-full border border-line bg-void-700 px-3 py-1.5 text-sm text-ink-dim transition-colors hover:text-ink">
+            <ArrowLeft className="h-4 w-4" /> Tournament
+          </button>
+        ) : (
+          <Link href="/" className="inline-flex items-center gap-2 rounded-full border border-line bg-void-700 px-3 py-1.5 text-sm text-ink-dim transition-colors hover:text-ink">
+            <ArrowLeft className="h-4 w-4" /> Lobby
+          </Link>
+        )}
         <AnimatePresence>
           {combo > 1 && (
             <motion.span
@@ -277,12 +300,23 @@ export function BlockBlitz() {
               >
                 <p className="text-2xl font-semibold tracking-tight text-rose">No moves left</p>
                 <p className="mt-1 text-sm text-ink-dim">Final score {score}</p>
+                {tournament && (
+                  <p className="mt-2 text-[11px] text-teal">Run submitted — your best score counts. Same board, try to beat it.</p>
+                )}
                 <button
                   onClick={reset}
                   className="btn-primary mt-5 inline-flex w-full items-center justify-center gap-2 rounded-2xl py-3 text-sm shadow-glow"
                 >
-                  <RotateCcw className="h-4 w-4" /> Play again
+                  <RotateCcw className="h-4 w-4" /> {tournament ? "Try again (same board)" : "Play again"}
                 </button>
+                {tournament && onExit && (
+                  <button
+                    onClick={onExit}
+                    className="mt-2 inline-flex w-full items-center justify-center gap-2 rounded-2xl border border-line bg-void-800 py-3 text-sm text-ink-dim transition-colors hover:text-ink"
+                  >
+                    Back to standings
+                  </button>
+                )}
               </motion.div>
             </motion.div>
           )}

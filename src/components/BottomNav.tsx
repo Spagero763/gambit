@@ -1,13 +1,14 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { Gamepad2, Trophy, Swords, User } from "lucide-react";
+import { Gamepad2, Trophy, Swords, User, Crown } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/cn";
 
 const TABS = [
   { href: "/", label: "Play", icon: Gamepad2 },
+  { href: "/tournaments", label: "Cups", icon: Crown, match: "/tournament" },
   { href: "/leaderboard", label: "Ranks", icon: Trophy },
   { href: "/events", label: "Events", icon: Swords },
   { href: "/profile", label: "You", icon: User },
@@ -22,7 +23,7 @@ export function BottomNav() {
         {TABS.map((t) => {
           const Icon = t.icon;
           const isActive =
-            t.href === "/" ? pathname === "/" : pathname.startsWith(t.href);
+            t.href === "/" ? pathname === "/" : pathname.startsWith((t as { match?: string }).match ?? t.href);
           return (
             <Link
               key={t.href}
