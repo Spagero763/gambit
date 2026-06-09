@@ -53,3 +53,31 @@ export async function settleOnChain(matchId: bigint, winner: string | null, chai
   await pub.waitForTransactionReceipt({ hash });
   return hash;
 }
+
+/**
+ * Settle a multi-player pot (tournament): pass the exact top-three finishers,
+ * highest first. The contract pays them 50/30/20 of the pot (minus fee).
+ */
+export async function settleRanking(matchId: bigint, ranking: string[], chainId: number) {
+  const key = relayerKey();
+  const cfg = CHAINS[chainId];
+  if (!cfg) throw new Error(`Unsupported chain ${chainId}`);
+  const escrow = ESCROW_ADDRESS[chainId];
+  if (!escrow) throw new Error(`No escrow on chain ${chainId}`);
+  if (ranking.length !== 3) throw new Error("Ranking must be exactly the top three");
+
+  const ordered = ranking.map((a) => getAddress(a)) as `0x${string}`[];
+  const account = privateKeyToAccount(key);
+  const wallet = createWalletClient({ account, chain: cfg.chain, transport: http(cfg.rpc) });
+  const pub = createPublicClient({ chain: cfg.chain, transport: http(cfg.rpc) });
+
+  const hash = await wallet.writeContract({
+    address: escrow,
+    abi: ESCROW_ABI,
+    functionName: "declareResult",
+    args: [matchId, ordered],
+    type: "legacy",
+  });
+  await pub.waitForTransactionReceipt({ hash });
+  return hash;
+}
