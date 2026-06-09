@@ -123,6 +123,47 @@ alter table scores enable row level security;
 drop policy if exists "scores readable" on scores;
 create policy "scores readable" on scores for select using (true);
 
+-- tournaments: staked score pools (3-8 players). One on-chain escrow match per
+-- tournament; the top three split the pot 50/30/20. Reads public; writes server.
+create table if not exists tournaments (
+  id           bigint primary key,            -- on-chain escrow match id
+  game         text not null,                 -- game slug (e.g. blocks)
+  chain_id     integer not null,
+  token        text,
+  decimals     integer not null default 18,
+  stake        text not null,                 -- per-player stake (wei)
+  capacity     integer not null,              -- 3..8
+  seed         bigint not null,               -- shared seed (fair, server-set)
+  creator      text not null,
+  status       text not null default 'open',  -- open|active|settling|settled|cancelled
+  winners      jsonb,                         -- [1st,2nd,3rd] after settle
+  settle_tx    text,
+  settle_error text,
+  created_at   timestamptz not null default now(),
+  updated_at   timestamptz not null default now()
+);
+create index if not exists tournaments_status_idx on tournaments (status);
+
+create table if not exists tournament_players (
+  tournament_id bigint not null references tournaments (id) on delete cascade,
+  address       text not null,
+  score         integer,                       -- null until they play
+  submitted_at  timestamptz,
+  joined_at     timestamptz not null default now(),
+  primary key (tournament_id, address)
+);
+
+alter table tournaments enable row level security;
+alter table tournament_players enable row level security;
+drop policy if exists "tournaments readable" on tournaments;
+create policy "tournaments readable" on tournaments for select using (true);
+drop policy if exists "tournament_players readable" on tournament_players;
+create policy "tournament_players readable" on tournament_players for select using (true);
+
+drop trigger if exists tournaments_touch on tournaments;
+create trigger tournaments_touch before update on tournaments
+  for each row execute function touch_updated_at();
+
 -- match_private: hidden game state (e.g. Whot hands + market). RLS denies all
 -- client reads; ONLY the server (service_role, which bypasses RLS) ever reads
 -- or writes it. Clients receive a redacted, per-player view via the API.
