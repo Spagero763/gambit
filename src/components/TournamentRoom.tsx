@@ -17,6 +17,7 @@ import {
   joinTournament,
   submitTournamentScore,
   settleTournamentNow,
+  syncTournamentCancelled,
   TournamentView,
 } from "@/lib/tournamentClient";
 import { cn } from "@/lib/cn";
@@ -42,7 +43,7 @@ export function TournamentRoom({ id }: { id: string }) {
   const { connect } = useConnect();
   const { switchChain } = useSwitchChain();
   const { signMessageAsync } = useSignMessage();
-  const { joinMatch, step, error, ready, onActiveChain } = useStakeMatch();
+  const { joinMatch, cancelMatch, reclaimStalled, step, error, ready, onActiveChain } = useStakeMatch();
   const [authed, setAuthed] = useState(false);
   useEffect(() => setAuthed(hasToken(address)), [address]);
 
@@ -60,10 +61,27 @@ export function TournamentRoom({ id }: { id: string }) {
   }, [refresh]);
 
   if (notFound) {
+    // Extremely rare: the on-chain match exists but its DB row never landed.
+    // The stake is still safe in escrow — offer the on-chain refund directly so
+    // a creator can always recover funds without leaving the app.
     return (
-      <div className="mx-auto w-full max-w-2xl px-5 py-10 text-center">
-        <p className="text-ink-dim">Tournament not found.</p>
-        <Link href="/tournaments" className="mt-4 inline-flex items-center gap-2 text-teal"><ArrowLeft className="h-4 w-4" /> All tournaments</Link>
+      <div className="mx-auto w-full max-w-md px-5 py-10 text-center">
+        <p className="font-semibold text-ink">Tournament not found</p>
+        <p className="mt-1 text-sm text-ink-dim">If you just created this cup and it didn&apos;t save, your stake is still safe in escrow. You can refund it on-chain below.</p>
+        <button
+          onClick={async () => {
+            setBusy(true); setMsg(null);
+            try { const ok = await cancelMatch(tid); if (ok) setMsg("Refunded. Your stake was returned to your wallet."); }
+            catch (e: any) { setMsg(e?.message ?? "Refund failed — you may not be the creator, or the cup already started."); }
+            finally { setBusy(false); }
+          }}
+          disabled={busy || !isConnected}
+          className="mt-4 inline-flex items-center justify-center gap-1.5 rounded-xl border border-line bg-void-800 px-4 py-2 text-[12px] font-medium text-ink-dim transition-colors hover:text-rose disabled:opacity-60"
+        >
+          {busy ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : null} Refund my stake (on-chain)
+        </button>
+        {msg && <p className="mt-2 text-[11px] text-teal">{msg}</p>}
+        <Link href="/tournaments" className="mt-5 inline-flex items-center gap-2 text-teal"><ArrowLeft className="h-4 w-4" /> All tournaments</Link>
       </div>
     );
   }
@@ -77,6 +95,7 @@ export function TournamentRoom({ id }: { id: string }) {
   const stake = Number(formatUnits(BigInt(t.stake), dec));
   const pot = stake * t.capacity * (1 - FEE);
   const me = address?.toLowerCase();
+  const isCreator = !!me && t.creator.toLowerCase() === me;
   const joined = !!me && players.some((p) => p.address.toLowerCase() === me);
   const myScore = players.find((p) => p.address.toLowerCase() === me)?.score ?? null;
   const full = players.length >= t.capacity;
@@ -133,6 +152,35 @@ export function TournamentRoom({ id }: { id: string }) {
     }
   };
 
+  // Creator cancels an un-started cup -> escrow refunds everyone who joined.
+  const cancelCup = async () => {
+    setBusy(true);
+    setMsg(null);
+    try {
+      const ok = await cancelMatch(tid);
+      if (ok) { await syncTournamentCancelled(tid); await refresh(); }
+    } catch (e: any) {
+      setMsg(e?.message ?? "Cancel failed");
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  // Permissionless backstop: if a filled cup never settles, anyone can refund
+  // everyone after the on-chain settle window. The contract enforces the timing.
+  const reclaim = async () => {
+    setBusy(true);
+    setMsg(null);
+    try {
+      const ok = await reclaimStalled(tid);
+      if (ok) { await syncTournamentCancelled(tid); await refresh(); }
+    } catch (e: any) {
+      setMsg(e?.message ?? "Reclaim failed — the payout window may not have elapsed yet.");
+    } finally {
+      setBusy(false);
+    }
+  };
+
   return (
     <div className="mx-auto w-full max-w-2xl px-5 pb-28 pt-4">
       <Link href="/tournaments" className="inline-flex w-fit items-center gap-2 rounded-full glass px-3 py-1.5 text-sm text-ink-dim">
@@ -166,7 +214,12 @@ export function TournamentRoom({ id }: { id: string }) {
 
       {/* action zone */}
       <div className="mt-5 rounded-3xl glass p-5 shadow-card">
-        {t.status === "settled" ? (
+        {t.status === "cancelled" ? (
+          <div className="text-center">
+            <p className="font-semibold text-ink">Tournament cancelled</p>
+            <p className="text-sm text-ink-dim">Every stake was refunded on-chain. Nothing is owed.</p>
+          </div>
+        ) : t.status === "settled" ? (
           <div className="text-center">
             <Crown className="mx-auto h-6 w-6 text-amber" />
             <p className="mt-1 font-semibold text-ink">Tournament settled</p>
@@ -207,6 +260,9 @@ export function TournamentRoom({ id }: { id: string }) {
           <div className="text-center">
             <p className="flex items-center justify-center gap-1.5 text-sm text-ink-dim"><Loader2 className="h-4 w-4 animate-spin" /> Waiting for players</p>
             <p className="mt-1 text-[12px] text-ink-faint">Starts automatically when all {t.capacity} seats are filled. Share the invite link.</p>
+            <button onClick={cancelCup} disabled={busy} className="mx-auto mt-3 flex items-center justify-center gap-1.5 rounded-xl border border-line bg-void-800 px-4 py-2 text-[12px] font-medium text-ink-dim transition-colors hover:text-rose disabled:opacity-60">
+              {busy ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : null} {isCreator ? "Cancel & refund everyone" : "Refund everyone (after join window)"}
+            </button>
           </div>
         ) : (
           // active + joined
@@ -217,6 +273,9 @@ export function TournamentRoom({ id }: { id: string }) {
             {myScore !== null && <p className="text-center text-[12px] text-ink-faint">Your best so far: <span className="nums font-semibold text-ink">{myScore.toLocaleString()}</span></p>}
             <button onClick={settle} disabled={busy} className="flex w-full items-center justify-center gap-2 rounded-2xl border border-line bg-void-800 py-2.5 text-[12px] text-ink-dim transition-colors hover:text-ink disabled:opacity-60">
               {busy ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : null} Finish & pay out
+            </button>
+            <button onClick={reclaim} disabled={busy} className="mx-auto block text-[11px] font-medium text-ink-faint underline-offset-2 transition-colors hover:text-ink hover:underline disabled:opacity-60">
+              Payout stuck? Reclaim all stakes (refund everyone, after 1h)
             </button>
           </div>
         )}
