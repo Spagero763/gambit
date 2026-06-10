@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
+import { motion } from "framer-motion";
 import { formatUnits } from "viem";
 import { RefreshCw, Plus, Swords, Coins } from "lucide-react";
 import { useAccount } from "wagmi";
@@ -10,6 +11,8 @@ import { GAMES } from "@/lib/games";
 import { GameCover } from "@/components/art/GameCover";
 import { symbolForToken } from "@/lib/tokens";
 import { cn } from "@/lib/cn";
+
+const ease = [0.22, 1, 0.36, 1] as const;
 
 const GAME = Object.fromEntries(GAMES.map((g) => [g.slug, g]));
 
@@ -111,10 +114,15 @@ export function Lobby() {
             const sym = symbolForToken(r.token);
             const mine = r.creator?.toLowerCase() === me;
             return (
-              <li key={r.id}>
+              <motion.li
+                key={r.id}
+                initial={{ opacity: 0, y: 14, filter: "blur(4px)" }}
+                animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+                transition={{ duration: 0.4, ease, delay: Math.min(rooms.indexOf(r) * 0.05, 0.4) }}
+              >
                 <Link
                   href={`/play/${r.game}?room=${r.id}&stake=${stake}&token=${r.token ?? ""}`}
-                  className="flex items-center gap-3 rounded-2xl border border-line bg-void-700 p-3 shadow-card transition-colors hover:border-line-strong"
+                  className="group flex items-center gap-3 rounded-2xl border border-line bg-void-700 p-3 shadow-card transition-all duration-200 hover:-translate-y-0.5 hover:border-line-strong hover:shadow-pop"
                 >
                   <span className="h-12 w-16 shrink-0 overflow-hidden rounded-lg border border-line">
                     {g ? <GameCover art={g.art} className="h-full w-full" /> : null}
@@ -130,10 +138,10 @@ export function Lobby() {
                       <Coins className="h-3.5 w-3.5" />
                       {stake.toFixed(2)} <span className="text-[10px] text-ink-faint">{sym}</span>
                     </p>
-                    <span className="text-[10px] text-ink-faint">{mine ? "open" : "join →"}</span>
+                    <span className="text-[10px] text-ink-faint transition-colors group-hover:text-teal">{mine ? "open" : "join →"}</span>
                   </div>
                 </Link>
-              </li>
+              </motion.li>
             );
           })}
         </ul>

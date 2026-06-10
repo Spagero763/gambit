@@ -1,12 +1,16 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { motion } from "framer-motion";
 import { formatUnits } from "viem";
 import { Users, Activity, Swords, Coins, Trophy, Flame } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { symbolForToken, decimalsForToken } from "@/lib/tokens";
 import { GAMES } from "@/lib/games";
+import { Counter } from "@/components/Counter";
 import { cn } from "@/lib/cn";
+
+const ease = [0.22, 1, 0.36, 1] as const;
 
 const NAME: Record<string, string> = Object.fromEntries(GAMES.map((g) => [g.slug, g.name]));
 const FEE = 0.05;
@@ -125,12 +129,12 @@ export function Stats() {
       ) : (
         <>
           <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-3">
-            <Card icon={Users} label="Players" value={s.totalPlayers.toLocaleString()} />
-            <Card icon={Activity} label="Active today" value={s.dau.toLocaleString()} accent="text-teal" />
-            <Card icon={Swords} label="Staked matches" value={s.matches.toLocaleString()} />
-            <Card icon={Trophy} label="Settled" value={s.settled.toLocaleString()} />
-            <Card icon={Flame} label="Top streak" value={`${s.topStreak}`} accent="text-amber" />
-            <Card icon={Users} label="Stakers" value={s.stakedPlayers.toLocaleString()} />
+            <Card icon={Users} label="Players" value={s.totalPlayers} i={0} />
+            <Card icon={Activity} label="Active today" value={s.dau} accent="text-teal" i={1} />
+            <Card icon={Swords} label="Staked matches" value={s.matches} i={2} />
+            <Card icon={Trophy} label="Settled" value={s.settled} i={3} />
+            <Card icon={Flame} label="Top streak" value={s.topStreak} accent="text-amber" i={4} />
+            <Card icon={Users} label="Stakers" value={s.stakedPlayers} i={5} />
           </div>
 
           <div className="mt-3 grid grid-cols-2 gap-3">
@@ -172,13 +176,21 @@ export function Stats() {
   );
 }
 
-function Card({ icon: Icon, label, value, accent }: { icon: any; label: string; value: string; accent?: string }) {
+function Card({ icon: Icon, label, value, accent, i = 0 }: { icon: any; label: string; value: number; accent?: string; i?: number }) {
   return (
-    <div className="rounded-2xl border border-line bg-void-700 p-4 shadow-card">
+    <motion.div
+      initial={{ opacity: 0, y: 16, filter: "blur(4px)" }}
+      whileInView={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+      viewport={{ once: true, margin: "-40px" }}
+      transition={{ duration: 0.45, ease, delay: i * 0.06 }}
+      className="rounded-2xl border border-line bg-void-700 p-4 shadow-card"
+    >
       <Icon className="h-4 w-4 text-ink-faint" />
-      <p className={cn("nums mt-2 text-2xl font-semibold tracking-tight", accent ?? "text-ink")}>{value}</p>
+      <p className={cn("nums mt-2 text-2xl font-semibold tracking-tight", accent ?? "text-ink")}>
+        <Counter to={value} />
+      </p>
       <p className="mt-0.5 text-[11px] text-ink-faint">{label}</p>
-    </div>
+    </motion.div>
   );
 }
 
