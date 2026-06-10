@@ -13,6 +13,7 @@ export interface TournamentRow {
   stake: string;
   capacity: number;
   seed: number;
+  round: number;
   creator: string;
   status: "open" | "active" | "settling" | "settled" | "cancelled";
   winners: string[] | null;
@@ -24,7 +25,21 @@ export interface TournamentRow {
 export interface TournamentPlayer {
   address: string;
   score: number | null;
+  round_score: number | null;
+  eliminated_round: number | null;
   submitted_at?: string | null;
+}
+
+/** Every round plays a different (deterministic) board. */
+export function roundSeed(seed: number, round: number) {
+  return seed + (round - 1) * 9973;
+}
+
+/** Human stage name for the current field size. */
+export function stageName(aliveCount: number) {
+  if (aliveCount <= 3) return "Final";
+  if (aliveCount <= 5) return "Semi-final";
+  return "Quarter-final";
 }
 
 export interface TournamentView {
