@@ -35,14 +35,24 @@ export function BottomNav() {
                   layoutId="navPill"
                   className="absolute inset-0 rounded-xl bg-void-600"
                   transition={{ type: "spring", stiffness: 380, damping: 32 }}
-                />
+                >
+                  {/* soft accent glow under the active tab */}
+                  <span className="absolute inset-x-3 -bottom-1 h-2 rounded-full bg-teal/25 blur-md" />
+                </motion.span>
               )}
-              <Icon
-                className={cn(
-                  "relative h-[19px] w-[19px] transition-colors",
-                  isActive ? "text-teal" : "text-ink-faint"
-                )}
-              />
+              <motion.span
+                whileTap={{ scale: 0.82 }}
+                animate={isActive ? { scale: [1, 1.28, 1], y: [0, -2.5, 0] } : { scale: 1, y: 0 }}
+                transition={{ duration: 0.38, ease: [0.22, 1, 0.36, 1] }}
+                className="relative"
+              >
+                <Icon
+                  className={cn(
+                    "relative h-[19px] w-[19px] transition-colors",
+                    isActive ? "text-teal" : "text-ink-faint"
+                  )}
+                />
+              </motion.span>
               <span
                 className={cn(
                   "relative text-[10px] font-medium transition-colors",

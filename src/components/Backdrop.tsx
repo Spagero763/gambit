@@ -1,9 +1,10 @@
 import { FloatingGlyphs } from "./background/FloatingGlyphs";
+import { Spotlight } from "./background/Spotlight";
 
 /**
  * Ambient backdrop: a solid near-black base, a faint top wash, slow-drifting
- * colour glows, and game motifs floating gently behind the content. Sleek and
- * on-brand — a world away from the old neon aurora. Sits behind all content.
+ * colour glows, game motifs floating behind the content, a pointer-tracking
+ * spotlight, and film grain for depth. Alive, never noisy.
  */
 export function Backdrop() {
   return (
@@ -17,6 +18,9 @@ export function Backdrop() {
         }}
       />
       <FloatingGlyphs />
+      <Spotlight />
+      {/* film grain — kills the flat-dark-page feel */}
+      <div aria-hidden className="grain absolute inset-0 opacity-[0.05] mix-blend-soft-light" />
       {/* gentle vignette to settle the edges */}
       <div
         aria-hidden
