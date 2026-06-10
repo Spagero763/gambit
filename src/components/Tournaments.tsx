@@ -17,7 +17,7 @@ import { cn } from "@/lib/cn";
 
 const FEE = 0.05;
 const BLOCKS_GAME_TYPE = 4;
-const CAPS = [3, 4, 5, 6, 8];
+const CAPS = [3, 4, 5, 6, 7, 8];
 
 const STATUS_STYLE: Record<string, string> = {
   open: "bg-teal/15 text-teal",
