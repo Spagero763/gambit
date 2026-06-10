@@ -57,6 +57,23 @@ export async function readMatchOnChain(matchId: bigint, chainId: number) {
   };
 }
 
+/** Diagnostics: the relayer's public address + CELO balance per chain. Never
+ *  returns the key itself. Lets us see if the server's relayer is funded. */
+export async function relayerDiagnostics() {
+  const key = relayerKey();
+  const account = privateKeyToAccount(key);
+  const balances: Record<string, string> = {};
+  for (const [idStr, cfg] of Object.entries(CHAINS)) {
+    try {
+      const pub = createPublicClient({ chain: cfg.chain, transport: http(cfg.rpc) });
+      balances[idStr] = (await pub.getBalance({ address: account.address })).toString();
+    } catch {
+      balances[idStr] = "error";
+    }
+  }
+  return { address: account.address, balances };
+}
+
 /** Normalise the relayer key: trim, strip quotes, ensure 0x-prefix. */
 function relayerKey(): `0x${string}` {
   let k = process.env.RELAYER_PRIVATE_KEY?.trim();
