@@ -6,6 +6,7 @@ import Link from "next/link";
 import { formatUnits } from "viem";
 import { retrySettle } from "@/lib/matchClient";
 import { useStakeMatch } from "@/hooks/useStakeMatch";
+import { Confetti } from "@/components/motion/Confetti";
 import { symbolForToken } from "@/lib/tokens";
 import { inviteUrl, shareOrCopy } from "@/lib/share";
 import { cn } from "@/lib/cn";
@@ -72,6 +73,7 @@ export function SettleOverlay({
 
   return (
     <div className="text-center">
+      {result === "win" && !settling && <Confetti className="fixed z-10" />}
       <p className={cn("text-3xl font-black tracking-tight", result === "draw" ? "text-amber" : result === "win" ? "text-teal" : "text-rose")}>
         {result === "draw" ? "Draw" : result === "win" ? "You win" : "You lose"}
       </p>

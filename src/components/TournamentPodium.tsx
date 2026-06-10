@@ -1,51 +1,12 @@
 "use client";
 
-import { useMemo } from "react";
+import { useEffect } from "react";
 import { motion } from "framer-motion";
 import { Crown, ExternalLink, X } from "lucide-react";
 import { Avatar } from "@/components/Avatar";
+import { Confetti } from "@/components/motion/Confetti";
 import { PublicProfile, displayName, avatarHex } from "@/lib/profiles";
 import { play } from "@/lib/sfx";
-import { useEffect } from "react";
-
-const CONFETTI_COLORS = ["#3ecf8e", "#aaa7ff", "#e3b341", "#e06c8b", "#f4f4f5"];
-
-function Confetti() {
-  // deterministic-ish pieces, generated once
-  const pieces = useMemo(
-    () =>
-      Array.from({ length: 56 }, (_, i) => ({
-        x: Math.random() * 100,
-        delay: Math.random() * 2.2,
-        dur: 3 + Math.random() * 2.4,
-        size: 6 + Math.random() * 7,
-        rot: Math.random() * 720 - 360,
-        color: CONFETTI_COLORS[i % CONFETTI_COLORS.length],
-        round: Math.random() < 0.35,
-      })),
-    []
-  );
-  return (
-    <div className="pointer-events-none absolute inset-0 overflow-hidden">
-      {pieces.map((p, i) => (
-        <motion.span
-          key={i}
-          className="absolute top-[-5%]"
-          style={{
-            left: `${p.x}%`,
-            width: p.size,
-            height: p.round ? p.size : p.size * 0.45,
-            borderRadius: p.round ? "50%" : 2,
-            background: p.color,
-          }}
-          initial={{ y: "-5vh", opacity: 1, rotate: 0 }}
-          animate={{ y: "110vh", opacity: [1, 1, 0.9, 0.7], rotate: p.rot }}
-          transition={{ duration: p.dur, delay: p.delay, repeat: Infinity, ease: "linear" }}
-        />
-      ))}
-    </div>
-  );
-}
 
 /**
  * Full-screen podium celebration when a tournament settles: confetti rain,
@@ -88,7 +49,7 @@ export function TournamentPodium({
       exit={{ opacity: 0 }}
       className="fixed inset-0 z-[70] flex flex-col items-center justify-center bg-void/92 px-5 backdrop-blur-md"
     >
-      <Confetti />
+      <Confetti loop count={56} />
 
       <button
         onClick={onClose}
