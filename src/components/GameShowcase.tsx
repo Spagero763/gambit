@@ -58,13 +58,22 @@ export function GameShowcase() {
             <AnimatePresence mode="wait">
               <motion.div
                 key={active.slug}
-                initial={{ opacity: 0, scale: 0.97 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 1.02 }}
-                transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+                initial={{ opacity: 0, x: 42, scale: 0.97, filter: "blur(8px)" }}
+                animate={{ opacity: 1, x: 0, scale: 1, filter: "blur(0px)" }}
+                exit={{ opacity: 0, x: -32, scale: 1.02, filter: "blur(6px)" }}
+                transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
                 className="absolute inset-0"
               >
-                <Scene />
+                {/* slow Ken Burns drift while the scene is on stage */}
+                <motion.div
+                  key={`kb-${active.slug}`}
+                  className="absolute inset-0"
+                  initial={{ scale: 1 }}
+                  animate={{ scale: paused ? 1.02 : 1.055 }}
+                  transition={{ duration: DURATION / 1000, ease: "linear" }}
+                >
+                  <Scene />
+                </motion.div>
               </motion.div>
             </AnimatePresence>
 
@@ -85,12 +94,24 @@ export function GameShowcase() {
                     </motion.div>
                   </AnimatePresence>
                 </div>
-                <span
-                  className="inline-flex items-center gap-1.5 rounded-full px-3.5 py-2 text-[13px] font-semibold text-void shadow-glow"
-                  style={{ background: active.accent }}
-                >
-                  <Play className="h-3.5 w-3.5 fill-void" />
-                  Play
+                <span className="relative inline-flex">
+                  {/* breathing ring drawing the eye to the CTA */}
+                  <motion.span
+                    aria-hidden
+                    className="absolute inset-0 rounded-full"
+                    style={{ background: active.accent }}
+                    animate={{ scale: [1, 1.35], opacity: [0.45, 0] }}
+                    transition={{ duration: 1.8, repeat: Infinity, ease: "easeOut" }}
+                  />
+                  <motion.span
+                    whileHover={{ scale: 1.06 }}
+                    whileTap={{ scale: 0.95 }}
+                    className="relative inline-flex items-center gap-1.5 rounded-full px-3.5 py-2 text-[13px] font-semibold text-void shadow-glow"
+                    style={{ background: active.accent }}
+                  >
+                    <Play className="h-3.5 w-3.5 fill-void" />
+                    Play
+                  </motion.span>
                 </span>
               </div>
             </div>
