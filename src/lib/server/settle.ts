@@ -17,6 +17,46 @@ export function relayerConfigured() {
   return !!process.env.RELAYER_PRIVATE_KEY;
 }
 
+/** Read a match's on-chain Status enum (1=Open 2=Active 3=Settled 4=Cancelled).
+ *  No key needed — public read. Lets the server reconcile DB rows to chain truth. */
+export async function readMatchStatus(matchId: bigint, chainId: number): Promise<number> {
+  const cfg = CHAINS[chainId];
+  if (!cfg) throw new Error(`Unsupported chain ${chainId}`);
+  const escrow = ESCROW_ADDRESS[chainId];
+  if (!escrow) throw new Error(`No escrow on chain ${chainId}`);
+  const pub = createPublicClient({ chain: cfg.chain, transport: http(cfg.rpc) });
+  const m = (await pub.readContract({
+    address: escrow,
+    abi: ESCROW_ABI,
+    functionName: "matches",
+    args: [matchId],
+  })) as readonly unknown[];
+  return Number(m[9]); // struct field order: ...joined(8), status(9)
+}
+
+/** Read the on-chain match struct fields we need to verify identity before
+ *  paying out (token, creator, stake, joined, status). Public read, no key. */
+export async function readMatchOnChain(matchId: bigint, chainId: number) {
+  const cfg = CHAINS[chainId];
+  if (!cfg) throw new Error(`Unsupported chain ${chainId}`);
+  const escrow = ESCROW_ADDRESS[chainId];
+  if (!escrow) throw new Error(`No escrow on chain ${chainId}`);
+  const pub = createPublicClient({ chain: cfg.chain, transport: http(cfg.rpc) });
+  const m = (await pub.readContract({
+    address: escrow,
+    abi: ESCROW_ABI,
+    functionName: "matches",
+    args: [matchId],
+  })) as readonly unknown[];
+  return {
+    token: String(m[0]).toLowerCase(),
+    creator: String(m[1]).toLowerCase(),
+    stake: BigInt(m[2] as bigint),
+    joined: Number(m[8]),
+    status: Number(m[9]),
+  };
+}
+
 /** Normalise the relayer key: trim, strip quotes, ensure 0x-prefix. */
 function relayerKey(): `0x${string}` {
   let k = process.env.RELAYER_PRIVATE_KEY?.trim();
