@@ -3,6 +3,7 @@
 import { AnimatePresence, motion } from "framer-motion";
 import { RotateCcw, Home } from "lucide-react";
 import Link from "next/link";
+import { Confetti } from "@/components/motion/Confetti";
 import { cn } from "@/lib/cn";
 
 export type ResultKind = "win" | "lose" | "draw" | null;
@@ -32,6 +33,7 @@ export function ResultOverlay({
           exit={{ opacity: 0 }}
           className="absolute inset-0 z-30 grid place-items-center bg-void/70 backdrop-blur-sm"
         >
+          {result === "win" && <Confetti />}
           <motion.div
             initial={{ scale: 0.86, y: 16, opacity: 0 }}
             animate={{ scale: 1, y: 0, opacity: 1 }}
