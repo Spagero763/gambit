@@ -2,37 +2,94 @@ import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase";
 import { verifyToken } from "@/lib/server/profileToken";
 import { settleRanking, relayerConfigured, readMatchStatus } from "@/lib/server/settle";
-import { rankTop3, newSeed, TPlayer } from "@/lib/server/tournament";
+import { newSeed } from "@/lib/server/tournament";
 
 export const runtime = "nodejs";
 
-const FORCE_SETTLE_MS = 30 * 60 * 1000; // anyone can settle 30 min after creation
+/**
+ * Staged knockout tournaments. Everyone in a round plays the same board; when
+ * all alive players have submitted (or the round window lapses), the bottom
+ * half is eliminated — Quarter-final → Semi-final → Final of three. The FINAL
+ * round's scores decide the on-chain top-3 payout (50/30/20).
+ */
+
+const ROUND_WINDOW_MS = 30 * 60 * 1000; // per-round force-advance window
 const clampScore = (v: unknown) => {
   const n = Math.floor(Number(v));
   return Number.isFinite(n) && n >= 0 ? Math.min(n, 10_000_000) : 0;
 };
+/** Survivors per cut: half the field, never below the final three. */
+const keepCount = (alive: number) => Math.max(3, Math.ceil(alive / 2));
 
-async function loadPlayers(db: ReturnType<typeof supabaseAdmin>, id: number): Promise<TPlayer[]> {
-  const { data } = await db.from("tournament_players").select("address,score").eq("tournament_id", id);
-  return (data as TPlayer[]) ?? [];
+interface PlayerRow {
+  address: string;
+  score: number | null;
+  round_score: number | null;
+  eliminated_round: number | null;
 }
 
-/** Rank the field and pay the top three on-chain. Shared by auto + manual settle. */
-async function settleTournament(db: ReturnType<typeof supabaseAdmin>, t: any) {
+async function loadPlayers(db: ReturnType<typeof supabaseAdmin>, id: number): Promise<PlayerRow[]> {
+  const { data } = await db
+    .from("tournament_players")
+    .select("address,score,round_score,eliminated_round")
+    .eq("tournament_id", id);
+  return (data as PlayerRow[]) ?? [];
+}
+
+const aliveOf = (players: PlayerRow[]) => players.filter((p) => p.eliminated_round === null);
+const rankRound = (players: PlayerRow[]) =>
+  [...players].sort(
+    (a, b) =>
+      (b.round_score ?? -1) - (a.round_score ?? -1) ||
+      a.address.toLowerCase().localeCompare(b.address.toLowerCase())
+  );
+
+/**
+ * If every alive player has scored (or force), either CUT the field (non-final
+ * round) or PAY the top three (final round). Returns what happened.
+ */
+async function advanceOrSettle(db: ReturnType<typeof supabaseAdmin>, t: any, force: boolean) {
   const players = await loadPlayers(db, t.id);
-  if (players.length < 3) throw new Error("Need at least 3 players to settle");
-  const ranking = rankTop3(players);
-  await db.from("tournaments").update({ status: "settling", winners: ranking, settle_error: null }).eq("id", t.id);
-  if (!relayerConfigured()) return { settled: false, ranking };
-  try {
-    const tx = await settleRanking(BigInt(t.id), ranking, Number(t.chain_id));
-    await db.from("tournaments").update({ status: "settled", settle_tx: tx, settle_error: null }).eq("id", t.id);
-    return { settled: true, ranking, settleTx: tx };
-  } catch (e: any) {
-    const settle_error = String(e?.shortMessage ?? e?.message ?? "settle failed").slice(0, 300);
-    await db.from("tournaments").update({ settle_error }).eq("id", t.id);
-    return { settled: false, ranking, error: settle_error };
+  const alive = aliveOf(players);
+  const allScored = alive.length > 0 && alive.every((p) => p.round_score !== null);
+  if (!allScored && !force) return { done: false as const };
+
+  const ranked = rankRound(alive);
+
+  if (alive.length <= 3) {
+    // FINAL — settle the pot on this round's scores
+    const ranking = ranked.slice(0, 3).map((p) => p.address);
+    if (ranking.length < 3) return { done: false as const, error: "Need three finalists" };
+    await db.from("tournaments").update({ status: "settling", winners: ranking, settle_error: null }).eq("id", t.id);
+    if (!relayerConfigured()) return { done: true as const, settled: false, ranking };
+    try {
+      const tx = await settleRanking(BigInt(t.id), ranking, Number(t.chain_id));
+      await db.from("tournaments").update({ status: "settled", settle_tx: tx, settle_error: null }).eq("id", t.id);
+      return { done: true as const, settled: true, ranking, settleTx: tx };
+    } catch (e: any) {
+      const settle_error = String(e?.shortMessage ?? e?.message ?? "settle failed").slice(0, 300);
+      await db.from("tournaments").update({ settle_error }).eq("id", t.id);
+      return { done: true as const, settled: false, ranking, error: settle_error };
+    }
   }
+
+  // CUT — eliminate the bottom of the round, reset scores for the survivors
+  const keep = keepCount(alive.length);
+  const out = ranked.slice(keep).map((p) => p.address);
+  if (out.length > 0) {
+    await db
+      .from("tournament_players")
+      .update({ eliminated_round: t.round })
+      .eq("tournament_id", t.id)
+      .in("address", out);
+  }
+  await db
+    .from("tournament_players")
+    .update({ round_score: null })
+    .eq("tournament_id", t.id)
+    .is("eliminated_round", null);
+  await db.from("tournaments").update({ round: t.round + 1 }).eq("id", t.id);
+  return { done: true as const, advanced: true, round: t.round + 1, eliminated: out };
 }
 
 /** GET ?id=  -> { tournament, players } ; otherwise a list of open/active ones. */
@@ -45,7 +102,7 @@ export async function GET(req: NextRequest) {
       if (!t) return NextResponse.json({ error: "Not found" }, { status: 404 });
       const { data: players } = await db
         .from("tournament_players")
-        .select("address,score,submitted_at")
+        .select("address,score,round_score,eliminated_round,submitted_at")
         .eq("tournament_id", Number(id));
       return NextResponse.json({ tournament: t, players: players ?? [] });
     }
@@ -94,7 +151,9 @@ export async function POST(req: NextRequest) {
         { onConflict: "id", ignoreDuplicates: true }
       );
       if (error) throw error;
-      await db.from("tournament_players").upsert({ tournament_id: Number(id), address: creator }, { onConflict: "tournament_id,address", ignoreDuplicates: true });
+      await db
+        .from("tournament_players")
+        .upsert({ tournament_id: Number(id), address: creator }, { onConflict: "tournament_id,address", ignoreDuplicates: true });
       const { data: t } = await db.from("tournaments").select("seed").eq("id", Number(id)).maybeSingle();
       return NextResponse.json({ ok: true, seed: t?.seed ?? seed });
     }
@@ -125,20 +184,33 @@ export async function POST(req: NextRequest) {
       const { data: t } = await db.from("tournaments").select("*").eq("id", Number(id)).maybeSingle();
       if (!t) return NextResponse.json({ error: "Not found" }, { status: 404 });
       if (t.status !== "active") return NextResponse.json({ error: "Tournament not active" }, { status: 409 });
-      const { data: me } = await db.from("tournament_players").select("score").eq("tournament_id", Number(id)).eq("address", addr).maybeSingle();
+      const { data: me } = await db
+        .from("tournament_players")
+        .select("score,round_score,eliminated_round")
+        .eq("tournament_id", Number(id))
+        .eq("address", addr)
+        .maybeSingle();
       if (!me) return NextResponse.json({ error: "Not in this tournament" }, { status: 403 });
-      const best = Math.max(clampScore(body.score), me.score ?? 0);
-      await db.from("tournament_players").update({ score: best, submitted_at: new Date().toISOString() }).eq("tournament_id", Number(id)).eq("address", addr);
-      // auto-settle once everyone has played
-      const players = await loadPlayers(db, Number(id));
-      if (players.length >= 3 && players.every((p) => p.score !== null && p.score !== undefined)) {
-        const res = await settleTournament(db, t);
-        return NextResponse.json({ ok: true, best, settled: res.settled });
+      if (me.eliminated_round !== null) {
+        return NextResponse.json({ error: "You were eliminated in an earlier round" }, { status: 409 });
       }
-      return NextResponse.json({ ok: true, best });
+      const submitted = clampScore(body.score);
+      const best = Math.max(submitted, me.round_score ?? 0);
+      await db
+        .from("tournament_players")
+        .update({
+          round_score: best,
+          score: Math.max(submitted, me.score ?? 0), // lifetime-best, for display
+          submitted_at: new Date().toISOString(),
+        })
+        .eq("tournament_id", Number(id))
+        .eq("address", addr);
+      const res = await advanceOrSettle(db, t, false);
+      return NextResponse.json({ ok: true, best, ...res });
     }
 
     if (action === "settle") {
+      // advance the current round (or pay the final) — anyone can drive this
       const { data: t } = await db.from("tournaments").select("*").eq("id", Number(id)).maybeSingle();
       if (!t) return NextResponse.json({ error: "Not found" }, { status: 404 });
       if (t.status === "settled") return NextResponse.json({ ok: true, settled: true, settleTx: t.settle_tx });
@@ -146,19 +218,22 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ error: "Tournament is not settleable" }, { status: 409 });
       }
       const players = await loadPlayers(db, Number(id));
-      const allScored = players.length >= 3 && players.every((p) => p.score !== null && p.score !== undefined);
-      const elapsed = Date.now() - new Date(t.created_at).getTime();
-      if (!allScored && elapsed < FORCE_SETTLE_MS) {
-        return NextResponse.json({ error: "Not everyone has finished yet", retryInMs: FORCE_SETTLE_MS - elapsed }, { status: 409 });
+      const alive = aliveOf(players);
+      const allScored = alive.length > 0 && alive.every((p) => p.round_score !== null);
+      // each round gets its own window before anyone may force it forward
+      const deadline = new Date(t.created_at).getTime() + t.round * ROUND_WINDOW_MS;
+      if (!allScored && Date.now() < deadline) {
+        return NextResponse.json(
+          { error: "This round isn't finished yet", retryInMs: deadline - Date.now() },
+          { status: 409 }
+        );
       }
-      const res = await settleTournament(db, t);
-      return NextResponse.json({ ok: res.settled, ...res });
+      const res = await advanceOrSettle(db, t, true);
+      return NextResponse.json({ ok: res.done, ...res });
     }
 
     if (action === "cancel") {
-      // Reconcile the row to on-chain truth after a creator cancelMatch (unfilled
-      // cup) or a permissionless reclaimStalled (stuck pot) refunds everyone.
-      // Trustless: we only mark it cancelled if the escrow itself says Cancelled.
+      // Reconcile the row to on-chain truth after cancelMatch / reclaimStalled.
       const { data: t } = await db.from("tournaments").select("*").eq("id", Number(id)).maybeSingle();
       if (!t) return NextResponse.json({ error: "Not found" }, { status: 404 });
       if (t.status === "cancelled") return NextResponse.json({ ok: true, cancelled: true });
