@@ -10,6 +10,7 @@ import { Card, Shape, SHAPE_LABEL, isLegal } from "@/lib/games/whot";
 import { WhotCardBack, WhotCardFace, WhotShape } from "./whot/WhotCard";
 import { SettleOverlay } from "./SettleOverlay";
 import { TimeoutClaim } from "./TimeoutClaim";
+import { MatchChat } from "./MatchChat";
 import { play } from "@/lib/sfx";
 import { cn } from "@/lib/cn";
 
@@ -175,6 +176,7 @@ export function StakedWhot({ matchId, you }: { matchId: bigint; you: `0x${string
       </div>
 
       <TimeoutClaim matchId={matchId} me={me} turn={view?.turn} updatedAt={view?.updatedAt} status={view?.status} />
+      <MatchChat matchId={matchId} me={me} />
 
 
       {/* your hand */}
