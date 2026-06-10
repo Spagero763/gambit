@@ -79,6 +79,11 @@ export async function settleTournamentNow(id: bigint): Promise<{ ok: boolean; se
   return post({ action: "settle", id: id.toString() });
 }
 
+/** Reconcile the row to a cancellation/refund that already happened on-chain. */
+export async function syncTournamentCancelled(id: bigint): Promise<{ ok: boolean; cancelled?: boolean; error?: string }> {
+  return post({ action: "cancel", id: id.toString() });
+}
+
 export async function fetchTournament(id: bigint): Promise<TournamentView> {
   const res = await fetch(`/api/tournament?id=${id.toString()}`, { cache: "no-store" });
   const data = await res.json();
