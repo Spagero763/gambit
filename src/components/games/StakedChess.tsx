@@ -10,6 +10,7 @@ import { submitMove } from "@/lib/matchClient";
 import { ChessPiece } from "./chess/ChessPiece";
 import { SettleOverlay } from "./SettleOverlay";
 import { TimeoutClaim } from "./TimeoutClaim";
+import { MatchChat } from "./MatchChat";
 import { cn } from "@/lib/cn";
 
 const FILES = ["a", "b", "c", "d", "e", "f", "g", "h"];
@@ -169,6 +170,7 @@ export function StakedChess({ matchId, you }: { matchId: bigint; you: `0x${strin
       <p className="mt-3 text-center text-sm text-ink-dim">{status}</p>
 
       <TimeoutClaim matchId={matchId} me={me} turn={match?.state?.turn} updatedAt={match?.updated_at} status={match?.status} />
+      <MatchChat matchId={matchId} me={me} />
 
       <div className="relative mt-3">
         <div

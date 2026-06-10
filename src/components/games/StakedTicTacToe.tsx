@@ -9,6 +9,7 @@ import { submitMove } from "@/lib/matchClient";
 import { Mark } from "./xo/Mark";
 import { SettleOverlay } from "./SettleOverlay";
 import { TimeoutClaim } from "./TimeoutClaim";
+import { MatchChat } from "./MatchChat";
 import { cn } from "@/lib/cn";
 
 interface MatchRow {
@@ -129,6 +130,7 @@ export function StakedTicTacToe({ matchId, you }: { matchId: bigint; you: `0x${s
       <p className="mt-3 text-center text-sm text-ink-dim">{status}</p>
 
       <TimeoutClaim matchId={matchId} me={me} turn={match?.state?.turn} updatedAt={match?.updated_at} status={match?.status} />
+      <MatchChat matchId={matchId} me={me} />
 
       {/* board */}
       <div className="relative mx-auto mt-4 aspect-square w-full max-w-[330px] rounded-3xl glass p-3 shadow-card">
