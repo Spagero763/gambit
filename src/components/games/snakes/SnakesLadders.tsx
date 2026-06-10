@@ -344,6 +344,12 @@ function Ladder({ from, to, color }: { from: number; to: number; color: string }
   );
 }
 
+/** Point on a cubic Bézier at t. */
+function cubicAt(t: number, p0: number, c1: number, c2: number, p1: number) {
+  const u = 1 - t;
+  return u * u * u * p0 + 3 * u * u * t * c1 + 3 * u * t * t * c2 + t * t * t * p1;
+}
+
 function SnakePath({ from, to, color }: { from: number; to: number; color: string }) {
   const a = centerFrac(from);
   const b = centerFrac(to);
@@ -352,41 +358,75 @@ function SnakePath({ from, to, color }: { from: number; to: number; color: strin
   const len = Math.hypot(dx, dy) || 1;
   const px = -dy / len, py = dx / len; // unit perpendicular
   const amp = Math.min(11, len * 0.2);
-  // S-shaped body via a cubic with alternating perpendicular control points
+  // S-shaped spine via a cubic with alternating perpendicular control points
   const c1x = x1 + dx * 0.33 + px * amp, c1y = y1 + dy * 0.33 + py * amp;
   const c2x = x1 + dx * 0.66 - px * amp, c2y = y1 + dy * 0.66 - py * amp;
-  const body = `M ${x1} ${y1} C ${c1x} ${c1y} ${c2x} ${c2y} ${x2} ${y2}`;
+
+  // Real snakes taper: sample the spine and draw segments that thin toward the
+  // tail (head ~4.2 → tail tip ~0.7), with a sheen + scale bands on the front.
+  const N = 16;
+  const pts = Array.from({ length: N + 1 }, (_, i) => {
+    const t = i / N;
+    return { x: cubicAt(t, x1, c1x, c2x, x2), y: cubicAt(t, y1, c1y, c2y, y2), t };
+  });
+  const width = (t: number) => 4.2 * Math.pow(1 - t, 0.55) + 0.7;
+  const seg = (i: number) => `M ${pts[i].x} ${pts[i].y} L ${pts[i + 1].x} ${pts[i + 1].y}`;
+
   // head faces away from the body (tangent points toward c1, mouth is opposite)
   const hx = c1x - x1, hy = c1y - y1, hl = Math.hypot(hx, hy) || 1;
   const ux = hx / hl, uy = hy / hl;
   const headAngle = (Math.atan2(uy, ux) * 180) / Math.PI;
-  const tipx = x1 - ux * 4.5, tipy = y1 - uy * 4.5; // tongue tip in front of mouth
+  const tipx = x1 - ux * 5, tipy = y1 - uy * 5; // tongue tip in front of mouth
 
   return (
     <g strokeLinecap="round">
-      {/* shadow / outline */}
-      <path d={body} fill="none" stroke="rgba(0,0,0,0.4)" strokeWidth={5} />
-      {/* main body */}
-      <path d={body} fill="none" stroke={color} strokeWidth={3.4} />
-      {/* belly highlight */}
-      <path d={body} fill="none" stroke="rgba(255,255,255,0.35)" strokeWidth={1.1} />
-      {/* scale pattern */}
-      <path d={body} fill="none" stroke="rgba(0,0,0,0.28)" strokeWidth={3} strokeDasharray="0.5 3.4" />
+      {/* tapered body: dark backing then colour, segment by segment */}
+      {pts.slice(0, -1).map((p, i) => (
+        <path key={`o${i}`} d={seg(i)} fill="none" stroke="rgba(0,0,0,0.45)" strokeWidth={width(p.t) + 1.4} />
+      ))}
+      {pts.slice(0, -1).map((p, i) => (
+        <path key={`b${i}`} d={seg(i)} fill="none" stroke={color} strokeWidth={width(p.t)} />
+      ))}
+      {/* belly sheen along the thick half */}
+      {pts.slice(0, Math.floor(N * 0.7)).map((p, i) => (
+        <path key={`h${i}`} d={seg(i)} fill="none" stroke="rgba(255,255,255,0.32)" strokeWidth={width(p.t) * 0.3} />
+      ))}
+      {/* scale bands — short dark ticks across the front of the body */}
+      {pts.slice(1, Math.floor(N * 0.75)).map((p, i) =>
+        i % 2 === 0 ? (
+          <path
+            key={`s${i}`}
+            d={seg(i + 1)}
+            fill="none"
+            stroke="rgba(0,0,0,0.3)"
+            strokeWidth={width(p.t) * 0.85}
+            strokeDasharray={`0.5 ${Math.max(2.2, width(p.t) * 1.1)}`}
+          />
+        ) : null
+      )}
 
       {/* forked tongue */}
-      <g stroke="#ff3b5c" strokeWidth={0.7}>
-        <line x1={x1 - ux * 1.5} y1={y1 - uy * 1.5} x2={tipx} y2={tipy} />
-        <line x1={tipx} y1={tipy} x2={tipx - uy * 1.3} y2={tipy + ux * 1.3} />
-        <line x1={tipx} y1={tipy} x2={tipx + uy * 1.3} y2={tipy - ux * 1.3} />
+      <g stroke="#ff3b5c" strokeWidth={0.75}>
+        <line x1={x1 - ux * 1.8} y1={y1 - uy * 1.8} x2={tipx} y2={tipy} />
+        <line x1={tipx} y1={tipy} x2={tipx - uy * 1.4} y2={tipy + ux * 1.4} />
+        <line x1={tipx} y1={tipy} x2={tipx + uy * 1.4} y2={tipy - ux * 1.4} />
       </g>
 
-      {/* head */}
-      <ellipse cx={x1} cy={y1} rx={3.4} ry={2.7} fill={color} stroke="rgba(0,0,0,0.45)" strokeWidth={0.5} transform={`rotate(${headAngle} ${x1} ${y1})`} />
-      {/* eyes */}
-      <circle cx={x1 + px * 1.3 - ux * 0.4} cy={y1 + py * 1.3 - uy * 0.4} r={0.85} fill="#fff" />
-      <circle cx={x1 - px * 1.3 - ux * 0.4} cy={y1 - py * 1.3 - uy * 0.4} r={0.85} fill="#fff" />
-      <circle cx={x1 + px * 1.3 - ux * 0.4} cy={y1 + py * 1.3 - uy * 0.4} r={0.4} fill="#111" />
-      <circle cx={x1 - px * 1.3 - ux * 0.4} cy={y1 - py * 1.3 - uy * 0.4} r={0.4} fill="#111" />
+      {/* head: rounded wedge with a neck, brow ridge and eyes */}
+      <g transform={`rotate(${headAngle} ${x1} ${y1})`}>
+        <path
+          d={`M ${x1 + 3.4} ${y1 - 1.1} C ${x1 + 1.6} ${y1 - 3.1} ${x1 - 1.9} ${y1 - 3} ${x1 - 3.4} ${y1 - 1.2} C ${x1 - 4.4} ${y1} ${x1 - 4.4} ${y1} ${x1 - 3.4} ${y1 + 1.2} C ${x1 - 1.9} ${y1 + 3} ${x1 + 1.6} ${y1 + 3.1} ${x1 + 3.4} ${y1 + 1.1} Z`}
+          fill={color}
+          stroke="rgba(0,0,0,0.5)"
+          strokeWidth={0.6}
+        />
+        <path d={`M ${x1 + 2.6} ${y1 - 1.6} C ${x1 + 0.8} ${y1 - 2.6} ${x1 - 1.6} ${y1 - 2.5} ${x1 - 2.8} ${y1 - 1.4}`} fill="none" stroke="rgba(255,255,255,0.3)" strokeWidth={0.5} />
+      </g>
+      {/* eyes (gold with slit pupils) */}
+      <circle cx={x1 + px * 1.5 - ux * 0.3} cy={y1 + py * 1.5 - uy * 0.3} r={0.95} fill="#f5c542" stroke="rgba(0,0,0,0.5)" strokeWidth={0.25} />
+      <circle cx={x1 - px * 1.5 - ux * 0.3} cy={y1 - py * 1.5 - uy * 0.3} r={0.95} fill="#f5c542" stroke="rgba(0,0,0,0.5)" strokeWidth={0.25} />
+      <ellipse cx={x1 + px * 1.5 - ux * 0.3} cy={y1 + py * 1.5 - uy * 0.3} rx={0.22} ry={0.6} fill="#161616" transform={`rotate(${headAngle} ${x1 + px * 1.5 - ux * 0.3} ${y1 + py * 1.5 - uy * 0.3})`} />
+      <ellipse cx={x1 - px * 1.5 - ux * 0.3} cy={y1 - py * 1.5 - uy * 0.3} rx={0.22} ry={0.6} fill="#161616" transform={`rotate(${headAngle} ${x1 - px * 1.5 - ux * 0.3} ${y1 - py * 1.5 - uy * 0.3})`} />
     </g>
   );
 }
@@ -397,12 +437,25 @@ function Dice({ value, rolling }: { value: number; rolling: boolean }) {
   };
   return (
     <motion.div
-      animate={rolling ? { rotate: [0, -18, 18, 0], scale: [1, 1.08, 1] } : { rotate: 0, scale: 1 }}
+      animate={rolling ? { rotateZ: [0, -22, 18, 0], rotateX: [0, 24, -16, 0], scale: [1, 1.12, 1] } : { rotateZ: 0, rotateX: 0, scale: 1 }}
       transition={{ duration: 0.5, repeat: rolling ? Infinity : 0 }}
-      className="grid h-14 w-14 grid-cols-3 grid-rows-3 gap-0.5 rounded-2xl border border-line bg-void-700 p-2 shadow-card"
+      style={{
+        background: "linear-gradient(145deg, #fdfaf2, #ddd5c2)",
+        boxShadow:
+          "inset 0 2px 3px rgba(255,255,255,0.9), inset 0 -3px 5px rgba(0,0,0,0.25), 0 4px 10px -2px rgba(0,0,0,0.6), 0 10px 24px -10px rgba(0,0,0,0.7)",
+      }}
+      className="grid h-14 w-14 grid-cols-3 grid-rows-3 gap-0.5 rounded-2xl border border-black/20 p-2"
     >
       {Array.from({ length: 9 }).map((_, i) => (
-        <span key={i} className={cn("m-auto h-2 w-2 rounded-full", pips[value].includes(i) ? "bg-ink" : "bg-transparent")} />
+        <span
+          key={i}
+          className={cn("m-auto h-2 w-2 rounded-full", pips[value].includes(i) ? "" : "bg-transparent")}
+          style={
+            pips[value].includes(i)
+              ? { background: "radial-gradient(circle at 35% 30%, #4a4452, #16131d 70%)", boxShadow: "inset 0 1px 1px rgba(0,0,0,0.7), 0 1px 0 rgba(255,255,255,0.5)" }
+              : undefined
+          }
+        />
       ))}
     </motion.div>
   );
