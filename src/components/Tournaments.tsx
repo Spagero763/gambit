@@ -103,7 +103,7 @@ export function Tournaments() {
         </span>
         <div>
           <h1 className="font-display text-2xl font-bold">Tournaments</h1>
-          <p className="text-sm text-ink-dim">Everyone plays the same Block Blitz board. Top 3 split the pot 50/30/20.</p>
+          <p className="text-sm text-ink-dim">Knockout rounds — survive the cuts to the final. Top 3 split the pot 50/30/20.</p>
         </div>
       </div>
 
