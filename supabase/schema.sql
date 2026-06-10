@@ -153,6 +153,12 @@ create table if not exists tournament_players (
   primary key (tournament_id, address)
 );
 
+-- staged knockout: players are eliminated round by round (quarters → semis →
+-- final of three); the FINAL round's scores decide the on-chain top-3 payout.
+alter table tournaments add column if not exists round integer not null default 1;
+alter table tournament_players add column if not exists round_score integer;
+alter table tournament_players add column if not exists eliminated_round integer;
+
 alter table tournaments enable row level security;
 alter table tournament_players enable row level security;
 drop policy if exists "tournaments readable" on tournaments;
