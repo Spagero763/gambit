@@ -20,6 +20,13 @@ const config: Config = {
           dim: "#9a9aa3",
           faint: "#646470",
         },
+        // Hairline borders/dividers. These were referenced app-wide but never
+        // defined, so Tailwind fell back to its light-gray default — harsh
+        // bright borders on a dark UI. Defining them refines every surface.
+        line: {
+          DEFAULT: "rgba(255,255,255,0.08)",
+          strong: "rgba(255,255,255,0.16)",
+        },
         // Matured, low-neon hues. Emerald (`teal`) is the brand / money accent.
         violet: {
           DEFAULT: "#8e8bf0",
