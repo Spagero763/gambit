@@ -69,7 +69,10 @@ export function Tournaments() {
     try {
       const id = await createMatch(stake, BLOCKS_GAME_TYPE, capacity, token);
       if (id !== null) {
-        await registerTournament({
+        // The stake is already escrowed on-chain, so registration MUST land —
+        // retry transient blips, then navigate to the room regardless (it can
+        // recover/cancel from the on-chain match even if the row is missing).
+        const args = {
           id,
           game: "blocks",
           chainId: ACTIVE_CHAIN_ID,
@@ -78,7 +81,11 @@ export function Tournaments() {
           creator: address,
           token: token.address,
           decimals: token.decimals,
-        });
+        };
+        let registered = false;
+        for (let i = 0; i < 3 && !registered; i++) {
+          try { await registerTournament(args); registered = true; } catch { await new Promise((r) => setTimeout(r, 800)); }
+        }
         router.push(`/tournament/${id.toString()}`);
       }
     } catch {
