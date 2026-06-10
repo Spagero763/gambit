@@ -29,6 +29,9 @@ interface MatchRow {
   winner: string | null;
   settle_tx: string | null;
   settle_error: string | null;
+  stake?: string;
+  token?: string | null;
+  decimals?: number;
   updated_at: string;
 }
 
@@ -197,6 +200,9 @@ export function StakedSnakes({ matchId, you }: { matchId: bigint; you: `0x${stri
                 chainId={match?.chain_id}
                 matchId={matchId}
                 shareAddress={me}
+                stakeWei={match?.stake}
+                decimals={match?.decimals}
+                token={match?.token}
               />
             </motion.div>
           )}

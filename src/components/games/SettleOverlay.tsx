@@ -1,12 +1,16 @@
 "use client";
 
 import { useState } from "react";
-import { Loader2, ExternalLink, RotateCcw, Share2 } from "lucide-react";
+import { Loader2, ExternalLink, RotateCcw, Share2, CheckCircle2 } from "lucide-react";
 import Link from "next/link";
+import { formatUnits } from "viem";
 import { retrySettle } from "@/lib/matchClient";
 import { useStakeMatch } from "@/hooks/useStakeMatch";
+import { symbolForToken } from "@/lib/tokens";
 import { inviteUrl, shareOrCopy } from "@/lib/share";
 import { cn } from "@/lib/cn";
+
+const FEE = 0.05;
 
 const EXPLORER: Record<number, string> = {
   42220: "https://celoscan.io/tx/",
@@ -26,6 +30,9 @@ export function SettleOverlay({
   chainId,
   matchId,
   shareAddress,
+  stakeWei,
+  decimals,
+  token,
 }: {
   result: "win" | "lose" | "draw";
   status: string; // "settling" | "settled"
@@ -34,8 +41,16 @@ export function SettleOverlay({
   chainId?: number;
   matchId: bigint;
   shareAddress?: string;
+  stakeWei?: string | null; // per-player stake (wei) — to show the credited amount
+  decimals?: number;
+  token?: string | null;
 }) {
   const settling = status === "settling";
+  const symbol = symbolForToken(token);
+  // amount credited to THIS player's wallet: a win takes both stakes minus fee;
+  // a draw refunds your own stake. (1v1 only — this overlay is per-match.)
+  const stake = stakeWei ? Number(formatUnits(BigInt(stakeWei), decimals ?? 18)) : null;
+  const payout = stake === null ? null : result === "win" ? stake * 2 * (1 - FEE) : result === "draw" ? stake : null;
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState<string | null>(null);
   const { reclaimStalled, error: reclaimError } = useStakeMatch();
@@ -95,9 +110,17 @@ export function SettleOverlay({
         </div>
       ) : (
         <div className="mt-1">
-          <p className="text-sm text-ink-dim">
-            {result === "draw" ? "Stakes refunded" : result === "win" ? "Pot paid to your wallet" : "Pot paid to opponent"}
-          </p>
+          {result === "lose" ? (
+            <p className="text-sm text-ink-dim">Pot paid to opponent</p>
+          ) : (
+            <div className="mx-auto mt-1 flex max-w-[18rem] items-center justify-center gap-2 rounded-2xl border border-teal/30 bg-teal/[0.08] px-4 py-2.5">
+              <CheckCircle2 className="h-5 w-5 shrink-0 text-teal" />
+              <p className="text-left text-sm font-semibold text-teal">
+                {result === "draw" ? "Stake refunded to your wallet" : "Paid to your wallet"}
+                {payout ? <span className="nums"> · {payout.toFixed(2)} {symbol}</span> : null}
+              </p>
+            </div>
+          )}
           {settleTx && chainId && (
             <a
               href={`${EXPLORER[chainId] ?? ""}${settleTx}`}
@@ -105,7 +128,7 @@ export function SettleOverlay({
               rel="noreferrer"
               className="mt-3 inline-flex items-center gap-1.5 rounded-full bg-white/10 px-3 py-1.5 text-xs font-semibold text-ink"
             >
-              View payout <ExternalLink className="h-3 w-3" />
+              {result === "lose" ? "View result" : "View payout on Celoscan"} <ExternalLink className="h-3 w-3" />
             </a>
           )}
           <div className="mt-4 flex items-center justify-center gap-2">
