@@ -2,10 +2,14 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { Trophy } from "lucide-react";
+import { Trophy, UserPen } from "lucide-react";
+import Link from "next/link";
 import { useAccount } from "wagmi";
 import { supabase } from "@/lib/supabase";
 import { aggregateStandings, Standing } from "@/lib/leaderboard";
+import { useProfiles, displayName, avatarHex, shortAddr, PublicProfile } from "@/lib/profiles";
+import { useProfile } from "@/lib/profile";
+import { Avatar } from "@/components/Avatar";
 import { cn } from "@/lib/cn";
 
 type Sort = "earnings" | "wins";
@@ -18,10 +22,6 @@ interface Raw {
   stake: string;
   created_at: string;
   decimals: number | null;
-}
-
-function short(a: string) {
-  return `${a.slice(0, 6)}…${a.slice(-4)}`;
 }
 
 export function Leaderboard() {
@@ -59,10 +59,30 @@ export function Leaderboard() {
     return standings.slice(0, 50);
   }, [raw, range, sort]);
 
+  // resolve player names + avatars for everyone on the board
+  const profiles = useProfiles(rows.map((r) => r.handle));
+  const { profile: myProfile, loading: profileLoading } = useProfile();
+  const needsName = !!address && !profileLoading && !myProfile?.name;
+
   return (
     <section className="mx-auto w-full max-w-2xl px-5 pb-28 pt-2">
       <h1 className="text-2xl font-semibold tracking-tight">Leaderboard</h1>
       <p className="mt-1 text-sm text-ink-dim">Top players by settled staked matches.</p>
+
+      {needsName && (
+        <Link
+          href="/profile"
+          className="mt-4 flex items-center gap-3 rounded-2xl border border-teal/35 bg-teal/[0.07] px-4 py-3 transition-colors hover:border-teal/60"
+        >
+          <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-teal/15 text-teal">
+            <UserPen className="h-4 w-4" />
+          </span>
+          <span className="min-w-0">
+            <span className="block text-sm font-semibold text-ink">Claim your player name</span>
+            <span className="block text-[12px] text-ink-dim">Set a name and photo so the board shows you — not your 0x address.</span>
+          </span>
+        </Link>
+      )}
 
       <div className="mt-5 grid grid-cols-2 gap-1 rounded-xl border border-line bg-void-800 p-1">
         {(
@@ -128,7 +148,7 @@ export function Leaderboard() {
             className="mt-4 space-y-2"
           >
             {rows.map((row, i) => (
-              <Row key={row.handle} row={row} rank={i + 1} sort={sort} isMe={row.handle === me} />
+              <Row key={row.handle} row={row} rank={i + 1} sort={sort} isMe={row.handle === me} profile={profiles[row.handle.toLowerCase()]} />
             ))}
           </motion.ul>
         </AnimatePresence>
@@ -137,9 +157,10 @@ export function Leaderboard() {
   );
 }
 
-function Row({ row, rank, sort, isMe }: { row: Standing; rank: number; sort: Sort; isMe: boolean }) {
+function Row({ row, rank, sort, isMe, profile }: { row: Standing; rank: number; sort: Sort; isMe: boolean; profile?: PublicProfile }) {
   const top = rank <= 3;
   const medal = ["text-amber", "text-ink-dim", "text-[#c08457]"][rank - 1];
+  const named = !!profile?.name?.trim();
 
   return (
     <motion.li
@@ -155,16 +176,20 @@ function Row({ row, rank, sort, isMe }: { row: Standing; rank: number; sort: Sor
         <span className={cn("nums font-mono text-sm font-semibold", top ? medal : "text-ink-faint")}>{rank}</span>
       </div>
 
-      <span className="grid h-9 w-9 place-items-center rounded-lg bg-void-600 text-[11px] font-semibold text-ink-dim">
-        {row.handle.slice(2, 4).toUpperCase()}
-      </span>
+      <Avatar
+        image={profile?.avatar_image || undefined}
+        color={avatarHex(profile)}
+        name={displayName(row.handle, profile)}
+        size={36}
+        rounded="rounded-lg"
+      />
 
       <div className="min-w-0 flex-1 leading-tight">
-        <p className="truncate font-mono text-[13px] font-medium text-ink">
-          {short(row.handle)} {isMe && <span className="text-teal">· you</span>}
+        <p className={cn("truncate text-[13px] font-medium text-ink", !named && "font-mono")}>
+          {displayName(row.handle, profile)} {isMe && <span className="text-teal">· you</span>}
         </p>
         <p className="text-[11px] text-ink-faint">
-          {row.wins}W · {row.losses}L
+          {row.wins}W · {row.losses}L{named ? <span className="font-mono"> · {shortAddr(row.handle)}</span> : ""}
         </p>
       </div>
 

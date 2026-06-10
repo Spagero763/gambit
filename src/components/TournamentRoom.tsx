@@ -12,6 +12,8 @@ import { useStakeMatch } from "@/hooks/useStakeMatch";
 import { ACTIVE_CHAIN_ID } from "@/lib/wagmi";
 import { tokensFor, symbolForToken, decimalsForToken } from "@/lib/tokens";
 import { hasToken, signIn } from "@/lib/profile";
+import { useProfiles, displayName, avatarHex } from "@/lib/profiles";
+import { Avatar } from "@/components/Avatar";
 import {
   fetchTournament,
   joinTournament,
@@ -46,6 +48,8 @@ export function TournamentRoom({ id }: { id: string }) {
   const { joinMatch, cancelMatch, reclaimStalled, step, error, ready, onActiveChain } = useStakeMatch();
   const [authed, setAuthed] = useState(false);
   useEffect(() => setAuthed(hasToken(address)), [address]);
+  // resolve player names/avatars (empty until the view loads — hook stays unconditional)
+  const profiles = useProfiles(view?.players.map((p) => p.address) ?? []);
 
   const refresh = useCallback(async () => {
     try {
@@ -301,10 +305,20 @@ export function TournamentRoom({ id }: { id: string }) {
                   p.address.toLowerCase() === me ? "ring-1 ring-teal/40" : ""
                 )}
               >
-                <div className="flex items-center gap-3">
-                  <span className="w-6 text-center text-sm">{i < 3 ? MEDAL[i] : <span className="text-ink-faint">{i + 1}</span>}</span>
-                  <div>
-                    <p className="nums text-sm font-medium text-ink">{p.address.slice(0, 6)}…{p.address.slice(-4)}{p.address.toLowerCase() === me ? " (you)" : ""}</p>
+                <div className="flex min-w-0 items-center gap-3">
+                  <span className="w-6 shrink-0 text-center text-sm">{i < 3 ? MEDAL[i] : <span className="text-ink-faint">{i + 1}</span>}</span>
+                  <Avatar
+                    image={profiles[p.address.toLowerCase()]?.avatar_image || undefined}
+                    color={avatarHex(profiles[p.address.toLowerCase()])}
+                    name={displayName(p.address, profiles[p.address.toLowerCase()])}
+                    size={32}
+                    rounded="rounded-lg"
+                  />
+                  <div className="min-w-0">
+                    <p className="truncate text-sm font-medium text-ink">
+                      {displayName(p.address, profiles[p.address.toLowerCase()])}
+                      {p.address.toLowerCase() === me ? <span className="text-teal"> (you)</span> : ""}
+                    </p>
                     <p className="text-[11px] text-ink-faint">{p.score === null ? "Not played yet" : `${p.score.toLocaleString()} pts`}</p>
                   </div>
                 </div>
