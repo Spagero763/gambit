@@ -164,6 +164,32 @@ drop trigger if exists tournaments_touch on tournaments;
 create trigger tournaments_touch before update on tournaments
   for each row execute function touch_updated_at();
 
+-- match_messages: in-match chat between the two players. Public read (game
+-- state is public anyway); writes go through the server, which verifies the
+-- sender's session token and seat. Realtime so messages appear instantly.
+create table if not exists match_messages (
+  id          bigserial primary key,
+  match_id    bigint not null references matches (id) on delete cascade,
+  sender      text not null,               -- wallet (lowercase), verified server-side
+  body        text not null,
+  created_at  timestamptz not null default now()
+);
+create index if not exists match_messages_match_idx on match_messages (match_id, id);
+
+alter table match_messages enable row level security;
+drop policy if exists "match_messages readable" on match_messages;
+create policy "match_messages readable" on match_messages for select using (true);
+
+do $$
+begin
+  if not exists (
+    select 1 from pg_publication_tables
+    where pubname = 'supabase_realtime' and schemaname = 'public' and tablename = 'match_messages'
+  ) then
+    alter publication supabase_realtime add table match_messages;
+  end if;
+end $$;
+
 -- match_private: hidden game state (e.g. Whot hands + market). RLS denies all
 -- client reads; ONLY the server (service_role, which bypasses RLS) ever reads
 -- or writes it. Clients receive a redacted, per-player view via the API.

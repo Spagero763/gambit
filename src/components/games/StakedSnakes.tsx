@@ -9,6 +9,7 @@ import { submitMove } from "@/lib/matchClient";
 import { SNAKES_LADDERS, centerFrac } from "@/lib/games/snakesLayout";
 import { SettleOverlay } from "./SettleOverlay";
 import { TimeoutClaim } from "./TimeoutClaim";
+import { MatchChat } from "./MatchChat";
 import { cn } from "@/lib/cn";
 
 interface SnakesState {
@@ -131,6 +132,7 @@ export function StakedSnakes({ matchId, you }: { matchId: bigint; you: `0x${stri
       <p className="mt-3 text-center text-sm text-ink-dim">{status}</p>
 
       <TimeoutClaim matchId={matchId} me={me} turn={match?.state?.turn} updatedAt={match?.updated_at} status={match?.status} />
+      <MatchChat matchId={matchId} me={me} />
 
       <div className="relative mx-auto mt-3 w-full max-w-[360px]">
         <div
