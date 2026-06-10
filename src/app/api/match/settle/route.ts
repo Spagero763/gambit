@@ -1,9 +1,22 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase";
-import { settleOnChain, relayerConfigured, readMatchOnChain } from "@/lib/server/settle";
+import { settleOnChain, relayerConfigured, readMatchOnChain, relayerDiagnostics } from "@/lib/server/settle";
 import { limited } from "@/lib/server/rateLimit";
 
 export const runtime = "nodejs";
+
+/** Admin diagnostic: GET ?secret=…  -> relayer address + per-chain balances. */
+export async function GET(req: NextRequest) {
+  const secret = req.nextUrl.searchParams.get("secret");
+  if (!process.env.ADMIN_SECRET || secret !== process.env.ADMIN_SECRET) {
+    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  }
+  try {
+    return NextResponse.json({ relayer: relayerConfigured() ? await relayerDiagnostics() : null });
+  } catch (e: any) {
+    return NextResponse.json({ error: e?.message ?? "Failed" }, { status: 500 });
+  }
+}
 
 /**
  * Re-drive settlement for a stuck match.
