@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase";
 import { verifyToken } from "@/lib/server/profileToken";
-import { settleRanking, relayerConfigured } from "@/lib/server/settle";
+import { settleRanking, relayerConfigured, readMatchStatus } from "@/lib/server/settle";
 import { rankTop3, newSeed, TPlayer } from "@/lib/server/tournament";
 
 export const runtime = "nodejs";
@@ -153,6 +153,21 @@ export async function POST(req: NextRequest) {
       }
       const res = await settleTournament(db, t);
       return NextResponse.json({ ok: res.settled, ...res });
+    }
+
+    if (action === "cancel") {
+      // Reconcile the row to on-chain truth after a creator cancelMatch (unfilled
+      // cup) or a permissionless reclaimStalled (stuck pot) refunds everyone.
+      // Trustless: we only mark it cancelled if the escrow itself says Cancelled.
+      const { data: t } = await db.from("tournaments").select("*").eq("id", Number(id)).maybeSingle();
+      if (!t) return NextResponse.json({ error: "Not found" }, { status: 404 });
+      if (t.status === "cancelled") return NextResponse.json({ ok: true, cancelled: true });
+      const onchain = await readMatchStatus(BigInt(id), Number(t.chain_id));
+      if (onchain === 4 /* Cancelled */) {
+        await db.from("tournaments").update({ status: "cancelled" }).eq("id", Number(id));
+        return NextResponse.json({ ok: true, cancelled: true });
+      }
+      return NextResponse.json({ error: "Escrow has not refunded this tournament yet", onchainStatus: onchain }, { status: 409 });
     }
 
     return NextResponse.json({ error: "Unknown action" }, { status: 400 });
