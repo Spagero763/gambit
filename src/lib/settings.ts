@@ -4,9 +4,7 @@ import { useEffect, useState } from "react";
 
 export interface GambitSettings {
   soundOn: boolean;
-  musicOn: boolean;
   volume: number; // 0..1
-  track: string; // current music track id
   name: string;
   avatar: string; // avatar colour id (fallback when no photo)
   avatarImage: string; // uploaded photo as a data URL ("" = none)
@@ -14,9 +12,7 @@ export interface GambitSettings {
 
 export const DEFAULT_SETTINGS: GambitSettings = {
   soundOn: true,
-  musicOn: false,
   volume: 0.5,
-  track: "lofi",
   name: "",
   avatar: "teal",
   avatarImage: "",
@@ -35,15 +31,6 @@ export const AVATAR_HEX: Record<string, string> = {
   sky: "#5fb7e6",
   lime: "#9bd154",
 };
-
-// Music styles, generated live in the browser (see lib/music). Ids map to
-// generative styles — no audio files to ship.
-export const TRACKS = [
-  { id: "lofi", label: "Lo-fi" },
-  { id: "arcade", label: "Arcade" },
-  { id: "ambient", label: "Ambient" },
-  { id: "synth", label: "Synthwave" },
-] as const;
 
 export function loadSettings(): GambitSettings {
   if (typeof window === "undefined") return DEFAULT_SETTINGS;

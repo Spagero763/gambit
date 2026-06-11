@@ -102,14 +102,49 @@ export function MatchSetup({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // RESUME: if the linked room is a live match I'm already seated in, jump
+  // straight back onto the board instead of showing the join form.
+  const [resuming, setResuming] = useState(false);
+  useEffect(() => {
+    if (typeof window === "undefined" || !address) return;
+    const room = new URLSearchParams(window.location.search).get("room");
+    if (!room) return;
+    let live = true;
+    (async () => {
+      const { supabase } = await import("@/lib/supabase");
+      if (!supabase) return;
+      const { data: m } = await supabase
+        .from("matches")
+        .select("id,status,creator,opponent")
+        .eq("id", Number(room))
+        .maybeSingle();
+      if (!live || !m) return;
+      const me = address.toLowerCase();
+      const seated = [m.creator, m.opponent].some((a: string | null) => a?.toLowerCase() === me);
+      if (seated && (m.status === "active" || m.status === "settling" || m.status === "settled")) {
+        setResuming(true);
+        onStart(difficulty, { matchId: BigInt(room), you: address });
+      }
+    })();
+    return () => {
+      live = false;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [address]);
+
   return (
     <div className="mx-auto flex min-h-[100dvh] w-full max-w-2xl flex-col px-5 py-5">
       <Link
         href="/"
         className="inline-flex w-fit items-center gap-2 rounded-full glass px-3 py-1.5 text-sm text-ink-dim"
       >
-        <ArrowLeft className="h-4 w-4" /> Lobby
+        <ArrowLeft className="h-4 w-4" /> Home
       </Link>
+      {resuming && (
+        <p className="mt-3 inline-flex items-center gap-1.5 text-[12px] font-medium text-teal">
+          <Loader2 className="h-3.5 w-3.5 animate-spin" /> Resuming your match…
+        </p>
+      )}
 
       <div className="mt-6 flex items-center gap-3">
         <span className="h-14 w-14 overflow-hidden rounded-2xl border border-white/10">

@@ -106,7 +106,7 @@ export async function POST(req: NextRequest) {
           title: "Your move ♟",
           body: `It's your turn in ${GAME_NAME[match.game] ?? match.game} · room #${id}`,
           tag: `turn-${id}`,
-          url: "/",
+          url: `/play/${match.game}?room=${id}`,
         });
       }
       return NextResponse.json({ ok: true, finished: false, state: outcome.state });
