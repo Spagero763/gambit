@@ -4,6 +4,22 @@ import { applyTtt, TttState } from "@/lib/server/ttt";
 import { applyChessMove, ChessState } from "@/lib/server/chess";
 import { applySnakesRoll, SnakesState } from "@/lib/server/snakes";
 import { settleOnChain, relayerConfigured } from "@/lib/server/settle";
+import { notify } from "@/lib/server/push";
+import { formatUnits } from "viem";
+
+const GAME_NAME: Record<string, string> = {
+  chess: "Chess",
+  "tic-tac-toe": "Tic-Tac-Toe",
+  snakes: "Snakes & Ladders",
+  whot: "Naija Whot",
+};
+
+/** "1.90 cUSD" from a match row (stake is per-player; pot = 2× minus 5% fee). */
+function potText(match: { stake: string; decimals?: number | null }) {
+  const dec = match.decimals ?? 18;
+  const pot = Number(formatUnits(BigInt(match.stake || "0") * BigInt(2), dec)) * 0.95;
+  return `${pot.toFixed(2)} ${dec === 6 ? "USDC" : "cUSD"}`;
+}
 import { verifyToken } from "@/lib/server/profileToken";
 import { limited } from "@/lib/server/rateLimit";
 
@@ -83,6 +99,15 @@ export async function POST(req: NextRequest) {
         .from("matches")
         .update({ state: outcome.state, turn: outcome.state.turn })
         .eq("id", Number(id));
+      // nudge the player whose turn it now is (tag replaces older turn pings)
+      if (outcome.state.turn) {
+        void notify([outcome.state.turn], {
+          title: "Your move ♟",
+          body: `It's your turn in ${GAME_NAME[match.game] ?? match.game} · room #${id}`,
+          tag: `turn-${id}`,
+          url: "/",
+        });
+      }
       return NextResponse.json({ ok: true, finished: false, state: outcome.state });
     }
 
@@ -113,6 +138,26 @@ export async function POST(req: NextRequest) {
       .from("matches")
       .update({ status: "settled", settle_tx: settleTx, settle_error: null })
       .eq("id", Number(id));
+
+    // result pushes: paid winner / refunded draw / commiserate loser
+    const seats = [match.creator, match.opponent].filter(Boolean) as string[];
+    if (outcome.winner) {
+      const loser = seats.find((s) => s.toLowerCase() !== outcome.winner!.toLowerCase());
+      void notify([outcome.winner], {
+        title: "You won! 💰",
+        body: `${potText(match)} paid straight to your wallet.`,
+        url: "/",
+      });
+      if (loser) {
+        void notify([loser], {
+          title: "Match over",
+          body: `Tough one in ${GAME_NAME[match.game] ?? match.game}. Run it back?`,
+          url: `/play/${match.game}`,
+        });
+      }
+    } else {
+      void notify(seats, { title: "Draw — stakes refunded", body: "Your stake is back in your wallet.", url: "/" });
+    }
 
     return NextResponse.json({
       ok: true,
