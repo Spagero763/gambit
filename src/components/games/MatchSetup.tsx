@@ -168,7 +168,7 @@ export function MatchSetup({
               <p className="text-sm leading-relaxed text-ink-dim">
                 Play against the bot. No wallet needed, no stake, just the
                 board. See how the game feels, then switch to staked when you
-                want to put cUSD on the line.
+                want to put USDm on the line.
               </p>
             </div>
 

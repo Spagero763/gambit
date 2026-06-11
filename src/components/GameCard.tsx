@@ -79,7 +79,7 @@ export function GameCard({
                   <>
                     <span>Min</span>
                     <span className="nums font-mono text-white/80">
-                      {game.minStake.toFixed(2)} cUSD
+                      {game.minStake.toFixed(2)} USDm
                     </span>
                   </>
                 )}

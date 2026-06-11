@@ -156,7 +156,7 @@ export function Profile() {
         </div>
         <div className="ml-auto text-right">
           <p className="nums text-lg font-semibold text-ink">{amount}</p>
-          <p className="text-[11px] text-ink-faint">cUSD balance</p>
+          <p className="text-[11px] text-ink-faint">USDm balance</p>
         </div>
       </motion.div>
 
@@ -178,7 +178,7 @@ export function Profile() {
       )}
 
       <div className="mt-5 grid grid-cols-3 gap-3">
-        <Stat label="Net P/L" value={`${net >= 0 ? "+" : ""}${net.toFixed(2)}`} accent={net > 0 ? "text-teal" : net < 0 ? "text-rose" : "text-ink"} sub="cUSD" />
+        <Stat label="Net P/L" value={`${net >= 0 ? "+" : ""}${net.toFixed(2)}`} accent={net > 0 ? "text-teal" : net < 0 ? "text-rose" : "text-ink"} sub="USDm" />
         <Stat label="Record" value={`${wins}–${losses}`} accent="text-ink" sub="W–L" />
         <Stat label="Win rate" value={decided ? `${winRate}%` : "—"} accent="text-ink" sub={`${decided} settled`} />
       </div>
@@ -260,7 +260,7 @@ function InviteCard({ address }: { address: string }) {
         </div>
         <button
           onClick={async () => {
-            const r = await shareOrCopy({ title: "Gambit", text: "Play classic games and stake cUSD on Gambit", url });
+            const r = await shareOrCopy({ title: "Gambit", text: "Play classic games and stake USDm on Gambit", url });
             if (r === "copied") {
               setCopied(true);
               setTimeout(() => setCopied(false), 1600);

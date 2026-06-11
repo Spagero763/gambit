@@ -27,14 +27,14 @@ const mono = JetBrains_Mono({
 });
 
 const DESCRIPTION =
-  "Classic skill games on Celo. Chess, Naija Whot, tic-tac-toe, snakes & ladders and Block Blitz. Free to play, or stake cUSD head to head — winner takes the pot.";
+  "Classic skill games on Celo. Chess, Naija Whot, tic-tac-toe, snakes & ladders and Block Blitz. Free to play, or stake USDm head to head — winner takes the pot.";
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://gambit-rose.vercel.app"),
-  title: "Gambit — play classic games, stake cUSD",
+  title: "Gambit — play classic games, stake USDm",
   description: DESCRIPTION,
   openGraph: {
-    title: "Gambit — play classic games, stake cUSD",
+    title: "Gambit — play classic games, stake USDm",
     description: DESCRIPTION,
     url: "/",
     siteName: "Gambit",
@@ -42,7 +42,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "Gambit — play classic games, stake cUSD",
+    title: "Gambit — play classic games, stake USDm",
     description: DESCRIPTION,
   },
   other: {

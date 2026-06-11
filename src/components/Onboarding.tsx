@@ -13,7 +13,7 @@ const STEPS = [
   {
     icon: Sparkles,
     title: "Welcome to Gambit",
-    body: "Five classic games — chess, Naija Whot, tic-tac-toe, snakes & ladders, and a block puzzle. Play free against the bot, or stake cUSD on a 1v1 and the winner takes the pot.",
+    body: "Five classic games — chess, Naija Whot, tic-tac-toe, snakes & ladders, and a block puzzle. Play free against the bot, or stake USDm on a 1v1 and the winner takes the pot.",
   },
   {
     icon: Wallet,
@@ -24,7 +24,7 @@ const STEPS = [
   {
     icon: Gamepad2,
     title: "Pick a game & play",
-    body: "Tap any game to start instantly vs the bot. Choose “Staked 1v1” to put cUSD on the line — sign in once, set your stake, and play.",
+    body: "Tap any game to start instantly vs the bot. Choose “Staked 1v1” to put USDm on the line — sign in once, set your stake, and play.",
   },
   {
     icon: Swords,

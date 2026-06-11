@@ -31,60 +31,64 @@ interface StyleDef {
   swing: number; // 0..0.2 — push on off-eighths
   filter: number;
   verb: number; // reverb send 0..1
-  motif: boolean; // pentatonic riffs on alternate bars
+  motif: boolean; // melodic phrases on alternate bars
+  crackle?: boolean; // vinyl warmth layer
 }
 
+// v3: real progressions (ii–V–I movement, vi–IV–I–V, natural-minor walks)
+// instead of static color chords — the loop finally RESOLVES somewhere.
 const STYLES: Record<Style, StyleDef> = {
   lofi: {
-    bpm: 72,
-    root: 48,
+    bpm: 66,
+    root: 50, // D — warm middle register
     wave: "triangle",
-    prog: [[0, "maj9"], [9, "min9"], [5, "maj7"], [7, "dom7"]],
+    prog: [[2, "min9"], [7, "dom7"], [0, "maj9"], [5, "maj7"]], // ii–V–I–IV
     arp: false,
     drums: true,
     pad: true,
-    swing: 0.14,
-    filter: 2400,
-    verb: 0.3,
+    swing: 0.16,
+    filter: 2200,
+    verb: 0.38,
     motif: true,
+    crackle: true,
   },
   ambient: {
-    bpm: 52,
+    bpm: 50,
     root: 45,
     wave: "sine",
-    prog: [[0, "maj9"], [7, "sus2"], [9, "min9"], [5, "maj9"]],
+    prog: [[0, "maj9"], [7, "sus2"], [5, "maj9"], [10, "sus2"]],
     arp: false,
     drums: false,
     pad: true,
     swing: 0,
-    filter: 1900,
-    verb: 0.55,
+    filter: 1800,
+    verb: 0.6,
     motif: true,
   },
   arcade: {
-    bpm: 116,
+    bpm: 118,
     root: 48,
     wave: "triangle",
-    prog: [[0, "maj"], [9, "min"], [5, "maj"], [7, "dom7"]],
+    prog: [[9, "min"], [5, "maj"], [0, "maj"], [7, "dom7"]], // vi–IV–I–V
     arp: true,
     drums: true,
     pad: false,
     swing: 0,
     filter: 4600,
-    verb: 0.16,
+    verb: 0.14,
     motif: false,
   },
   synth: {
-    bpm: 96,
+    bpm: 92,
     root: 45,
     wave: "sawtooth",
-    prog: [[0, "min9"], [10, "maj7"], [8, "maj7"], [5, "min7"]],
+    prog: [[0, "min9"], [8, "maj7"], [3, "maj7"], [10, "dom7"]], // i–VI–III–VII
     arp: true,
     drums: true,
     pad: true,
-    swing: 0.06,
-    filter: 2800,
-    verb: 0.35,
+    swing: 0.05,
+    filter: 2700,
+    verb: 0.38,
     motif: true,
   },
 };
@@ -106,6 +110,61 @@ let curStyle: Style = "lofi";
 let nextTime = 0;
 let step = 0;
 let bar = 0;
+let crackleSrc: AudioBufferSourceNode | null = null;
+let crackleGain: GainNode | null = null;
+
+// A 2-bar melodic PHRASE (per-eighth pentatonic degree or rest), regenerated
+// every 4 bars and repeated — call-and-response instead of random notes.
+let phrase: (number | null)[] = [];
+let phraseBar = -1;
+function makePhrase() {
+  const RHYTHMS = [
+    [1, 0, 1, 1, 0, 1, 0, 0],
+    [0, 1, 1, 0, 1, 0, 1, 0],
+    [1, 0, 0, 1, 1, 0, 1, 0],
+  ];
+  const r = RHYTHMS[Math.floor(Math.random() * RHYTHMS.length)];
+  let prev = Math.floor(Math.random() * PENTA.length);
+  phrase = r.map((on) => {
+    if (!on) return null;
+    // melodies walk in steps more than they leap
+    prev = Math.max(0, Math.min(PENTA.length - 1, prev + (Math.random() < 0.7 ? (Math.random() < 0.5 ? -1 : 1) : Math.floor(Math.random() * PENTA.length) - prev)));
+    return prev;
+  });
+}
+
+/** Sparse dust-and-pop loop — the warmth of a record player, nearly subliminal. */
+function startCrackle() {
+  if (!ctx || !master || crackleSrc) return;
+  const secs = 2.8;
+  const buf = ctx.createBuffer(1, Math.floor(ctx.sampleRate * secs), ctx.sampleRate);
+  const d = buf.getChannelData(0);
+  for (let i = 0; i < d.length; i++) {
+    d[i] = (Math.random() * 2 - 1) * 0.012; // dust floor
+    if (Math.random() < 0.00012) d[i] = (Math.random() * 2 - 1) * 0.6; // pops
+  }
+  crackleSrc = ctx.createBufferSource();
+  crackleSrc.buffer = buf;
+  crackleSrc.loop = true;
+  const lp2 = ctx.createBiquadFilter();
+  lp2.type = "lowpass";
+  lp2.frequency.value = 5200;
+  crackleGain = ctx.createGain();
+  crackleGain.gain.value = 0.9;
+  crackleSrc.connect(lp2);
+  lp2.connect(crackleGain);
+  crackleGain.connect(master);
+  crackleSrc.start();
+}
+function stopCrackle() {
+  try {
+    crackleSrc?.stop();
+  } catch {
+    /* already stopped */
+  }
+  crackleSrc = null;
+  crackleGain = null;
+}
 
 /** Exponentially decaying noise impulse — a perfectly good room, for free. */
 function makeImpulse(ac: AudioContext, seconds: number, decay: number) {
@@ -275,32 +334,37 @@ function scheduleStep(s: number, tBase: number) {
   if (s === 4) voice(midi(root - 12 + (Math.random() < 0.4 ? 7 : 0)), t, beat * 1.4, 0.1, "triangle", 2);
   if (s === 7 && Math.random() < 0.35) voice(midi(root - 5), t, eighth, 0.07, "triangle", 2); // pickup
 
-  // drums: kick on 1 & 3 (with occasional syncopation), rim backbeat on 2 & 4
+  // drums: soft kick on 1 & 3 (occasional syncopation), rim backbeat on 2 & 4
   if (def.drums) {
-    if (s === 0) kick(t, 0.22);
-    if (s === 4) kick(t, 0.18);
-    if (s === 5 && Math.random() < 0.3) kick(t, 0.12);
-    if (s === 2 || s === 6) rim(t, 0.07);
-    if (s % 2 === 1) hat(t, curStyle === "arcade" ? 0.045 : 0.02);
+    if (s === 0) kick(t, 0.17);
+    if (s === 4) kick(t, 0.13);
+    if (s === 5 && Math.random() < 0.25) kick(t, 0.09);
+    if (s === 2 || s === 6) rim(t, 0.05);
+    if (s % 2 === 1) hat(t, curStyle === "arcade" ? 0.04 : 0.014);
   }
 
   // arpeggio (eighths), cycling chord tones with octave lifts
   if (def.arp) {
     const tone = chord[(s + bar) % chord.length];
     const oct = s % 4 === 3 ? 24 : 12;
-    voice(midi(root + tone + oct), t, eighth * 1.15, 0.055, def.wave, 4);
+    voice(midi(root + tone + oct), t, eighth * 1.15, 0.05, def.wave, 4);
   }
 
-  // pentatonic motif on alternate bars — a real melodic phrase, not noise
-  if (def.motif && bar % 2 === 1 && (s === 1 || s === 3 || s === 4 || s === 6)) {
-    if (Math.random() < 0.75) {
-      const note = PENTA[Math.floor(Math.random() * PENTA.length)];
-      voice(midi(root + 12 + note), t, eighth * 1.6, 0.045, curStyle === "ambient" ? "sine" : "triangle", 3);
+  // melody: a cached 1-bar phrase repeated across alternate bars — coherent
+  // call-and-response, regenerated every 4 bars so it evolves without chaos
+  if (def.motif) {
+    if (bar !== phraseBar && bar % 4 === 0 && s === 0) {
+      makePhrase();
+      phraseBar = bar;
     }
-  } else if (!def.arp && s % 2 === 0 && Math.random() < 0.35) {
+    if (bar % 2 === 1 && phrase[s] !== null && phrase[s] !== undefined) {
+      const note = PENTA[phrase[s] as number];
+      voice(midi(root + 12 + note), t, eighth * 1.7, 0.042, curStyle === "ambient" ? "sine" : "triangle", 3);
+    }
+  } else if (!def.arp && s % 2 === 0 && Math.random() < 0.3) {
     // sparse chord-tone sprinkles on the quiet bars
     const tone = chord[Math.floor(Math.random() * chord.length)];
-    voice(midi(root + tone + 12), t, beat * 0.9, 0.03, def.wave, 5);
+    voice(midi(root + tone + 12), t, beat * 0.9, 0.028, def.wave, 5);
   }
 }
 
@@ -326,10 +390,13 @@ export function startMusic(style: string, volume: number) {
   lp.frequency.setTargetAtTime(STYLES[curStyle].filter, ac.currentTime, 0.3);
   verbSend.gain.setTargetAtTime(STYLES[curStyle].verb, ac.currentTime, 0.3);
   master.gain.setTargetAtTime(Math.min(0.6, volume * 0.5), ac.currentTime, 0.2);
+  if (STYLES[curStyle].crackle) startCrackle();
+  else stopCrackle();
   if (playing) return; // already running; style/volume updated above
   playing = true;
   step = 0;
   bar = 0;
+  phraseBar = -1;
   nextTime = ac.currentTime + 0.1;
   loop();
 }
@@ -342,6 +409,7 @@ export function stopMusic() {
   playing = false;
   if (timer) clearTimeout(timer);
   timer = null;
+  stopCrackle();
   if (ctx && master) master.gain.setTargetAtTime(0.0001, ctx.currentTime, 0.25);
 }
 
