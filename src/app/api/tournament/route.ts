@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase";
 import { verifyToken } from "@/lib/server/profileToken";
-import { settleRanking, relayerConfigured, readMatchStatus } from "@/lib/server/settle";
+import { settleRanking, relayerConfigured, readMatchStatus, readMatchPlayers, cancelOnChain } from "@/lib/server/settle";
 import { newSeed } from "@/lib/server/tournament";
 import { notify } from "@/lib/server/push";
 import { formatUnits } from "viem";
@@ -198,26 +198,36 @@ export async function POST(req: NextRequest) {
       const { data: t } = await db.from("tournaments").select("*").eq("id", Number(id)).maybeSingle();
       if (!t) return NextResponse.json({ error: "Not found" }, { status: 404 });
       if (t.status !== "open") return NextResponse.json({ error: "Tournament is not open" }, { status: 409 });
+      // The chain is the source of truth for seats: only players whose stake
+      // actually landed in escrow may enter. (A reverted/failed join tx must
+      // never produce a phantom DB seat — that strands the whole cup.)
+      const seated = await readMatchPlayers(BigInt(id), Number(t.chain_id));
+      if (!seated.includes(addr)) {
+        return NextResponse.json(
+          { error: "Your stake hasn't landed on-chain yet — confirm the join transaction and try again" },
+          { status: 409 }
+        );
+      }
       const players = await loadPlayers(db, Number(id));
       if (!players.some((p) => p.address.toLowerCase() === addr)) {
-        if (players.length >= t.capacity) return NextResponse.json({ error: "Tournament is full" }, { status: 409 });
         await db.from("tournament_players").insert({ tournament_id: Number(id), address: addr });
       }
-      const allPlayers = await loadPlayers(db, Number(id));
-      const count = allPlayers.length;
-      if (count >= t.capacity) {
+      // Activate only when the ESCROW says the match filled (status Active).
+      const onchain = await readMatchStatus(BigInt(id), Number(t.chain_id));
+      if (onchain === 2 /* Active */) {
         await db.from("tournaments").update({ status: "active" }).eq("id", Number(id));
+        const allPlayers = await loadPlayers(db, Number(id));
         // the cup is full — everyone's first round starts now
         void notify(
           allPlayers.map((p) => p.address),
           {
             title: "Your cup is live! 🏁",
-            body: `Cup #${id} is full — the ${stageOf(count)} has started. Play your run.`,
+            body: `Cup #${id} is full — the ${stageOf(allPlayers.length)} has started. Play your run.`,
             url: `/tournament/${id}`,
           }
         );
       }
-      return NextResponse.json({ ok: true, status: count >= t.capacity ? "active" : "open", seed: t.seed });
+      return NextResponse.json({ ok: true, status: onchain === 2 ? "active" : "open", seed: t.seed });
     }
 
     if (action === "score") {
@@ -277,13 +287,33 @@ export async function POST(req: NextRequest) {
     }
 
     if (action === "cancel") {
-      // Reconcile the row to on-chain truth after cancelMatch / reclaimStalled.
+      // Reconcile to on-chain truth — and if the escrow match never filled
+      // (Open past its join window), have the relayer cancel it on-chain so
+      // every staker is refunded. The CONTRACT enforces who may cancel and
+      // when, so this endpoint can safely be public.
       const { data: t } = await db.from("tournaments").select("*").eq("id", Number(id)).maybeSingle();
       if (!t) return NextResponse.json({ error: "Not found" }, { status: 404 });
       if (t.status === "cancelled") return NextResponse.json({ ok: true, cancelled: true });
-      const onchain = await readMatchStatus(BigInt(id), Number(t.chain_id));
+      let onchain = await readMatchStatus(BigInt(id), Number(t.chain_id));
+      if (onchain === 1 /* Open — unfilled */ && relayerConfigured()) {
+        try {
+          await cancelOnChain(BigInt(id), Number(t.chain_id));
+          onchain = 4;
+        } catch {
+          /* join window not lapsed yet (or raced) — fall through to 409 */
+        }
+      }
       if (onchain === 4 /* Cancelled */) {
         await db.from("tournaments").update({ status: "cancelled" }).eq("id", Number(id));
+        const players = await loadPlayers(db, Number(id));
+        void notify(
+          players.map((p) => p.address),
+          {
+            title: "Cup cancelled — stakes refunded",
+            body: `Cup #${id} didn't fill on-chain. Every stake was returned to its wallet.`,
+            url: `/tournament/${id}`,
+          }
+        );
         return NextResponse.json({ ok: true, cancelled: true });
       }
       return NextResponse.json({ error: "Escrow has not refunded this tournament yet", onchainStatus: onchain }, { status: 409 });

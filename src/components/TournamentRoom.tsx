@@ -198,16 +198,21 @@ export function TournamentRoom({ id }: { id: string }) {
     }
   };
 
-  // Permissionless backstop: if a filled cup never settles, anyone can refund
-  // everyone after the on-chain settle window. The contract enforces the timing.
+  // Permissionless backstop: refund everyone from a cup that can't finish.
+  // Tries the on-chain reclaim (filled-but-stalled pots), then falls back to
+  // the server-side cancel (relayer rescues a cup that never filled on-chain).
   const reclaim = async () => {
     setBusy(true);
     setMsg(null);
     try {
-      const ok = await reclaimStalled(tid);
-      if (ok) { await syncTournamentCancelled(tid); await refresh(); }
+      const ok = await reclaimStalled(tid).catch(() => false);
+      const res = await syncTournamentCancelled(tid).catch(() => ({ ok: false, error: undefined as string | undefined }));
+      if (!ok && !res.ok) {
+        setMsg(res.error ?? "Not refundable yet — the contract windows haven't lapsed.");
+      }
+      await refresh();
     } catch (e: any) {
-      setMsg(e?.message ?? "Reclaim failed — the payout window may not have elapsed yet.");
+      setMsg(e?.message ?? "Refund failed — try again shortly.");
     } finally {
       setBusy(false);
     }

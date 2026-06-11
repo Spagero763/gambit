@@ -68,6 +68,13 @@ export const ESCROW_ABI = [
   },
   {
     type: "function",
+    name: "players",
+    stateMutability: "view",
+    inputs: [{ name: "id", type: "uint256" }],
+    outputs: [{ name: "", type: "address[]" }],
+  },
+  {
+    type: "function",
     name: "matches",
     stateMutability: "view",
     inputs: [{ name: "", type: "uint256" }],
