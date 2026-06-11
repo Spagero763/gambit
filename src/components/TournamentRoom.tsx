@@ -8,6 +8,10 @@ import { useAccount, useConnect, useSwitchChain, useSignMessage } from "wagmi";
 import { injected } from "wagmi/connectors";
 import { formatUnits } from "viem";
 import { BlockBlitz } from "@/components/games/blocks/BlockBlitz";
+import { StakedChess } from "@/components/games/StakedChess";
+import { StakedTicTacToe } from "@/components/games/StakedTicTacToe";
+import { StakedSnakes } from "@/components/games/StakedSnakes";
+import { StakedWhot } from "@/components/games/StakedWhot";
 import { useStakeMatch } from "@/hooks/useStakeMatch";
 import { ACTIVE_CHAIN_ID } from "@/lib/wagmi";
 import { tokensFor, symbolForToken, decimalsForToken } from "@/lib/tokens";
@@ -23,6 +27,7 @@ import {
   roundSeed,
   stageName,
   TournamentView,
+  BracketMatch,
 } from "@/lib/tournamentClient";
 import { TournamentPodium } from "@/components/TournamentPodium";
 import { AnimatePresence } from "framer-motion";
@@ -31,6 +36,21 @@ import { cn } from "@/lib/cn";
 
 // mirrors the contract's joinWindow (600s): a cup must fill within 10 minutes
 const JOIN_WINDOW_MS = 10 * 60 * 1000;
+
+const SLOT_NAMES = ["Semi-final 1", "Semi-final 2", "Bronze match", "Final"];
+const GAME_NAMES: Record<string, string> = {
+  blocks: "Block Blitz",
+  chess: "Chess",
+  "tic-tac-toe": "Tic-Tac-Toe",
+  snakes: "Snakes & Ladders",
+  whot: "Naija Whot",
+};
+const BOARDS: Record<string, React.ComponentType<{ matchId: bigint; you: `0x${string}` }>> = {
+  chess: StakedChess,
+  "tic-tac-toe": StakedTicTacToe,
+  snakes: StakedSnakes,
+  whot: StakedWhot,
+};
 
 const FEE = 0.05;
 const SPLIT = [0.5, 0.3, 0.2];
@@ -45,6 +65,7 @@ export function TournamentRoom({ id }: { id: string }) {
   const [view, setView] = useState<TournamentView | null>(null);
   const [notFound, setNotFound] = useState(false);
   const [playing, setPlaying] = useState(false);
+  const [playingMatch, setPlayingMatch] = useState<BracketMatch | null>(null);
   const [copied, setCopied] = useState(false);
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState<string | null>(null);
@@ -161,8 +182,18 @@ export function TournamentRoom({ id }: { id: string }) {
       .sort((a, b) => (b.eliminated_round ?? 0) - (a.eliminated_round ?? 0)),
   ];
 
+  // knockout brackets: real 1v1 sub-matches on separate boards
+  const isBracketCup = t.format === "bracket";
+  const bracket = view.bracket ?? [];
+  const myLiveMatch =
+    me && isBracketCup
+      ? bracket.find(
+          (m) => m.status === "active" && [m.creator, m.opponent].some((a) => a?.toLowerCase() === me)
+        ) ?? null
+      : null;
+
   // Each round deals a different board; everyone alive grinds the same one.
-  if (playing && t.status === "active" && joined && iAmAlive && me) {
+  if (playing && t.status === "active" && joined && iAmAlive && me && !isBracketCup) {
     return (
       <BlockBlitz
         seed={roundSeed(t.seed, round)}
@@ -171,6 +202,31 @@ export function TournamentRoom({ id }: { id: string }) {
           try { await submitTournamentScore(tid, me, score); refresh(); } catch {}
         }}
       />
+    );
+  }
+
+  // playing a bracket sub-match — render the real staked board inline
+  if (playingMatch && me) {
+    const Board = BOARDS[playingMatch.game];
+    const stillLive = bracket.find((m) => m.id === playingMatch.id)?.status === "active";
+    return (
+      <div className="relative">
+        <div className="sticky top-0 z-40 mx-auto flex w-full max-w-2xl items-center justify-between bg-void/90 px-5 py-2.5 backdrop-blur">
+          <button
+            onClick={() => { setPlayingMatch(null); refresh(); }}
+            className="inline-flex items-center gap-2 rounded-full border border-line bg-void-700 px-3 py-1.5 text-sm text-ink-dim transition-colors hover:text-ink"
+          >
+            <ArrowLeft className="h-4 w-4" /> Bracket
+          </button>
+          <span className="rounded-full bg-amber/15 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-amber">
+            {SLOT_NAMES[playingMatch.bracket_slot] ?? "Match"}
+          </span>
+        </div>
+        {Board ? <Board matchId={BigInt(playingMatch.id)} you={me as `0x${string}`} /> : null}
+        {!stillLive && (
+          <p className="pb-6 text-center text-[12px] text-ink-faint">This match has finished — head back to the bracket.</p>
+        )}
+      </div>
     );
   }
 
@@ -255,8 +311,10 @@ export function TournamentRoom({ id }: { id: string }) {
       <div className="mt-5 flex items-center gap-3">
         <span className="grid h-12 w-12 place-items-center rounded-2xl bg-amber/15 text-amber"><Trophy className="h-6 w-6" /></span>
         <div>
-          <h1 className="font-display text-2xl font-bold">Block Blitz Cup</h1>
-          {t.status === "active" ? (
+          <h1 className="font-display text-2xl font-bold">{GAME_NAMES[t.game] ?? t.game} Cup</h1>
+          {isBracketCup ? (
+            <p className="text-sm text-ink-dim">Knockout bracket · semis → bronze + final · top 3 paid</p>
+          ) : t.status === "active" ? (
             <p className="mt-0.5 flex items-center gap-1.5 text-sm">
               <span className={cn("rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide", isFinal ? "bg-amber/20 text-amber" : "bg-violet/15 text-violet-bright")}>
                 {stage}
@@ -357,6 +415,28 @@ export function TournamentRoom({ id }: { id: string }) {
               {busy ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : null} {isCreator ? "Cancel & refund everyone" : "Refund everyone (after join window)"}
             </button>
           </div>
+        ) : isBracketCup ? (
+          // knockout cup: your job is whichever board you're on
+          <div className="space-y-3">
+            {myLiveMatch ? (
+              <button
+                onClick={() => setPlayingMatch(myLiveMatch)}
+                className="btn-primary flex w-full items-center justify-center gap-2 rounded-2xl py-3.5 text-sm shadow-glow"
+              >
+                <Play className="h-4 w-4" /> Play your {SLOT_NAMES[myLiveMatch.bracket_slot] ?? "match"}
+              </button>
+            ) : (
+              <p className="text-center text-sm text-ink-dim">
+                {bracket.length === 0 ? "Drawing the bracket…" : "No board waiting on you — follow the bracket below."}
+              </p>
+            )}
+            <button onClick={settle} disabled={busy} className="flex w-full items-center justify-center gap-2 rounded-2xl border border-line bg-void-800 py-2.5 text-[12px] text-ink-dim transition-colors hover:text-ink disabled:opacity-60">
+              {busy ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : null} Resolve stuck matches
+            </button>
+            <button onClick={reclaim} disabled={busy} className="mx-auto block text-[11px] font-medium text-ink-faint underline-offset-2 transition-colors hover:text-ink hover:underline disabled:opacity-60">
+              Payout stuck? Reclaim all stakes (refund everyone, after 1h)
+            </button>
+          </div>
         ) : !iAmAlive ? (
           // joined but knocked out in an earlier round
           <div className="text-center">
@@ -388,8 +468,91 @@ export function TournamentRoom({ id }: { id: string }) {
         )}
       </div>
 
-      {/* standings */}
-      <div className="mt-6">
+      {/* bracket */}
+      {isBracketCup && bracket.length > 0 && (
+        <div className="mt-6">
+          <p className="mb-3 flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-ink-faint">
+            <Trophy className="h-3.5 w-3.5" /> Bracket
+          </p>
+          <div className="space-y-2.5">
+            {[0, 1, 3, 2].map((slot) => {
+              const m = bracket.find((x) => x.bracket_slot === slot);
+              if (!m) {
+                if (slot >= 2 && bracket.length >= 2)
+                  return (
+                    <div key={slot} className="rounded-2xl border border-dashed border-line px-4 py-3 text-[12px] text-ink-faint">
+                      {SLOT_NAMES[slot]} — waiting for the semi-finals
+                    </div>
+                  );
+                return null;
+              }
+              const w = m.winner?.toLowerCase() ?? null;
+              const mine = !!me && [m.creator, m.opponent].some((a) => a?.toLowerCase() === me);
+              const toMoveName = m.turn ? displayName(m.turn, profiles[m.turn.toLowerCase()]) : null;
+              return (
+                <div
+                  key={slot}
+                  className={cn(
+                    "rounded-2xl border px-4 py-3",
+                    slot === 3 ? "border-amber/40 bg-amber/[0.05]" : "border-line bg-void-800",
+                    mine && m.status === "active" && "ring-1 ring-teal/40"
+                  )}
+                >
+                  <div className="mb-2 flex items-center justify-between">
+                    <p className={cn("text-[11px] font-bold uppercase tracking-wide", slot === 3 ? "text-amber" : "text-ink-faint")}>
+                      {SLOT_NAMES[slot]}
+                    </p>
+                    <p className="text-[11px] text-ink-faint">
+                      {m.status === "settled"
+                        ? "Finished"
+                        : toMoveName
+                          ? `${m.turn?.toLowerCase() === me ? "Your" : toMoveName + "'s"} move`
+                          : "Live"}
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    {[m.creator, m.opponent].map((addr) => {
+                      if (!addr) return null;
+                      const a = addr.toLowerCase();
+                      const p = profiles[a];
+                      const won = w === a;
+                      const lost = !!w && w !== a;
+                      return (
+                        <div
+                          key={a}
+                          className={cn(
+                            "flex min-w-0 flex-1 items-center gap-2 rounded-xl border px-2.5 py-2",
+                            won ? "border-teal/40 bg-teal/[0.08]" : "border-line bg-void-700",
+                            lost && "opacity-50"
+                          )}
+                        >
+                          <Avatar image={p?.avatar_image || undefined} color={avatarHex(p)} name={displayName(a, p)} size={26} rounded="rounded-md" />
+                          <p className="truncate text-[12px] font-medium text-ink">
+                            {displayName(a, p)}
+                            {a === me ? <span className="text-teal"> (you)</span> : ""}
+                          </p>
+                          {won && <span className="ml-auto shrink-0 text-[12px]">🏆</span>}
+                        </div>
+                      );
+                    })}
+                  </div>
+                  {mine && m.status === "active" && (
+                    <button
+                      onClick={() => setPlayingMatch(m)}
+                      className="btn-primary mt-2.5 w-full rounded-xl py-2 text-[13px] shadow-glow"
+                    >
+                      Play this match
+                    </button>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* standings (score cups; bracket cups show it only until the draw) */}
+      <div className={cn("mt-6", isBracketCup && bracket.length > 0 && "hidden")}>
         <p className="mb-3 flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-ink-faint"><Users className="h-3.5 w-3.5" /> Standings</p>
         <div className="space-y-2">
           {standings.map((p, i) => {
