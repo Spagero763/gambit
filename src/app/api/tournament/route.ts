@@ -179,7 +179,9 @@ export async function POST(req: NextRequest) {
         if (!(BRACKET_GAMES as readonly string[]).includes(game)) {
           return NextResponse.json({ error: "That game doesn't support bracket cups" }, { status: 400 });
         }
-        if (capacity !== 4) return NextResponse.json({ error: "Bracket cups are 4 players" }, { status: 400 });
+        if (capacity !== 4 && capacity !== 8) {
+          return NextResponse.json({ error: "Knockouts need a power of two — pick 4 or 8 players" }, { status: 400 });
+        }
       } else if (!(capacity >= 3 && capacity <= 8)) {
         return NextResponse.json({ error: "Capacity must be 3–8" }, { status: 400 });
       }
