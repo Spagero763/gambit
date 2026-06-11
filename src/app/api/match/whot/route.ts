@@ -9,6 +9,7 @@ import {
   applyWhotDraw,
 } from "@/lib/server/whot";
 import { settleOnChain, relayerConfigured } from "@/lib/server/settle";
+import { advanceBracket } from "@/lib/server/bracket";
 import { notify } from "@/lib/server/push";
 import { verifyToken } from "@/lib/server/profileToken";
 import { limited } from "@/lib/server/rateLimit";
@@ -107,6 +108,16 @@ export async function POST(req: NextRequest) {
         });
       }
       return NextResponse.json(view({ ...match, state: pub }, nextPriv, String(player)));
+    }
+
+    // bracket sub-match: record the winner and advance — the tournament escrow
+    // pays the podium at the end; nothing settles on-chain here.
+    if (match.tournament_id) {
+      await db.from("matches").update({ state: pub, status: "settled", winner: outcome.winner, settle_error: null }).eq("id", Number(id));
+      await advanceBracket(db, Number(match.tournament_id));
+      return NextResponse.json(
+        view({ ...match, state: pub, status: "settled", winner: outcome.winner, settle_tx: null }, nextPriv, String(player))
+      );
     }
 
     // finished: settle on-chain (on the match's own chain)
