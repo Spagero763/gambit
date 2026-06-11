@@ -44,8 +44,9 @@ export function Tournaments() {
   const [custom, setCustom] = useState("");
   const [cupGame, setCupGame] = useState(CUP_GAMES[0]);
   const [capacity, setCapacity] = useState(4);
+  const [bracketSeats, setBracketSeats] = useState<4 | 8>(4);
   const isBracket = cupGame.format === "bracket";
-  const seats = isBracket ? 4 : capacity; // brackets are always 4 players
+  const seats = isBracket ? bracketSeats : capacity; // knockouts: powers of two
   const [rows, setRows] = useState<TournamentRow[] | null>(null);
 
   const { address, isConnected } = useAccount();
@@ -192,9 +193,28 @@ export function Tournaments() {
 
         <p className="mb-2 mt-4 text-xs font-semibold uppercase tracking-wide text-ink-faint">Players</p>
         {isBracket ? (
-          <p className="rounded-xl border border-line bg-void-800 px-3 py-2 text-sm text-ink-dim">
-            <span className="nums font-semibold text-ink">4</span> · semi-finals → bronze + final
-          </p>
+          <div>
+            <div className="flex gap-2">
+              {([4, 8] as const).map((n) => (
+                <button
+                  key={n}
+                  onClick={() => setBracketSeats(n)}
+                  className={cn(
+                    "flex-1 rounded-xl border px-3 py-2 text-sm font-semibold transition-colors",
+                    bracketSeats === n ? "border-teal/50 bg-teal/[0.1] text-ink" : "border-line bg-void-800 text-ink-dim hover:text-ink"
+                  )}
+                >
+                  <span className="nums">{n}</span>
+                  <span className="ml-1.5 text-[11px] font-medium text-ink-faint">
+                    {n === 4 ? "semis → final" : "quarters → semis → final"}
+                  </span>
+                </button>
+              ))}
+            </div>
+            <p className="mt-1.5 text-[11px] text-ink-faint">
+              Knockouts need a power of two — odd counts would hand someone a free pass.
+            </p>
+          </div>
         ) : (
           <div className="flex flex-wrap gap-2">
             {CAPS.map((c) => (
