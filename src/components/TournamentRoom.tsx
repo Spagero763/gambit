@@ -24,6 +24,7 @@ import {
   submitTournamentScore,
   settleTournamentNow,
   syncTournamentCancelled,
+  syncTournament,
   roundSeed,
   stageName,
   TournamentView,
@@ -97,7 +98,7 @@ export function TournamentRoom({ id }: { id: string }) {
     const t = setInterval(() => setNow(Date.now()), 1000);
     return () => clearInterval(t);
   }, []);
-  const expirySynced = useRef(false);
+  const expirySynced = useRef(0); // last chain-sync timestamp (throttle)
 
   // podium celebration — shown once per tournament when it settles
   const [podium, setPodium] = useState(false);
@@ -120,16 +121,18 @@ export function TournamentRoom({ id }: { id: string }) {
     }
   }, [tid]);
 
-  // when the join window lapses on an unfilled cup, trigger the on-chain
-  // refund for everyone (one shot) — the server/contract enforce correctness
+  // While the cup is open, self-heal from chain truth every ~10s: import any
+  // seats whose browser failed to report, start the cup the moment the escrow
+  // is full — and once the join window lapses, keep retrying the refund until
+  // the chain confirms it. The server/contract enforce all correctness.
   useEffect(() => {
     const t = view?.tournament;
-    if (!t || t.status !== "open" || expirySynced.current) return;
+    if (!t || t.status !== "open") return;
+    if (Date.now() - expirySynced.current < 9000) return;
+    expirySynced.current = Date.now();
     const deadline = new Date(t.created_at).getTime() + JOIN_WINDOW_MS;
-    if (Date.now() > deadline + 5000) {
-      expirySynced.current = true;
-      syncTournamentCancelled(tid).then(refresh).catch(() => {});
-    }
+    const call = Date.now() > deadline + 5000 ? syncTournamentCancelled(tid) : syncTournament(tid);
+    call.then(() => refresh()).catch(() => {});
   }, [now, view?.tournament, tid, refresh]);
   useEffect(() => {
     refresh();
@@ -413,7 +416,11 @@ export function TournamentRoom({ id }: { id: string }) {
             {(() => {
               const left = new Date(t.created_at).getTime() + JOIN_WINDOW_MS - now;
               if (left <= 0)
-                return <p className="mt-2 text-[12px] font-semibold text-rose">Join window closed — refunding everyone…</p>;
+                return (
+                  <p className="mt-2 text-[12px] font-semibold text-rose">
+                    Join window closed — refunding everyone on-chain (takes ~15 seconds)…
+                  </p>
+                );
               const m = Math.floor(left / 60000);
               const s = Math.floor((left % 60000) / 1000);
               return (
