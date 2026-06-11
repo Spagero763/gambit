@@ -10,6 +10,7 @@ import { Mark } from "./xo/Mark";
 import { SettleOverlay } from "./SettleOverlay";
 import { TimeoutClaim } from "./TimeoutClaim";
 import { MatchChat } from "./MatchChat";
+import { useProfiles, displayName } from "@/lib/profiles";
 import { cn } from "@/lib/cn";
 
 interface MatchRow {
@@ -38,6 +39,9 @@ const EXPLORER: Record<number, string> = {
 export function StakedTicTacToe({ matchId, you }: { matchId: bigint; you: `0x${string}` }) {
   const me = you.toLowerCase();
   const [match, setMatch] = useState<MatchRow | null>(null);
+  const oppAddr = [match?.creator, match?.opponent].find((a) => a && a.toLowerCase() !== me) ?? null;
+  const oppProfiles = useProfiles(oppAddr ? [oppAddr] : []);
+  const oppName = oppAddr ? displayName(oppAddr, oppProfiles[oppAddr.toLowerCase()]) : "Opponent";
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -119,7 +123,7 @@ export function StakedTicTacToe({ matchId, you }: { matchId: bigint; you: `0x${s
         <PlayerTag label="You" mark={myMark} active={myTurn} accent="text-violet-bright" />
         <span className="text-xs text-ink-faint">vs</span>
         <PlayerTag
-          label="Opponent"
+          label={oppName}
           mark={myMark === "X" ? "O" : "X"}
           active={match?.status === "active" && !myTurn}
           accent="text-teal"

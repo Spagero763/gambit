@@ -12,6 +12,7 @@ import { SettleOverlay } from "./SettleOverlay";
 import { TimeoutClaim } from "./TimeoutClaim";
 import { MatchChat } from "./MatchChat";
 import { play } from "@/lib/sfx";
+import { useProfiles, displayName } from "@/lib/profiles";
 import { cn } from "@/lib/cn";
 
 const EXPLORER: Record<number, string> = {
@@ -22,6 +23,9 @@ const EXPLORER: Record<number, string> = {
 export function StakedWhot({ matchId, you }: { matchId: bigint; you: `0x${string}` }) {
   const me = you.toLowerCase();
   const [view, setView] = useState<WhotView | null>(null);
+  const oppAddr = view?.order.find((a) => a !== me) ?? null;
+  const oppProfiles = useProfiles(oppAddr ? [oppAddr] : []);
+  const oppName = oppAddr ? displayName(oppAddr, oppProfiles[oppAddr.toLowerCase()]) : "Opponent";
   const [calling, setCalling] = useState<Card | null>(null);
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
@@ -122,7 +126,7 @@ export function StakedWhot({ matchId, you }: { matchId: bigint; you: `0x${string
       {/* opponent */}
       <div className="mt-4 flex flex-col items-center gap-1">
         <div className={cn("flex items-center gap-2 rounded-2xl border px-3 py-1.5", view?.status === "active" && !myTurn ? "border-teal/40 bg-void-700" : "border-line bg-void-800")}>
-          <span className="text-[11px] font-semibold text-ink">Opponent</span>
+          <span className="text-[11px] font-semibold text-ink">{oppName}</span>
           <span className="text-[9px] text-ink-faint">{oppCount} cards</span>
         </div>
         <div className="flex -space-x-3.5">

@@ -11,6 +11,7 @@ import { ChessPiece } from "./chess/ChessPiece";
 import { SettleOverlay } from "./SettleOverlay";
 import { TimeoutClaim } from "./TimeoutClaim";
 import { MatchChat } from "./MatchChat";
+import { useProfiles, displayName } from "@/lib/profiles";
 import { cn } from "@/lib/cn";
 
 const FILES = ["a", "b", "c", "d", "e", "f", "g", "h"];
@@ -46,6 +47,9 @@ const EXPLORER: Record<number, string> = {
 export function StakedChess({ matchId, you }: { matchId: bigint; you: `0x${string}` }) {
   const me = you.toLowerCase();
   const [match, setMatch] = useState<MatchRow | null>(null);
+  const oppAddr = [match?.creator, match?.opponent].find((a) => a && a.toLowerCase() !== me) ?? null;
+  const oppProfiles = useProfiles(oppAddr ? [oppAddr] : []);
+  const oppName = oppAddr ? displayName(oppAddr, oppProfiles[oppAddr.toLowerCase()]) : "Opponent";
   const [selected, setSelected] = useState<Square | null>(null);
   const [promo, setPromo] = useState<{ from: Square; to: Square } | null>(null);
   const [busy, setBusy] = useState(false);
@@ -166,7 +170,7 @@ export function StakedChess({ matchId, you }: { matchId: bigint; you: `0x${strin
       </div>
 
       <PlayerStrip
-        label="Opponent"
+        label={oppName}
         color={myColor === "w" ? "b" : "w"}
         active={match?.status === "active" && !myTurn}
         deadlineMs={match?.status === "active" && match?.updated_at ? new Date(match.updated_at).getTime() + 120_000 : null}
