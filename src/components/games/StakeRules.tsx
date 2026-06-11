@@ -13,7 +13,7 @@ const GAME_RULES: Record<string, string> = {
 };
 
 const TERMS = [
-  { icon: Coins, text: "Both players stake the same cUSD amount into an on-chain escrow." },
+  { icon: Coins, text: "Both players stake the same USDm amount into an on-chain escrow." },
   { icon: Trophy, text: "Win and you take the pot — both stakes, minus a 5% fee." },
   { icon: Scale, text: "A draw refunds both players in full." },
   { icon: AlarmClock, text: "If your opponent abandons, you can claim the win after 2 minutes." },

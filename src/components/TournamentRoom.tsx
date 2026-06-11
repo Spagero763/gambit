@@ -31,6 +31,7 @@ import {
   BracketMatch,
 } from "@/lib/tournamentClient";
 import { TournamentPodium } from "@/components/TournamentPodium";
+import { BracketTree } from "@/components/BracketTree";
 import { AnimatePresence } from "framer-motion";
 import { friendlyError } from "@/lib/errors";
 import { cn } from "@/lib/cn";
@@ -140,6 +141,20 @@ export function TournamentRoom({ id }: { id: string }) {
     return () => clearInterval(t);
   }, [refresh]);
 
+  // when my bracket match finishes, hold the result a moment then bring me
+  // back to the tournament table so I watch the winner advance
+  useEffect(() => {
+    if (!playingMatch) return;
+    const cur = view?.bracket?.find((m) => m.id === playingMatch.id);
+    if (cur && cur.status !== "active") {
+      const timer = setTimeout(() => {
+        setPlayingMatch(null);
+        refresh();
+      }, 2600);
+      return () => clearTimeout(timer);
+    }
+  }, [playingMatch, view?.bracket, refresh]);
+
   if (notFound) {
     // Extremely rare: the on-chain match exists but its DB row never landed.
     // The stake is still safe in escrow — offer the on-chain refund directly so
@@ -205,6 +220,20 @@ export function TournamentRoom({ id }: { id: string }) {
           (m) => m.status === "active" && [m.creator, m.opponent].some((a) => a?.toLowerCase() === me)
         ) ?? null
       : null;
+  // single elimination: one loss (other than winning bronze) and you're out
+  const iAmOut =
+    !!me &&
+    isBracketCup &&
+    !myLiveMatch &&
+    bracket.some(
+      (m) =>
+        m.status === "settled" &&
+        m.winner &&
+        [m.creator, m.opponent].some((a) => a?.toLowerCase() === me) &&
+        m.winner.toLowerCase() !== me
+    );
+  // hold players at the table while the cup runs; losers may bow out
+  const holdAtTable = isBracketCup && t.status === "active" && joined && !iAmOut;
 
   // Each round deals a different board; everyone alive grinds the same one.
   if (playing && t.status === "active" && joined && iAmAlive && me && !isBracketCup) {
@@ -318,9 +347,15 @@ export function TournamentRoom({ id }: { id: string }) {
 
   return (
     <div className="mx-auto w-full max-w-2xl px-5 pb-28 pt-4">
-      <Link href="/tournaments" className="inline-flex w-fit items-center gap-2 rounded-full glass px-3 py-1.5 text-sm text-ink-dim">
-        <ArrowLeft className="h-4 w-4" /> Tournaments
-      </Link>
+      {holdAtTable ? (
+        <span className="inline-flex w-fit items-center gap-2 rounded-full glass px-3 py-1.5 text-sm text-amber">
+          ⚔️ Cup in progress — you&apos;re at the table
+        </span>
+      ) : (
+        <Link href="/tournaments" className="inline-flex w-fit items-center gap-2 rounded-full glass px-3 py-1.5 text-sm text-ink-dim">
+          <ArrowLeft className="h-4 w-4" /> Tournaments
+        </Link>
+      )}
 
       <div className="mt-5 flex items-center gap-3">
         <span className="grid h-12 w-12 place-items-center rounded-2xl bg-amber/15 text-amber"><Trophy className="h-6 w-6" /></span>
@@ -436,7 +471,18 @@ export function TournamentRoom({ id }: { id: string }) {
         ) : isBracketCup ? (
           // knockout cup: your job is whichever board you're on
           <div className="space-y-3">
-            {myLiveMatch ? (
+            {iAmOut ? (
+              <div className="text-center">
+                <p className="font-semibold text-ink">You&apos;re out of the cup</p>
+                <p className="mt-1 text-sm text-ink-dim">Stay and watch the table play out — or bow out now.</p>
+                <Link
+                  href="/tournaments"
+                  className="mt-3 inline-flex items-center justify-center gap-1.5 rounded-xl border border-line bg-void-800 px-5 py-2.5 text-[13px] font-medium text-ink-dim transition-colors hover:text-rose"
+                >
+                  Exit tournament
+                </Link>
+              </div>
+            ) : myLiveMatch ? (
               <button
                 onClick={() => setPlayingMatch(myLiveMatch)}
                 className="btn-primary flex w-full items-center justify-center gap-2 rounded-2xl py-3.5 text-sm shadow-glow"
@@ -445,7 +491,9 @@ export function TournamentRoom({ id }: { id: string }) {
               </button>
             ) : (
               <p className="text-center text-sm text-ink-dim">
-                {bracket.length === 0 ? "Drawing the bracket…" : "No board waiting on you — follow the bracket below."}
+                {bracket.length === 0
+                  ? "Drawing the bracket…"
+                  : "You're through — waiting for the other matches. Watch the table below."}
               </p>
             )}
             <button onClick={settle} disabled={busy} className="flex w-full items-center justify-center gap-2 rounded-2xl border border-line bg-void-800 py-2.5 text-[12px] text-ink-dim transition-colors hover:text-ink disabled:opacity-60">
@@ -486,87 +534,9 @@ export function TournamentRoom({ id }: { id: string }) {
         )}
       </div>
 
-      {/* bracket */}
+      {/* bracket — the tournament table */}
       {isBracketCup && bracket.length > 0 && (
-        <div className="mt-6">
-          <p className="mb-3 flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-ink-faint">
-            <Trophy className="h-3.5 w-3.5" /> Bracket
-          </p>
-          <div className="space-y-2.5">
-            {slotOrder(t.capacity).map((slot) => {
-              const m = bracket.find((x) => x.bracket_slot === slot);
-              if (!m) {
-                if (slot >= 2 && bracket.length >= 2)
-                  return (
-                    <div key={slot} className="rounded-2xl border border-dashed border-line px-4 py-3 text-[12px] text-ink-faint">
-                      {slotName(t.capacity, slot)} — waiting for the earlier rounds
-                    </div>
-                  );
-                return null;
-              }
-              const w = m.winner?.toLowerCase() ?? null;
-              const mine = !!me && [m.creator, m.opponent].some((a) => a?.toLowerCase() === me);
-              const toMoveName = m.turn ? displayName(m.turn, profiles[m.turn.toLowerCase()]) : null;
-              return (
-                <div
-                  key={slot}
-                  className={cn(
-                    "rounded-2xl border px-4 py-3",
-                    slot === finalSlot(t.capacity) ? "border-amber/40 bg-amber/[0.05]" : "border-line bg-void-800",
-                    mine && m.status === "active" && "ring-1 ring-teal/40"
-                  )}
-                >
-                  <div className="mb-2 flex items-center justify-between">
-                    <p className={cn("text-[11px] font-bold uppercase tracking-wide", slot === finalSlot(t.capacity) ? "text-amber" : "text-ink-faint")}>
-                      {slotName(t.capacity, slot)}
-                    </p>
-                    <p className="text-[11px] text-ink-faint">
-                      {m.status === "settled"
-                        ? "Finished"
-                        : toMoveName
-                          ? `${m.turn?.toLowerCase() === me ? "Your" : toMoveName + "'s"} move`
-                          : "Live"}
-                    </p>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    {[m.creator, m.opponent].map((addr) => {
-                      if (!addr) return null;
-                      const a = addr.toLowerCase();
-                      const p = profiles[a];
-                      const won = w === a;
-                      const lost = !!w && w !== a;
-                      return (
-                        <div
-                          key={a}
-                          className={cn(
-                            "flex min-w-0 flex-1 items-center gap-2 rounded-xl border px-2.5 py-2",
-                            won ? "border-teal/40 bg-teal/[0.08]" : "border-line bg-void-700",
-                            lost && "opacity-50"
-                          )}
-                        >
-                          <Avatar image={p?.avatar_image || undefined} color={avatarHex(p)} name={displayName(a, p)} size={26} rounded="rounded-md" />
-                          <p className="truncate text-[12px] font-medium text-ink">
-                            {displayName(a, p)}
-                            {a === me ? <span className="text-teal"> (you)</span> : ""}
-                          </p>
-                          {won && <span className="ml-auto shrink-0 text-[12px]">🏆</span>}
-                        </div>
-                      );
-                    })}
-                  </div>
-                  {mine && m.status === "active" && (
-                    <button
-                      onClick={() => setPlayingMatch(m)}
-                      className="btn-primary mt-2.5 w-full rounded-xl py-2 text-[13px] shadow-glow"
-                    >
-                      Play this match
-                    </button>
-                  )}
-                </div>
-              );
-            })}
-          </div>
-        </div>
+        <BracketTree tournament={t} bracket={bracket} me={me} profiles={profiles} onPlay={(m) => setPlayingMatch(m)} />
       )}
 
       {/* standings (score cups; bracket cups show it only until the draw) */}

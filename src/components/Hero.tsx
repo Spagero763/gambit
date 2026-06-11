@@ -70,7 +70,7 @@ export function Hero() {
             </motion.span>
           ))}
           <motion.span variants={word} className="text-shimmer inline-block will-change-transform">
-            cUSD.
+            USDm.
           </motion.span>
         </span>
       </motion.h1>
@@ -82,7 +82,7 @@ export function Hero() {
         className="mt-3 max-w-md text-[15px] leading-relaxed text-ink-dim"
       >
         Chess, Whot, tic-tac-toe, snakes &amp; ladders and a block puzzle. Practise
-        free against the bot, or put cUSD on a 1v1 — the winner takes the pot.
+        free against the bot, or put USDm on a 1v1 — the winner takes the pot.
       </motion.p>
 
       <motion.div

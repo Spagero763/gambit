@@ -1,6 +1,6 @@
 import { celo, celoSepolia } from "@reown/appkit/networks";
 
-/** A stake token. `decimals` matters — cUSD is 18, USDC is 6. */
+/** A stake token. `decimals` matters — USDm is 18, USDC is 6. */
 export interface StakeToken {
   address: `0x${string}`;
   symbol: string;
@@ -9,7 +9,7 @@ export interface StakeToken {
 
 const CUSD: StakeToken = {
   address: "0x765DE816845861e75A25fCA122bb6898B8B1282a",
-  symbol: "cUSD",
+  symbol: "USDm",
   decimals: 18,
 };
 
@@ -40,12 +40,12 @@ function lookup(address?: string | null): StakeToken | null {
   return null;
 }
 
-/** Decimals for a stored stake token address (defaults to 18 = cUSD). */
+/** Decimals for a stored stake token address (defaults to 18 = USDm). */
 export function decimalsForToken(address?: string | null): number {
   return lookup(address)?.decimals ?? 18;
 }
 
-/** Symbol for a stored stake token address (defaults to cUSD). */
+/** Symbol for a stored stake token address (defaults to USDm). */
 export function symbolForToken(address?: string | null): string {
-  return lookup(address)?.symbol ?? "cUSD";
+  return lookup(address)?.symbol ?? "USDm";
 }

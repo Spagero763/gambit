@@ -41,7 +41,7 @@ export function WalletPill() {
         />
         <div className="leading-tight">
           <p className="font-mono text-[11px] text-ink">{short(address)}</p>
-          <p className="nums text-[10px] text-teal">{amount} cUSD</p>
+          <p className="nums text-[10px] text-teal">{amount} USDm</p>
         </div>
       </button>
     );

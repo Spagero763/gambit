@@ -13,7 +13,7 @@ export const ESCROW_ADDRESS: Record<number, `0x${string}`> = {
   [celo.id]: (ENV_CELO || "0xB34548Ad3A45C2a571f99341e5fb32abB4FACd05") as `0x${string}`,
 };
 
-// cUSD is the same address on Celo Sepolia and mainnet.
+// USDm is the same address on Celo Sepolia and mainnet.
 export const STAKE_TOKEN: Record<number, `0x${string}`> = {
   [celoSepolia.id]: "0x765DE816845861e75A25fCA122bb6898B8B1282a",
   [celo.id]: "0x765DE816845861e75A25fCA122bb6898B8B1282a",

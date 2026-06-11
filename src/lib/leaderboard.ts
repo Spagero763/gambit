@@ -2,7 +2,7 @@ import { formatUnits } from "viem";
 
 export interface Standing {
   handle: string; // wallet address (lowercase)
-  net: number; // net cUSD across settled staked matches
+  net: number; // net USDm across settled staked matches
   wins: number;
   losses: number;
 }
