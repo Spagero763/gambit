@@ -60,7 +60,8 @@ export function useStakeMatch() {
           functionName: "approve",
           args: [escrow, amount],
         });
-        await publicClient.waitForTransactionReceipt({ hash });
+        const receipt = await publicClient.waitForTransactionReceipt({ hash });
+        if (receipt.status !== "success") throw new Error("Token approval failed on-chain");
       }
     },
     [address, chainId, publicClient, writeContractAsync]
@@ -84,6 +85,9 @@ export function useStakeMatch() {
           args: [stakeToken.address, amount, gameType, capacity],
         });
         const receipt = await publicClient.waitForTransactionReceipt({ hash });
+        // waitForTransactionReceipt does NOT throw on revert — a reverted
+        // create/join silently "succeeding" is how phantom seats happen.
+        if (receipt.status !== "success") throw new Error("Transaction reverted on-chain");
 
         // pull the match id from the MatchCreated event (topic[1])
         let id: bigint | null = null;
@@ -122,7 +126,10 @@ export function useStakeMatch() {
           functionName: "joinMatch",
           args: [id],
         });
-        await publicClient.waitForTransactionReceipt({ hash });
+        const receipt = await publicClient.waitForTransactionReceipt({ hash });
+        if (receipt.status !== "success") {
+          throw new Error("Join failed on-chain — the room may be full or its join window expired");
+        }
         setMatchId(id);
         setStep("waiting");
         return true;
@@ -148,7 +155,8 @@ export function useStakeMatch() {
           functionName: "cancelMatch",
           args: [matchId],
         });
-        await publicClient.waitForTransactionReceipt({ hash });
+        const receipt = await publicClient.waitForTransactionReceipt({ hash });
+        if (receipt.status !== "success") throw new Error("Cancel reverted — the room may have already started");
         return true;
       } catch (e: any) {
         setError(e?.shortMessage ?? e?.message ?? "Cancel failed");
@@ -171,7 +179,8 @@ export function useStakeMatch() {
           functionName: "reclaimStalled",
           args: [matchId],
         });
-        await publicClient.waitForTransactionReceipt({ hash });
+        const receipt = await publicClient.waitForTransactionReceipt({ hash });
+        if (receipt.status !== "success") throw new Error("Reclaim reverted — the settle window may not have lapsed yet");
         return true;
       } catch (e: any) {
         setError(e?.shortMessage ?? e?.message ?? "Reclaim failed");
