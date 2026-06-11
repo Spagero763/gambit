@@ -3,6 +3,7 @@ import { supabaseAdmin } from "@/lib/supabase";
 import { verifyToken } from "@/lib/server/profileToken";
 import { settleRanking, relayerConfigured, readMatchStatus, readMatchPlayers, cancelOnChain } from "@/lib/server/settle";
 import { newSeed } from "@/lib/server/tournament";
+import { seedBracket, advanceBracket, forceResolveStale, BRACKET_GAMES } from "@/lib/server/bracket";
 import { notify } from "@/lib/server/push";
 import { formatUnits } from "viem";
 
@@ -136,7 +137,16 @@ export async function GET(req: NextRequest) {
         .from("tournament_players")
         .select("address,score,round_score,eliminated_round,submitted_at")
         .eq("tournament_id", Number(id));
-      return NextResponse.json({ tournament: t, players: players ?? [] });
+      let bracket: unknown[] = [];
+      if (t.format === "bracket") {
+        const { data: subs } = await db
+          .from("matches")
+          .select("id,game,creator,opponent,status,winner,turn,bracket_slot,updated_at")
+          .eq("tournament_id", Number(id))
+          .order("bracket_slot");
+        bracket = subs ?? [];
+      }
+      return NextResponse.json({ tournament: t, players: players ?? [], bracket });
     }
     const { data } = await db
       .from("tournaments")
@@ -163,14 +173,22 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ error: "Sign in to create a tournament" }, { status: 401 });
       }
       const capacity = Number(body.capacity);
-      if (!(capacity >= 3 && capacity <= 8)) {
+      const format = body.format === "bracket" ? "bracket" : "score";
+      const game = String(body.game ?? "blocks");
+      if (format === "bracket") {
+        if (!(BRACKET_GAMES as readonly string[]).includes(game)) {
+          return NextResponse.json({ error: "That game doesn't support bracket cups" }, { status: 400 });
+        }
+        if (capacity !== 4) return NextResponse.json({ error: "Bracket cups are 4 players" }, { status: 400 });
+      } else if (!(capacity >= 3 && capacity <= 8)) {
         return NextResponse.json({ error: "Capacity must be 3–8" }, { status: 400 });
       }
       const seed = newSeed();
       const { error } = await db.from("tournaments").upsert(
         {
           id: Number(id),
-          game: String(body.game ?? "blocks"),
+          game,
+          format,
           chain_id: Number(body.chainId),
           token: body.token ? String(body.token) : null,
           decimals: Number(body.decimals ?? 18),
@@ -216,16 +234,20 @@ export async function POST(req: NextRequest) {
       const onchain = await readMatchStatus(BigInt(id), Number(t.chain_id));
       if (onchain === 2 /* Active */) {
         await db.from("tournaments").update({ status: "active" }).eq("id", Number(id));
-        const allPlayers = await loadPlayers(db, Number(id));
-        // the cup is full — everyone's first round starts now
-        void notify(
-          allPlayers.map((p) => p.address),
-          {
-            title: "Your cup is live! 🏁",
-            body: `Cup #${id} is full — the ${stageOf(allPlayers.length)} has started. Play your run.`,
-            url: `/tournament/${id}`,
-          }
-        );
+        if (t.format === "bracket") {
+          // draw the field + open both semi-finals (notifies inside)
+          await seedBracket(db, { ...t, status: "active" });
+        } else {
+          const allPlayers = await loadPlayers(db, Number(id));
+          void notify(
+            allPlayers.map((p) => p.address),
+            {
+              title: "Your cup is live! 🏁",
+              body: `Cup #${id} is full — the ${stageOf(allPlayers.length)} has started. Play your run.`,
+              url: `/tournament/${id}`,
+            }
+          );
+        }
       }
       return NextResponse.json({ ok: true, status: onchain === 2 ? "active" : "open", seed: t.seed });
     }
@@ -237,6 +259,9 @@ export async function POST(req: NextRequest) {
       }
       const { data: t } = await db.from("tournaments").select("*").eq("id", Number(id)).maybeSingle();
       if (!t) return NextResponse.json({ error: "Not found" }, { status: 404 });
+      if (t.format === "bracket") {
+        return NextResponse.json({ error: "Bracket cups are decided on the boards, not by score" }, { status: 400 });
+      }
       if (t.status !== "active") return NextResponse.json({ error: "Tournament not active" }, { status: 409 });
       const { data: me } = await db
         .from("tournament_players")
@@ -270,6 +295,22 @@ export async function POST(req: NextRequest) {
       if (t.status === "settled") return NextResponse.json({ ok: true, settled: true, settleTx: t.settle_tx });
       if (t.status !== "active" && t.status !== "settling") {
         return NextResponse.json({ error: "Tournament is not settleable" }, { status: 409 });
+      }
+      if (t.format === "bracket") {
+        // re-drive the bracket: settle if done; otherwise force-resolve any
+        // sub-match that's been dead for 30+ minutes (player to move loses)
+        await advanceBracket(db, Number(id));
+        const { data: after } = await db.from("tournaments").select("status,settle_tx").eq("id", Number(id)).maybeSingle();
+        if (after?.status === "settled") return NextResponse.json({ ok: true, settled: true, settleTx: after.settle_tx });
+        const changed = await forceResolveStale(db, Number(id), ROUND_WINDOW_MS);
+        const { data: fin } = await db.from("tournaments").select("status,settle_tx").eq("id", Number(id)).maybeSingle();
+        if (fin?.status === "settled") return NextResponse.json({ ok: true, settled: true, settleTx: fin.settle_tx });
+        return NextResponse.json(
+          changed
+            ? { ok: true, advanced: true }
+            : { error: "Matches are still being played — nothing to force yet", retryInMs: 60_000 },
+          { status: changed ? 200 : 409 }
+        );
       }
       const players = await loadPlayers(db, Number(id));
       const alive = aliveOf(players);

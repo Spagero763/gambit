@@ -159,6 +159,14 @@ alter table tournaments add column if not exists round integer not null default 
 alter table tournament_players add column if not exists round_score integer;
 alter table tournament_players add column if not exists eliminated_round integer;
 
+-- bracket cups: 'score' = everyone grinds the same board (Block Blitz);
+-- 'bracket' = real 1v1 sub-matches (semi-finals → final + bronze) for the
+-- head-to-head games. Sub-matches live in `matches` flagged by tournament_id.
+alter table tournaments add column if not exists format text not null default 'score';
+alter table matches add column if not exists tournament_id bigint;
+alter table matches add column if not exists bracket_slot integer; -- 0/1 = semis, 2 = bronze, 3 = final
+create index if not exists matches_tournament_idx on matches (tournament_id) where tournament_id is not null;
+
 alter table tournaments enable row level security;
 alter table tournament_players enable row level security;
 drop policy if exists "tournaments readable" on tournaments;
