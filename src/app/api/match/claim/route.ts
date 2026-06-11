@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase";
 import { settleOnChain, relayerConfigured } from "@/lib/server/settle";
+import { advanceBracket } from "@/lib/server/bracket";
 import { limited } from "@/lib/server/rateLimit";
 
 export const runtime = "nodejs";
@@ -42,6 +43,13 @@ export async function POST(req: NextRequest) {
         { error: "Opponent still has time", remainingMs: TURN_TIMEOUT_MS - elapsed },
         { status: 409 }
       );
+    }
+
+    // bracket sub-match: forfeit advances the bracket; no on-chain settle here
+    if (match.tournament_id) {
+      await db.from("matches").update({ status: "settled", winner: me, settle_error: null }).eq("id", Number(id));
+      await advanceBracket(db, Number(match.tournament_id));
+      return NextResponse.json({ ok: true, settled: true, winner: me });
     }
 
     // opponent timed out → you win by forfeit

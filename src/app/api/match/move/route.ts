@@ -4,6 +4,7 @@ import { applyTtt, TttState } from "@/lib/server/ttt";
 import { applyChessMove, ChessState } from "@/lib/server/chess";
 import { applySnakesRoll, SnakesState } from "@/lib/server/snakes";
 import { settleOnChain, relayerConfigured } from "@/lib/server/settle";
+import { advanceBracket, rematchSubMatch } from "@/lib/server/bracket";
 import { notify } from "@/lib/server/push";
 import { formatUnits } from "viem";
 
@@ -109,6 +110,21 @@ export async function POST(req: NextRequest) {
         });
       }
       return NextResponse.json({ ok: true, finished: false, state: outcome.state });
+    }
+
+    // bracket sub-match: no money here — the tournament escrow pays the podium.
+    // A draw can't advance a bracket, so it triggers an instant rematch.
+    if (match.tournament_id) {
+      if (!outcome.winner) {
+        await rematchSubMatch(db, match);
+        return NextResponse.json({ ok: true, finished: false, rematch: true, state: outcome.state });
+      }
+      await db
+        .from("matches")
+        .update({ state: outcome.state, status: "settled", winner: outcome.winner, settle_error: null })
+        .eq("id", Number(id));
+      await advanceBracket(db, Number(match.tournament_id));
+      return NextResponse.json({ ok: true, finished: true, winner: outcome.winner, settled: true, state: outcome.state });
     }
 
     // finished: mark settling, settle on-chain, record result

@@ -7,6 +7,7 @@ import { getToken } from "@/lib/profile";
 export interface TournamentRow {
   id: number;
   game: string;
+  format: "score" | "bracket";
   chain_id: number;
   token: string | null;
   decimals: number;
@@ -20,6 +21,19 @@ export interface TournamentRow {
   settle_tx: string | null;
   settle_error: string | null;
   created_at: string;
+}
+
+/** A bracket sub-match (semi/bronze/final) — a real 1v1 in `matches`. */
+export interface BracketMatch {
+  id: number;
+  game: string;
+  creator: string;
+  opponent: string | null;
+  status: string;
+  winner: string | null;
+  turn: string | null;
+  bracket_slot: number; // 0/1 = semis, 2 = bronze, 3 = final
+  updated_at: string;
 }
 
 export interface TournamentPlayer {
@@ -45,6 +59,7 @@ export function stageName(aliveCount: number) {
 export interface TournamentView {
   tournament: TournamentRow;
   players: TournamentPlayer[];
+  bracket?: BracketMatch[];
 }
 
 async function post(body: Record<string, unknown>) {
@@ -61,6 +76,7 @@ async function post(body: Record<string, unknown>) {
 export async function registerTournament(args: {
   id: bigint;
   game: string;
+  format?: "score" | "bracket";
   chainId: number;
   stake: bigint;
   capacity: number;
@@ -72,6 +88,7 @@ export async function registerTournament(args: {
     action: "register",
     id: args.id.toString(),
     game: args.game,
+    format: args.format ?? "score",
     chainId: args.chainId,
     stake: args.stake.toString(),
     capacity: args.capacity,

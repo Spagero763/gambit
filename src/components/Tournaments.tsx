@@ -16,8 +16,17 @@ import { registerTournament, listTournaments, TournamentRow } from "@/lib/tourna
 import { cn } from "@/lib/cn";
 
 const FEE = 0.05;
-const BLOCKS_GAME_TYPE = 4;
 const CAPS = [3, 4, 5, 6, 7, 8];
+
+// Cup types: Block Blitz is a score race (3-8 players, same board); the 1v1
+// games run as real knockouts — semi-finals, bronze match and final (4 players).
+const CUP_GAMES = [
+  { slug: "blocks", name: "Block Blitz", gameType: 4, format: "score" as const },
+  { slug: "chess", name: "Chess", gameType: 0, format: "bracket" as const },
+  { slug: "whot", name: "Naija Whot", gameType: 3, format: "bracket" as const },
+  { slug: "tic-tac-toe", name: "Tic-Tac-Toe", gameType: 1, format: "bracket" as const },
+  { slug: "snakes", name: "Snakes & Ladders", gameType: 2, format: "bracket" as const },
+];
 
 const STATUS_STYLE: Record<string, string> = {
   open: "bg-teal/15 text-teal",
@@ -33,7 +42,10 @@ export function Tournaments() {
   const [token, setToken] = useState<StakeToken>(tokens[0]);
   const [stake, setStake] = useState(0.5);
   const [custom, setCustom] = useState("");
+  const [cupGame, setCupGame] = useState(CUP_GAMES[0]);
   const [capacity, setCapacity] = useState(4);
+  const isBracket = cupGame.format === "bracket";
+  const seats = isBracket ? 4 : capacity; // brackets are always 4 players
   const [rows, setRows] = useState<TournamentRow[] | null>(null);
 
   const { address, isConnected } = useAccount();
@@ -60,24 +72,25 @@ export function Tournaments() {
   }, [refresh]);
 
   const validStake = Number.isFinite(stake) && stake > 0;
-  const pot = stake * capacity * (1 - FEE);
+  const pot = stake * seats * (1 - FEE);
   const busy = creating || step === "approving" || step === "creating";
 
   const create = async () => {
     if (!address || !validStake) return;
     setCreating(true);
     try {
-      const id = await createMatch(stake, BLOCKS_GAME_TYPE, capacity, token);
+      const id = await createMatch(stake, cupGame.gameType, seats, token);
       if (id !== null) {
         // The stake is already escrowed on-chain, so registration MUST land —
         // retry transient blips, then navigate to the room regardless (it can
         // recover/cancel from the on-chain match even if the row is missing).
         const args = {
           id,
-          game: "blocks",
+          game: cupGame.slug,
+          format: cupGame.format,
           chainId: ACTIVE_CHAIN_ID,
           stake: parseUnits(stake.toString(), token.decimals),
-          capacity,
+          capacity: seats,
           creator: address,
           token: token.address,
           decimals: token.decimals,
@@ -110,6 +123,27 @@ export function Tournaments() {
       {/* Create */}
       <div className="mt-6 rounded-3xl glass p-5 shadow-card">
         <p className="mb-3 flex items-center gap-2 text-sm font-semibold text-ink"><Plus className="h-4 w-4 text-teal" /> Create a tournament</p>
+
+        <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-ink-faint">Game</p>
+        <div className="mb-3 flex flex-wrap gap-2">
+          {CUP_GAMES.map((g) => (
+            <button
+              key={g.slug}
+              onClick={() => setCupGame(g)}
+              className={cn(
+                "rounded-xl border px-3 py-2 text-sm font-semibold transition-colors",
+                cupGame.slug === g.slug ? "border-teal/50 bg-teal/[0.1] text-ink" : "border-line bg-void-800 text-ink-dim hover:text-ink"
+              )}
+            >
+              {g.name}
+            </button>
+          ))}
+        </div>
+        <p className="mb-3 text-[11px] text-ink-faint">
+          {isBracket
+            ? "Knockout bracket · 4 players · two semi-finals on separate boards, then the final — losers fight for bronze."
+            : "Score race · everyone plays the same board each round, the bottom half is cut until the final three."}
+        </p>
 
         {tokens.length > 1 && (
           <div className="mb-3 grid grid-cols-2 gap-2">
@@ -157,20 +191,26 @@ export function Tournaments() {
         </div>
 
         <p className="mb-2 mt-4 text-xs font-semibold uppercase tracking-wide text-ink-faint">Players</p>
-        <div className="flex flex-wrap gap-2">
-          {CAPS.map((c) => (
-            <button
-              key={c}
-              onClick={() => setCapacity(c)}
-              className={cn(
-                "nums rounded-xl border px-4 py-2 text-sm font-semibold transition-colors",
-                capacity === c ? "border-teal/50 bg-teal/[0.1] text-ink" : "border-line bg-void-800 text-ink-dim hover:text-ink"
-              )}
-            >
-              {c}
-            </button>
-          ))}
-        </div>
+        {isBracket ? (
+          <p className="rounded-xl border border-line bg-void-800 px-3 py-2 text-sm text-ink-dim">
+            <span className="nums font-semibold text-ink">4</span> · semi-finals → bronze + final
+          </p>
+        ) : (
+          <div className="flex flex-wrap gap-2">
+            {CAPS.map((c) => (
+              <button
+                key={c}
+                onClick={() => setCapacity(c)}
+                className={cn(
+                  "nums rounded-xl border px-4 py-2 text-sm font-semibold transition-colors",
+                  capacity === c ? "border-teal/50 bg-teal/[0.1] text-ink" : "border-line bg-void-800 text-ink-dim hover:text-ink"
+                )}
+              >
+                {c}
+              </button>
+            ))}
+          </div>
+        )}
 
         <div className="mt-4 flex items-center justify-between rounded-2xl border border-line bg-void-700 px-4 py-3">
           <span className="text-sm text-ink-dim">Prize pool</span>
@@ -232,7 +272,12 @@ function Card({ row }: { row: TournamentRow }) {
       <motion.div whileTap={{ scale: 0.99 }} className="flex items-center justify-between rounded-2xl border border-line bg-void-800 px-4 py-3.5 transition-colors hover:border-line-strong">
         <div className="min-w-0">
           <div className="flex items-center gap-2">
-            <span className="font-display text-sm font-bold text-ink">Block Blitz</span>
+            <span className="font-display text-sm font-bold text-ink">
+              {CUP_GAMES.find((g) => g.slug === row.game)?.name ?? row.game}
+            </span>
+            {row.format === "bracket" && (
+              <span className="rounded-full bg-violet/15 px-2 py-0.5 text-[10px] font-bold uppercase text-violet-bright">Knockout</span>
+            )}
             <span className={cn("rounded-full px-2 py-0.5 text-[10px] font-bold uppercase", STATUS_STYLE[row.status] ?? "bg-white/10 text-ink-dim")}>{row.status}</span>
           </div>
           <p className="mt-0.5 flex items-center gap-2 text-[12px] text-ink-faint">
