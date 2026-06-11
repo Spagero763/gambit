@@ -57,6 +57,49 @@ export async function readMatchOnChain(matchId: bigint, chainId: number) {
   };
 }
 
+/** Who is ACTUALLY seated on-chain (lowercase). The source of truth for joins. */
+export async function readMatchPlayers(matchId: bigint, chainId: number): Promise<string[]> {
+  const cfg = CHAINS[chainId];
+  if (!cfg) throw new Error(`Unsupported chain ${chainId}`);
+  const escrow = ESCROW_ADDRESS[chainId];
+  if (!escrow) throw new Error(`No escrow on chain ${chainId}`);
+  const pub = createPublicClient({ chain: cfg.chain, transport: http(cfg.rpc) });
+  const list = (await pub.readContract({
+    address: escrow,
+    abi: ESCROW_ABI,
+    functionName: "players",
+    args: [matchId],
+  })) as readonly string[];
+  return list.map((a) => a.toLowerCase());
+}
+
+/**
+ * Relayer-driven cancelMatch: refunds every on-chain staker of an UNFILLED
+ * match. The contract enforces who may call it (creator anytime while Open,
+ * anyone once the join window has lapsed), so exposing this is safe — a revert
+ * just means "not allowed yet".
+ */
+export async function cancelOnChain(matchId: bigint, chainId: number) {
+  const key = relayerKey();
+  const cfg = CHAINS[chainId];
+  if (!cfg) throw new Error(`Unsupported chain ${chainId}`);
+  const escrow = ESCROW_ADDRESS[chainId];
+  if (!escrow) throw new Error(`No escrow on chain ${chainId}`);
+  const account = privateKeyToAccount(key);
+  const wallet = createWalletClient({ account, chain: cfg.chain, transport: http(cfg.rpc) });
+  const pub = createPublicClient({ chain: cfg.chain, transport: http(cfg.rpc) });
+  const hash = await wallet.writeContract({
+    address: escrow,
+    abi: ESCROW_ABI,
+    functionName: "cancelMatch",
+    args: [matchId],
+    type: "legacy",
+  });
+  const receipt = await pub.waitForTransactionReceipt({ hash });
+  if (receipt.status !== "success") throw new Error("cancelMatch reverted");
+  return hash;
+}
+
 /** Diagnostics: the relayer's public address + CELO balance per chain. Never
  *  returns the key itself. Lets us see if the server's relayer is funded. */
 export async function relayerDiagnostics() {
