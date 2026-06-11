@@ -37,7 +37,18 @@ import { cn } from "@/lib/cn";
 // mirrors the contract's joinWindow (600s): a cup must fill within 10 minutes
 const JOIN_WINDOW_MS = 10 * 60 * 1000;
 
-const SLOT_NAMES = ["Semi-final 1", "Semi-final 2", "Bronze match", "Final"];
+// slot layout: cap 4 → 0/1 semis, 2 bronze, 3 final; cap 8 → 0-3 quarters,
+// 4/5 semis, 6 bronze, 7 final
+function slotName(capacity: number, slot: number) {
+  if (capacity === 8) {
+    if (slot <= 3) return `Quarter-final ${slot + 1}`;
+    if (slot <= 5) return `Semi-final ${slot - 3}`;
+    return slot === 6 ? "Bronze match" : "Final";
+  }
+  return ["Semi-final 1", "Semi-final 2", "Bronze match", "Final"][slot] ?? "Match";
+}
+const slotOrder = (capacity: number) => (capacity === 8 ? [0, 1, 2, 3, 4, 5, 7, 6] : [0, 1, 3, 2]);
+const finalSlot = (capacity: number) => (capacity === 8 ? 7 : 3);
 const GAME_NAMES: Record<string, string> = {
   blocks: "Block Blitz",
   chess: "Chess",
@@ -219,7 +230,7 @@ export function TournamentRoom({ id }: { id: string }) {
             <ArrowLeft className="h-4 w-4" /> Bracket
           </button>
           <span className="rounded-full bg-amber/15 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-amber">
-            {SLOT_NAMES[playingMatch.bracket_slot] ?? "Match"}
+            {slotName(t.capacity, playingMatch.bracket_slot)}
           </span>
         </div>
         {Board ? <Board matchId={BigInt(playingMatch.id)} you={me as `0x${string}`} /> : null}
@@ -423,7 +434,7 @@ export function TournamentRoom({ id }: { id: string }) {
                 onClick={() => setPlayingMatch(myLiveMatch)}
                 className="btn-primary flex w-full items-center justify-center gap-2 rounded-2xl py-3.5 text-sm shadow-glow"
               >
-                <Play className="h-4 w-4" /> Play your {SLOT_NAMES[myLiveMatch.bracket_slot] ?? "match"}
+                <Play className="h-4 w-4" /> Play your {slotName(t.capacity, myLiveMatch.bracket_slot)}
               </button>
             ) : (
               <p className="text-center text-sm text-ink-dim">
@@ -475,13 +486,13 @@ export function TournamentRoom({ id }: { id: string }) {
             <Trophy className="h-3.5 w-3.5" /> Bracket
           </p>
           <div className="space-y-2.5">
-            {[0, 1, 3, 2].map((slot) => {
+            {slotOrder(t.capacity).map((slot) => {
               const m = bracket.find((x) => x.bracket_slot === slot);
               if (!m) {
                 if (slot >= 2 && bracket.length >= 2)
                   return (
                     <div key={slot} className="rounded-2xl border border-dashed border-line px-4 py-3 text-[12px] text-ink-faint">
-                      {SLOT_NAMES[slot]} — waiting for the semi-finals
+                      {slotName(t.capacity, slot)} — waiting for the earlier rounds
                     </div>
                   );
                 return null;
@@ -494,13 +505,13 @@ export function TournamentRoom({ id }: { id: string }) {
                   key={slot}
                   className={cn(
                     "rounded-2xl border px-4 py-3",
-                    slot === 3 ? "border-amber/40 bg-amber/[0.05]" : "border-line bg-void-800",
+                    slot === finalSlot(t.capacity) ? "border-amber/40 bg-amber/[0.05]" : "border-line bg-void-800",
                     mine && m.status === "active" && "ring-1 ring-teal/40"
                   )}
                 >
                   <div className="mb-2 flex items-center justify-between">
-                    <p className={cn("text-[11px] font-bold uppercase tracking-wide", slot === 3 ? "text-amber" : "text-ink-faint")}>
-                      {SLOT_NAMES[slot]}
+                    <p className={cn("text-[11px] font-bold uppercase tracking-wide", slot === finalSlot(t.capacity) ? "text-amber" : "text-ink-faint")}>
+                      {slotName(t.capacity, slot)}
                     </p>
                     <p className="text-[11px] text-ink-faint">
                       {m.status === "settled"
