@@ -74,7 +74,7 @@ export async function POST(req: NextRequest) {
     void notify([match.creator], {
       title: "Opponent joined! ⚔️",
       body: `Room #${id} is live — your match starts now.`,
-      url: "/",
+      url: `/play/${match.game}?room=${id}`,
     });
 
     return NextResponse.json({ ok: true });
