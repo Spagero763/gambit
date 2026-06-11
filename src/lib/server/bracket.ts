@@ -23,9 +23,15 @@ const BRACKET_BASE = 1_000_000_000_000;
 export const slotId = (tournamentId: number, slot: number) => BRACKET_BASE + tournamentId * 10 + slot;
 export const isBracketMatchId = (id: number) => id >= BRACKET_BASE;
 
-export const SLOT_NAMES = ["Semi-final 1", "Semi-final 2", "Bronze match", "Final"] as const;
-
 export const BRACKET_GAMES = ["chess", "tic-tac-toe", "snakes", "whot"] as const;
+export const BRACKET_SIZES = [4, 8] as const; // knockouts need powers of two (contract max 8)
+
+// Slot layout:
+//   capacity 4: 0/1 = semis,      2 = bronze, 3 = final
+//   capacity 8: 0-3 = quarters, 4/5 = semis,  6 = bronze, 7 = final
+const SEMIS = (cap: number) => (cap === 8 ? [4, 5] : [0, 1]);
+const BRONZE = (cap: number) => (cap === 8 ? 6 : 2);
+const FINAL = (cap: number) => (cap === 8 ? 7 : 3);
 
 /** Deterministic shuffle from the tournament seed — fair, reproducible draw. */
 function drawOrder<T>(arr: T[], seed: number): T[] {
@@ -117,18 +123,25 @@ export async function rematchSubMatch(db: SupabaseClient, match: any) {
   await db.from("matches").update({ state, turn, status: "active", winner: null }).eq("id", match.id);
 }
 
-/** Once the escrow is full: draw the field and open both semi-finals. */
+/** Once the escrow is full: draw the field and open the first round. */
 export async function seedBracket(db: SupabaseClient, t: any) {
   const { data: existing } = await db.from("matches").select("id").eq("tournament_id", t.id).limit(1);
   if (existing?.length) return; // already seeded (idempotent)
   const { data: players } = await db.from("tournament_players").select("address").eq("tournament_id", t.id);
   const field = drawOrder((players ?? []).map((p: any) => p.address.toLowerCase()), t.seed);
-  if (field.length !== 4) return;
-  await createSubMatch(db, t, 0, field[0], field[3]);
-  await createSubMatch(db, t, 1, field[1], field[2]);
+  if (field.length === 4) {
+    await createSubMatch(db, t, 0, field[0], field[3]);
+    await createSubMatch(db, t, 1, field[1], field[2]);
+  } else if (field.length === 8) {
+    for (let i = 0; i < 4; i++) {
+      await createSubMatch(db, t, i, field[i * 2], field[i * 2 + 1]);
+    }
+  } else {
+    return;
+  }
   void notify(field, {
     title: "Your cup is live! 🏁",
-    body: `Cup #${t.id}: the semi-finals are set — find your board and play.`,
+    body: `Cup #${t.id}: the ${field.length === 8 ? "quarter-finals are" : "semi-finals are"} set — find your board and play.`,
     url: `/tournament/${t.id}`,
   });
 }
@@ -149,23 +162,42 @@ const loserOf = (m: any): string | null => {
 export async function advanceBracket(db: SupabaseClient, tournamentId: number) {
   const { data: t } = await db.from("tournaments").select("*").eq("id", tournamentId).maybeSingle();
   if (!t || t.status === "settled" || t.status === "cancelled") return;
+  const cap = Number(t.capacity);
   const { data: subs } = await db.from("matches").select("*").eq("tournament_id", tournamentId);
   const bySlot: Record<number, any> = {};
   for (const m of subs ?? []) bySlot[m.bracket_slot] = m;
 
-  const sf1W = winnerOf(bySlot[0]);
-  const sf2W = winnerOf(bySlot[1]);
+  // 8-player: open the semis once all four quarter-finals have winners
+  if (cap === 8) {
+    const qfW = [0, 1, 2, 3].map((s) => winnerOf(bySlot[s]));
+    if (qfW.every(Boolean)) {
+      if (!bySlot[4]) {
+        await createSubMatch(db, t, 4, qfW[0]!, qfW[1]!);
+        void notify([qfW[0]!, qfW[1]!], { title: "Semi-final is live ⚔️", body: `Cup #${t.id}: win to reach the final.`, url: `/tournament/${t.id}` });
+      }
+      if (!bySlot[5]) {
+        await createSubMatch(db, t, 5, qfW[2]!, qfW[3]!);
+        void notify([qfW[2]!, qfW[3]!], { title: "Semi-final is live ⚔️", body: `Cup #${t.id}: win to reach the final.`, url: `/tournament/${t.id}` });
+      }
+    }
+  }
 
-  // open bronze + final when both semis have winners
+  // re-read (semis may have just been created), then open bronze + final
+  const { data: subsA } = await db.from("matches").select("*").eq("tournament_id", tournamentId);
+  const byA: Record<number, any> = {};
+  for (const m of subsA ?? []) byA[m.bracket_slot] = m;
+  const [sfA, sfB] = SEMIS(cap);
+  const sf1W = winnerOf(byA[sfA]);
+  const sf2W = winnerOf(byA[sfB]);
   if (sf1W && sf2W) {
-    if (!bySlot[2]) {
-      const l1 = loserOf(bySlot[0])!;
-      const l2 = loserOf(bySlot[1])!;
-      await createSubMatch(db, t, 2, l1, l2);
+    if (!byA[BRONZE(cap)]) {
+      const l1 = loserOf(byA[sfA])!;
+      const l2 = loserOf(byA[sfB])!;
+      await createSubMatch(db, t, BRONZE(cap), l1, l2);
       void notify([l1, l2], { title: "Bronze match is live 🥉", body: `Cup #${t.id}: win it to take 3rd place money.`, url: `/tournament/${t.id}` });
     }
-    if (!bySlot[3]) {
-      await createSubMatch(db, t, 3, sf1W, sf2W);
+    if (!byA[FINAL(cap)]) {
+      await createSubMatch(db, t, FINAL(cap), sf1W, sf2W);
       void notify([sf1W, sf2W], { title: "The FINAL is live 🏆", body: `Cup #${t.id}: winner takes the crown — and half the pot.`, url: `/tournament/${t.id}` });
     }
   }
@@ -174,11 +206,11 @@ export async function advanceBracket(db: SupabaseClient, tournamentId: number) {
   const { data: subs2 } = await db.from("matches").select("*").eq("tournament_id", tournamentId);
   const by2: Record<number, any> = {};
   for (const m of subs2 ?? []) by2[m.bracket_slot] = m;
-  const finalW = winnerOf(by2[3]);
-  const bronzeW = winnerOf(by2[2]);
+  const finalW = winnerOf(by2[FINAL(cap)]);
+  const bronzeW = winnerOf(by2[BRONZE(cap)]);
   if (!finalW || !bronzeW) return;
 
-  const ranking = [finalW, loserOf(by2[3])!, bronzeW];
+  const ranking = [finalW, loserOf(by2[FINAL(cap)])!, bronzeW];
   await db.from("tournaments").update({ status: "settling", winners: ranking, settle_error: null }).eq("id", tournamentId);
   if (!relayerConfigured()) return;
   try {
