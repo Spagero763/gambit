@@ -59,6 +59,7 @@ async function createSubMatch(
   const id = slotId(t.id, slot);
   let state: unknown = {};
   let turn: string | null = null;
+  let priv: unknown | null = null;
   if (t.game === "tic-tac-toe") {
     const s = newTtt(a, b);
     state = s;
@@ -72,12 +73,15 @@ async function createSubMatch(
     state = s;
     turn = s.turn;
   } else if (t.game === "whot") {
-    const { pub, priv } = splitWhot(newWhot(a, b));
-    state = pub;
-    turn = pub.turn;
-    await db.from("match_private").upsert({ match_id: id, state: priv }, { onConflict: "match_id" });
+    const split = splitWhot(newWhot(a, b));
+    state = split.pub;
+    turn = split.pub.turn;
+    priv = split.priv;
   }
-  await db.from("matches").upsert(
+  // ORDER MATTERS: match_private has a foreign key onto matches(id), so the
+  // match row must exist FIRST — writing priv before it silently failed and
+  // dealt a Whot sub-match with no hands.
+  const { error: mErr } = await db.from("matches").upsert(
     {
       id,
       game: t.game,
@@ -93,6 +97,11 @@ async function createSubMatch(
     },
     { onConflict: "id", ignoreDuplicates: true }
   );
+  if (mErr) throw mErr;
+  if (priv !== null) {
+    const { error: pErr } = await db.from("match_private").upsert({ match_id: id, state: priv }, { onConflict: "match_id" });
+    if (pErr) throw pErr;
+  }
   return id;
 }
 
