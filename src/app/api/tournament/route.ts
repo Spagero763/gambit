@@ -329,6 +329,40 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ ok: res.done, ...res });
     }
 
+    if (action === "sync") {
+      // Self-heal from chain truth: if stakes landed on-chain but a player's
+      // browser failed to report them (closed tab, network blip), import the
+      // missing seats and start the cup. Public + idempotent — the chain decides.
+      const { data: t } = await db.from("tournaments").select("*").eq("id", Number(id)).maybeSingle();
+      if (!t) return NextResponse.json({ error: "Not found" }, { status: 404 });
+      if (t.status !== "open") return NextResponse.json({ ok: true, status: t.status });
+      const onchain = await readMatchStatus(BigInt(id), Number(t.chain_id));
+      if (onchain === 4 /* Cancelled */) {
+        await db.from("tournaments").update({ status: "cancelled" }).eq("id", Number(id));
+        return NextResponse.json({ ok: true, status: "cancelled" });
+      }
+      const seated = await readMatchPlayers(BigInt(id), Number(t.chain_id));
+      for (const addr of seated) {
+        await db
+          .from("tournament_players")
+          .upsert({ tournament_id: Number(id), address: addr }, { onConflict: "tournament_id,address", ignoreDuplicates: true });
+      }
+      if (onchain === 2 /* Active — full */) {
+        await db.from("tournaments").update({ status: "active" }).eq("id", Number(id));
+        if (t.format === "bracket") {
+          await seedBracket(db, { ...t, status: "active" });
+        } else {
+          void notify(seated, {
+            title: "Your cup is live! 🏁",
+            body: `Cup #${id} is full — the ${stageOf(seated.length)} has started. Play your run.`,
+            url: `/tournament/${id}`,
+          });
+        }
+        return NextResponse.json({ ok: true, status: "active" });
+      }
+      return NextResponse.json({ ok: true, status: "open", seated: seated.length });
+    }
+
     if (action === "cancel") {
       // Reconcile to on-chain truth — and if the escrow match never filled
       // (Open past its join window), have the relayer cancel it on-chain so
