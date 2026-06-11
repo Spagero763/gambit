@@ -165,7 +165,12 @@ export function StakedChess({ matchId, you }: { matchId: bigint; you: `0x${strin
         </span>
       </div>
 
-      <PlayerStrip label="Opponent" color={myColor === "w" ? "b" : "w"} active={match?.status === "active" && !myTurn} />
+      <PlayerStrip
+        label="Opponent"
+        color={myColor === "w" ? "b" : "w"}
+        active={match?.status === "active" && !myTurn}
+        deadlineMs={match?.status === "active" && match?.updated_at ? new Date(match.updated_at).getTime() + 120_000 : null}
+      />
 
       <p className="mt-3 text-center text-sm text-ink-dim">{status}</p>
 
@@ -272,14 +277,43 @@ export function StakedChess({ matchId, you }: { matchId: bigint; you: `0x${strin
         </AnimatePresence>
       </div>
 
-      <PlayerStrip label="You" color={myColor ?? "w"} active={!!myTurn} you />
+      <PlayerStrip
+        label="You"
+        color={myColor ?? "w"}
+        active={!!myTurn}
+        you
+        deadlineMs={match?.status === "active" && match?.updated_at ? new Date(match.updated_at).getTime() + 120_000 : null}
+      />
 
       {err && <p className="mt-3 text-center text-[11px] text-rose">{err}</p>}
     </div>
   );
 }
 
-function PlayerStrip({ label, color, active, you }: { label: string; color: "w" | "b"; active: boolean; you?: boolean }) {
+function PlayerStrip({
+  label,
+  color,
+  active,
+  you,
+  deadlineMs,
+}: {
+  label: string;
+  color: "w" | "b";
+  active: boolean;
+  you?: boolean;
+  /** when set and active, show a ticking move clock counting down to forfeit */
+  deadlineMs?: number | null;
+}) {
+  const [now, setNow] = useState(() => Date.now());
+  useEffect(() => {
+    if (!active || !deadlineMs) return;
+    const t = setInterval(() => setNow(Date.now()), 1000);
+    return () => clearInterval(t);
+  }, [active, deadlineMs]);
+  const left = active && deadlineMs ? Math.max(0, deadlineMs - now) : null;
+  const mm = left !== null ? Math.floor(left / 60000) : 0;
+  const ss = left !== null ? Math.floor((left % 60000) / 1000) : 0;
+
   return (
     <div
       className={cn(
@@ -294,7 +328,18 @@ function PlayerStrip({ label, color, active, you }: { label: string; color: "w" 
         <p className="text-sm font-semibold text-ink">{you ? "You" : label}</p>
         <p className="text-[10px] text-ink-faint">{color === "w" ? "White" : "Black"}</p>
       </div>
-      {active && <span className="ml-auto h-2 w-2 rounded-full bg-teal" />}
+      {left !== null ? (
+        <span
+          className={cn(
+            "nums ml-auto rounded-lg px-2.5 py-1 font-mono text-sm font-bold",
+            left <= 30_000 ? "bg-rose/15 text-rose" : "bg-void-600 text-ink"
+          )}
+        >
+          {mm}:{ss.toString().padStart(2, "0")}
+        </span>
+      ) : (
+        active && <span className="ml-auto h-2 w-2 rounded-full bg-teal" />
+      )}
     </div>
   );
 }
