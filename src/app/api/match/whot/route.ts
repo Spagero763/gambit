@@ -140,7 +140,7 @@ export async function POST(req: NextRequest) {
       const pot = (Number(BigInt(match.stake || "0") * BigInt(2)) / 10 ** dec) * 0.95;
       void notify([outcome.winner], {
         title: "You won! 💰",
-        body: `${pot.toFixed(2)} ${dec === 6 ? "USDC" : "cUSD"} paid straight to your wallet.`,
+        body: `${pot.toFixed(2)} ${dec === 6 ? "USDC" : "USDm"} paid straight to your wallet.`,
         url: "/",
       });
       const loser = [match.creator, match.opponent].find(

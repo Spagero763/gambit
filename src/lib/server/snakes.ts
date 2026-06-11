@@ -1,5 +1,5 @@
 // Server-authoritative snakes & ladders. The server rolls the dice so a client
-// can never pick its own number — essential once cUSD is on the line.
+// can never pick its own number — essential once USDm is on the line.
 import { jumpTo } from "@/lib/games/snakesLayout";
 
 export interface SnakesState {

@@ -197,7 +197,7 @@ function Row({ row, rank, sort, isMe, profile }: { row: Standing; rank: number; 
         {sort === "earnings" ? (
           <p className={cn("nums text-sm font-semibold", row.net >= 0 ? "text-teal" : "text-rose")}>
             {row.net >= 0 ? "+" : ""}
-            {row.net.toFixed(2)} <span className="text-[10px] text-ink-faint">cUSD</span>
+            {row.net.toFixed(2)} <span className="text-[10px] text-ink-faint">USDm</span>
           </p>
         ) : (
           <p className="nums text-sm font-semibold text-ink">

@@ -10,7 +10,7 @@ import { formatUnits } from "viem";
 const stageOf = (alive: number) => (alive <= 3 ? "Final" : alive <= 5 ? "Semi-final" : "Quarter-final");
 const prizeText = (t: any, frac: number) => {
   const pot = Number(formatUnits(BigInt(t.stake || "0"), t.decimals ?? 18)) * t.capacity * 0.95;
-  return `${(pot * frac).toFixed(2)} ${(t.decimals ?? 18) === 6 ? "USDC" : "cUSD"}`;
+  return `${(pot * frac).toFixed(2)} ${(t.decimals ?? 18) === 6 ? "USDC" : "USDm"}`;
 };
 
 export const runtime = "nodejs";
