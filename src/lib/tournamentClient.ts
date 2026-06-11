@@ -116,6 +116,11 @@ export async function syncTournamentCancelled(id: bigint): Promise<{ ok: boolean
   return post({ action: "cancel", id: id.toString() });
 }
 
+/** Self-heal an open cup from chain truth (import missed seats, start when full). */
+export async function syncTournament(id: bigint): Promise<{ ok: boolean; status?: string }> {
+  return post({ action: "sync", id: id.toString() });
+}
+
 export async function fetchTournament(id: bigint): Promise<TournamentView> {
   const res = await fetch(`/api/tournament?id=${id.toString()}`, { cache: "no-store" });
   const data = await res.json();
