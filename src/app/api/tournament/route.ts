@@ -3,6 +3,14 @@ import { supabaseAdmin } from "@/lib/supabase";
 import { verifyToken } from "@/lib/server/profileToken";
 import { settleRanking, relayerConfigured, readMatchStatus } from "@/lib/server/settle";
 import { newSeed } from "@/lib/server/tournament";
+import { notify } from "@/lib/server/push";
+import { formatUnits } from "viem";
+
+const stageOf = (alive: number) => (alive <= 3 ? "Final" : alive <= 5 ? "Semi-final" : "Quarter-final");
+const prizeText = (t: any, frac: number) => {
+  const pot = Number(formatUnits(BigInt(t.stake || "0"), t.decimals ?? 18)) * t.capacity * 0.95;
+  return `${(pot * frac).toFixed(2)} ${(t.decimals ?? 18) === 6 ? "USDC" : "cUSD"}`;
+};
 
 export const runtime = "nodejs";
 
@@ -65,6 +73,16 @@ async function advanceOrSettle(db: ReturnType<typeof supabaseAdmin>, t: any, for
     try {
       const tx = await settleRanking(BigInt(t.id), ranking, Number(t.chain_id));
       await db.from("tournaments").update({ status: "settled", settle_tx: tx, settle_error: null }).eq("id", t.id);
+      // crown the podium — each winner learns their place + prize
+      const MEDALS = ["🥇 Champion", "🥈 2nd place", "🥉 3rd place"];
+      const SPLIT = [0.5, 0.3, 0.2];
+      ranking.forEach((addr, i) => {
+        void notify([addr], {
+          title: `${MEDALS[i]}!`,
+          body: `Cup #${t.id}: ${prizeText(t, SPLIT[i])} paid to your wallet. 🎉`,
+          url: `/tournament/${t.id}`,
+        });
+      });
       return { done: true as const, settled: true, ranking, settleTx: tx };
     } catch (e: any) {
       const settle_error = String(e?.shortMessage ?? e?.message ?? "settle failed").slice(0, 300);
@@ -89,6 +107,20 @@ async function advanceOrSettle(db: ReturnType<typeof supabaseAdmin>, t: any, for
     .eq("tournament_id", t.id)
     .is("eliminated_round", null);
   await db.from("tournaments").update({ round: t.round + 1 }).eq("id", t.id);
+  // round results: survivors get the next stage, the cut get the bad news
+  const survivors = ranked.slice(0, keep).map((p) => p.address);
+  void notify(survivors, {
+    title: `You're through! ✅`,
+    body: `Cup #${t.id}: you advanced to the ${stageOf(keep)}. New board is live — play your run.`,
+    url: `/tournament/${t.id}`,
+  });
+  if (out.length > 0) {
+    void notify(out, {
+      title: "Knocked out",
+      body: `Cup #${t.id}: you fell in round ${t.round}. There's always the next cup.`,
+      url: "/tournaments",
+    });
+  }
   return { done: true as const, advanced: true, round: t.round + 1, eliminated: out };
 }
 
@@ -171,8 +203,20 @@ export async function POST(req: NextRequest) {
         if (players.length >= t.capacity) return NextResponse.json({ error: "Tournament is full" }, { status: 409 });
         await db.from("tournament_players").insert({ tournament_id: Number(id), address: addr });
       }
-      const count = (await loadPlayers(db, Number(id))).length;
-      if (count >= t.capacity) await db.from("tournaments").update({ status: "active" }).eq("id", Number(id));
+      const allPlayers = await loadPlayers(db, Number(id));
+      const count = allPlayers.length;
+      if (count >= t.capacity) {
+        await db.from("tournaments").update({ status: "active" }).eq("id", Number(id));
+        // the cup is full — everyone's first round starts now
+        void notify(
+          allPlayers.map((p) => p.address),
+          {
+            title: "Your cup is live! 🏁",
+            body: `Cup #${id} is full — the ${stageOf(count)} has started. Play your run.`,
+            url: `/tournament/${id}`,
+          }
+        );
+      }
       return NextResponse.json({ ok: true, status: count >= t.capacity ? "active" : "open", seed: t.seed });
     }
 

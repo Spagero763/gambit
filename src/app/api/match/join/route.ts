@@ -4,6 +4,7 @@ import { newTtt } from "@/lib/server/ttt";
 import { newChess } from "@/lib/server/chess";
 import { newSnakes } from "@/lib/server/snakes";
 import { newWhot, splitWhot } from "@/lib/server/whot";
+import { notify } from "@/lib/server/push";
 
 export const runtime = "nodejs";
 
@@ -68,6 +69,13 @@ export async function POST(req: NextRequest) {
       .update({ opponent: opp, status: "active", state, turn })
       .eq("id", Number(id));
     if (upErr) throw upErr;
+
+    // tell the creator their challenger arrived
+    void notify([match.creator], {
+      title: "Opponent joined! ⚔️",
+      body: `Room #${id} is live — your match starts now.`,
+      url: "/",
+    });
 
     return NextResponse.json({ ok: true });
   } catch (e: any) {
