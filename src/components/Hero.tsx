@@ -8,7 +8,7 @@ import { Magnetic } from "./motion/Magnetic";
 const ease = [0.22, 1, 0.36, 1] as const;
 
 const FACTS = [
-  { icon: Cpu, label: "Free vs the engine" },
+  { icon: Cpu, label: "Free vs the bot" },
   { icon: Coins, label: "95% to the winner" },
   { icon: ShieldCheck, label: "Settled on-chain" },
 ];
@@ -82,7 +82,7 @@ export function Hero() {
         className="mt-3 max-w-md text-[15px] leading-relaxed text-ink-dim"
       >
         Chess, Whot, tic-tac-toe, snakes &amp; ladders and a block puzzle. Practise
-        free against the engine, or put cUSD on a 1v1 — the winner takes the pot.
+        free against the bot, or put cUSD on a 1v1 — the winner takes the pot.
       </motion.p>
 
       <motion.div
