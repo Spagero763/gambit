@@ -31,7 +31,7 @@ export const GAMES: Game[] = [
     slug: "tic-tac-toe",
     name: "Tic-Tac-Toe",
     tagline: "Simple board. Quick rounds.",
-    description: "Three in a row wins. Fast games against an engine that plays back.",
+    description: "Three in a row wins. Fast games against a bot that plays back.",
     mode: "1v1",
     status: "live",
     minStake: 0.1,
