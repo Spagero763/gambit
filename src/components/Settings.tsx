@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { Volume2, Music, User as UserIcon, Check, Camera, Trash2, ShieldCheck, Loader2, Wallet } from "lucide-react";
+import { Volume2, Music, User as UserIcon, Check, Camera, Trash2, ShieldCheck, Loader2, Wallet, Bell } from "lucide-react";
+import { PushToggle } from "@/components/PushToggle";
 import { useAccount, useConnect, useSignMessage } from "wagmi";
 import { injected } from "wagmi/connectors";
 import { useSettings, TRACKS, AVATARS, AVATAR_HEX } from "@/lib/settings";
@@ -159,6 +160,14 @@ export function Settings() {
             Signing is free (no gas). Saves your name, photo and streak to your wallet, synced across devices.
           </p>
         </div>
+      </div>
+
+      {/* Notifications */}
+      <div className="mt-4 rounded-2xl border border-line bg-void-700 p-5 shadow-card">
+        <div className="mb-1 flex items-center gap-2 text-sm font-semibold text-ink">
+          <Bell className="h-4 w-4 text-ink-dim" /> Notifications
+        </div>
+        <PushToggle />
       </div>
 
       {/* Sound */}

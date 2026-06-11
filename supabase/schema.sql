@@ -196,6 +196,18 @@ begin
   end if;
 end $$;
 
+-- push_subs: web-push device registrations per wallet. Server-only access
+-- (RLS deny-all — endpoints are capability URLs and must never leak).
+create table if not exists push_subs (
+  endpoint   text primary key,             -- push endpoint URL (unique per device)
+  address    text not null,                -- wallet (lowercase), token-verified
+  sub        jsonb not null,               -- full PushSubscription JSON
+  created_at timestamptz not null default now()
+);
+create index if not exists push_subs_address_idx on push_subs (address);
+alter table push_subs enable row level security;
+-- (intentionally NO policies => only the server's service_role can touch it)
+
 -- match_private: hidden game state (e.g. Whot hands + market). RLS denies all
 -- client reads; ONLY the server (service_role, which bypasses RLS) ever reads
 -- or writes it. Clients receive a redacted, per-player view via the API.
