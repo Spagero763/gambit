@@ -1,11 +1,11 @@
 "use client";
 
 import { useState } from "react";
-import { Volume2, Music, User as UserIcon, Check, Camera, Trash2, ShieldCheck, Loader2, Wallet, Bell } from "lucide-react";
+import { Volume2, User as UserIcon, Check, Camera, Trash2, ShieldCheck, Loader2, Wallet, Bell } from "lucide-react";
 import { PushToggle } from "@/components/PushToggle";
 import { useAccount, useConnect, useSignMessage } from "wagmi";
 import { injected } from "wagmi/connectors";
-import { useSettings, TRACKS, AVATARS, AVATAR_HEX } from "@/lib/settings";
+import { useSettings, AVATARS, AVATAR_HEX } from "@/lib/settings";
 import { useProgress } from "@/lib/progress";
 import { useProfile, createProfile, setProfile } from "@/lib/profile";
 import { Avatar } from "@/components/Avatar";
@@ -185,13 +185,6 @@ export function Settings() {
             if (v) play("tap");
           }}
         />
-        <div className="my-1 h-px bg-line" />
-        <Toggle
-          label="Background music"
-          sub="Plays while you browse and play"
-          on={s.musicOn}
-          onChange={(v) => update({ musicOn: v })}
-        />
 
         <div className="mt-4">
           <p className="mb-1.5 flex items-center justify-between text-xs text-ink-faint">
@@ -206,29 +199,6 @@ export function Settings() {
             onChange={(e) => update({ volume: Number(e.target.value) / 100 })}
             className="w-full accent-teal"
           />
-        </div>
-
-        <p className="mb-2 mt-4 flex items-center gap-1.5 text-xs text-ink-faint">
-          <Music className="h-3.5 w-3.5" /> Track
-        </p>
-        <div className="grid grid-cols-2 gap-2">
-          {TRACKS.map((t) => {
-            const active = s.track === t.id;
-            return (
-              <button
-                key={t.id}
-                onClick={() => update({ track: t.id, musicOn: true })}
-                className={cn(
-                  "rounded-xl border px-3 py-2.5 text-sm font-medium transition-colors",
-                  active
-                    ? "border-teal/50 bg-teal/[0.08] text-ink"
-                    : "border-line bg-void-800 text-ink-dim hover:text-ink"
-                )}
-              >
-                {t.label}
-              </button>
-            );
-          })}
         </div>
       </div>
     </section>
