@@ -9,7 +9,7 @@ import {
   applyWhotDraw,
 } from "@/lib/server/whot";
 import { settleOnChain, relayerConfigured } from "@/lib/server/settle";
-import { advanceBracket } from "@/lib/server/bracket";
+import { advanceBracket, rematchSubMatch } from "@/lib/server/bracket";
 import { notify } from "@/lib/server/push";
 import { verifyToken } from "@/lib/server/profileToken";
 import { limited } from "@/lib/server/rateLimit";
@@ -50,9 +50,17 @@ export async function GET(req: NextRequest) {
     const player = req.nextUrl.searchParams.get("player") ?? "";
     if (!id || !player) return NextResponse.json({ error: "Bad request" }, { status: 400 });
     const db = supabaseAdmin();
-    const { data: match } = await db.from("matches").select("*").eq("id", id).single();
+    let { data: match } = await db.from("matches").select("*").eq("id", id).single();
     if (!match) return NextResponse.json({ error: "Match not found" }, { status: 404 });
-    const priv = await loadPrivate(db, id);
+    let priv = await loadPrivate(db, id);
+    // Self-heal: an active match with no private state means the deal was
+    // lost (e.g. the old bracket FK ordering bug) — nobody has seen a card,
+    // so dealing fresh is fair and unblocks both players.
+    if (!priv && match.game === "whot" && match.status === "active" && match.creator && match.opponent) {
+      await rematchSubMatch(db, match);
+      ({ data: match } = await db.from("matches").select("*").eq("id", id).single());
+      priv = await loadPrivate(db, id);
+    }
     return NextResponse.json(view(match, priv, player));
   } catch (e: any) {
     return NextResponse.json({ error: e?.message ?? "Failed" }, { status: 500 });
