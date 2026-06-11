@@ -38,7 +38,7 @@ function escrowFor(chainId?: number) {
   return { address: ESCROW_ADDRESS[id], token: STAKE_TOKEN[id] };
 }
 
-/** Ensures the escrow is approved to pull `amount` of cUSD, then runs `action`. */
+/** Ensures the escrow is approved to pull `amount` of USDm, then runs `action`. */
 export function useStakeMatch() {
   const { address, chainId } = useAccount();
   const publicClient = usePublicClient();

@@ -15,11 +15,11 @@ const GAME_NAME: Record<string, string> = {
   whot: "Naija Whot",
 };
 
-/** "1.90 cUSD" from a match row (stake is per-player; pot = 2× minus 5% fee). */
+/** "1.90 USDm" from a match row (stake is per-player; pot = 2× minus 5% fee). */
 function potText(match: { stake: string; decimals?: number | null }) {
   const dec = match.decimals ?? 18;
   const pot = Number(formatUnits(BigInt(match.stake || "0") * BigInt(2), dec)) * 0.95;
-  return `${pot.toFixed(2)} ${dec === 6 ? "USDC" : "cUSD"}`;
+  return `${pot.toFixed(2)} ${dec === 6 ? "USDC" : "USDm"}`;
 }
 import { verifyToken } from "@/lib/server/profileToken";
 import { limited } from "@/lib/server/rateLimit";

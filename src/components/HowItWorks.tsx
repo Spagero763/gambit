@@ -6,7 +6,7 @@ import { Modal } from "./Modal";
 
 const STEPS = [
   { icon: Gamepad2, title: "Pick a game", body: "Chess, Whot, tic-tac-toe, snakes & ladders or a block puzzle." },
-  { icon: Coins, title: "Play free, or stake", body: "Practise free vs the bot — or put cUSD on a 1v1 against a real person." },
+  { icon: Coins, title: "Play free, or stake", body: "Practise free vs the bot — or put USDm on a 1v1 against a real person." },
   { icon: Trophy, title: "Winner takes the pot", body: "Win and you collect both stakes (minus a small 5% fee). A draw refunds both." },
   { icon: ShieldCheck, title: "Safe & on-chain", body: "Stakes sit in an audited escrow contract on Celo and pay out automatically. If a game stalls, funds are always reclaimable." },
 ];
