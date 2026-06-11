@@ -10,6 +10,7 @@ import { SNAKES_LADDERS, centerFrac } from "@/lib/games/snakesLayout";
 import { SettleOverlay } from "./SettleOverlay";
 import { TimeoutClaim } from "./TimeoutClaim";
 import { MatchChat } from "./MatchChat";
+import { useProfiles, displayName } from "@/lib/profiles";
 import { cn } from "@/lib/cn";
 
 interface SnakesState {
@@ -47,6 +48,9 @@ const MEEPLE_PATH =
 export function StakedSnakes({ matchId, you }: { matchId: bigint; you: `0x${string}` }) {
   const me = you.toLowerCase();
   const [match, setMatch] = useState<MatchRow | null>(null);
+  const oppAddr = [match?.creator, match?.opponent].find((a) => a && a.toLowerCase() !== me) ?? null;
+  const oppProfiles = useProfiles(oppAddr ? [oppAddr] : []);
+  const oppName = oppAddr ? displayName(oppAddr, oppProfiles[oppAddr.toLowerCase()]) : "Opponent";
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -126,7 +130,7 @@ export function StakedSnakes({ matchId, you }: { matchId: bigint; you: `0x${stri
       <div className="mt-3 flex items-center justify-between gap-3">
         <Tag label="You" pos={myPos} color="violet" active={!!myTurn} />
         <span className="text-xs text-ink-faint">vs</span>
-        <Tag label="Opponent" pos={oppPos} color="amber" active={match?.status === "active" && !myTurn} alignRight />
+        <Tag label={oppName} pos={oppPos} color="amber" active={match?.status === "active" && !myTurn} alignRight />
       </div>
 
       <p className="mt-3 text-center text-sm text-ink-dim">{status}</p>
