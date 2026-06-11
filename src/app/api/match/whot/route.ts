@@ -104,7 +104,7 @@ export async function POST(req: NextRequest) {
           title: "Your move 🃏",
           body: `It's your turn in Naija Whot · room #${id}`,
           tag: `turn-${id}`,
-          url: "/",
+          url: `/play/whot?room=${id}`,
         });
       }
       return NextResponse.json(view({ ...match, state: pub }, nextPriv, String(player)));

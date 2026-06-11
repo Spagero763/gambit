@@ -1,7 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Inter, JetBrains_Mono } from "next/font/google";
 import { Providers } from "./providers";
-import { MusicPlayer } from "@/components/audio/MusicPlayer";
 import { ProfileSync } from "@/components/ProfileSync";
 import { Onboarding } from "@/components/Onboarding";
 import "./globals.css";
@@ -68,7 +67,6 @@ export default function RootLayout({
       <body className="min-h-screen font-sans antialiased">
         <Providers>
           {children}
-          <MusicPlayer />
           <ProfileSync />
           <Onboarding />
         </Providers>
