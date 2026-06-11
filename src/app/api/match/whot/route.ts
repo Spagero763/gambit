@@ -9,6 +9,7 @@ import {
   applyWhotDraw,
 } from "@/lib/server/whot";
 import { settleOnChain, relayerConfigured } from "@/lib/server/settle";
+import { notify } from "@/lib/server/push";
 import { verifyToken } from "@/lib/server/profileToken";
 import { limited } from "@/lib/server/rateLimit";
 
@@ -97,6 +98,14 @@ export async function POST(req: NextRequest) {
 
     if (!outcome.finished) {
       await db.from("matches").update({ state: pub, turn: pub.turn }).eq("id", Number(id));
+      if (pub.turn && pub.turn !== String(player).toLowerCase()) {
+        void notify([pub.turn], {
+          title: "Your move 🃏",
+          body: `It's your turn in Naija Whot · room #${id}`,
+          tag: `turn-${id}`,
+          url: "/",
+        });
+      }
       return NextResponse.json(view({ ...match, state: pub }, nextPriv, String(player)));
     }
 
@@ -115,6 +124,19 @@ export async function POST(req: NextRequest) {
       }
     }
     await db.from("matches").update({ status: "settled", settle_tx: settleTx, settle_error: null }).eq("id", Number(id));
+    if (outcome.winner) {
+      const dec = match.decimals ?? 18;
+      const pot = (Number(BigInt(match.stake || "0") * BigInt(2)) / 10 ** dec) * 0.95;
+      void notify([outcome.winner], {
+        title: "You won! 💰",
+        body: `${pot.toFixed(2)} ${dec === 6 ? "USDC" : "cUSD"} paid straight to your wallet.`,
+        url: "/",
+      });
+      const loser = [match.creator, match.opponent].find(
+        (s: string | null) => s && s.toLowerCase() !== outcome.winner!.toLowerCase()
+      );
+      if (loser) void notify([loser], { title: "Match over", body: "Tough hand. Run it back?", url: "/play/whot" });
+    }
     return NextResponse.json(
       view({ ...match, state: pub, status: "settled", winner: outcome.winner, settle_tx: settleTx }, nextPriv, String(player))
     );
