@@ -166,7 +166,7 @@ export function MatchSetup({
           >
             <div className="rounded-3xl glass p-5 shadow-card">
               <p className="text-sm leading-relaxed text-ink-dim">
-                Play against the engine. No wallet needed, no stake, just the
+                Play against the bot. No wallet needed, no stake, just the
                 board. See how the game feels, then switch to staked when you
                 want to put cUSD on the line.
               </p>

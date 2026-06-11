@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
 import { ArrowLeft, Trophy, Users, Loader2, Wallet, ShieldCheck, AlertTriangle, Play, Copy, Check, ExternalLink, Crown } from "lucide-react";
 import Link from "next/link";
@@ -26,7 +26,11 @@ import {
 } from "@/lib/tournamentClient";
 import { TournamentPodium } from "@/components/TournamentPodium";
 import { AnimatePresence } from "framer-motion";
+import { friendlyError } from "@/lib/errors";
 import { cn } from "@/lib/cn";
+
+// mirrors the contract's joinWindow (600s): a cup must fill within 10 minutes
+const JOIN_WINDOW_MS = 10 * 60 * 1000;
 
 const FEE = 0.05;
 const SPLIT = [0.5, 0.3, 0.2];
@@ -54,6 +58,15 @@ export function TournamentRoom({ id }: { id: string }) {
   useEffect(() => setAuthed(hasToken(address)), [address]);
   // resolve player names/avatars (empty until the view loads — hook stays unconditional)
   const profiles = useProfiles(view?.players.map((p) => p.address) ?? []);
+  // join-window countdown: a cup must fill within 10 minutes or it's
+  // auto-cancelled (everyone refunded) — keep players aware and the row honest
+  const [now, setNow] = useState(() => Date.now());
+  useEffect(() => {
+    const t = setInterval(() => setNow(Date.now()), 1000);
+    return () => clearInterval(t);
+  }, []);
+  const expirySynced = useRef(false);
+
   // podium celebration — shown once per tournament when it settles
   const [podium, setPodium] = useState(false);
   useEffect(() => {
@@ -74,6 +87,18 @@ export function TournamentRoom({ id }: { id: string }) {
       setNotFound(true);
     }
   }, [tid]);
+
+  // when the join window lapses on an unfilled cup, trigger the on-chain
+  // refund for everyone (one shot) — the server/contract enforce correctness
+  useEffect(() => {
+    const t = view?.tournament;
+    if (!t || t.status !== "open" || expirySynced.current) return;
+    const deadline = new Date(t.created_at).getTime() + JOIN_WINDOW_MS;
+    if (Date.now() > deadline + 5000) {
+      expirySynced.current = true;
+      syncTournamentCancelled(tid).then(refresh).catch(() => {});
+    }
+  }, [now, view?.tournament, tid, refresh]);
   useEffect(() => {
     refresh();
     const t = setInterval(refresh, 4000);
@@ -163,7 +188,7 @@ export function TournamentRoom({ id }: { id: string }) {
         await refresh();
       }
     } catch (e: any) {
-      setMsg(e?.message ?? "Join failed");
+      setMsg(friendlyError(e, "Join failed — please try again."));
     } finally {
       setBusy(false);
     }
@@ -174,25 +199,28 @@ export function TournamentRoom({ id }: { id: string }) {
     setMsg(null);
     try {
       const res = await settleTournamentNow(tid);
-      if (!res.ok && res.error) setMsg(res.error);
+      if (!res.ok && res.error) setMsg(friendlyError(res.error, "Couldn't close the round — try again."));
       else if (!res.ok && res.retryInMs) setMsg(`Not everyone has finished — you can force payout in ${Math.ceil(res.retryInMs / 60000)} min.`);
       await refresh();
     } catch (e: any) {
-      setMsg(e?.message ?? "Settle failed");
+      setMsg(friendlyError(e, "Couldn't close the round — try again."));
     } finally {
       setBusy(false);
     }
   };
 
   // Creator cancels an un-started cup -> escrow refunds everyone who joined.
+  // ALWAYS re-sync afterwards: if the on-chain cancel already happened (e.g. a
+  // double-tap), the sync still flips the room to "cancelled" instead of
+  // leaving a raw revert on screen.
   const cancelCup = async () => {
     setBusy(true);
     setMsg(null);
     try {
-      const ok = await cancelMatch(tid);
-      if (ok) { await syncTournamentCancelled(tid); await refresh(); }
-    } catch (e: any) {
-      setMsg(e?.message ?? "Cancel failed");
+      await cancelMatch(tid).catch(() => false);
+      const res = await syncTournamentCancelled(tid).catch(() => ({ ok: false, error: undefined as string | undefined }));
+      if (!res.ok) setMsg(friendlyError(res.error, "Couldn't cancel yet — try again in a moment."));
+      await refresh();
     } finally {
       setBusy(false);
     }
@@ -208,11 +236,11 @@ export function TournamentRoom({ id }: { id: string }) {
       const ok = await reclaimStalled(tid).catch(() => false);
       const res = await syncTournamentCancelled(tid).catch(() => ({ ok: false, error: undefined as string | undefined }));
       if (!ok && !res.ok) {
-        setMsg(res.error ?? "Not refundable yet — the contract windows haven't lapsed.");
+        setMsg(friendlyError(res.error, "Not refundable yet — the contract windows haven't lapsed."));
       }
       await refresh();
     } catch (e: any) {
-      setMsg(e?.message ?? "Refund failed — try again shortly.");
+      setMsg(friendlyError(e, "Refund failed — try again shortly."));
     } finally {
       setBusy(false);
     }
@@ -313,6 +341,18 @@ export function TournamentRoom({ id }: { id: string }) {
           <div className="text-center">
             <p className="flex items-center justify-center gap-1.5 text-sm text-ink-dim"><Loader2 className="h-4 w-4 animate-spin" /> Waiting for players</p>
             <p className="mt-1 text-[12px] text-ink-faint">Starts automatically when all {t.capacity} seats are filled. Share the invite link.</p>
+            {(() => {
+              const left = new Date(t.created_at).getTime() + JOIN_WINDOW_MS - now;
+              if (left <= 0)
+                return <p className="mt-2 text-[12px] font-semibold text-rose">Join window closed — refunding everyone…</p>;
+              const m = Math.floor(left / 60000);
+              const s = Math.floor((left % 60000) / 1000);
+              return (
+                <p className={cn("nums mt-2 text-[12px] font-semibold", left < 120000 ? "text-rose" : "text-amber")}>
+                  ⏱ Join window closes in {m}:{s.toString().padStart(2, "0")} — everyone must stake before then
+                </p>
+              );
+            })()}
             <button onClick={cancelCup} disabled={busy} className="mx-auto mt-3 flex items-center justify-center gap-1.5 rounded-xl border border-line bg-void-800 px-4 py-2 text-[12px] font-medium text-ink-dim transition-colors hover:text-rose disabled:opacity-60">
               {busy ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : null} {isCreator ? "Cancel & refund everyone" : "Refund everyone (after join window)"}
             </button>
@@ -341,7 +381,11 @@ export function TournamentRoom({ id }: { id: string }) {
           </div>
         )}
         {(msg || error) && <p className="mt-2 text-center text-[11px] text-rose">{msg ?? error}</p>}
-        {t.settle_error && <p className="mt-2 text-center text-[11px] text-amber">Last payout attempt failed: {t.settle_error}. Anyone may retry with “Finish & pay out”.</p>}
+        {t.settle_error && t.status !== "cancelled" && t.status !== "settled" && (
+          <p className="mt-2 text-center text-[11px] text-amber">
+            Last payout attempt didn&apos;t go through: {friendlyError(t.settle_error, "the network rejected it")}. Anyone may retry above.
+          </p>
+        )}
       </div>
 
       {/* standings */}

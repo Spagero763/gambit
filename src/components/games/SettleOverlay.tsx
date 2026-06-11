@@ -7,6 +7,7 @@ import { formatUnits } from "viem";
 import { retrySettle } from "@/lib/matchClient";
 import { useStakeMatch } from "@/hooks/useStakeMatch";
 import { Confetti } from "@/components/motion/Confetti";
+import { friendlyError } from "@/lib/errors";
 import { symbolForToken } from "@/lib/tokens";
 import { inviteUrl, shareOrCopy } from "@/lib/share";
 import { cn } from "@/lib/cn";
@@ -84,7 +85,9 @@ export function SettleOverlay({
             <Loader2 className="h-3.5 w-3.5 animate-spin" /> {result === "draw" ? "Refunding…" : "Paying out…"}
           </p>
           {(settleError || msg) && (
-            <p className="mx-auto mt-2 max-w-[16rem] text-[11px] leading-snug text-rose">{msg || settleError}</p>
+            <p className="mx-auto mt-2 max-w-[16rem] text-[11px] leading-snug text-rose">
+              {friendlyError(msg || settleError, "The payout hit a snag — tap retry.")}
+            </p>
           )}
           <button
             onClick={retry}
