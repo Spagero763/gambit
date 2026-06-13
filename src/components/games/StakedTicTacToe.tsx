@@ -36,7 +36,7 @@ const EXPLORER: Record<number, string> = {
   11142220: "https://sepolia.celoscan.io/tx/",
 };
 
-export function StakedTicTacToe({ matchId, you }: { matchId: bigint; you: `0x${string}` }) {
+export function StakedTicTacToe({ matchId, you, onExit }: { matchId: bigint; you: `0x${string}`; onExit?: () => void }) {
   const me = you.toLowerCase();
   const [match, setMatch] = useState<MatchRow | null>(null);
   const oppAddr = [match?.creator, match?.opponent].find((a) => a && a.toLowerCase() !== me) ?? null;
@@ -108,9 +108,15 @@ export function StakedTicTacToe({ matchId, you }: { matchId: bigint; you: `0x${s
   return (
     <div className="mx-auto flex min-h-[100dvh] w-full max-w-md flex-col px-5 py-5">
       <div className="flex items-center justify-between">
-        <Link href="/" className="inline-flex items-center gap-2 rounded-full glass px-3 py-1.5 text-sm text-ink-dim">
-          <ArrowLeft className="h-4 w-4" /> Lobby
-        </Link>
+        {onExit ? (
+          <button onClick={onExit} className="inline-flex items-center gap-2 rounded-full glass px-3 py-1.5 text-sm text-ink-dim">
+            <ArrowLeft className="h-4 w-4" /> Cup
+          </button>
+        ) : (
+          <Link href="/" className="inline-flex items-center gap-2 rounded-full glass px-3 py-1.5 text-sm text-ink-dim">
+            <ArrowLeft className="h-4 w-4" /> Lobby
+          </Link>
+        )}
         <span className="rounded-full glass px-3 py-1.5 text-xs font-semibold text-teal">
           Staked · #{matchId.toString()}
         </span>
