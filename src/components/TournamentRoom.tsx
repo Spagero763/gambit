@@ -58,7 +58,7 @@ const GAME_NAMES: Record<string, string> = {
   snakes: "Snakes & Ladders",
   whot: "Naija Whot",
 };
-const BOARDS: Record<string, React.ComponentType<{ matchId: bigint; you: `0x${string}` }>> = {
+const BOARDS: Record<string, React.ComponentType<{ matchId: bigint; you: `0x${string}`; onExit?: () => void }>> = {
   chess: StakedChess,
   "tic-tac-toe": StakedTicTacToe,
   snakes: StakedSnakes,
@@ -239,39 +239,31 @@ export function TournamentRoom({ id }: { id: string }) {
   const holdAtTable = (isBracketCup || isTableCup) && t.status === "active" && joined && !iAmOut;
 
   // Each round deals a different board; everyone alive grinds the same one.
+  // Full-screen overlay (above the page Header + bottom nav) so nothing covers
+  // the board — same clean canvas as free play / staked 1v1.
   if (playing && t.status === "active" && joined && iAmAlive && me && !isBracketCup) {
     return (
-      <BlockBlitz
-        seed={roundSeed(t.seed, round)}
-        onExit={() => { setPlaying(false); refresh(); }}
-        onSubmit={async (score) => {
-          try { await submitTournamentScore(tid, me, score); refresh(); } catch {}
-        }}
-      />
+      <div className="fixed inset-0 z-[60] overflow-y-auto bg-void">
+        <BlockBlitz
+          seed={roundSeed(t.seed, round)}
+          onExit={() => { setPlaying(false); refresh(); }}
+          onSubmit={async (score) => {
+            try { await submitTournamentScore(tid, me, score); refresh(); } catch {}
+          }}
+        />
+      </div>
     );
   }
 
-  // playing a bracket sub-match — render the real staked board inline
+  // playing a bracket/table sub-match — the real staked board, full-screen,
+  // clean (no page Header / bottom nav). The board's own back button returns
+  // here via onExit, so it's a single clean header like free play.
   if (playingMatch && me) {
     const Board = BOARDS[playingMatch.game];
-    const stillLive = bracket.find((m) => m.id === playingMatch.id)?.status === "active";
+    const back = () => { setPlayingMatch(null); refresh(); };
     return (
-      <div className="relative">
-        <div className="sticky top-0 z-40 mx-auto flex w-full max-w-2xl items-center justify-between bg-void/90 px-5 py-2.5 backdrop-blur">
-          <button
-            onClick={() => { setPlayingMatch(null); refresh(); }}
-            className="inline-flex items-center gap-2 rounded-full border border-line bg-void-700 px-3 py-1.5 text-sm text-ink-dim transition-colors hover:text-ink"
-          >
-            <ArrowLeft className="h-4 w-4" /> Bracket
-          </button>
-          <span className="rounded-full bg-amber/15 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-amber">
-            {playingMatch.bracket_slot === 9 ? "The table" : slotName(t.capacity, playingMatch.bracket_slot)}
-          </span>
-        </div>
-        {Board ? <Board matchId={BigInt(playingMatch.id)} you={me as `0x${string}`} /> : null}
-        {!stillLive && (
-          <p className="pb-6 text-center text-[12px] text-ink-faint">This match has finished — head back to the cup.</p>
-        )}
+      <div className="fixed inset-0 z-[60] overflow-y-auto bg-void">
+        {Board ? <Board matchId={BigInt(playingMatch.id)} you={me as `0x${string}`} onExit={back} /> : null}
       </div>
     );
   }
