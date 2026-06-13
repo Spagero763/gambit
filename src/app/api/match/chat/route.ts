@@ -40,9 +40,13 @@ export async function POST(req: NextRequest) {
     }
 
     const db = supabaseAdmin();
-    const { data: match } = await db.from("matches").select("creator,opponent,status").eq("id", Number(id)).maybeSingle();
+    const { data: match } = await db.from("matches").select("creator,opponent,status,state").eq("id", Number(id)).maybeSingle();
     if (!match) return NextResponse.json({ error: "Match not found" }, { status: 404 });
-    const seated = [match.creator?.toLowerCase(), match.opponent?.toLowerCase()].includes(sender);
+    // seats: the two columns, plus state.order for multiplayer tables
+    const order = ((match.state as any)?.order ?? []) as string[];
+    const seated =
+      [match.creator?.toLowerCase(), match.opponent?.toLowerCase()].includes(sender) ||
+      order.some((a) => a?.toLowerCase() === sender);
     if (!seated) return NextResponse.json({ error: "Not in this match" }, { status: 403 });
 
     const { error } = await db.from("match_messages").insert({ match_id: Number(id), sender, body: text });

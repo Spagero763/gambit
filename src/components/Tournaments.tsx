@@ -23,7 +23,7 @@ const CAPS = [3, 4, 5, 6, 7, 8];
 const CUP_GAMES = [
   { slug: "blocks", name: "Block Blitz", gameType: 4, format: "score" as const },
   { slug: "chess", name: "Chess", gameType: 0, format: "bracket" as const },
-  { slug: "whot", name: "Naija Whot", gameType: 3, format: "bracket" as const },
+  { slug: "whot", name: "Naija Whot", gameType: 3, format: "table" as const },
   { slug: "tic-tac-toe", name: "Tic-Tac-Toe", gameType: 1, format: "bracket" as const },
   { slug: "snakes", name: "Snakes & Ladders", gameType: 2, format: "bracket" as const },
 ];
@@ -46,7 +46,8 @@ export function Tournaments() {
   const [capacity, setCapacity] = useState(4);
   const [bracketSeats, setBracketSeats] = useState<4 | 8>(4);
   const isBracket = cupGame.format === "bracket";
-  const seats = isBracket ? bracketSeats : capacity; // knockouts: powers of two
+  const isTable = cupGame.format === "table";
+  const seats = isBracket ? bracketSeats : capacity; // knockouts: powers of two; table/score: 3-8
   const [rows, setRows] = useState<TournamentRow[] | null>(null);
 
   const { address, isConnected } = useAccount();
@@ -142,8 +143,10 @@ export function Tournaments() {
         </div>
         <p className="mb-3 text-[11px] text-ink-faint">
           {isBracket
-            ? "Knockout bracket · 4 players · two semi-finals on separate boards, then the final — losers fight for bronze."
-            : "Score race · everyone plays the same board each round, the bottom half is cut until the final three."}
+            ? "Knockout bracket · two semi-finals on separate boards, then the final — losers fight for bronze."
+            : isTable
+              ? "Survival table · 3–8 players, one board. Finish your cards to claim 1st, 2nd, 3rd — the podium splits the pot."
+              : "Score race · everyone plays the same board each round, the bottom half is cut until the final three."}
         </p>
 
         {tokens.length > 1 && (
@@ -297,6 +300,9 @@ function Card({ row }: { row: TournamentRow }) {
             </span>
             {row.format === "bracket" && (
               <span className="rounded-full bg-violet/15 px-2 py-0.5 text-[10px] font-bold uppercase text-violet-bright">Knockout</span>
+            )}
+            {row.format === "table" && (
+              <span className="rounded-full bg-violet/15 px-2 py-0.5 text-[10px] font-bold uppercase text-violet-bright">Table</span>
             )}
             <span className={cn("rounded-full px-2 py-0.5 text-[10px] font-bold uppercase", STATUS_STYLE[row.status] ?? "bg-white/10 text-ink-dim")}>{row.status}</span>
           </div>

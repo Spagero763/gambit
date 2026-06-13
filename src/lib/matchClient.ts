@@ -78,6 +78,7 @@ export interface WhotView {
   pending: { amount: number; num: number } | null;
   counts: Record<string, number>;
   order: string[];
+  finished: string[]; // placement order on survival tables (1st, 2nd, …)
   yourHand: Card[];
   updatedAt: string | null;
 }
