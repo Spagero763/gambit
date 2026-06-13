@@ -45,7 +45,7 @@ const EXPLORER: Record<number, string> = {
 const MEEPLE_PATH =
   "M50 5C40 5 33 13 33 22C33 28 36 33 41 36C30 39 22 47 17 58C15 62 17 67 22 67L36 67C36 67 33 75 33 82C33 90 40 95 50 95C60 95 67 90 67 82C67 75 64 67 64 67L78 67C83 67 85 62 83 58C78 47 70 39 59 36C64 33 67 28 67 22C67 13 60 5 50 5Z";
 
-export function StakedSnakes({ matchId, you }: { matchId: bigint; you: `0x${string}` }) {
+export function StakedSnakes({ matchId, you, onExit }: { matchId: bigint; you: `0x${string}`; onExit?: () => void }) {
   const me = you.toLowerCase();
   const [match, setMatch] = useState<MatchRow | null>(null);
   const oppAddr = [match?.creator, match?.opponent].find((a) => a && a.toLowerCase() !== me) ?? null;
@@ -119,9 +119,15 @@ export function StakedSnakes({ matchId, you }: { matchId: bigint; you: `0x${stri
   return (
     <div className="mx-auto flex min-h-[100dvh] w-full max-w-md flex-col px-4 py-4">
       <div className="flex items-center justify-between">
-        <Link href="/" className="inline-flex items-center gap-2 rounded-full border border-line bg-void-700 px-3 py-1.5 text-sm text-ink-dim transition-colors hover:text-ink">
-          <ArrowLeft className="h-4 w-4" /> Lobby
-        </Link>
+        {onExit ? (
+          <button onClick={onExit} className="inline-flex items-center gap-2 rounded-full border border-line bg-void-700 px-3 py-1.5 text-sm text-ink-dim transition-colors hover:text-ink">
+            <ArrowLeft className="h-4 w-4" /> Cup
+          </button>
+        ) : (
+          <Link href="/" className="inline-flex items-center gap-2 rounded-full border border-line bg-void-700 px-3 py-1.5 text-sm text-ink-dim transition-colors hover:text-ink">
+            <ArrowLeft className="h-4 w-4" /> Lobby
+          </Link>
+        )}
         <span className="rounded-full border border-line bg-void-700 px-3 py-1.5 text-xs font-semibold text-teal">
           Staked · #{matchId.toString()}
         </span>
