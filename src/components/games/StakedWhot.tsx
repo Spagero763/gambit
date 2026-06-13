@@ -12,7 +12,8 @@ import { SettleOverlay } from "./SettleOverlay";
 import { TimeoutClaim } from "./TimeoutClaim";
 import { MatchChat } from "./MatchChat";
 import { play } from "@/lib/sfx";
-import { useProfiles, displayName } from "@/lib/profiles";
+import { useProfiles, displayName, avatarHex } from "@/lib/profiles";
+import { Avatar } from "@/components/Avatar";
 import { cn } from "@/lib/cn";
 
 const EXPLORER: Record<number, string> = {
@@ -66,6 +67,16 @@ export function StakedWhot({ matchId, you }: { matchId: bigint; you: `0x${string
   const myTurn = view?.status === "active" && view?.turn === me;
   const finished = view?.status === "settling" || view?.status === "settled";
   const iWon = view?.winner?.toLowerCase() === me;
+
+  // survival table (3+ seats): placements lock in as players empty their hands
+  const order = view?.order ?? [];
+  const multi = order.length > 2;
+  const placements = view?.finished ?? [];
+  const myPlace = me ? placements.indexOf(me) : -1;
+  const others = order.filter((a) => a !== me);
+  const otherProfiles = useProfiles(others);
+  const tournamentId = Number(matchId) >= 1_000_000_000_000 ? Math.floor((Number(matchId) - 1_000_000_000_000) / 10) : null;
+  const MEDALS = ["🥇", "🥈", "🥉"];
 
   const legalId = (c: Card) =>
     pending ? c.num === pending.num : active ? isLegal(c, top?.num ?? 0, active) : false;
@@ -123,20 +134,54 @@ export function StakedWhot({ matchId, you }: { matchId: bigint; you: `0x${string
         </span>
       </div>
 
-      {/* opponent */}
-      <div className="mt-4 flex flex-col items-center gap-1">
-        <div className={cn("flex items-center gap-2 rounded-2xl border px-3 py-1.5", view?.status === "active" && !myTurn ? "border-teal/40 bg-void-700" : "border-line bg-void-800")}>
-          <span className="text-[11px] font-semibold text-ink">{oppName}</span>
-          <span className="text-[9px] text-ink-faint">{oppCount} cards</span>
+      {/* opponents — single fan for 1v1, seat chips around the table for 3+ */}
+      {multi ? (
+        <div className="mt-4 flex flex-wrap items-center justify-center gap-2">
+          {others.map((a) => {
+            const p = otherProfiles[a.toLowerCase()];
+            const placeI = placements.indexOf(a);
+            const theirTurn = view?.status === "active" && view?.turn === a;
+            return (
+              <div
+                key={a}
+                className={cn(
+                  "flex items-center gap-1.5 rounded-2xl border px-2.5 py-1.5",
+                  theirTurn ? "border-teal/50 bg-teal/[0.08]" : "border-line bg-void-800",
+                  placeI >= 0 && "opacity-60"
+                )}
+              >
+                <Avatar image={p?.avatar_image || undefined} color={avatarHex(p)} name={displayName(a, p)} size={20} rounded="rounded-md" />
+                <span className="max-w-[72px] truncate text-[11px] font-semibold text-ink">{displayName(a, p)}</span>
+                <span className="nums text-[9px] text-ink-faint">
+                  {placeI >= 0 ? MEDALS[placeI] ?? "✔" : `${view?.counts?.[a] ?? 0}🂠`}
+                </span>
+                {theirTurn && <span className="h-1.5 w-1.5 rounded-full bg-teal" />}
+              </div>
+            );
+          })}
         </div>
-        <div className="flex -space-x-3.5">
-          {Array.from({ length: Math.min(8, oppCount) }).map((_, i) => (
-            <div key={i} className="h-8 w-[22px]" style={{ transform: `rotate(${(i - Math.min(8, oppCount) / 2) * 5}deg)` }}>
-              <WhotCardBack />
-            </div>
-          ))}
+      ) : (
+        <div className="mt-4 flex flex-col items-center gap-1">
+          <div className={cn("flex items-center gap-2 rounded-2xl border px-3 py-1.5", view?.status === "active" && !myTurn ? "border-teal/40 bg-void-700" : "border-line bg-void-800")}>
+            <span className="text-[11px] font-semibold text-ink">{oppName}</span>
+            <span className="text-[9px] text-ink-faint">{oppCount} cards</span>
+          </div>
+          <div className="flex -space-x-3.5">
+            {Array.from({ length: Math.min(8, oppCount) }).map((_, i) => (
+              <div key={i} className="h-8 w-[22px]" style={{ transform: `rotate(${(i - Math.min(8, oppCount) / 2) * 5}deg)` }}>
+                <WhotCardBack />
+              </div>
+            ))}
+          </div>
         </div>
-      </div>
+      )}
+
+      {/* your locked placement while the table plays on */}
+      {multi && myPlace >= 0 && !finished && (
+        <p className="mt-2 text-center text-[12px] font-semibold text-teal">
+          {MEDALS[myPlace] ?? "✔"} You finished {["1st", "2nd", "3rd"][myPlace] ?? `${myPlace + 1}th`} — the table plays on.
+        </p>
+      )}
 
       {/* table */}
       <div className="mt-4 flex flex-1 items-center justify-center gap-6">
@@ -179,7 +224,7 @@ export function StakedWhot({ matchId, you }: { matchId: bigint; you: `0x${string
         )}
       </div>
 
-      <TimeoutClaim matchId={matchId} me={me} turn={view?.turn} updatedAt={view?.updatedAt} status={view?.status} />
+      {!multi && <TimeoutClaim matchId={matchId} me={me} turn={view?.turn} updatedAt={view?.updatedAt} status={view?.status} />}
       <MatchChat matchId={matchId} me={me} />
 
 
@@ -236,9 +281,27 @@ export function StakedWhot({ matchId, you }: { matchId: bigint; you: `0x${string
         )}
       </AnimatePresence>
 
-      {/* result */}
+      {/* result — table games show your placement; 1v1 shows the payout flow */}
       <AnimatePresence>
-        {finished && (
+        {finished && multi && (
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="fixed inset-0 z-40 grid place-items-center bg-void/80 backdrop-blur-sm">
+            <div className="w-[min(86%,20rem)] rounded-3xl border border-line bg-void-700 p-6 text-center shadow-pop">
+              <p className="text-3xl">{myPlace >= 0 && myPlace < 3 ? MEDALS[myPlace] : "🃏"}</p>
+              <p className="mt-1 text-2xl font-black tracking-tight text-ink">
+                {myPlace === 0 ? "Champion!" : myPlace > 0 ? `You placed ${["1st", "2nd", "3rd"][myPlace] ?? `${myPlace + 1}th`}` : "Table over"}
+              </p>
+              <p className="mt-1 text-sm text-ink-dim">
+                {myPlace >= 0 && myPlace < 3 ? "Your prize is paid from the cup escrow." : "No prize this time — run it back."}
+              </p>
+              {tournamentId !== null && (
+                <Link href={`/tournament/${tournamentId}`} className="btn-primary mt-5 inline-block w-full rounded-2xl py-3 text-sm shadow-glow">
+                  Back to the cup
+                </Link>
+              )}
+            </div>
+          </motion.div>
+        )}
+        {finished && !multi && (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="fixed inset-0 z-40 grid place-items-center bg-void/80 backdrop-blur-sm">
             <SettleOverlay
               result={iWon ? "win" : "lose"}

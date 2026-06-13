@@ -2,7 +2,7 @@ import { SupabaseClient } from "@supabase/supabase-js";
 import { newTtt } from "@/lib/server/ttt";
 import { newChess } from "@/lib/server/chess";
 import { newSnakes } from "@/lib/server/snakes";
-import { newWhot, splitWhot } from "@/lib/server/whot";
+import { newWhot, newWhotTable, splitWhot } from "@/lib/server/whot";
 import { settleRanking, relayerConfigured } from "@/lib/server/settle";
 import { notify } from "@/lib/server/push";
 
@@ -227,6 +227,68 @@ export async function advanceBracket(db: SupabaseClient, tournamentId: number) {
     await db.from("tournaments").update({ status: "settled", settle_tx: tx, settle_error: null }).eq("id", tournamentId);
     const MEDALS = ["🥇 Champion", "🥈 2nd place", "🥉 3rd place"];
     ranking.forEach((addr, i) => {
+      void notify([addr], { title: `${MEDALS[i]}!`, body: `Cup #${tournamentId}: your prize was paid straight to your wallet. 🎉`, url: `/tournament/${tournamentId}` });
+    });
+  } catch (e: any) {
+    const settle_error = String(e?.shortMessage ?? e?.message ?? "settle failed").slice(0, 300);
+    await db.from("tournaments").update({ settle_error }).eq("id", tournamentId);
+  }
+}
+
+/* ----------------------- Whot survival table (format 'table') ------------ */
+
+// One board for the whole field; lives in `matches` at slot 9.
+export const TABLE_SLOT = 9;
+export const tableMatchId = (tournamentId: number) => slotId(tournamentId, TABLE_SLOT);
+
+/** Once the escrow is full: deal one Whot table for everybody. */
+export async function seedTable(db: SupabaseClient, t: any) {
+  const id = tableMatchId(t.id);
+  const { data: existing } = await db.from("matches").select("id").eq("id", id).maybeSingle();
+  if (existing) return; // already dealt (idempotent)
+  const { data: players } = await db.from("tournament_players").select("address").eq("tournament_id", t.id);
+  const field = drawOrder((players ?? []).map((p: any) => p.address.toLowerCase()), t.seed);
+  if (field.length < 3) return;
+  const { pub, priv } = splitWhot(newWhotTable(field));
+  const { error: mErr } = await db.from("matches").upsert(
+    {
+      id,
+      game: "whot",
+      chain_id: t.chain_id,
+      stake: "0",
+      creator: field[0],
+      opponent: field[1], // schema needs two seats; the real seating is state.order
+      status: "active",
+      state: pub,
+      turn: pub.turn,
+      tournament_id: t.id,
+      bracket_slot: TABLE_SLOT,
+    },
+    { onConflict: "id", ignoreDuplicates: true }
+  );
+  if (mErr) throw mErr;
+  const { error: pErr } = await db.from("match_private").upsert({ match_id: id, state: priv }, { onConflict: "match_id" });
+  if (pErr) throw pErr;
+  void notify(field, {
+    title: "The table is set! 🃏",
+    body: `Cup #${t.id}: ${field.length} players, one board. First to finish takes the crown.`,
+    url: `/tournament/${t.id}`,
+  });
+}
+
+/** Pay the survival table's podium from the tournament escrow. */
+export async function settleTable(db: SupabaseClient, tournamentId: number, ranking: string[]) {
+  const { data: t } = await db.from("tournaments").select("*").eq("id", tournamentId).maybeSingle();
+  if (!t || t.status === "settled" || t.status === "cancelled") return;
+  const top3 = ranking.slice(0, 3);
+  if (top3.length < 3) return;
+  await db.from("tournaments").update({ status: "settling", winners: top3, settle_error: null }).eq("id", tournamentId);
+  if (!relayerConfigured()) return;
+  try {
+    const tx = await settleRanking(BigInt(tournamentId), top3, Number(t.chain_id));
+    await db.from("tournaments").update({ status: "settled", settle_tx: tx, settle_error: null }).eq("id", tournamentId);
+    const MEDALS = ["🥇 Champion", "🥈 2nd place", "🥉 3rd place"];
+    top3.forEach((addr, i) => {
       void notify([addr], { title: `${MEDALS[i]}!`, body: `Cup #${tournamentId}: your prize was paid straight to your wallet. 🎉`, url: `/tournament/${tournamentId}` });
     });
   } catch (e: any) {

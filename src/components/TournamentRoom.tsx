@@ -213,7 +213,10 @@ export function TournamentRoom({ id }: { id: string }) {
 
   // knockout brackets: real 1v1 sub-matches on separate boards
   const isBracketCup = t.format === "bracket";
+  // survival table: one Whot board (slot 9) for the whole field
+  const isTableCup = t.format === "table";
   const bracket = view.bracket ?? [];
+  const tableMatch = isTableCup ? bracket.find((m) => m.bracket_slot === 9) ?? null : null;
   const myLiveMatch =
     me && isBracketCup
       ? bracket.find(
@@ -233,7 +236,7 @@ export function TournamentRoom({ id }: { id: string }) {
         m.winner.toLowerCase() !== me
     );
   // hold players at the table while the cup runs; losers may bow out
-  const holdAtTable = isBracketCup && t.status === "active" && joined && !iAmOut;
+  const holdAtTable = (isBracketCup || isTableCup) && t.status === "active" && joined && !iAmOut;
 
   // Each round deals a different board; everyone alive grinds the same one.
   if (playing && t.status === "active" && joined && iAmAlive && me && !isBracketCup) {
@@ -262,12 +265,12 @@ export function TournamentRoom({ id }: { id: string }) {
             <ArrowLeft className="h-4 w-4" /> Bracket
           </button>
           <span className="rounded-full bg-amber/15 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-amber">
-            {slotName(t.capacity, playingMatch.bracket_slot)}
+            {playingMatch.bracket_slot === 9 ? "The table" : slotName(t.capacity, playingMatch.bracket_slot)}
           </span>
         </div>
         {Board ? <Board matchId={BigInt(playingMatch.id)} you={me as `0x${string}`} /> : null}
         {!stillLive && (
-          <p className="pb-6 text-center text-[12px] text-ink-faint">This match has finished — head back to the bracket.</p>
+          <p className="pb-6 text-center text-[12px] text-ink-faint">This match has finished — head back to the cup.</p>
         )}
       </div>
     );
@@ -361,7 +364,9 @@ export function TournamentRoom({ id }: { id: string }) {
         <span className="grid h-12 w-12 place-items-center rounded-2xl bg-amber/15 text-amber"><Trophy className="h-6 w-6" /></span>
         <div>
           <h1 className="font-display text-2xl font-bold">{GAME_NAMES[t.game] ?? t.game} Cup</h1>
-          {isBracketCup ? (
+          {isTableCup ? (
+            <p className="text-sm text-ink-dim">Survival table · one board · finish your cards for the podium</p>
+          ) : isBracketCup ? (
             <p className="text-sm text-ink-dim">Knockout bracket · semis → bronze + final · top 3 paid</p>
           ) : t.status === "active" ? (
             <p className="mt-0.5 flex items-center gap-1.5 text-sm">
@@ -503,6 +508,26 @@ export function TournamentRoom({ id }: { id: string }) {
               Payout stuck? Reclaim all stakes (refund everyone, after 1h)
             </button>
           </div>
+        ) : isTableCup ? (
+          // survival table: one Whot board for the whole field
+          <div className="space-y-3">
+            {tableMatch ? (
+              <button
+                onClick={() => setPlayingMatch(tableMatch)}
+                className="btn-primary flex w-full items-center justify-center gap-2 rounded-2xl py-3.5 text-sm shadow-glow"
+              >
+                <Play className="h-4 w-4" /> Sit at the table 🃏
+              </button>
+            ) : (
+              <p className="text-center text-sm text-ink-dim">Dealing the table…</p>
+            )}
+            <button onClick={settle} disabled={busy} className="flex w-full items-center justify-center gap-2 rounded-2xl border border-line bg-void-800 py-2.5 text-[12px] text-ink-dim transition-colors hover:text-ink disabled:opacity-60">
+              {busy ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : null} Nudge a stalled player
+            </button>
+            <button onClick={reclaim} disabled={busy} className="mx-auto block text-[11px] font-medium text-ink-faint underline-offset-2 transition-colors hover:text-ink hover:underline disabled:opacity-60">
+              Payout stuck? Reclaim all stakes (refund everyone, after 1h)
+            </button>
+          </div>
         ) : !iAmAlive ? (
           // joined but knocked out in an earlier round
           <div className="text-center">
@@ -539,8 +564,61 @@ export function TournamentRoom({ id }: { id: string }) {
         <BracketTree tournament={t} bracket={bracket} me={me} profiles={profiles} onPlay={(m) => setPlayingMatch(m)} />
       )}
 
-      {/* standings (score cups; bracket cups show it only until the draw) */}
-      <div className={cn("mt-6", isBracketCup && bracket.length > 0 && "hidden")}>
+      {/* survival table — live seats, card counts, locked podium places */}
+      {isTableCup && tableMatch && (
+        <div className="mt-6">
+          <p className="mb-3 flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-ink-faint">
+            <Trophy className="h-3.5 w-3.5" /> The table
+          </p>
+          <div className="space-y-2">
+            {(() => {
+              const st = tableMatch.state ?? {};
+              const order = st.order ?? [];
+              const fin = st.finished ?? [];
+              const seats = [...order].sort((a, b) => {
+                const fa = fin.indexOf(a), fb = fin.indexOf(b);
+                if (fa >= 0 || fb >= 0) return (fa < 0 ? 99 : fa) - (fb < 0 ? 99 : fb);
+                return (st.counts?.[a] ?? 0) - (st.counts?.[b] ?? 0);
+              });
+              return seats.map((a) => {
+                const p = profiles[a.toLowerCase()];
+                const place = fin.indexOf(a);
+                const theirTurn = tableMatch.state?.turn?.toLowerCase() === a.toLowerCase() && tableMatch.status === "active";
+                const prize = place >= 0 && place < 3 ? pot * SPLIT[place] : 0;
+                return (
+                  <div
+                    key={a}
+                    className={cn(
+                      "flex items-center justify-between rounded-2xl border px-4 py-3",
+                      place === 0 ? "border-amber/40 bg-amber/[0.06]" : "border-line bg-void-800",
+                      theirTurn && "ring-1 ring-teal/40",
+                      a.toLowerCase() === me && "ring-1 ring-teal/40"
+                    )}
+                  >
+                    <div className="flex min-w-0 items-center gap-3">
+                      <span className="w-6 shrink-0 text-center text-sm">{place >= 0 ? MEDAL[place] ?? "✔" : ""}</span>
+                      <Avatar image={p?.avatar_image || undefined} color={avatarHex(p)} name={displayName(a, p)} size={32} rounded="rounded-lg" />
+                      <div className="min-w-0">
+                        <p className="truncate text-sm font-medium text-ink">
+                          {displayName(a, p)}
+                          {a.toLowerCase() === me ? <span className="text-teal"> (you)</span> : ""}
+                        </p>
+                        <p className="text-[11px] text-ink-faint">
+                          {place >= 0 ? `Finished ${["1st", "2nd", "3rd"][place] ?? `${place + 1}th`}` : theirTurn ? "Playing now…" : `${st.counts?.[a] ?? 0} cards`}
+                        </p>
+                      </div>
+                    </div>
+                    {prize > 0 && <span className="nums text-sm font-bold text-teal">+{prize.toFixed(2)} {sym}</span>}
+                  </div>
+                );
+              });
+            })()}
+          </div>
+        </div>
+      )}
+
+      {/* standings (score cups; bracket/table cups show it only until the draw) */}
+      <div className={cn("mt-6", ((isBracketCup && bracket.length > 0) || (isTableCup && tableMatch)) && "hidden")}>
         <p className="mb-3 flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-ink-faint"><Users className="h-3.5 w-3.5" /> Standings</p>
         <div className="space-y-2">
           {standings.map((p, i) => {
