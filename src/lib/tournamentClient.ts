@@ -7,7 +7,7 @@ import { getToken } from "@/lib/profile";
 export interface TournamentRow {
   id: number;
   game: string;
-  format: "score" | "bracket";
+  format: "score" | "bracket" | "table";
   chain_id: number;
   token: string | null;
   decimals: number;
@@ -32,8 +32,15 @@ export interface BracketMatch {
   status: string;
   winner: string | null;
   turn: string | null;
-  bracket_slot: number; // 0/1 = semis, 2 = bronze, 3 = final
+  bracket_slot: number; // 0/1 = semis, 2 = bronze, 3 = final, 9 = survival table
   updated_at: string;
+  // present on the survival table (slot 9): public Whot state
+  state?: {
+    order?: string[];
+    counts?: Record<string, number>;
+    finished?: string[];
+    turn?: string | null;
+  };
 }
 
 export interface TournamentPlayer {
@@ -76,7 +83,7 @@ async function post(body: Record<string, unknown>) {
 export async function registerTournament(args: {
   id: bigint;
   game: string;
-  format?: "score" | "bracket";
+  format?: "score" | "bracket" | "table";
   chainId: number;
   stake: bigint;
   capacity: number;

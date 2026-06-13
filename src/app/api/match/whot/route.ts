@@ -9,7 +9,7 @@ import {
   applyWhotDraw,
 } from "@/lib/server/whot";
 import { settleOnChain, relayerConfigured } from "@/lib/server/settle";
-import { advanceBracket, rematchSubMatch } from "@/lib/server/bracket";
+import { advanceBracket, rematchSubMatch, settleTable, TABLE_SLOT } from "@/lib/server/bracket";
 import { notify } from "@/lib/server/push";
 import { verifyToken } from "@/lib/server/profileToken";
 import { limited } from "@/lib/server/rateLimit";
@@ -32,6 +32,7 @@ function view(match: any, priv: WhotPrivate | null, player: string) {
     pending: pub.pending ?? null,
     counts: pub.counts ?? {},
     order: pub.order ?? [],
+    finished: pub.finished ?? [],
     yourHand: priv?.hands?.[addr] ?? [],
     settleError: (match.settle_error as string | null) ?? null,
     updatedAt: (match.updated_at as string | null) ?? null,
@@ -107,22 +108,37 @@ export async function POST(req: NextRequest) {
 
     if (!outcome.finished) {
       await db.from("matches").update({ state: pub, turn: pub.turn }).eq("id", Number(id));
+      // survival table: someone just claimed a podium spot but play continues
+      const prevFinished = ((match.state as any)?.finished ?? []) as string[];
+      if ((pub.finished?.length ?? 0) > prevFinished.length) {
+        const justDone = pub.finished[pub.finished.length - 1];
+        const MEDALS = ["🥇 1st", "🥈 2nd", "🥉 3rd"];
+        void notify([justDone], {
+          title: `${MEDALS[pub.finished.length - 1] ?? "Finished"}! 🃏`,
+          body: `You're out of cards — placement locked. The table plays on.`,
+          url: match.tournament_id ? `/tournament/${match.tournament_id}` : "/",
+        });
+      }
       if (pub.turn && pub.turn !== String(player).toLowerCase()) {
         void notify([pub.turn], {
           title: "Your move 🃏",
           body: `It's your turn in Naija Whot · room #${id}`,
           tag: `turn-${id}`,
-          url: `/play/whot?room=${id}`,
+          url: match.tournament_id ? `/tournament/${match.tournament_id}` : `/play/whot?room=${id}`,
         });
       }
       return NextResponse.json(view({ ...match, state: pub }, nextPriv, String(player)));
     }
 
-    // bracket sub-match: record the winner and advance — the tournament escrow
-    // pays the podium at the end; nothing settles on-chain here.
+    // tournament play: nothing settles on this match — the escrow pays once.
     if (match.tournament_id) {
       await db.from("matches").update({ state: pub, status: "settled", winner: outcome.winner, settle_error: null }).eq("id", Number(id));
-      await advanceBracket(db, Number(match.tournament_id));
+      if (match.bracket_slot === TABLE_SLOT && outcome.ranking) {
+        // survival table over → pay the podium from the tournament escrow
+        await settleTable(db, Number(match.tournament_id), outcome.ranking);
+      } else {
+        await advanceBracket(db, Number(match.tournament_id));
+      }
       return NextResponse.json(
         view({ ...match, state: pub, status: "settled", winner: outcome.winner, settle_tx: null }, nextPriv, String(player))
       );

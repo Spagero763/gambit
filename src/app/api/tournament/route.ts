@@ -3,7 +3,8 @@ import { supabaseAdmin } from "@/lib/supabase";
 import { verifyToken } from "@/lib/server/profileToken";
 import { settleRanking, relayerConfigured, readMatchStatus, readMatchPlayers, cancelOnChain } from "@/lib/server/settle";
 import { newSeed } from "@/lib/server/tournament";
-import { seedBracket, advanceBracket, forceResolveStale, BRACKET_GAMES } from "@/lib/server/bracket";
+import { seedBracket, advanceBracket, forceResolveStale, seedTable, tableMatchId, BRACKET_GAMES } from "@/lib/server/bracket";
+import { mergeWhot, splitWhot, applyWhotDraw, WhotPublic, WhotPrivate } from "@/lib/server/whot";
 import { notify } from "@/lib/server/push";
 import { formatUnits } from "viem";
 
@@ -138,10 +139,10 @@ export async function GET(req: NextRequest) {
         .select("address,score,round_score,eliminated_round,submitted_at")
         .eq("tournament_id", Number(id));
       let bracket: unknown[] = [];
-      if (t.format === "bracket") {
+      if (t.format === "bracket" || t.format === "table") {
         const { data: subs } = await db
           .from("matches")
-          .select("id,game,creator,opponent,status,winner,turn,bracket_slot,updated_at")
+          .select("id,game,creator,opponent,status,winner,turn,bracket_slot,updated_at,state")
           .eq("tournament_id", Number(id))
           .order("bracket_slot");
         bracket = subs ?? [];
@@ -173,7 +174,7 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ error: "Sign in to create a tournament" }, { status: 401 });
       }
       const capacity = Number(body.capacity);
-      const format = body.format === "bracket" ? "bracket" : "score";
+      const format = body.format === "bracket" ? "bracket" : body.format === "table" ? "table" : "score";
       const game = String(body.game ?? "blocks");
       if (format === "bracket") {
         if (!(BRACKET_GAMES as readonly string[]).includes(game)) {
@@ -182,6 +183,9 @@ export async function POST(req: NextRequest) {
         if (capacity !== 4 && capacity !== 8) {
           return NextResponse.json({ error: "Knockouts need a power of two — pick 4 or 8 players" }, { status: 400 });
         }
+      } else if (format === "table") {
+        if (game !== "whot") return NextResponse.json({ error: "Survival tables are a Whot format" }, { status: 400 });
+        if (!(capacity >= 3 && capacity <= 8)) return NextResponse.json({ error: "Tables seat 3-8 players" }, { status: 400 });
       } else if (!(capacity >= 3 && capacity <= 8)) {
         return NextResponse.json({ error: "Capacity must be 3–8" }, { status: 400 });
       }
@@ -239,6 +243,8 @@ export async function POST(req: NextRequest) {
         if (t.format === "bracket") {
           // draw the field + open both semi-finals (notifies inside)
           await seedBracket(db, { ...t, status: "active" });
+        } else if (t.format === "table") {
+          await seedTable(db, { ...t, status: "active" });
         } else {
           const allPlayers = await loadPlayers(db, Number(id));
           void notify(
@@ -314,6 +320,27 @@ export async function POST(req: NextRequest) {
           { status: changed ? 200 : 409 }
         );
       }
+      if (t.format === "table") {
+        // survival table: if the player to move has been idle 3+ minutes,
+        // they draw a card and the turn passes — the table can't be hostaged
+        const mid = tableMatchId(Number(id));
+        const { data: tm } = await db.from("matches").select("*").eq("id", mid).maybeSingle();
+        if (!tm || tm.status !== "active") {
+          return NextResponse.json({ error: "The table isn't running" }, { status: 409 });
+        }
+        const idle = Date.now() - new Date(tm.updated_at).getTime();
+        if (idle < 3 * 60 * 1000) {
+          return NextResponse.json({ error: "The current player still has time", retryInMs: 3 * 60 * 1000 - idle }, { status: 409 });
+        }
+        const { data: pr } = await db.from("match_private").select("state").eq("match_id", mid).maybeSingle();
+        if (!pr?.state) return NextResponse.json({ error: "Table state missing" }, { status: 409 });
+        const full = mergeWhot(tm.state as WhotPublic, pr.state as WhotPrivate);
+        const out = applyWhotDraw(full, full.turn);
+        const { pub, priv } = splitWhot(out.full);
+        await db.from("match_private").upsert({ match_id: mid, state: priv }, { onConflict: "match_id" });
+        await db.from("matches").update({ state: pub, turn: pub.turn }).eq("id", mid);
+        return NextResponse.json({ ok: true, advanced: true });
+      }
       const players = await loadPlayers(db, Number(id));
       const alive = aliveOf(players);
       const allScored = alive.length > 0 && alive.every((p) => p.round_score !== null);
@@ -351,6 +378,8 @@ export async function POST(req: NextRequest) {
         await db.from("tournaments").update({ status: "active" }).eq("id", Number(id));
         if (t.format === "bracket") {
           await seedBracket(db, { ...t, status: "active" });
+        } else if (t.format === "table") {
+          await seedTable(db, { ...t, status: "active" });
         } else {
           void notify(seated, {
             title: "Your cup is live! 🏁",
