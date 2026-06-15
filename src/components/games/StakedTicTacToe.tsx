@@ -11,6 +11,7 @@ import { SettleOverlay } from "./SettleOverlay";
 import { TimeoutClaim } from "./TimeoutClaim";
 import { MatchChat } from "./MatchChat";
 import { useProfiles, displayName } from "@/lib/profiles";
+import { play as playSfx } from "@/lib/sfx";
 import { cn } from "@/lib/cn";
 
 interface MatchRow {
@@ -85,6 +86,7 @@ export function StakedTicTacToe({ matchId, you, onExit }: { matchId: bigint; you
     try {
       const res = await submitMove(matchId, me, { cell });
       if (res.state) setMatch((m) => (m ? { ...m, state: res.state as any } : m));
+      playSfx(res.finished ? (res.winner?.toLowerCase() === me ? "win" : res.draw ? "place" : "lose") : "place");
       await refresh();
     } catch (e: any) {
       setErr(e?.message ?? "Move failed");
@@ -92,6 +94,20 @@ export function StakedTicTacToe({ matchId, you, onExit }: { matchId: bigint; you
       setBusy(false);
     }
   };
+
+  // sounds for the opponent's move (your turn again) and game end
+  const prevTurnRef = useRef<string | undefined>(undefined);
+  const finishedRef = useRef(false);
+  useEffect(() => {
+    if (!match) return;
+    if (finished && !finishedRef.current) {
+      finishedRef.current = true;
+      playSfx(iWon ? "win" : draw ? "place" : "lose");
+    }
+    const t = match.state?.turn;
+    if (prevTurnRef.current && prevTurnRef.current !== t && t === me && match.status === "active") playSfx("place");
+    prevTurnRef.current = t;
+  }, [match, finished, iWon, draw, me]);
 
   const status = !match
     ? "Loading match…"

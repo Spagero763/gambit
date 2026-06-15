@@ -11,6 +11,7 @@ import { SettleOverlay } from "./SettleOverlay";
 import { TimeoutClaim } from "./TimeoutClaim";
 import { MatchChat } from "./MatchChat";
 import { useProfiles, displayName } from "@/lib/profiles";
+import { play } from "@/lib/sfx";
 import { cn } from "@/lib/cn";
 
 interface SnakesState {
@@ -93,9 +94,11 @@ export function StakedSnakes({ matchId, you, onExit }: { matchId: bigint; you: `
     if (!myTurn || busy) return;
     setBusy(true);
     setErr(null);
+    play("roll");
     try {
       const res = await submitMove(matchId, me, { roll: true });
       if (res.state) setMatch((m) => (m ? { ...m, state: res.state as SnakesState } : m));
+      play(res.finished ? (res.winner?.toLowerCase() === me ? "win" : "lose") : "place");
       await refresh();
     } catch (e: any) {
       setErr(e?.message ?? "Roll failed");
@@ -103,6 +106,20 @@ export function StakedSnakes({ matchId, you, onExit }: { matchId: bigint; you: `
       setBusy(false);
     }
   };
+
+  // sounds for the opponent's roll (your turn again) and game end
+  const prevTurnRef = useRef<string | undefined>(undefined);
+  const finishedRef = useRef(false);
+  useEffect(() => {
+    if (!match) return;
+    if (finished && !finishedRef.current) {
+      finishedRef.current = true;
+      play(iWon ? "win" : "lose");
+    }
+    const t = match.state?.turn;
+    if (prevTurnRef.current && prevTurnRef.current !== t && t === me && match.status === "active") play("roll");
+    prevTurnRef.current = t;
+  }, [match, finished, iWon, me]);
 
   const status = !match
     ? "Loading match…"

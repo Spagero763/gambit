@@ -12,6 +12,7 @@ import { SettleOverlay } from "./SettleOverlay";
 import { TimeoutClaim } from "./TimeoutClaim";
 import { MatchChat } from "./MatchChat";
 import { useProfiles, displayName } from "@/lib/profiles";
+import { play } from "@/lib/sfx";
 import { cn } from "@/lib/cn";
 
 const FILES = ["a", "b", "c", "d", "e", "f", "g", "h"];
@@ -115,8 +116,10 @@ export function StakedChess({ matchId, you, onExit }: { matchId: bigint; you: `0
     setErr(null);
     setSelected(null);
     try {
+      const captured = !!chess?.get(to);
       const res = await submitMove(matchId, me, { from, to, promotion });
       if (res.state) setMatch((m) => (m ? { ...m, state: res.state as ChessState } : m));
+      play(res.finished ? (res.winner?.toLowerCase() === me ? "win" : "lose") : captured ? "capture" : "place");
       await refresh();
     } catch (e: any) {
       setErr(e?.message ?? "Move failed");
@@ -124,6 +127,20 @@ export function StakedChess({ matchId, you, onExit }: { matchId: bigint; you: `0
       setBusy(false);
     }
   };
+
+  // sounds for the OPPONENT's move (your turn again) and game end
+  const prevTurnRef = useRef<string | undefined>(undefined);
+  const finishedRef = useRef(false);
+  useEffect(() => {
+    if (!match) return;
+    if (finished && !finishedRef.current) {
+      finishedRef.current = true;
+      play(iWon ? "win" : draw ? "place" : "lose");
+    }
+    const t = match.state?.turn;
+    if (prevTurnRef.current && prevTurnRef.current !== t && t === me && match.status === "active") play("place");
+    prevTurnRef.current = t;
+  }, [match, finished, iWon, draw, me]);
 
   const onSquare = (sq: Square) => {
     if (!chess || !myTurn || finished || busy) return;

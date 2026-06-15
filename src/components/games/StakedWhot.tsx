@@ -78,6 +78,15 @@ export function StakedWhot({ matchId, you, onExit }: { matchId: bigint; you: `0x
   const tournamentId = Number(matchId) >= 1_000_000_000_000 ? Math.floor((Number(matchId) - 1_000_000_000_000) / 10) : null;
   const MEDALS = ["🥇", "🥈", "🥉"];
 
+  // celebratory chime the moment your placement locks at the table
+  const placedRef = useRef(false);
+  useEffect(() => {
+    if (myPlace >= 0 && !placedRef.current) {
+      placedRef.current = true;
+      play("win");
+    }
+  }, [myPlace]);
+
   const legalId = (c: Card) =>
     pending ? c.num === pending.num : active ? isLegal(c, top?.num ?? 0, active) : false;
 
