@@ -502,24 +502,47 @@ export function TournamentRoom({ id }: { id: string }) {
           </div>
         ) : isTableCup ? (
           // survival table: one Whot board for the whole field
-          <div className="space-y-3">
-            {tableMatch ? (
-              <button
-                onClick={() => setPlayingMatch(tableMatch)}
-                className="btn-primary flex w-full items-center justify-center gap-2 rounded-2xl py-3.5 text-sm shadow-glow"
-              >
-                <Play className="h-4 w-4" /> Sit at the table 🃏
-              </button>
-            ) : (
-              <p className="text-center text-sm text-ink-dim">Dealing the table…</p>
-            )}
-            <button onClick={settle} disabled={busy} className="flex w-full items-center justify-center gap-2 rounded-2xl border border-line bg-void-800 py-2.5 text-[12px] text-ink-dim transition-colors hover:text-ink disabled:opacity-60">
-              {busy ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : null} Nudge a stalled player
-            </button>
-            <button onClick={reclaim} disabled={busy} className="mx-auto block text-[11px] font-medium text-ink-faint underline-offset-2 transition-colors hover:text-ink hover:underline disabled:opacity-60">
-              Payout stuck? Reclaim all stakes (refund everyone, after 1h)
-            </button>
-          </div>
+          (() => {
+            const myTablePlace = me ? (tableMatch?.state?.finished ?? []).findIndex((a) => a.toLowerCase() === me) : -1;
+            const iFinished = myTablePlace >= 0;
+            return (
+              <div className="space-y-3">
+                {!tableMatch ? (
+                  <p className="text-center text-sm text-ink-dim">Dealing the table…</p>
+                ) : iFinished ? (
+                  <>
+                    <div className="text-center">
+                      <p className="text-2xl">{MEDAL[myTablePlace] ?? "✅"}</p>
+                      <p className="mt-1 font-semibold text-ink">
+                        You finished {["1st", "2nd", "3rd"][myTablePlace] ?? `${myTablePlace + 1}th`}
+                        {myTablePlace < 3 ? " — prize locked" : ""}
+                      </p>
+                      <p className="mt-0.5 text-sm text-ink-dim">Your cards are done. Watch the table decide the rest.</p>
+                    </div>
+                    <button
+                      onClick={() => setPlayingMatch(tableMatch)}
+                      className="flex w-full items-center justify-center gap-2 rounded-2xl border border-line bg-void-800 py-2.5 text-sm text-ink-dim transition-colors hover:text-ink"
+                    >
+                      <Play className="h-4 w-4" /> Watch the table
+                    </button>
+                  </>
+                ) : (
+                  <button
+                    onClick={() => setPlayingMatch(tableMatch)}
+                    className="btn-primary flex w-full items-center justify-center gap-2 rounded-2xl py-3.5 text-sm shadow-glow"
+                  >
+                    <Play className="h-4 w-4" /> Sit at the table 🃏
+                  </button>
+                )}
+                <button onClick={settle} disabled={busy} className="flex w-full items-center justify-center gap-2 rounded-2xl border border-line bg-void-800 py-2.5 text-[12px] text-ink-dim transition-colors hover:text-ink disabled:opacity-60">
+                  {busy ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : null} Nudge a stalled player
+                </button>
+                <button onClick={reclaim} disabled={busy} className="mx-auto block text-[11px] font-medium text-ink-faint underline-offset-2 transition-colors hover:text-ink hover:underline disabled:opacity-60">
+                  Payout stuck? Reclaim all stakes (refund everyone, after 1h)
+                </button>
+              </div>
+            );
+          })()
         ) : !iAmAlive ? (
           // joined but knocked out in an earlier round
           <div className="text-center">
