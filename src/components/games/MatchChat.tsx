@@ -108,12 +108,13 @@ export function MatchChat({ matchId, me }: { matchId: bigint; me: string }) {
 
   return (
     <>
-      {/* floating bubble */}
+      {/* floating bubble — pinned to the right edge at mid-height so it never
+          sits over the hand of cards (bottom) or the opponent strip (top) */}
       <motion.button
         onClick={() => setOpen((o) => !o)}
         whileTap={{ scale: 0.88 }}
         aria-label="Match chat"
-        className="fixed bottom-24 right-4 z-40 grid h-12 w-12 place-items-center rounded-full border border-line bg-void-700/95 text-ink shadow-pop backdrop-blur"
+        className="fixed right-2 top-1/2 z-40 grid h-11 w-11 -translate-y-1/2 place-items-center rounded-full border border-line bg-void-700/95 text-ink shadow-pop backdrop-blur"
       >
         <MessageCircle className="h-5 w-5" />
         <AnimatePresence>
@@ -138,7 +139,7 @@ export function MatchChat({ matchId, me }: { matchId: bigint; me: string }) {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 28 }}
             transition={{ type: "spring", stiffness: 380, damping: 32 }}
-            className="fixed bottom-[9.5rem] right-4 z-40 flex max-h-[50dvh] w-[min(92vw,20rem)] flex-col overflow-hidden rounded-2xl border border-line bg-void-800/98 shadow-pop backdrop-blur"
+            className="fixed right-3 top-1/2 z-40 flex max-h-[60dvh] w-[min(92vw,20rem)] -translate-y-1/2 flex-col overflow-hidden rounded-2xl border border-line bg-void-800/98 shadow-pop backdrop-blur"
           >
             <div className="flex items-center justify-between border-b border-line px-3.5 py-2.5">
               <p className="text-sm font-semibold text-ink">Match chat</p>
