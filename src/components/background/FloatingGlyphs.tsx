@@ -1,27 +1,22 @@
 "use client";
 
-import { useEffect } from "react";
-import { motion, useMotionValue, useReducedMotion, useSpring, useTransform } from "framer-motion";
-
-/** Sleek ambient motion: drifting colour orbs + game motifs that gently react
- *  to the pointer (parallax). On-brand and alive, but never neon-soup. */
+/**
+ * Floating game motifs behind the content. Pure CSS transform animations (no
+ * framer RAF loop, no pointer parallax) so they're GPU-composited and don't
+ * touch the main thread. Only mounted on capable desktops (see Backdrop), so
+ * phones never pay for them.
+ */
 type Motif = "circle" | "triangle" | "square" | "cross" | "star" | "x" | "o" | "dice" | "crown";
 
-const GLYPHS: { m: Motif; x: number; y: number; size: number; dur: number; rot: number; o: number; teal?: boolean; violet?: boolean; blur?: boolean }[] = [
-  { m: "crown", x: 6, y: 14, size: 78, dur: 30, rot: -14, o: 0.1, blur: true },
-  { m: "star", x: 84, y: 9, size: 56, dur: 26, rot: 18, o: 0.13, teal: true },
-  { m: "triangle", x: 15, y: 62, size: 64, dur: 34, rot: 10, o: 0.09 },
-  { m: "circle", x: 90, y: 44, size: 52, dur: 28, rot: -8, o: 0.1, violet: true },
-  { m: "x", x: 71, y: 76, size: 60, dur: 32, rot: 14, o: 0.11, blur: true },
-  { m: "dice", x: 9, y: 86, size: 56, dur: 24, rot: -10, o: 0.12 },
-  { m: "cross", x: 49, y: 24, size: 48, dur: 30, rot: 20, o: 0.08, blur: true },
-  { m: "square", x: 36, y: 82, size: 50, dur: 27, rot: -16, o: 0.09, violet: true },
-  { m: "o", x: 92, y: 80, size: 54, dur: 31, rot: 8, o: 0.12, teal: true },
-  { m: "star", x: 27, y: 36, size: 40, dur: 25, rot: -12, o: 0.07, blur: true },
-  { m: "circle", x: 60, y: 56, size: 34, dur: 29, rot: 6, o: 0.07, blur: true },
-  { m: "triangle", x: 78, y: 30, size: 38, dur: 33, rot: -20, o: 0.08, teal: true },
-  { m: "x", x: 20, y: 8, size: 36, dur: 26, rot: 12, o: 0.07 },
-  { m: "dice", x: 56, y: 90, size: 38, dur: 28, rot: 16, o: 0.08, blur: true },
+const GLYPHS: { m: Motif; x: number; y: number; size: number; dur: number; rot: number; o: number; teal?: boolean; violet?: boolean }[] = [
+  { m: "crown", x: 6, y: 14, size: 78, dur: 17, rot: -14, o: 0.1 },
+  { m: "star", x: 84, y: 9, size: 56, dur: 15, rot: 18, o: 0.13, teal: true },
+  { m: "triangle", x: 15, y: 62, size: 64, dur: 19, rot: 10, o: 0.09 },
+  { m: "circle", x: 90, y: 44, size: 52, dur: 16, rot: -8, o: 0.1, violet: true },
+  { m: "x", x: 71, y: 76, size: 60, dur: 18, rot: 14, o: 0.11 },
+  { m: "dice", x: 9, y: 86, size: 56, dur: 14, rot: -10, o: 0.12 },
+  { m: "o", x: 92, y: 80, size: 54, dur: 17, rot: 8, o: 0.12, teal: true },
+  { m: "square", x: 36, y: 82, size: 50, dur: 16, rot: -16, o: 0.09, violet: true },
 ];
 
 function Shape({ m }: { m: Motif }) {
@@ -61,76 +56,27 @@ function Shape({ m }: { m: Motif }) {
 }
 
 export function FloatingGlyphs() {
-  const reduce = useReducedMotion();
-  const mx = useMotionValue(0);
-  const my = useMotionValue(0);
-  const sx = useSpring(mx, { stiffness: 40, damping: 22 });
-  const sy = useSpring(my, { stiffness: 40, damping: 22 });
-
-  useEffect(() => {
-    if (reduce) return;
-    const onMove = (e: PointerEvent) => {
-      mx.set(e.clientX / window.innerWidth - 0.5);
-      my.set(e.clientY / window.innerHeight - 0.5);
-    };
-    window.addEventListener("pointermove", onMove);
-    return () => window.removeEventListener("pointermove", onMove);
-  }, [reduce, mx, my]);
-
-  const orbX = useTransform(sx, (v) => v * 30);
-  const orbY = useTransform(sy, (v) => v * 30);
-  const glyphX = useTransform(sx, (v) => v * 55);
-  const glyphY = useTransform(sy, (v) => v * 55);
-
   return (
     <div className="absolute inset-0 overflow-hidden">
-      {/* drifting colour orbs (with pointer parallax) */}
-      <motion.div className="absolute inset-0" style={reduce ? undefined : { x: orbX, y: orbY }}>
-        <motion.div
+      {GLYPHS.map((g, i) => (
+        <div
+          key={i}
           aria-hidden
-          className="absolute -left-32 top-[-14%] h-[560px] w-[560px] rounded-full"
-          style={{ background: "radial-gradient(circle, rgba(62,207,142,0.13), transparent 62%)" }}
-          animate={reduce ? undefined : { x: [0, 70, -30, 0], y: [0, 50, -40, 0], scale: [1, 1.12, 0.95, 1] }}
-          transition={reduce ? undefined : { duration: 34, repeat: Infinity, ease: "easeInOut" }}
-        />
-        <motion.div
-          aria-hidden
-          className="absolute right-[-18%] top-1/4 h-[500px] w-[500px] rounded-full"
-          style={{ background: "radial-gradient(circle, rgba(142,139,240,0.12), transparent 62%)" }}
-          animate={reduce ? undefined : { x: [0, -60, 35, 0], y: [0, -40, 50, 0], scale: [1, 0.92, 1.1, 1] }}
-          transition={reduce ? undefined : { duration: 40, repeat: Infinity, ease: "easeInOut" }}
-        />
-        <motion.div
-          aria-hidden
-          className="absolute bottom-[-16%] left-1/3 h-[420px] w-[420px] rounded-full"
-          style={{ background: "radial-gradient(circle, rgba(227,179,65,0.08), transparent 62%)" }}
-          animate={reduce ? undefined : { x: [0, 40, -30, 0], y: [0, -30, 20, 0], scale: [1, 1.08, 0.96, 1] }}
-          transition={reduce ? undefined : { duration: 46, repeat: Infinity, ease: "easeInOut" }}
-        />
-      </motion.div>
-
-      {/* floating game motifs (stronger parallax for depth) */}
-      <motion.div className="absolute inset-0" style={reduce ? undefined : { x: glyphX, y: glyphY }}>
-        {GLYPHS.map((g, i) => (
-          <motion.div
-            key={i}
-            aria-hidden
-            className={cnTint(g)}
-            style={{ left: `${g.x}%`, top: `${g.y}%`, opacity: g.o, filter: g.blur ? "blur(1px)" : undefined }}
-            initial={false}
-            animate={reduce ? { rotate: g.rot } : { y: [0, -26, 0], rotate: [g.rot, g.rot + 10, g.rot] }}
-            transition={reduce ? undefined : { duration: g.dur, repeat: Infinity, ease: "easeInOut", delay: i * 0.5 }}
-          >
-            <svg width={g.size} height={g.size} viewBox="0 0 24 24">
-              <Shape m={g.m} />
-            </svg>
-          </motion.div>
-        ))}
-      </motion.div>
+          className={`anim-bg absolute ${g.teal ? "text-teal" : g.violet ? "text-violet" : "text-ink"}`}
+          style={{
+            left: `${g.x}%`,
+            top: `${g.y}%`,
+            opacity: g.o,
+            ["--gr" as any]: `${g.rot}deg`,
+            transform: `rotate(${g.rot}deg)`,
+            animation: `glyph-float ${g.dur}s ease-in-out ${i * 0.4}s infinite`,
+          }}
+        >
+          <svg width={g.size} height={g.size} viewBox="0 0 24 24">
+            <Shape m={g.m} />
+          </svg>
+        </div>
+      ))}
     </div>
   );
-}
-
-function cnTint(g: { teal?: boolean; violet?: boolean }) {
-  return `absolute ${g.teal ? "text-teal" : g.violet ? "text-violet" : "text-ink"}`;
 }
