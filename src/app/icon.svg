@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 48 48" role="img" aria-label="Gambit">
+  <rect x="1.5" y="1.5" width="45" height="45" rx="13" fill="#16161a"/>
+  <rect x="1.5" y="1.5" width="45" height="45" rx="13" fill="none" stroke="rgba(255,255,255,0.1)"/>
+  <g fill="none" stroke="#3ecf8e" stroke-width="3.2" stroke-linejoin="round" stroke-linecap="round">
+    <path d="M31 16.5 L24 12.5 L13 18.8 L13 30.2 L24 36.5 L35 30.2 L35 24 L25 24"/>
+  </g>
+  <circle cx="24" cy="24" r="2.2" fill="#3ecf8e"/>
+</svg>
