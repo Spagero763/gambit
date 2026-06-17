@@ -99,7 +99,7 @@ export function GameCard({
               }}
             >
               <span
-                className="absolute -inset-[100%] animate-[spin_3.2s_linear_infinite]"
+                className="absolute -inset-[100%] animate-[spin_3.2s_linear_infinite] [animation-play-state:paused] group-hover:[animation-play-state:running]"
                 style={{
                   background:
                     "conic-gradient(from 0deg, transparent 0 62%, rgba(62,207,142,0.9) 76%, rgba(170,167,255,0.85) 86%, transparent 96%)",
