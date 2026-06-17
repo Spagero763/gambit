@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import { ShieldCheck, X } from "lucide-react";
+import { useAccount } from "wagmi";
 import { useProgress, levelInfo } from "@/lib/progress";
 import { useProfile } from "@/lib/profile";
 
@@ -17,6 +18,7 @@ const DISMISS_KEY = "gambit:saveprompt:dismissed";
  */
 export function SaveProgressPrompt() {
   const p = useProgress();
+  const { isConnected } = useAccount();
   const { hasProfile, loading } = useProfile();
   const [dismissed, setDismissed] = useState(true);
 
@@ -28,9 +30,10 @@ export function SaveProgressPrompt() {
     }
   }, []);
 
-  // worth saving once they've actually built something up
-  const hasProgress = p.played >= 2 || p.xp >= 80 || p.streak >= 2;
-  const show = !dismissed && !loading && !hasProfile && hasProgress;
+  // worth saving once they've built something up — or as soon as they connect
+  // a wallet (clear intent) without a profile yet
+  const hasProgress = p.played >= 1 || p.xp >= 50 || p.streak >= 1;
+  const show = !dismissed && !loading && !hasProfile && (hasProgress || isConnected);
 
   const close = () => {
     setDismissed(true);
