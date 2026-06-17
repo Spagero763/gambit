@@ -26,6 +26,7 @@ export interface Progress {
   xp: number;
   streak: number;
   lastPlayed: string; // YYYY-MM-DD
+  lastReward: string; // YYYY-MM-DD the daily reward was last claimed
   questDate: string; // day the current quests belong to
   quests: Quest[];
   played: number;
@@ -82,11 +83,46 @@ export const DEFAULT_PROGRESS: Progress = {
   xp: 0,
   streak: 0,
   lastPlayed: "",
+  lastReward: "",
   questDate: "",
   quests: [],
   played: 0,
   wins: 0,
 };
+
+/** The daily reward for a given login-day number (1-based). Grows with the
+ *  streak so coming back every day is worth more, with a little random sparkle. */
+export function dailyRewardFor(day: number): number {
+  const base = 40 + Math.min(day, 14) * 12; // day1 ~52, day7 ~124, day14+ ~208
+  return base + Math.floor(Math.random() * 24);
+}
+
+/** Is today's reward still unclaimed? */
+export function rewardClaimable(p: Progress): boolean {
+  return p.lastReward !== today();
+}
+
+/**
+ * Claim today's daily reward (client-side, consistent with the rest of the XP
+ * system). Advances the streak like a daily login, grants XP, and the synced
+ * profile lifts you on the Points leaderboard. Returns the reward + new day.
+ */
+export function claimDailyReward(): { progress: Progress; reward: number; day: number } | null {
+  const p = loadProgress();
+  const t = today();
+  if (p.lastReward === t) return null; // already claimed today
+  // claiming counts as a daily return → advance the streak
+  if (p.lastPlayed !== t) {
+    p.streak = p.lastPlayed === yesterdayOf(t) ? p.streak + 1 : 1;
+    p.lastPlayed = t;
+  }
+  const day = Math.max(1, p.streak);
+  const reward = dailyRewardFor(day);
+  p.xp += reward;
+  p.lastReward = t;
+  save(p);
+  return { progress: p, reward, day };
+}
 
 export function loadProgress(): Progress {
   if (typeof window === "undefined") return DEFAULT_PROGRESS;
