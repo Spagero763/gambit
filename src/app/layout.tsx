@@ -3,6 +3,7 @@ import { Inter, JetBrains_Mono } from "next/font/google";
 import { Providers } from "./providers";
 import { ProfileSync } from "@/components/ProfileSync";
 import { AchievementToast } from "@/components/Achievements";
+import { MusicPlayer } from "@/components/audio/MusicPlayer";
 import { Onboarding } from "@/components/Onboarding";
 import "./globals.css";
 
@@ -76,6 +77,7 @@ export default function RootLayout({
           {children}
           <ProfileSync />
           <AchievementToast />
+          <MusicPlayer />
           <Onboarding />
         </Providers>
       </body>
