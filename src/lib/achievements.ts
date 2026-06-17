@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { Progress, levelInfo } from "@/lib/progress";
+import { useEffect, useRef, useState } from "react";
+import { Progress, levelInfo, loadProgress } from "@/lib/progress";
 
 /**
  * Achievements — long-term goals beyond the daily loop. Derived entirely from
@@ -66,24 +66,28 @@ function saveSeen(ids: string[]) {
  */
 export function useNewAchievements(p: Progress): { newly: Achievement[]; dismiss: () => void } {
   const [newly, setNewly] = useState<Achievement[]>([]);
-  const [seeded, setSeeded] = useState(false);
+  const seededRef = useRef(false);
 
   useEffect(() => {
-    const unlockedNow = ACHIEVEMENTS.filter((a) => isUnlocked(a, p)).map((a) => a.id);
-    const seen = loadSeen();
-    if (!seeded) {
-      // first evaluation this session — seed silently
-      saveSeen(Array.from(new Set([...seen, ...unlockedNow])));
-      setSeeded(true);
+    // Seed the baseline from the REAL stored progress (read synchronously), not
+    // the default snapshot the hook starts with — otherwise everything a
+    // returning player has already earned would fire as "new" on first load.
+    if (!seededRef.current) {
+      seededRef.current = true;
+      const real = loadProgress();
+      const already = ACHIEVEMENTS.filter((a) => isUnlocked(a, real)).map((a) => a.id);
+      saveSeen(Array.from(new Set([...loadSeen(), ...already])));
       return;
     }
+    const seen = loadSeen();
+    const unlockedNow = ACHIEVEMENTS.filter((a) => isUnlocked(a, p)).map((a) => a.id);
     const fresh = unlockedNow.filter((id) => !seen.includes(id));
     if (fresh.length) {
       saveSeen(Array.from(new Set([...seen, ...unlockedNow])));
       setNewly((cur) => [...cur, ...ACHIEVEMENTS.filter((a) => fresh.includes(a.id) && !cur.some((c) => c.id === a.id))]);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [p.played, p.wins, p.streak, p.xp, seeded]);
+  }, [p.played, p.wins, p.streak, p.xp]);
 
   return { newly, dismiss: () => setNewly((cur) => cur.slice(1)) };
 }

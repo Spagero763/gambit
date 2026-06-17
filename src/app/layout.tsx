@@ -30,9 +30,15 @@ const DESCRIPTION =
   "Classic skill games on Celo. Chess, Naija Whot, tic-tac-toe, snakes & ladders and Block Blitz. Free to play, or stake USDm head to head — winner takes the pot.";
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://gambit-rose.vercel.app"),
+  metadataBase: new URL("https://www.bestgambit.live"),
   title: "Gambit — play classic games, stake USDm",
   description: DESCRIPTION,
+  applicationName: "Gambit",
+  appleWebApp: {
+    capable: true,
+    title: "Gambit",
+    statusBarStyle: "black-translucent",
+  },
   openGraph: {
     title: "Gambit — play classic games, stake USDm",
     description: DESCRIPTION,
