@@ -1,0 +1,89 @@
+"use client";
+
+import { useEffect, useState } from "react";
+import { Progress, levelInfo } from "@/lib/progress";
+
+/**
+ * Achievements — long-term goals beyond the daily loop. Derived entirely from
+ * the progression we already track (games played, wins, streak, level), so
+ * there's no schema and no new data: they just light up as you play.
+ */
+export interface Achievement {
+  id: string;
+  name: string;
+  desc: string;
+  icon: string; // emoji — reads instantly, no asset
+  tier: "bronze" | "silver" | "gold";
+  /** current numeric progress + the goal, from a Progress snapshot */
+  measure: (p: Progress) => { value: number; goal: number };
+}
+
+const lvl = (p: Progress) => levelInfo(p.xp).level;
+
+export const ACHIEVEMENTS: Achievement[] = [
+  { id: "first-game", name: "First Steps", desc: "Play your first match", icon: "🎮", tier: "bronze", measure: (p) => ({ value: p.played, goal: 1 }) },
+  { id: "first-win", name: "Winner", desc: "Win your first match", icon: "🏅", tier: "bronze", measure: (p) => ({ value: p.wins, goal: 1 }) },
+  { id: "play-25", name: "Regular", desc: "Play 25 matches", icon: "🕹️", tier: "bronze", measure: (p) => ({ value: p.played, goal: 25 }) },
+  { id: "win-10", name: "Sharpshooter", desc: "Win 10 matches", icon: "🎯", tier: "silver", measure: (p) => ({ value: p.wins, goal: 10 }) },
+  { id: "streak-3", name: "On a Roll", desc: "Reach a 3-day streak", icon: "🔥", tier: "bronze", measure: (p) => ({ value: p.streak, goal: 3 }) },
+  { id: "streak-7", name: "Committed", desc: "Reach a 7-day streak", icon: "⚡", tier: "silver", measure: (p) => ({ value: p.streak, goal: 7 }) },
+  { id: "streak-30", name: "Unstoppable", desc: "Reach a 30-day streak", icon: "🌟", tier: "gold", measure: (p) => ({ value: p.streak, goal: 30 }) },
+  { id: "level-5", name: "Rising", desc: "Reach level 5", icon: "📈", tier: "bronze", measure: (p) => ({ value: lvl(p), goal: 5 }) },
+  { id: "level-10", name: "Seasoned", desc: "Reach level 10", icon: "💎", tier: "silver", measure: (p) => ({ value: lvl(p), goal: 10 }) },
+  { id: "level-20", name: "Elite", desc: "Reach level 20", icon: "👑", tier: "gold", measure: (p) => ({ value: lvl(p), goal: 20 }) },
+  { id: "play-100", name: "Centurion", desc: "Play 100 matches", icon: "🛡️", tier: "silver", measure: (p) => ({ value: p.played, goal: 100 }) },
+  { id: "win-50", name: "Champion", desc: "Win 50 matches", icon: "🏆", tier: "gold", measure: (p) => ({ value: p.wins, goal: 50 }) },
+];
+
+export const TIER_COLOR: Record<Achievement["tier"], string> = {
+  bronze: "#c08457",
+  silver: "#cbd0db",
+  gold: "#e3b341",
+};
+
+export function isUnlocked(a: Achievement, p: Progress) {
+  const { value, goal } = a.measure(p);
+  return value >= goal;
+}
+
+const SEEN_KEY = "gambit:ach:seen";
+function loadSeen(): string[] {
+  if (typeof window === "undefined") return [];
+  try {
+    return JSON.parse(localStorage.getItem(SEEN_KEY) || "[]");
+  } catch {
+    return [];
+  }
+}
+function saveSeen(ids: string[]) {
+  if (typeof window !== "undefined") localStorage.setItem(SEEN_KEY, JSON.stringify(ids));
+}
+
+/**
+ * Watches progress and surfaces achievements that JUST unlocked (so we can
+ * celebrate them once). First load seeds "seen" silently so we don't spam a
+ * returning player with their whole history.
+ */
+export function useNewAchievements(p: Progress): { newly: Achievement[]; dismiss: () => void } {
+  const [newly, setNewly] = useState<Achievement[]>([]);
+  const [seeded, setSeeded] = useState(false);
+
+  useEffect(() => {
+    const unlockedNow = ACHIEVEMENTS.filter((a) => isUnlocked(a, p)).map((a) => a.id);
+    const seen = loadSeen();
+    if (!seeded) {
+      // first evaluation this session — seed silently
+      saveSeen(Array.from(new Set([...seen, ...unlockedNow])));
+      setSeeded(true);
+      return;
+    }
+    const fresh = unlockedNow.filter((id) => !seen.includes(id));
+    if (fresh.length) {
+      saveSeen(Array.from(new Set([...seen, ...unlockedNow])));
+      setNewly((cur) => [...cur, ...ACHIEVEMENTS.filter((a) => fresh.includes(a.id) && !cur.some((c) => c.id === a.id))]);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [p.played, p.wins, p.streak, p.xp, seeded]);
+
+  return { newly, dismiss: () => setNewly((cur) => cur.slice(1)) };
+}

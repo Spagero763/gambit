@@ -14,6 +14,7 @@ import { useProgress } from "@/lib/progress";
 import { useProfile, createProfile, setProfile } from "@/lib/profile";
 import { Avatar } from "@/components/Avatar";
 import { ProgressCard } from "@/components/Daily";
+import { Achievements } from "@/components/Achievements";
 import { GAMES } from "@/lib/games";
 import { cn } from "@/lib/cn";
 
@@ -190,6 +191,8 @@ export function Profile() {
       <div className="mt-4">
         <InviteCard address={address} />
       </div>
+
+      <Achievements />
 
       <h2 className="mb-3 mt-7 text-[15px] font-semibold tracking-tight">Recent matches</h2>
 
