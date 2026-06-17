@@ -120,6 +120,33 @@ body {
   }
 }
 
+/* Backdrop motion — pure CSS transforms (GPU, off the main thread) so the
+   ambient background costs ~nothing even on low-end phones. */
+@keyframes orb-a {
+  0%, 100% { transform: translate3d(0, 0, 0) scale(1); }
+  50% { transform: translate3d(7%, 5%, 0) scale(1.12); }
+}
+@keyframes orb-b {
+  0%, 100% { transform: translate3d(0, 0, 0) scale(1); }
+  50% { transform: translate3d(-6%, 4%, 0) scale(0.92); }
+}
+@keyframes orb-c {
+  0%, 100% { transform: translate3d(0, 0, 0) scale(1); }
+  50% { transform: translate3d(4%, -4%, 0) scale(1.08); }
+}
+@keyframes glyph-float {
+  0%, 100% { transform: translate3d(0, 0, 0) rotate(var(--gr, 0deg)); }
+  50% { transform: translate3d(0, -22px, 0) rotate(calc(var(--gr, 0deg) + 9deg)); }
+}
+.anim-bg {
+  will-change: transform;
+}
+@media (prefers-reduced-motion: reduce) {
+  .anim-bg {
+    animation: none !important;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
