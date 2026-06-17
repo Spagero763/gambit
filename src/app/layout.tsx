@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Inter, JetBrains_Mono } from "next/font/google";
 import { Providers } from "./providers";
 import { ProfileSync } from "@/components/ProfileSync";
+import { AchievementToast } from "@/components/Achievements";
 import { Onboarding } from "@/components/Onboarding";
 import "./globals.css";
 
@@ -68,6 +69,7 @@ export default function RootLayout({
         <Providers>
           {children}
           <ProfileSync />
+          <AchievementToast />
           <Onboarding />
         </Providers>
       </body>
