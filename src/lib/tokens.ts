@@ -1,4 +1,4 @@
-import { celo, celoSepolia } from "@reown/appkit/networks";
+import { celo, celoSepolia } from "viem/chains";
 
 /** A stake token. `decimals` matters — USDm is 18, USDC is 6. */
 export interface StakeToken {

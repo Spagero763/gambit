@@ -4,7 +4,7 @@ import { useState } from "react";
 import { Volume2, Music, User as UserIcon, Check, Camera, Trash2, ShieldCheck, Loader2, Wallet, Bell } from "lucide-react";
 import { PushToggle } from "@/components/PushToggle";
 import { useAccount, useSignMessage } from "wagmi";
-import { useAppKit } from "@reown/appkit/react";
+import { usePrivy } from "@privy-io/react-auth";
 import { useSettings, AVATARS, AVATAR_HEX, TRACKS } from "@/lib/settings";
 import { useProgress } from "@/lib/progress";
 import { useProfile, createProfile, setProfile } from "@/lib/profile";
@@ -39,7 +39,7 @@ function fileToAvatar(file: File): Promise<string> {
 export function Settings() {
   const [s, update] = useSettings();
   const { address, isConnected } = useAccount();
-  const { open } = useAppKit();
+  const { login, logout, authenticated } = usePrivy();
   const { signMessageAsync } = useSignMessage();
   const { hasProfile } = useProfile();
   const prog = useProgress();
@@ -134,7 +134,7 @@ export function Settings() {
         <div className="mt-5 border-t border-line pt-4">
           {!isConnected || !address ? (
             <button
-              onClick={() => open()}
+              onClick={() => login()}
               className="flex w-full items-center justify-center gap-2 rounded-xl border border-line bg-void-800 py-2.5 text-sm font-medium text-ink-dim transition-colors hover:text-ink"
             >
               <Wallet className="h-4 w-4" /> Connect wallet to save your profile
@@ -159,6 +159,14 @@ export function Settings() {
           <p className="mt-2 text-[11px] text-ink-faint">
             Signing is free (no gas). Saves your name, photo and streak to your wallet, synced across devices.
           </p>
+          {authenticated && (
+            <button
+              onClick={() => logout()}
+              className="mt-3 text-[12px] font-medium text-ink-faint underline-offset-2 transition-colors hover:text-rose hover:underline"
+            >
+              Sign out
+            </button>
+          )}
         </div>
       </div>
 
