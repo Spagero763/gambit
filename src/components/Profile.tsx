@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { motion } from "framer-motion";
-import { Wallet, ShieldCheck, Check, Loader2, Share2, Copy } from "lucide-react";
+import { Wallet, ShieldCheck, Check, Loader2, Share2, Copy, Send } from "lucide-react";
 import { inviteUrl, shareOrCopy } from "@/lib/share";
 import { formatUnits } from "viem";
 import { useAccount, useBalance, useSignMessage } from "wagmi";
@@ -13,6 +13,7 @@ import { useSettings, AVATAR_HEX } from "@/lib/settings";
 import { useProgress } from "@/lib/progress";
 import { useProfile, createProfile, setProfile } from "@/lib/profile";
 import { Avatar } from "@/components/Avatar";
+import { SendFunds } from "@/components/SendFunds";
 import { ProgressCard } from "@/components/Daily";
 import { Achievements } from "@/components/Achievements";
 import { GAMES } from "@/lib/games";
@@ -91,6 +92,7 @@ export function Profile() {
   const { login } = usePrivy();
   const { data: bal } = useBalance({ address, token: CUSD_ADDRESS, query: { enabled: !!address } });
   const [settings] = useSettings();
+  const [sendOpen, setSendOpen] = useState(false);
   const [rows, setRows] = useState<MatchRow[] | null>(null);
   const prog = useProgress();
   const { hasProfile, loading: profileLoading } = useProfile();
@@ -188,11 +190,21 @@ export function Profile() {
           <h1 className="truncate text-lg font-semibold tracking-tight">{displayName}</h1>
           <CopyAddress address={address} />
         </div>
-        <div className="ml-auto text-right">
-          <p className="nums text-lg font-semibold text-ink">{amount}</p>
-          <p className="text-[11px] text-ink-faint">USDm balance</p>
+        <div className="ml-auto flex flex-col items-end gap-1.5">
+          <div className="text-right">
+            <p className="nums text-lg font-semibold text-ink">{amount}</p>
+            <p className="text-[11px] text-ink-faint">USDm balance</p>
+          </div>
+          <button
+            onClick={() => setSendOpen(true)}
+            className="inline-flex items-center gap-1.5 rounded-full border border-line bg-void-700 px-3 py-1.5 text-[12px] font-medium text-ink-dim transition-colors hover:border-line-strong hover:text-ink"
+          >
+            <Send className="h-3.5 w-3.5" /> Send
+          </button>
         </div>
       </motion.div>
+
+      {sendOpen && <SendFunds address={address} onClose={() => setSendOpen(false)} />}
 
       {isConnected && address && !hasProfile && !profileLoading && (
         <ProfileSaveCard
