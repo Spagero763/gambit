@@ -5,8 +5,8 @@ import { motion } from "framer-motion";
 import { Wallet, ShieldCheck, Check, Loader2, Share2 } from "lucide-react";
 import { inviteUrl, shareOrCopy } from "@/lib/share";
 import { formatUnits } from "viem";
-import { useAccount, useBalance, useConnect, useSignMessage } from "wagmi";
-import { injected } from "wagmi/connectors";
+import { useAccount, useBalance, useSignMessage } from "wagmi";
+import { useAppKit } from "@reown/appkit/react";
 import { CUSD_ADDRESS } from "@/lib/wagmi";
 import { supabase } from "@/lib/supabase";
 import { useSettings, AVATAR_HEX } from "@/lib/settings";
@@ -55,7 +55,7 @@ function relTime(iso: string) {
 
 export function Profile() {
   const { address, isConnected } = useAccount();
-  const { connect } = useConnect();
+  const { open } = useAppKit();
   const { data: bal } = useBalance({ address, token: CUSD_ADDRESS, query: { enabled: !!address } });
   const [settings] = useSettings();
   const [rows, setRows] = useState<MatchRow[] | null>(null);
@@ -120,7 +120,7 @@ export function Profile() {
             Connect your wallet to see your record, net winnings and match history.
           </p>
           <button
-            onClick={() => connect({ connector: injected() })}
+            onClick={() => open()}
             className="btn-primary mt-5 w-full rounded-xl py-3 text-sm shadow-glow"
           >
             Connect wallet
