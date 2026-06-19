@@ -2,8 +2,8 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { ShieldCheck, Wallet, Loader2, Fuel, RefreshCw, ExternalLink } from "lucide-react";
-import { useAccount, useConnect, useSignMessage } from "wagmi";
-import { injected } from "wagmi/connectors";
+import { useAccount, useSignMessage } from "wagmi";
+import { useAppKit } from "@reown/appkit/react";
 import { hasToken, signIn, getToken } from "@/lib/profile";
 import { cn } from "@/lib/cn";
 
@@ -18,7 +18,7 @@ interface Status {
 
 export function AdminPanel() {
   const { address, isConnected } = useAccount();
-  const { connect } = useConnect();
+  const { open } = useAppKit();
   const { signMessageAsync } = useSignMessage();
   const [authed, setAuthed] = useState(false);
   const [data, setData] = useState<Status | null>(null);
@@ -64,7 +64,7 @@ export function AdminPanel() {
   if (!isConnected) {
     return (
       <Center>
-        <button onClick={() => connect({ connector: injected() })} className="btn-primary flex items-center justify-center gap-2 rounded-2xl px-6 py-3 text-sm shadow-glow">
+        <button onClick={() => open()} className="btn-primary flex items-center justify-center gap-2 rounded-2xl px-6 py-3 text-sm shadow-glow">
           <Wallet className="h-4 w-4" /> Connect owner wallet
         </button>
       </Center>

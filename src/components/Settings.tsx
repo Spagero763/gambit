@@ -3,8 +3,8 @@
 import { useState } from "react";
 import { Volume2, Music, User as UserIcon, Check, Camera, Trash2, ShieldCheck, Loader2, Wallet, Bell } from "lucide-react";
 import { PushToggle } from "@/components/PushToggle";
-import { useAccount, useConnect, useSignMessage } from "wagmi";
-import { injected } from "wagmi/connectors";
+import { useAccount, useSignMessage } from "wagmi";
+import { useAppKit } from "@reown/appkit/react";
 import { useSettings, AVATARS, AVATAR_HEX, TRACKS } from "@/lib/settings";
 import { useProgress } from "@/lib/progress";
 import { useProfile, createProfile, setProfile } from "@/lib/profile";
@@ -39,7 +39,7 @@ function fileToAvatar(file: File): Promise<string> {
 export function Settings() {
   const [s, update] = useSettings();
   const { address, isConnected } = useAccount();
-  const { connect } = useConnect();
+  const { open } = useAppKit();
   const { signMessageAsync } = useSignMessage();
   const { hasProfile } = useProfile();
   const prog = useProgress();
@@ -134,7 +134,7 @@ export function Settings() {
         <div className="mt-5 border-t border-line pt-4">
           {!isConnected || !address ? (
             <button
-              onClick={() => connect({ connector: injected() })}
+              onClick={() => open()}
               className="flex w-full items-center justify-center gap-2 rounded-xl border border-line bg-void-800 py-2.5 text-sm font-medium text-ink-dim transition-colors hover:text-ink"
             >
               <Wallet className="h-4 w-4" /> Connect wallet to save your profile
