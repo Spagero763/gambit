@@ -6,7 +6,7 @@ import { Trophy, Users, Loader2, Wallet, ShieldCheck, AlertTriangle, Plus, Arrow
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAccount, useSwitchChain, useSignMessage } from "wagmi";
-import { useAppKit } from "@reown/appkit/react";
+import { usePrivy } from "@privy-io/react-auth";
 import { parseUnits, formatUnits } from "viem";
 import { useStakeMatch } from "@/hooks/useStakeMatch";
 import { ACTIVE_CHAIN_ID } from "@/lib/wagmi";
@@ -51,7 +51,7 @@ export function Tournaments() {
   const [rows, setRows] = useState<TournamentRow[] | null>(null);
 
   const { address, isConnected } = useAccount();
-  const { open } = useAppKit();
+  const { login } = usePrivy();
   const { switchChain } = useSwitchChain();
   const { signMessageAsync } = useSignMessage();
   const { createMatch, step, error, ready, onActiveChain } = useStakeMatch();
@@ -242,7 +242,7 @@ export function Tournaments() {
         <p className="mt-1.5 text-[11px] text-ink-faint">1st {(pot * 0.5).toFixed(2)} · 2nd {(pot * 0.3).toFixed(2)} · 3rd {(pot * 0.2).toFixed(2)} {token.symbol} (after 5% fee)</p>
 
         {!isConnected ? (
-          <button onClick={() => open()} className="btn-primary mt-4 flex w-full items-center justify-center gap-2 rounded-2xl py-3.5 text-sm shadow-glow">
+          <button onClick={() => login()} className="btn-primary mt-4 flex w-full items-center justify-center gap-2 rounded-2xl py-3.5 text-sm shadow-glow">
             <Wallet className="h-4 w-4" /> Connect to create
           </button>
         ) : !onActiveChain ? (

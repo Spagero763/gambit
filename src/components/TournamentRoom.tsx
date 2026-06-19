@@ -5,7 +5,7 @@ import { motion } from "framer-motion";
 import { ArrowLeft, Trophy, Users, Loader2, Wallet, ShieldCheck, AlertTriangle, Play, Copy, Check, ExternalLink, Crown } from "lucide-react";
 import Link from "next/link";
 import { useAccount, useSwitchChain, useSignMessage } from "wagmi";
-import { useAppKit } from "@reown/appkit/react";
+import { usePrivy } from "@privy-io/react-auth";
 import { formatUnits } from "viem";
 import { BlockBlitz } from "@/components/games/blocks/BlockBlitz";
 import { StakedChess } from "@/components/games/StakedChess";
@@ -84,7 +84,7 @@ export function TournamentRoom({ id }: { id: string }) {
   const [msg, setMsg] = useState<string | null>(null);
 
   const { address, isConnected } = useAccount();
-  const { open } = useAppKit();
+  const { login } = usePrivy();
   const { switchChain } = useSwitchChain();
   const { signMessageAsync } = useSignMessage();
   const { joinMatch, cancelMatch, reclaimStalled, step, error, ready, onActiveChain } = useStakeMatch();
@@ -416,7 +416,7 @@ export function TournamentRoom({ id }: { id: string }) {
             )}
           </div>
         ) : !isConnected ? (
-          <button onClick={() => open()} className="btn-primary flex w-full items-center justify-center gap-2 rounded-2xl py-3.5 text-sm shadow-glow">
+          <button onClick={() => login()} className="btn-primary flex w-full items-center justify-center gap-2 rounded-2xl py-3.5 text-sm shadow-glow">
             <Wallet className="h-4 w-4" /> Connect wallet
           </button>
         ) : !onActiveChain ? (
