@@ -1,36 +1,40 @@
 "use client";
 
 import { ReactNode, useState } from "react";
-import { WagmiProvider } from "wagmi";
+import { PrivyProvider } from "@privy-io/react-auth";
+import { WagmiProvider } from "@privy-io/wagmi";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { config, wagmiAdapter, ACTIVE_CHAIN_ID } from "@/lib/wagmi";
-import { createAppKit } from "@reown/appkit/react";
-import { celo, celoSepolia } from "@reown/appkit/networks";
+import { celo, celoSepolia } from "viem/chains";
+import { config, ACTIVE_CHAIN_ID } from "@/lib/wagmi";
 
-const defaultNetwork = ACTIVE_CHAIN_ID === celo.id ? celo : celoSepolia;
-
-createAppKit({
-  adapters: [wagmiAdapter],
-  projectId: process.env.NEXT_PUBLIC_REOWN_PROJECT_ID ?? "0b1cfff79855c73f2ec77409f402908b",
-  networks: [celo, celoSepolia],
-  defaultNetwork,
-  // Email + social create an invisible embedded wallet, so people who've never
-  // heard of a wallet can sign in and play. Wallets still show alongside (so
-  // MiniPay / MetaMask users connect as before).
-  features: {
-    analytics: false,
-    email: true,
-    socials: ["google", "x", "apple", "farcaster", "discord"],
-    emailShowWallets: true,
-  },
-});
+// Public Privy app id (safe in the client). Override via env if it ever rotates.
+const PRIVY_APP_ID = process.env.NEXT_PUBLIC_PRIVY_APP_ID ?? "cmqkrw0fi000l0dldcurqz6nt";
+const defaultChain = ACTIVE_CHAIN_ID === celo.id ? celo : celoSepolia;
 
 export function Providers({ children }: { children: ReactNode }) {
   const [queryClient] = useState(() => new QueryClient());
 
   return (
-    <WagmiProvider config={config}>
-      <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
-    </WagmiProvider>
+    <PrivyProvider
+      appId={PRIVY_APP_ID}
+      config={{
+        // email + socials create an invisible embedded wallet for newcomers;
+        // "wallet" keeps MiniPay / MetaMask / injected working in the same flow.
+        loginMethods: ["email", "google", "farcaster", "wallet"],
+        appearance: {
+          theme: "dark",
+          accentColor: "#3ecf8e",
+          logo: "https://www.bestgambit.live/logo.svg",
+          walletChainType: "ethereum-only",
+        },
+        embeddedWallets: { ethereum: { createOnLogin: "users-without-wallets" } },
+        defaultChain,
+        supportedChains: [celo, celoSepolia],
+      }}
+    >
+      <QueryClientProvider client={queryClient}>
+        <WagmiProvider config={config}>{children}</WagmiProvider>
+      </QueryClientProvider>
+    </PrivyProvider>
   );
 }

@@ -1,4 +1,4 @@
-import { celo, celoSepolia } from "@reown/appkit/networks";
+import { celo, celoSepolia } from "viem/chains";
 
 // ArcadeEscrow deployments. Addresses can be overridden per-chain via env so
 // going to mainnet is a config-only step (no code change / redeploy of the app):
