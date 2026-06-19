@@ -14,7 +14,15 @@ createAppKit({
   projectId: process.env.NEXT_PUBLIC_REOWN_PROJECT_ID ?? "0b1cfff79855c73f2ec77409f402908b",
   networks: [celo, celoSepolia],
   defaultNetwork,
-  features: { analytics: false },
+  // Email + social create an invisible embedded wallet, so people who've never
+  // heard of a wallet can sign in and play. Wallets still show alongside (so
+  // MiniPay / MetaMask users connect as before).
+  features: {
+    analytics: false,
+    email: true,
+    socials: ["google", "x", "apple", "farcaster", "discord"],
+    emailShowWallets: true,
+  },
 });
 
 export function Providers({ children }: { children: ReactNode }) {
