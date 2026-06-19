@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { motion } from "framer-motion";
-import { Wallet, ShieldCheck, Check, Loader2, Share2 } from "lucide-react";
+import { Wallet, ShieldCheck, Check, Loader2, Share2, Copy } from "lucide-react";
 import { inviteUrl, shareOrCopy } from "@/lib/share";
 import { formatUnits } from "viem";
 import { useAccount, useBalance, useSignMessage } from "wagmi";
@@ -43,6 +43,39 @@ interface Played {
 
 function short(a?: string) {
   return a ? `${a.slice(0, 6)}…${a.slice(-4)}` : "";
+}
+
+/**
+ * Shows the wallet address with a tap-to-copy. Matters most for email/social
+ * sign-ins: their embedded wallet starts empty, so they need the full address
+ * to deposit USDm/CELO into it before they can stake.
+ */
+function CopyAddress({ address }: { address: string }) {
+  const [copied, setCopied] = useState(false);
+  const copy = async () => {
+    try {
+      await navigator.clipboard.writeText(address);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1500);
+    } catch {
+      /* clipboard blocked — ignore */
+    }
+  };
+  return (
+    <button
+      onClick={copy}
+      title="Copy your full wallet address"
+      className="group inline-flex items-center gap-1.5 font-mono text-xs text-ink-faint transition-colors hover:text-ink"
+    >
+      {short(address)}
+      {copied ? (
+        <Check className="h-3 w-3 text-teal" />
+      ) : (
+        <Copy className="h-3 w-3 opacity-60 group-hover:opacity-100" />
+      )}
+      <span className="sr-only">Copy wallet address</span>
+    </button>
+  );
 }
 
 function relTime(iso: string) {
@@ -153,7 +186,7 @@ export function Profile() {
         />
         <div className="min-w-0">
           <h1 className="truncate text-lg font-semibold tracking-tight">{displayName}</h1>
-          <p className="font-mono text-xs text-ink-faint">{short(address)}</p>
+          <CopyAddress address={address} />
         </div>
         <div className="ml-auto text-right">
           <p className="nums text-lg font-semibold text-ink">{amount}</p>
