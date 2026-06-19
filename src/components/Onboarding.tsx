@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { Sparkles, Wallet, Gamepad2, Swords, User, Check, ArrowLeft, ArrowRight } from "lucide-react";
 import { useAccount } from "wagmi";
-import { useAppKit } from "@reown/appkit/react";
+import { usePrivy } from "@privy-io/react-auth";
 import { Modal } from "./Modal";
 import { cn } from "@/lib/cn";
 
@@ -42,7 +42,7 @@ export function Onboarding() {
   const [open, setOpen] = useState(false);
   const [i, setI] = useState(0);
   const { isConnected } = useAccount();
-  const { open: openWallet } = useAppKit();
+  const { login: openWallet } = usePrivy();
 
   useEffect(() => {
     try {
