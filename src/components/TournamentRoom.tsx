@@ -417,7 +417,7 @@ export function TournamentRoom({ id }: { id: string }) {
           </div>
         ) : !isConnected ? (
           <button onClick={() => login()} className="btn-primary flex w-full items-center justify-center gap-2 rounded-2xl py-3.5 text-sm shadow-glow">
-            <Wallet className="h-4 w-4" /> Connect wallet
+            <Wallet className="h-4 w-4" /> Sign in
           </button>
         ) : !onActiveChain ? (
           <button onClick={() => switchChain({ chainId: ACTIVE_CHAIN_ID })} className="flex w-full items-center justify-center gap-2 rounded-2xl bg-amber py-3.5 text-sm font-semibold text-void">
