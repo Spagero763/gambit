@@ -96,11 +96,11 @@ export function BlockBlitz({
     setHover(null);
   };
 
-  const drop = (r: number, c: number) => {
-    if (over || !piece) return;
-    if (!canPlace(grid, piece, r, c)) return;
+  const drop = (r: number, c: number, pc: Piece | null = piece) => {
+    if (over || !pc) return;
+    if (!canPlace(grid, pc, r, c)) return;
 
-    const placed = place(grid, piece, r, c);
+    const placed = place(grid, pc, r, c);
     const { grid: cleared, cleared: lines } = clearLines(placed);
 
     let nextCombo = combo;
@@ -114,9 +114,9 @@ export function BlockBlitz({
       play("place");
     }
     setCombo(nextCombo);
-    setScore((s) => s + piece.cells.length + lines * 10 * (lines > 0 ? nextCombo : 1));
+    setScore((s) => s + pc.cells.length + lines * 10 * (lines > 0 ? nextCombo : 1));
 
-    let nextTray = tray.filter((p) => p.id !== piece.id);
+    let nextTray = tray.filter((p) => p.id !== pc.id);
     if (nextTray.length === 0) nextTray = makePieces(rng);
 
     setGrid(cleared);
@@ -125,7 +125,7 @@ export function BlockBlitz({
     setHover(null);
 
     if (!anyMove(cleared, nextTray)) {
-      const finalScore = score + piece.cells.length + lines * 10 * (lines > 0 ? nextCombo : 1);
+      const finalScore = score + pc.cells.length + lines * 10 * (lines > 0 ? nextCombo : 1);
       setBest((b) => Math.max(b, finalScore));
       setOver(true);
       play("lose");
@@ -136,6 +136,44 @@ export function BlockBlitz({
         submitScore(address, "blocks", finalScore); // weekly events board
       }
     }
+  };
+
+  // Drag-to-place: grab a shape from the tray and drag it onto the board. Touch
+  // captures the pointer to the tray button, so we hit-test the board by screen
+  // coords (elementFromPoint) rather than relying on the cells' enter events.
+  const cellFromPoint = (x: number, y: number): { r: number; c: number } | null => {
+    const el = document.elementFromPoint(x, y) as HTMLElement | null;
+    const cell = el?.closest<HTMLElement>("[data-cell]");
+    if (!cell || cell.dataset.r === undefined || cell.dataset.c === undefined) return null;
+    return { r: Number(cell.dataset.r), c: Number(cell.dataset.c) };
+  };
+  // anchor the piece so it sits just above the finger, centred horizontally
+  const anchorFor = (p: Piece, hit: { r: number; c: number }) => ({
+    r: hit.r - (p.h - 1),
+    c: hit.c - Math.floor(p.w / 2),
+  });
+
+  const startDrag = (p: Piece) => {
+    if (over) return;
+    setSelected(p.id);
+    const move = (e: PointerEvent) => {
+      const hit = cellFromPoint(e.clientX, e.clientY);
+      setHover(hit ? anchorFor(p, hit) : null);
+    };
+    const end = (e: PointerEvent) => {
+      window.removeEventListener("pointermove", move);
+      window.removeEventListener("pointerup", end);
+      window.removeEventListener("pointercancel", end);
+      const hit = cellFromPoint(e.clientX, e.clientY);
+      if (hit) {
+        const a = anchorFor(p, hit);
+        drop(a.r, a.c, p);
+      }
+      setHover(null);
+    };
+    window.addEventListener("pointermove", move);
+    window.addEventListener("pointerup", end);
+    window.addEventListener("pointercancel", end);
   };
 
   return (
@@ -194,13 +232,16 @@ export function BlockBlitz({
             return (
               <button
                 key={i}
+                data-cell
+                data-r={r}
+                data-c={c}
                 onPointerEnter={() => setHover({ r, c })}
                 onPointerDown={() => {
                   setHover({ r, c });
                   drop(r, c);
                 }}
                 className={cn(
-                  "relative rounded-[6px] transition-colors",
+                  "relative touch-none rounded-[6px] transition-colors",
                   fill ? "" : "bg-white/[0.04]",
                   inPreview && (preview?.ok ? "ring-2 ring-teal/70" : "ring-2 ring-rose/60")
                 )}
@@ -254,9 +295,9 @@ export function BlockBlitz({
             return (
               <button
                 key={p.id}
-                onPointerDown={() => setSelected(p.id)}
+                onPointerDown={() => startDrag(p)}
                 className={cn(
-                  "flex items-center justify-center rounded-2xl border py-4 transition-all",
+                  "flex touch-none items-center justify-center rounded-2xl border py-4 transition-all",
                   active ? "border-line-strong bg-void-700" : "border-line bg-void-800"
                 )}
               >
@@ -283,7 +324,7 @@ export function BlockBlitz({
         </div>
 
         <p className="mt-3 text-center text-[11px] text-ink-faint">
-          Tap a shape, then tap the board to drop it.
+          Drag a shape onto the board — or tap a shape, then tap a cell to drop it.
         </p>
 
         <AnimatePresence>
