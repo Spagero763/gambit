@@ -152,13 +152,13 @@ export function Profile() {
             <Wallet className="h-5 w-5" />
           </span>
           <p className="mt-4 text-sm text-ink-dim">
-            Connect your wallet to see your record, net winnings and match history.
+            Sign in to see your record, net winnings and match history. Email or Google works — a wallet is created for you.
           </p>
           <button
             onClick={() => login()}
             className="btn-primary mt-5 w-full rounded-xl py-3 text-sm shadow-glow"
           >
-            Connect wallet
+            Sign in
           </button>
         </div>
 

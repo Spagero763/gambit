@@ -17,8 +17,8 @@ const STEPS = [
   },
   {
     icon: Wallet,
-    title: "Connect your wallet",
-    body: "Connect to stake and save your progress across devices. Just want to try it? You can play free without connecting.",
+    title: "Sign in & save your progress",
+    body: "Sign in with email, Google or Farcaster — a wallet is created for you automatically, no app or seed phrase needed. Already have a wallet? Connect that instead. Just want to try it? Play free without signing in.",
     connect: true,
   },
   {
@@ -81,11 +81,11 @@ export function Onboarding() {
           <div className="mt-4">
             {isConnected ? (
               <span className="inline-flex items-center gap-1.5 rounded-xl border border-teal/40 bg-teal/[0.08] px-3 py-2 text-sm font-medium text-teal">
-                <Check className="h-4 w-4" /> Wallet connected
+                <Check className="h-4 w-4" /> Signed in
               </span>
             ) : (
               <button onClick={() => openWallet()} className="btn-primary inline-flex items-center gap-2 rounded-xl px-5 py-2.5 text-sm shadow-glow">
-                <Wallet className="h-4 w-4" /> Connect wallet
+                <Wallet className="h-4 w-4" /> Sign in
               </button>
             )}
           </div>

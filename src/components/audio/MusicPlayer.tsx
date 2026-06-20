@@ -1,42 +1,39 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect } from "react";
+import { usePathname } from "next/navigation";
 import { useSettings } from "@/lib/settings";
-import { startMusic, stopMusic, setMusicVolume, isMusicPlaying } from "@/lib/music";
+import { playMusic, stopMusic, setMusicVolume, MusicKey } from "@/lib/music";
 
 /**
- * Drives background chiptune from settings. Web Audio needs a user gesture to
- * start, so when music is enabled we arm a one-time "start on first tap" —
- * after that it follows the toggle, track and volume live.
+ * Picks the right track for the screen you're on (each game has its own mood)
+ * and follows the music toggle + volume live. The engine itself handles the
+ * autoplay-gesture retry and crossfading between tracks.
  */
+function keyForPath(path: string): MusicKey {
+  if (path.startsWith("/play/")) {
+    const slug = path.split("/")[2] ?? "";
+    if (slug === "chess") return "chess";
+    if (slug === "whot") return "whot";
+    if (slug === "tic-tac-toe") return "tictactoe";
+    if (slug === "snakes") return "snakes";
+    if (slug === "blocks") return "blocks";
+  }
+  if (path.startsWith("/tournament")) return "tournament";
+  return "lobby";
+}
+
 export function MusicPlayer() {
   const [s] = useSettings();
-  const armed = useRef(false);
+  const pathname = usePathname();
 
   useEffect(() => {
     if (!s.musicOn) {
       stopMusic();
-      armed.current = false;
       return;
     }
-    // try to start immediately (works if a gesture already happened)
-    startMusic(s.track, s.volume);
-    if (isMusicPlaying()) return;
-    // otherwise start on the first interaction
-    if (armed.current) return;
-    armed.current = true;
-    const go = () => {
-      if (s.musicOn) startMusic(s.track, s.volume);
-      window.removeEventListener("pointerdown", go);
-      window.removeEventListener("keydown", go);
-    };
-    window.addEventListener("pointerdown", go, { once: true });
-    window.addEventListener("keydown", go, { once: true });
-    return () => {
-      window.removeEventListener("pointerdown", go);
-      window.removeEventListener("keydown", go);
-    };
-  }, [s.musicOn, s.track]);
+    playMusic(keyForPath(pathname || "/"), s.volume);
+  }, [s.musicOn, pathname]);
 
   // live volume
   useEffect(() => {
