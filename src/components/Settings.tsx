@@ -137,7 +137,7 @@ export function Settings() {
               onClick={() => login()}
               className="flex w-full items-center justify-center gap-2 rounded-xl border border-line bg-void-800 py-2.5 text-sm font-medium text-ink-dim transition-colors hover:text-ink"
             >
-              <Wallet className="h-4 w-4" /> Connect wallet to save your profile
+              <Wallet className="h-4 w-4" /> Sign in to save your profile
             </button>
           ) : (
             <SaveProfileButton
