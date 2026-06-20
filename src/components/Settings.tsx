@@ -5,7 +5,7 @@ import { Volume2, Music, User as UserIcon, Check, Camera, Trash2, ShieldCheck, L
 import { PushToggle } from "@/components/PushToggle";
 import { useAccount, useSignMessage } from "wagmi";
 import { usePrivy } from "@privy-io/react-auth";
-import { useSettings, AVATARS, AVATAR_HEX, TRACKS } from "@/lib/settings";
+import { useSettings, AVATARS, AVATAR_HEX } from "@/lib/settings";
 import { useProgress } from "@/lib/progress";
 import { useProfile, createProfile, setProfile } from "@/lib/profile";
 import { Avatar } from "@/components/Avatar";
@@ -196,7 +196,7 @@ export function Settings() {
         <div className="my-1 h-px bg-line" />
         <Toggle
           label="Background music"
-          sub="Upbeat chiptune while you play"
+          sub="Each game has its own soundtrack"
           on={s.musicOn}
           onChange={(v) => update({ musicOn: v })}
         />
@@ -216,26 +216,9 @@ export function Settings() {
           />
         </div>
 
-        <p className="mb-2 mt-4 flex items-center gap-1.5 text-xs text-ink-faint">
-          <Music className="h-3.5 w-3.5" /> Track
+        <p className="mt-4 flex items-center gap-1.5 text-[11px] text-ink-faint">
+          <Music className="h-3.5 w-3.5" /> The music changes to match the game you&apos;re playing.
         </p>
-        <div className="grid grid-cols-2 gap-2">
-          {TRACKS.map((t) => {
-            const active = s.track === t.id;
-            return (
-              <button
-                key={t.id}
-                onClick={() => update({ track: t.id, musicOn: true })}
-                className={cn(
-                  "rounded-xl border px-3 py-2.5 text-sm font-medium transition-colors",
-                  active ? "border-teal/50 bg-teal/[0.08] text-ink" : "border-line bg-void-800 text-ink-dim hover:text-ink"
-                )}
-              >
-                {t.label}
-              </button>
-            );
-          })}
-        </div>
       </div>
     </section>
   );

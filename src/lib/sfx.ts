@@ -156,12 +156,17 @@ export function play(sound: Sfx) {
       break;
 
     case "win":
-      // bright major arpeggio + shimmer
+      // triumphant rising arpeggio, a warm bass to anchor it, then a final
+      // major chord that rings out with a shimmer on top
       [523, 659, 784, 1046, 1318].forEach((f, i) =>
-        tone({ freq: f, type: "sine", dur: 0.55, peak: V(0.16), when: i * 0.085 })
+        tone({ freq: f, type: "sine", dur: 0.55, peak: V(0.16), when: i * 0.08 })
       );
-      [659, 988].forEach((f, i) =>
-        tone({ freq: f, type: "triangle", dur: 0.5, peak: V(0.06), when: 0.34 + i * 0.04, filter: 5000 })
+      tone({ freq: 131, type: "triangle", dur: 0.6, peak: V(0.12), when: 0.32, sweepTo: 130 }); // bass root
+      [523, 659, 784, 1046].forEach((f) =>
+        tone({ freq: f, type: "sine", dur: 0.85, peak: V(0.11), when: 0.42 }) // sustained chord
+      );
+      [1318, 1568, 2093].forEach((f, i) =>
+        tone({ freq: f, type: "triangle", dur: 0.45, peak: V(0.05), when: 0.5 + i * 0.05, filter: 6000 }) // sparkle
       );
       break;
 
