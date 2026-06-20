@@ -5,7 +5,6 @@ import { useEffect, useState } from "react";
 export interface GambitSettings {
   soundOn: boolean;
   musicOn: boolean;
-  track: string; // chiptune track id
   volume: number; // 0..1
   name: string;
   avatar: string; // avatar colour id (fallback when no photo)
@@ -15,20 +14,11 @@ export interface GambitSettings {
 export const DEFAULT_SETTINGS: GambitSettings = {
   soundOn: true,
   musicOn: false, // off by default; one tap in Settings turns it on
-  track: "arcade",
   volume: 0.5,
   name: "",
   avatar: "teal",
   avatarImage: "",
 };
-
-// Chiptune tracks (see lib/music) — composed, generated live, no files.
-export const TRACKS = [
-  { id: "arcade", label: "Arcade" },
-  { id: "neon", label: "Neon" },
-  { id: "bounce", label: "Bounce" },
-  { id: "dream", label: "Dream" },
-] as const;
 
 const KEY = "gambit:settings";
 
