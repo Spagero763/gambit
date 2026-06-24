@@ -21,8 +21,17 @@ const USDC_CELO: StakeToken = {
   decimals: 6,
 };
 
+// GoodDollar (G$) on Celo mainnet — verified on-chain: 18 decimals.
+// Lets players stake/win in G$, giving the UBI token real utility (GoodBuilders).
+// Must be allowlisted on the escrow (owner calls setTokenAllowed) before staking.
+const GOODDOLLAR: StakeToken = {
+  address: "0x62B8B11039FcfE5aB0C56E502b1C372A3d2a9c7A",
+  symbol: "G$",
+  decimals: 18,
+};
+
 export const STAKE_TOKENS: Record<number, StakeToken[]> = {
-  [celo.id]: [CUSD, USDC_CELO],
+  [celo.id]: [CUSD, USDC_CELO, GOODDOLLAR],
   [celoSepolia.id]: [CUSD],
 };
 
