@@ -9,6 +9,7 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@goodsdks/citizen-sdk": "^1.2.5",
     "@privy-io/react-auth": "^3.32.1",
     "@privy-io/wagmi": "^4.0.13",
     "@supabase/supabase-js": "^2.107.0",
