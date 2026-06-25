@@ -81,8 +81,9 @@ export function Hero() {
         transition={{ duration: 0.45, ease, delay: 0.42 }}
         className="mt-3 max-w-md text-[15px] leading-relaxed text-ink-dim"
       >
-        Chess, Whot, tic-tac-toe, snakes &amp; ladders and a block puzzle. Practise
-        free against the bot, or put USDm on a 1v1 — the winner takes the pot.
+        Chess, Whot, tic-tac-toe, snakes &amp; ladders and a block puzzle. Play
+        free against the bot, or stake USDm or G$ on a 1v1 and win real money —
+        the winner takes the pot, settled on-chain.
       </motion.p>
 
       <motion.div
