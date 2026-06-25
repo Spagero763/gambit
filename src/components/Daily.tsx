@@ -6,6 +6,7 @@ import { Flame, Zap, Check, Gift, Sparkles, X } from "lucide-react";
 import Link from "next/link";
 import { useProgress, levelInfo, claimQuest } from "@/lib/progress";
 import { Confetti } from "@/components/motion/Confetti";
+import { Portal } from "@/components/Portal";
 import { play } from "@/lib/sfx";
 import { cn } from "@/lib/cn";
 
@@ -101,7 +102,8 @@ export function ProgressCard() {
       </ul>
     </div>
 
-    {/* claim reveal — centered so it's tappable instantly, no scrolling */}
+    {/* claim reveal — portaled to <body> so it centers on the viewport */}
+    <Portal>
     <AnimatePresence>
       {reveal && (
         <motion.div
@@ -148,6 +150,7 @@ export function ProgressCard() {
         </motion.div>
       )}
     </AnimatePresence>
+    </Portal>
     </>
   );
 }
