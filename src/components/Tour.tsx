@@ -1,0 +1,145 @@
+"use client";
+
+import { useEffect, useState } from "react";
+import { motion } from "framer-motion";
+import { Portal } from "@/components/Portal";
+
+const KEY = "gambit:tour:v1";
+
+interface Step {
+  sel?: string; // CSS selector of the element to spotlight (omit for a centered card)
+  title: string;
+  body: string;
+}
+
+const STEPS: Step[] = [
+  { title: "Welcome to Gambit 👋", body: "Play classic games and win real money — free vs the bot, or stake USDm/G$ in 1v1s & tournaments. Here's the 10-second tour." },
+  { sel: '[data-tour="wallet"]', title: "Your wallet", body: "Tap here anytime to see your balances and withdraw your winnings." },
+  { sel: '[data-tour="play"]', title: "Play", body: "Pick a game — practise free, or stake to win the pot." },
+  { sel: '[data-tour="cups"]', title: "Cups", body: "Tournaments and prize cups. Compete for bigger pots." },
+  { sel: '[data-tour="ranks"]', title: "Ranks", body: "The leaderboard — climb to the top earners." },
+  { sel: '[data-tour="you"]', title: "You", body: "Your profile, XP, daily rewards and (optional) human verification." },
+];
+
+const clamp = (v: number, lo: number, hi: number) => Math.min(hi, Math.max(lo, v));
+
+/**
+ * First-run guided tour. Dims the screen, spotlights one real element at a
+ * time with a pointing hand + tooltip, Skip / Next, and only ever runs once
+ * (localStorage). Replaces the old static welcome modal with something that
+ * actually shows people where things are.
+ */
+export function Tour() {
+  const [step, setStep] = useState(-1);
+  const [, force] = useState(0); // re-render on resize/scroll to track the element
+
+  useEffect(() => {
+    try {
+      if (localStorage.getItem(KEY)) return;
+    } catch {
+      return;
+    }
+    const t = setTimeout(() => setStep(0), 900); // let the first paint settle
+    return () => clearTimeout(t);
+  }, []);
+
+  useEffect(() => {
+    if (step < 0) return;
+    const on = () => force((x) => x + 1);
+    window.addEventListener("resize", on);
+    window.addEventListener("scroll", on, true);
+    return () => {
+      window.removeEventListener("resize", on);
+      window.removeEventListener("scroll", on, true);
+    };
+  }, [step]);
+
+  if (step < 0) return null;
+
+  const finish = () => {
+    try {
+      localStorage.setItem(KEY, "1");
+    } catch {
+      /* private mode */
+    }
+    setStep(-1);
+  };
+  const next = () => (step >= STEPS.length - 1 ? finish() : setStep(step + 1));
+
+  const s = STEPS[step];
+  const el = s.sel && typeof document !== "undefined" ? document.querySelector(s.sel) : null;
+  const rect = el ? el.getBoundingClientRect() : null;
+  const vw = typeof window !== "undefined" ? window.innerWidth : 390;
+  const vh = typeof window !== "undefined" ? window.innerHeight : 800;
+  const pad = 8;
+  const below = rect ? rect.top < vh * 0.5 : true; // element high up → tooltip below it
+
+  const cardStyle: React.CSSProperties = rect
+    ? {
+        left: clamp(rect.left + rect.width / 2 - 150, 12, vw - 12 - 300),
+        ...(below ? { top: rect.bottom + 24 } : { bottom: vh - rect.top + 24 }),
+        width: 300,
+      }
+    : { left: "50%", top: "50%", transform: "translate(-50%,-50%)", width: "min(88%,20rem)" };
+
+  return (
+    <Portal>
+      <div className="fixed inset-0 z-[120]" style={{ background: rect ? "transparent" : "rgba(8,7,18,0.82)" }}>
+        {/* spotlight cut-out around the element */}
+        {rect && (
+          <div
+            className="pointer-events-none absolute rounded-xl"
+            style={{
+              left: rect.left - pad,
+              top: rect.top - pad,
+              width: rect.width + pad * 2,
+              height: rect.height + pad * 2,
+              boxShadow: "0 0 0 9999px rgba(8,7,18,0.82)",
+              border: "2px solid rgba(62,207,142,0.85)",
+            }}
+          />
+        )}
+
+        {/* pointing hand at the element */}
+        {rect && (
+          <motion.div
+            className="pointer-events-none absolute text-2xl"
+            style={{
+              left: clamp(rect.left + rect.width / 2 - 12, 8, vw - 32),
+              ...(below ? { top: rect.bottom + 2 } : { top: rect.top - 34 }),
+            }}
+            animate={{ y: below ? [0, 6, 0] : [0, -6, 0] }}
+            transition={{ duration: 1, repeat: Infinity }}
+          >
+            {below ? "👆" : "👇"}
+          </motion.div>
+        )}
+
+        {/* tooltip card */}
+        <motion.div
+          key={step}
+          initial={{ opacity: 0, scale: 0.96 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="absolute rounded-2xl border border-line bg-void-800 p-4 shadow-pop"
+          style={cardStyle}
+        >
+          <p className="text-sm font-bold text-ink">{s.title}</p>
+          <p className="mt-1 text-[13px] leading-snug text-ink-dim">{s.body}</p>
+          <div className="mt-4 flex items-center justify-between">
+            <button onClick={finish} className="text-[12px] font-medium text-ink-faint transition-colors hover:text-ink-dim">
+              Skip
+            </button>
+            <div className="flex items-center gap-2">
+              <span className="text-[11px] text-ink-faint">
+                {step + 1}/{STEPS.length}
+              </span>
+              <button onClick={next} className="btn-primary rounded-xl px-4 py-2 text-[13px] shadow-glow">
+                {step >= STEPS.length - 1 ? "Got it" : "Next"}
+              </button>
+            </div>
+          </div>
+        </motion.div>
+      </div>
+    </Portal>
+  );
+}
