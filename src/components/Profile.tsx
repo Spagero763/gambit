@@ -15,6 +15,7 @@ import { useProfile, createProfile, setProfile } from "@/lib/profile";
 import { Avatar } from "@/components/Avatar";
 import { SendFunds } from "@/components/SendFunds";
 import { GoodIdCard } from "@/components/GoodIdCard";
+import { symbolForToken } from "@/lib/tokens";
 import { ProgressCard } from "@/components/Daily";
 import { Achievements } from "@/components/Achievements";
 import { GAMES } from "@/lib/games";
@@ -33,6 +34,7 @@ interface MatchRow {
   winner: string | null;
   created_at: string;
   decimals: number | null;
+  token: string | null;
 }
 
 interface Played {
@@ -40,6 +42,7 @@ interface Played {
   game: string;
   result: "win" | "lose" | "draw";
   delta: number;
+  unit: string;
   when: string;
 }
 
@@ -107,7 +110,7 @@ export function Profile() {
     (async () => {
       const { data } = await supabase!
         .from("matches")
-        .select("id,game,stake,creator,opponent,status,winner,created_at,decimals")
+        .select("id,game,stake,creator,opponent,status,winner,created_at,decimals,token")
         .or(`creator.eq.${me},opponent.eq.${me}`)
         .in("status", ["settling", "settled"])
         .order("created_at", { ascending: false })
@@ -131,6 +134,7 @@ export function Profile() {
         game: NAME[m.game] ?? m.game,
         result: isDraw ? "draw" : won ? "win" : "lose",
         delta,
+        unit: symbolForToken(m.token),
         when: relTime(m.created_at),
       };
     });
@@ -138,9 +142,27 @@ export function Profile() {
 
   const wins = played.filter((p) => p.result === "win").length;
   const losses = played.filter((p) => p.result === "lose").length;
-  const net = played.reduce((s, p) => s + p.delta, 0);
   const decided = wins + losses;
   const winRate = decided ? Math.round((wins / decided) * 100) : 0;
+  // P/L can't mix tokens — show the net for the token you've played most.
+  const { net, netUnit } = useMemo(() => {
+    const by: Record<string, { net: number; decided: number }> = {};
+    for (const p of played) {
+      const e = by[p.unit] ?? { net: 0, decided: 0 };
+      e.net += p.delta;
+      if (p.result !== "draw") e.decided += 1;
+      by[p.unit] = e;
+    }
+    let unit = "USDm";
+    let best = -1;
+    for (const u of Object.keys(by)) {
+      if (by[u].decided > best) {
+        best = by[u].decided;
+        unit = u;
+      }
+    }
+    return { net: by[unit]?.net ?? 0, netUnit: unit };
+  }, [played]);
   const avatarHex = AVATAR_HEX[settings.avatar] ?? AVATAR_HEX.teal;
   const displayName = settings.name || short(address);
 
@@ -227,7 +249,7 @@ export function Profile() {
       )}
 
       <div className="mt-5 grid grid-cols-3 gap-3">
-        <Stat label="Net P/L" value={`${net >= 0 ? "+" : ""}${net.toFixed(2)}`} accent={net > 0 ? "text-teal" : net < 0 ? "text-rose" : "text-ink"} sub="USDm" />
+        <Stat label="Net P/L" value={`${net >= 0 ? "+" : ""}${net.toFixed(2)}`} accent={net > 0 ? "text-teal" : net < 0 ? "text-rose" : "text-ink"} sub={netUnit} />
         <Stat label="Record" value={`${wins}–${losses}`} accent="text-ink" sub="W–L" />
         <Stat label="Win rate" value={decided ? `${winRate}%` : "—"} accent="text-ink" sub={`${decided} settled`} />
       </div>
@@ -280,7 +302,7 @@ export function Profile() {
                 </span>
                 <span
                   className={cn(
-                    "nums w-16 text-right font-mono text-sm",
+                    "nums w-24 text-right font-mono text-sm",
                     m.delta > 0 && "text-teal",
                     m.delta < 0 && "text-rose",
                     m.delta === 0 && "text-ink-faint"
@@ -288,6 +310,7 @@ export function Profile() {
                 >
                   {m.delta > 0 ? "+" : ""}
                   {m.delta.toFixed(2)}
+                  <span className="ml-0.5 text-[9px] text-ink-faint">{m.unit}</span>
                 </span>
               </div>
             </motion.li>
