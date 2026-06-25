@@ -28,11 +28,11 @@ const mono = JetBrains_Mono({
 });
 
 const DESCRIPTION =
-  "Classic skill games on Celo. Chess, Naija Whot, tic-tac-toe, snakes & ladders and Block Blitz. Free to play, or stake USDm head to head — winner takes the pot.";
+  "Classic skill games on Celo. Chess, Naija Whot, tic-tac-toe, snakes & ladders and Block Blitz. Sign in with email — a wallet is made for you. Play free, or stake USDm or GoodDollar (G$) and win real money. Claim a little G$ every day.";
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://www.bestgambit.live"),
-  title: "Gambit — play classic games, stake USDm",
+  title: "Gambit — play classic games, win real money",
   description: DESCRIPTION,
   applicationName: "Gambit",
   appleWebApp: {
@@ -41,7 +41,7 @@ export const metadata: Metadata = {
     statusBarStyle: "black-translucent",
   },
   openGraph: {
-    title: "Gambit — play classic games, stake USDm",
+    title: "Gambit — play classic games, win real money",
     description: DESCRIPTION,
     url: "/",
     siteName: "Gambit",
@@ -49,7 +49,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "Gambit — play classic games, stake USDm",
+    title: "Gambit — play classic games, win real money",
     description: DESCRIPTION,
   },
   other: {

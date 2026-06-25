@@ -22,13 +22,18 @@ export async function POST(req: NextRequest) {
     if (!addr) return NextResponse.json({ gAmount: 0, reason: "signin" });
 
     const db = supabaseAdmin();
-    const { data: prof } = await db
+    let { data: prof } = await db
       .from("profiles")
       .select("address,last_g_claim")
       .eq("address", addr)
       .maybeSingle();
 
-    if (!prof) return NextResponse.json({ gAmount: 0, reason: "no-profile" });
+    // first-time claimer with no saved profile yet — create a minimal row so we
+    // can track the daily claim (the token already proved wallet ownership).
+    if (!prof) {
+      await db.from("profiles").upsert({ address: addr, name: "", avatar: "teal" }, { onConflict: "address", ignoreDuplicates: true });
+      prof = { address: addr, last_g_claim: null };
+    }
     if (prof.last_g_claim === today()) return NextResponse.json({ gAmount: 0, reason: "already" });
     if (!treasuryConfigured()) return NextResponse.json({ gAmount: 0, reason: "no-treasury" });
 
