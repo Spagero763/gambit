@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { Portal } from "@/components/Portal";
 
-const KEY = "gambit:tour:v1";
+const KEY = "gambit:tour:v2";
 
 interface Step {
   sel?: string; // CSS selector of the element to spotlight (omit for a centered card)
@@ -13,12 +13,13 @@ interface Step {
 }
 
 const STEPS: Step[] = [
-  { title: "Welcome to Gambit 👋", body: "Play classic games and win real money — free vs the bot, or stake USDm/G$ in 1v1s & tournaments. Here's the 10-second tour." },
-  { sel: '[data-tour="wallet"]', title: "Your wallet", body: "Tap here anytime to see your balances and withdraw your winnings." },
-  { sel: '[data-tour="play"]', title: "Play", body: "Pick a game — practise free, or stake to win the pot." },
-  { sel: '[data-tour="cups"]', title: "Cups", body: "Tournaments and prize cups. Compete for bigger pots." },
-  { sel: '[data-tour="ranks"]', title: "Ranks", body: "The leaderboard — climb to the top earners." },
-  { sel: '[data-tour="you"]', title: "You", body: "Your profile, XP, daily rewards and (optional) human verification." },
+  { title: "Welcome to Gambit 👋", body: "Play classic games and win real money — free vs the bot, or stake USDm/G$ in 1v1s. Here's the quick tour." },
+  { sel: '[data-tour="wallet"]', title: "Your wallet", body: "Tap here anytime to see your balances and withdraw your winnings — no crypto know-how needed." },
+  { sel: '[data-tour="daily"]', title: "Daily reward", body: "Come back each day and tap this for free XP — and a little real $G straight to your wallet." },
+  { sel: '[data-tour="games"]', title: "Pick a game", body: "Tap any game. Play free against the bot, or choose 'Staked 1v1' to put USDm/$G on the line and win the pot." },
+  { sel: '[data-tour="cups"]', title: "Cups", body: "Tournaments and prize cups — compete for bigger pots." },
+  { sel: '[data-tour="ranks"]', title: "Ranks", body: "The leaderboard. Win matches to climb the top earners." },
+  { sel: '[data-tour="you"]', title: "You", body: "Your profile, stats, XP and settings all live here. That's it — go play!" },
 ];
 
 const clamp = (v: number, lo: number, hi: number) => Math.min(hi, Math.max(lo, v));
