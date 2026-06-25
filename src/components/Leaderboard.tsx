@@ -10,6 +10,8 @@ import { aggregateStandings, Standing } from "@/lib/leaderboard";
 import { useProfiles, displayName, avatarHex, shortAddr, PublicProfile } from "@/lib/profiles";
 import { useProfile } from "@/lib/profile";
 import { levelInfo } from "@/lib/progress";
+import { tokensFor } from "@/lib/tokens";
+import { ACTIVE_CHAIN_ID } from "@/lib/wagmi";
 import { Avatar } from "@/components/Avatar";
 import { cn } from "@/lib/cn";
 
@@ -23,6 +25,7 @@ interface Raw {
   stake: string;
   created_at: string;
   decimals: number | null;
+  token: string | null;
 }
 
 interface PointsRow {
@@ -47,6 +50,9 @@ export function Leaderboard() {
   const [points, setPoints] = useState<PointsRow[] | null>(null);
   const { address } = useAccount();
   const me = address?.toLowerCase();
+  const tokens = tokensFor(ACTIVE_CHAIN_ID);
+  const [tokenAddr, setTokenAddr] = useState(tokens[0].address.toLowerCase());
+  const tokenSym = tokens.find((t) => t.address.toLowerCase() === tokenAddr)?.symbol ?? "USDm";
 
   // staked matches (earnings / wins boards)
   useEffect(() => {
@@ -58,7 +64,7 @@ export function Leaderboard() {
     (async () => {
       const { data } = await supabase!
         .from("matches")
-        .select("creator,opponent,winner,stake,created_at,decimals")
+        .select("creator,opponent,winner,stake,created_at,decimals,token")
         .in("status", ["settling", "settled"])
         .limit(1000);
       if (active) setRaw((data as Raw[]) ?? []);
@@ -89,11 +95,20 @@ export function Leaderboard() {
   const rows = useMemo<Standing[]>(() => {
     if (!raw) return [];
     const cutoff = Date.now() - 7 * 86400 * 1000;
-    const filtered = range === "week" ? raw.filter((m) => new Date(m.created_at).getTime() >= cutoff) : raw;
+    const usdm = tokens[0].address.toLowerCase();
+    // one token at a time — you can't meaningfully add G$ and USDm into one
+    // "earnings" number. Legacy matches predate the token column → treat as USDm.
+    const filtered = raw.filter((m) => {
+      const t = (m.token ?? "").toLowerCase();
+      const sameToken = t === tokenAddr || (tokenAddr === usdm && t === "");
+      if (!sameToken) return false;
+      if (range === "week" && new Date(m.created_at).getTime() < cutoff) return false;
+      return true;
+    });
     const standings = aggregateStandings(filtered);
     standings.sort((a, b) => (sort === "wins" ? b.wins - a.wins : b.net - a.net));
     return standings.slice(0, 50);
-  }, [raw, range, sort]);
+  }, [raw, range, sort, tokenAddr, tokens]);
 
   const profiles = useProfiles(rows.map((r) => r.handle));
   const { profile: myProfile, loading: profileLoading } = useProfile();
@@ -160,6 +175,27 @@ export function Leaderboard() {
         </div>
       )}
 
+      {/* which token's earnings — USDm / USDC / G$ are separate boards */}
+      {!isPoints && (
+        <div className="mt-2 flex gap-2">
+          {tokens.map((t) => {
+            const active = tokenAddr === t.address.toLowerCase();
+            return (
+              <button
+                key={t.address}
+                onClick={() => setTokenAddr(t.address.toLowerCase())}
+                className={cn(
+                  "rounded-full border px-3 py-1.5 text-xs font-medium transition-colors",
+                  active ? "border-teal/50 bg-teal/[0.1] text-ink" : "border-line text-ink-faint"
+                )}
+              >
+                {t.symbol}
+              </button>
+            );
+          })}
+        </div>
+      )}
+
       {isPoints ? (
         points === null ? (
           <Loading />
@@ -180,7 +216,7 @@ export function Leaderboard() {
         <AnimatePresence mode="wait">
           <motion.ul key={sort + range} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="mt-4 space-y-2">
             {rows.map((row, i) => (
-              <Row key={row.handle} row={row} rank={i + 1} sort={sort} isMe={row.handle === me} profile={profiles[row.handle.toLowerCase()]} />
+              <Row key={row.handle} row={row} rank={i + 1} sort={sort} isMe={row.handle === me} profile={profiles[row.handle.toLowerCase()]} unit={tokenSym} />
             ))}
           </motion.ul>
         </AnimatePresence>
@@ -240,7 +276,7 @@ function PointsRowItem({ p, rank, isMe }: { p: PointsRow; rank: number; isMe: bo
   );
 }
 
-function Row({ row, rank, sort, isMe, profile }: { row: Standing; rank: number; sort: Sort; isMe: boolean; profile?: PublicProfile }) {
+function Row({ row, rank, sort, isMe, profile, unit }: { row: Standing; rank: number; sort: Sort; isMe: boolean; profile?: PublicProfile; unit: string }) {
   const top = rank <= 3;
   const named = !!profile?.name?.trim();
 
@@ -270,7 +306,7 @@ function Row({ row, rank, sort, isMe, profile }: { row: Standing; rank: number; 
         {sort === "earnings" ? (
           <p className={cn("nums text-sm font-semibold", row.net >= 0 ? "text-teal" : "text-rose")}>
             {row.net >= 0 ? "+" : ""}
-            {row.net.toFixed(2)} <span className="text-[10px] text-ink-faint">USDm</span>
+            {row.net.toFixed(2)} <span className="text-[10px] text-ink-faint">{unit}</span>
           </p>
         ) : (
           <p className="nums text-sm font-semibold text-ink">
