@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useState } from "react";
-import { parseUnits } from "viem";
+import { parseUnits, maxUint256 } from "viem";
 import {
   useAccount,
   usePublicClient,
@@ -73,11 +73,15 @@ export function useStakeMatch() {
       })) as bigint;
       if (allowance < amount) {
         setStep("approving");
+        // approve a max allowance once, not the exact stake every time — the
+        // escrow consumes the whole allowance per match, so an exact approval
+        // forces a fresh approve tx on every match. Approving max means repeat
+        // players skip the approval step entirely (one less gas tx per match).
         const hash = await writeContractAsync({
           address: tokenAddress,
           abi: ERC20_ABI,
           functionName: "approve",
-          args: [escrow, amount],
+          args: [escrow, maxUint256],
         });
         const receipt = await publicClient.waitForTransactionReceipt({ hash });
         if (receipt.status !== "success") throw new Error("Token approval failed on-chain");
