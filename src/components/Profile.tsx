@@ -222,7 +222,7 @@ export function Profile() {
             onClick={() => setSendOpen(true)}
             className="inline-flex items-center gap-1.5 rounded-full border border-line bg-void-700 px-3 py-1.5 text-[12px] font-medium text-ink-dim transition-colors hover:border-line-strong hover:text-ink"
           >
-            <Send className="h-3.5 w-3.5" /> Send
+            <Send className="h-3.5 w-3.5" /> Withdraw
           </button>
         </div>
       </motion.div>
