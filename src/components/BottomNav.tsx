@@ -7,11 +7,11 @@ import { usePathname } from "next/navigation";
 import { cn } from "@/lib/cn";
 
 const TABS = [
-  { href: "/", label: "Play", icon: Gamepad2 },
-  { href: "/tournaments", label: "Cups", icon: Crown, match: "/tournament" },
-  { href: "/leaderboard", label: "Ranks", icon: Trophy },
-  { href: "/events", label: "Events", icon: Swords },
-  { href: "/profile", label: "You", icon: User },
+  { href: "/", label: "Play", icon: Gamepad2, tour: "play" },
+  { href: "/tournaments", label: "Cups", icon: Crown, match: "/tournament", tour: "cups" },
+  { href: "/leaderboard", label: "Ranks", icon: Trophy, tour: "ranks" },
+  { href: "/events", label: "Events", icon: Swords, tour: "events" },
+  { href: "/profile", label: "You", icon: User, tour: "you" },
 ];
 
 export function BottomNav() {
@@ -28,6 +28,7 @@ export function BottomNav() {
             <Link
               key={t.href}
               href={t.href}
+              data-tour={t.tour}
               className="relative flex flex-1 flex-col items-center gap-1 rounded-xl py-2"
             >
               {isActive && (

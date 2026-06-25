@@ -4,7 +4,7 @@ import { Providers } from "./providers";
 import { ProfileSync } from "@/components/ProfileSync";
 import { AchievementToast } from "@/components/Achievements";
 import { MusicPlayer } from "@/components/audio/MusicPlayer";
-import { Onboarding } from "@/components/Onboarding";
+import { Tour } from "@/components/Tour";
 import "./globals.css";
 
 // One restrained typeface family. Inter for UI + display (tracked tighter in
@@ -78,7 +78,7 @@ export default function RootLayout({
           <ProfileSync />
           <AchievementToast />
           <MusicPlayer />
-          <Onboarding />
+          <Tour />
         </Providers>
       </body>
     </html>
