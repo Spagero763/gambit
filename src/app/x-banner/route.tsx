@@ -47,7 +47,7 @@ export async function GET() {
         <div style={{ marginTop: 26, fontSize: 62, fontWeight: 800, lineHeight: 1.04, letterSpacing: -2, display: "flex", flexDirection: "column" }}>
           <span>Play classic games.</span>
           <span style={{ display: "flex" }}>
-            <span>Win&nbsp;</span>
+            <span style={{ marginRight: 20 }}>Win</span>
             <span style={{ color: "#3ecf8e" }}>real money.</span>
           </span>
         </div>
