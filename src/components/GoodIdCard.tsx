@@ -38,9 +38,12 @@ export function GoodIdCard() {
         <ShieldCheck className="h-5 w-5" />
       </span>
       <div className="min-w-0 flex-1">
-        <p className="text-sm font-semibold text-ink">Verify you&apos;re a real human</p>
+        <div className="flex items-center gap-2">
+          <p className="text-sm font-semibold text-ink">Verify you&apos;re a real human</p>
+          <span className="rounded-full bg-void-600 px-2 py-0.5 text-[10px] font-semibold text-ink-faint">Optional</span>
+        </div>
         <p className="mt-0.5 text-[12px] leading-snug text-ink-dim">
-          A quick GoodDollar face check unlocks free prize tournaments — one entry per person, no bots, no farming.
+          You can play and stake without this. A quick GoodDollar face check just unlocks the <span className="text-ink">free prize tournaments</span> — one entry per person, no bots.
         </p>
         <button
           onClick={async () => {

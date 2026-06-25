@@ -5,6 +5,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { Gift, Flame, X, Sparkles } from "lucide-react";
 import { useProgress, claimDailyReward, rewardClaimable, levelInfo } from "@/lib/progress";
 import { Confetti } from "@/components/motion/Confetti";
+import { Portal } from "@/components/Portal";
 import { play } from "@/lib/sfx";
 import { cn } from "@/lib/cn";
 
@@ -70,7 +71,8 @@ export function DailyReward() {
         </div>
       )}
 
-      {/* reveal */}
+      {/* reveal — portaled to <body> so it centers on the viewport, not under the fold */}
+      <Portal>
       <AnimatePresence>
         {reveal && (
           <motion.div
@@ -117,6 +119,7 @@ export function DailyReward() {
           </motion.div>
         )}
       </AnimatePresence>
+      </Portal>
     </>
   );
 }

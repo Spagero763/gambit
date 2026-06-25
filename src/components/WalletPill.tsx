@@ -1,12 +1,13 @@
 "use client";
 
+import { useState } from "react";
 import { Wallet, Loader2 } from "lucide-react";
-import Link from "next/link";
 import { useAccount, useBalance } from "wagmi";
 import { usePrivy } from "@privy-io/react-auth";
 import { CUSD_ADDRESS } from "@/lib/wagmi";
 import { useSettings, AVATAR_HEX } from "@/lib/settings";
 import { Avatar } from "@/components/Avatar";
+import { WalletSheet } from "@/components/WalletSheet";
 
 function short(addr?: string) {
   return addr ? `${addr.slice(0, 5)}…${addr.slice(-4)}` : "";
@@ -17,6 +18,7 @@ export function WalletPill() {
   const { address } = useAccount();
   const { data: bal } = useBalance({ address, token: CUSD_ADDRESS, query: { enabled: !!address } });
   const [settings] = useSettings();
+  const [open, setOpen] = useState(false);
 
   if (!ready) return <div className="h-10 w-28 rounded-xl border border-line bg-void-700" />;
 
@@ -24,22 +26,25 @@ export function WalletPill() {
   if (authenticated && address) {
     const amount = bal ? Number(bal.formatted).toFixed(2) : "0.00";
     return (
-      <Link
-        href="/profile"
-        className="flex items-center gap-2 rounded-xl border border-line bg-void-700 py-1.5 pl-2 pr-3 text-left transition-colors hover:border-line-strong"
-      >
-        <Avatar
-          image={settings.avatarImage || undefined}
-          color={AVATAR_HEX[settings.avatar] ?? AVATAR_HEX.teal}
-          name={settings.name || address.slice(2, 4)}
-          size={28}
-          rounded="rounded-lg"
-        />
-        <div className="leading-tight">
-          <p className="font-mono text-[11px] text-ink">{short(address)}</p>
-          <p className="nums text-[10px] text-teal">{amount} USDm</p>
-        </div>
-      </Link>
+      <>
+        <button
+          onClick={() => setOpen(true)}
+          className="flex items-center gap-2 rounded-xl border border-line bg-void-700 py-1.5 pl-2 pr-3 text-left transition-colors hover:border-line-strong"
+        >
+          <Avatar
+            image={settings.avatarImage || undefined}
+            color={AVATAR_HEX[settings.avatar] ?? AVATAR_HEX.teal}
+            name={settings.name || address.slice(2, 4)}
+            size={28}
+            rounded="rounded-lg"
+          />
+          <div className="leading-tight">
+            <p className="font-mono text-[11px] text-ink">{short(address)}</p>
+            <p className="nums text-[10px] text-teal">{amount} USDm</p>
+          </div>
+        </button>
+        {open && <WalletSheet address={address} onClose={() => setOpen(false)} />}
+      </>
     );
   }
 
