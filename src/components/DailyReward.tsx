@@ -3,9 +3,9 @@
 import { useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { Gift, Flame, X, Sparkles } from "lucide-react";
-import { useAccount } from "wagmi";
+import { useAccount, useSignMessage } from "wagmi";
 import { useProgress, claimDailyReward, rewardClaimable, levelInfo } from "@/lib/progress";
-import { getToken } from "@/lib/profile";
+import { getToken, signIn } from "@/lib/profile";
 import { Confetti } from "@/components/motion/Confetti";
 import { Portal } from "@/components/Portal";
 import { play } from "@/lib/sfx";
@@ -19,6 +19,7 @@ import { cn } from "@/lib/cn";
 export function DailyReward() {
   const p = useProgress();
   const { address } = useAccount();
+  const { signMessageAsync } = useSignMessage();
   const claimable = rewardClaimable(p);
   const [reveal, setReveal] = useState<{ reward: number; day: number; g?: number } | null>(null);
   const lvl = levelInfo(p.xp);
@@ -28,11 +29,13 @@ export function DailyReward() {
     if (!res) return;
     play("win");
     setReveal({ reward: res.reward, day: res.day });
-    // claim a little real G$ on top — server-gated (once/day, funded treasury);
-    // no-ops cleanly if not signed in or the treasury isn't set/funded.
-    const token = address ? getToken(address) : null;
-    if (!token) return;
+    // claim a little real G$ on top — server-gated (once/day, funded treasury).
+    if (!address) return;
     try {
+      // mint a session token if we don't have one yet (fresh sign-ins won't).
+      // signing is free/gasless; the embedded wallet handles it quietly.
+      let token = getToken(address);
+      if (!token) token = await signIn(address, (a) => signMessageAsync({ message: a.message }));
       const r = await fetch("/api/claim/daily", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -41,7 +44,7 @@ export function DailyReward() {
       const d = await r.json();
       if (d?.gAmount > 0) setReveal((cur) => (cur ? { ...cur, g: d.gAmount } : cur));
     } catch {
-      /* XP is already granted client-side; ignore G$ failure */
+      /* XP is already granted client-side; ignore G$ failure (e.g. sign rejected) */
     }
   };
 
@@ -50,6 +53,7 @@ export function DailyReward() {
       {claimable ? (
         <motion.button
           onClick={claim}
+          data-tour="daily"
           initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
           whileTap={{ scale: 0.98 }}
@@ -74,7 +78,7 @@ export function DailyReward() {
           <span className="rounded-full bg-amber px-3 py-1.5 text-[12px] font-bold text-void">Claim</span>
         </motion.button>
       ) : (
-        <div className="mx-auto mt-4 flex w-full max-w-2xl items-center gap-3 rounded-2xl border border-line bg-void-800 px-4 py-3">
+        <div data-tour="daily" className="mx-auto mt-4 flex w-full max-w-2xl items-center gap-3 rounded-2xl border border-line bg-void-800 px-4 py-3">
           <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-void-600 text-ink-faint">
             <Gift className="h-4 w-4" />
           </span>

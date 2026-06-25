@@ -10,7 +10,7 @@ export function GameGrid() {
   const live = GAMES.filter((g) => g.status === "live").length;
 
   return (
-    <section className="mx-auto w-full max-w-2xl px-5 pb-28 pt-7">
+    <section data-tour="games" className="mx-auto w-full max-w-2xl px-5 pb-28 pt-7">
       <div className="mb-3.5 flex items-end justify-between">
         <div className="flex items-center gap-2">
           <h2 className="text-[15px] font-semibold tracking-tight text-ink">Games</h2>
