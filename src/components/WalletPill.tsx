@@ -29,6 +29,7 @@ export function WalletPill() {
       <>
         <button
           onClick={() => setOpen(true)}
+          data-tour="wallet"
           className="flex items-center gap-2 rounded-xl border border-line bg-void-700 py-1.5 pl-2 pr-3 text-left transition-colors hover:border-line-strong"
         >
           <Avatar
