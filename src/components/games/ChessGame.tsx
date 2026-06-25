@@ -179,6 +179,10 @@ export function ChessGame({ difficulty = "normal" }: { difficulty?: Difficulty }
         const m = game.move(mv);
         setLast({ from: mv.from as Square, to: mv.to as Square });
         setFen(game.fen());
+        // the bot moves in well under a second, so the per-second tick would
+        // never touch its clock — deduct a realistic "think" time per move so
+        // the bot's clock actually runs and the game is fair.
+        setBTime((t) => Math.max(0, t - (2 + Math.floor(Math.random() * 4))));
         if (m?.captured) play("capture");
         else play("place");
         if (game.inCheck() && !game.isGameOver()) play("check");
@@ -188,14 +192,23 @@ export function ChessGame({ difficulty = "normal" }: { difficulty?: Difficulty }
     return () => clearTimeout(t);
   }, [turn, fen, result, promo, settle, game, difficulty]);
 
+  // tick the side-to-move's clock. Keep the updater pure — flagging is handled
+  // in its own effect below (calling setResult inside an updater is a bug).
   useEffect(() => {
     if (result || promo) return;
     const id = setInterval(() => {
-      if (turn === "w") setWTime((t) => (t <= 1 ? (setResult("lose"), 0) : t - 1));
-      else setBTime((t) => (t <= 1 ? (setResult("win"), 0) : t - 1));
+      if (turn === "w") setWTime((t) => Math.max(0, t - 1));
+      else setBTime((t) => Math.max(0, t - 1));
     }, 1000);
     return () => clearInterval(id);
   }, [turn, result, promo]);
+
+  // flag-fall: whoever hits 0 first loses (you = lose, bot = win)
+  useEffect(() => {
+    if (result) return;
+    if (wTime <= 0) setResult("lose");
+    else if (bTime <= 0) setResult("win");
+  }, [wTime, bTime, result]);
 
   const board = game.board();
   const inCheck = game.inCheck();
