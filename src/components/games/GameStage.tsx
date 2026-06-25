@@ -12,6 +12,7 @@ import { SnakesLadders } from "./snakes/SnakesLadders";
 import { StakedSnakes } from "./StakedSnakes";
 import { WhotGame } from "./whot/WhotGame";
 import { StakedWhot } from "./StakedWhot";
+import { GameIntro } from "./GameIntro";
 import { GameCover } from "@/components/art/GameCover";
 import { Difficulty } from "@/lib/difficulty";
 import type { StakeCtx } from "./PlayFlow";
@@ -25,36 +26,37 @@ export function GameStage({
   difficulty?: Difficulty;
   stake?: StakeCtx;
 }) {
+  let body: React.ReactNode;
   switch (game.slug) {
     case "tic-tac-toe":
       // staked = real-time human vs human (server-authoritative); free = vs engine
-      return stake ? (
-        <StakedTicTacToe matchId={stake.matchId} you={stake.you} />
-      ) : (
-        <TicTacToe difficulty={difficulty} />
-      );
+      body = stake ? <StakedTicTacToe matchId={stake.matchId} you={stake.you} /> : <TicTacToe difficulty={difficulty} />;
+      break;
     case "chess":
       // staked = real-time human vs human (server-authoritative); free = vs engine
-      return stake ? (
-        <StakedChess matchId={stake.matchId} you={stake.you} />
-      ) : (
-        <ChessGame difficulty={difficulty} />
-      );
+      body = stake ? <StakedChess matchId={stake.matchId} you={stake.you} /> : <ChessGame difficulty={difficulty} />;
+      break;
     case "blocks":
-      return <BlockBlitz />;
+      body = <BlockBlitz />;
+      break;
     case "snakes":
       // staked = real-time human vs human with server-rolled dice; free = vs bot
-      return stake ? (
-        <StakedSnakes matchId={stake.matchId} you={stake.you} />
-      ) : (
-        <SnakesLadders difficulty={difficulty} />
-      );
+      body = stake ? <StakedSnakes matchId={stake.matchId} you={stake.you} /> : <SnakesLadders difficulty={difficulty} />;
+      break;
     case "whot":
       // staked = real-time 1v1 with hidden hands (server-authoritative); free = WhotGame (2-6 + tournament)
-      return stake ? <StakedWhot matchId={stake.matchId} you={stake.you} /> : <WhotGame />;
+      body = stake ? <StakedWhot matchId={stake.matchId} you={stake.you} /> : <WhotGame />;
+      break;
     default:
-      return <ComingSoon game={game} />;
+      body = <ComingSoon game={game} />;
   }
+  // first-time "how to play" card for this game (shown once)
+  return (
+    <>
+      <GameIntro slug={game.slug} />
+      {body}
+    </>
+  );
 }
 
 function ComingSoon({ game }: { game: Game }) {
