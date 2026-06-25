@@ -3,7 +3,9 @@
 import { useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { Gift, Flame, X, Sparkles } from "lucide-react";
+import { useAccount } from "wagmi";
 import { useProgress, claimDailyReward, rewardClaimable, levelInfo } from "@/lib/progress";
+import { getToken } from "@/lib/profile";
 import { Confetti } from "@/components/motion/Confetti";
 import { Portal } from "@/components/Portal";
 import { play } from "@/lib/sfx";
@@ -16,15 +18,31 @@ import { cn } from "@/lib/cn";
  */
 export function DailyReward() {
   const p = useProgress();
+  const { address } = useAccount();
   const claimable = rewardClaimable(p);
-  const [reveal, setReveal] = useState<{ reward: number; day: number } | null>(null);
+  const [reveal, setReveal] = useState<{ reward: number; day: number; g?: number } | null>(null);
   const lvl = levelInfo(p.xp);
 
-  const claim = () => {
+  const claim = async () => {
     const res = claimDailyReward();
     if (!res) return;
     play("win");
     setReveal({ reward: res.reward, day: res.day });
+    // claim a little real G$ on top — server-gated (once/day, funded treasury);
+    // no-ops cleanly if not signed in or the treasury isn't set/funded.
+    const token = address ? getToken(address) : null;
+    if (!token) return;
+    try {
+      const r = await fetch("/api/claim/daily", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ token }),
+      });
+      const d = await r.json();
+      if (d?.gAmount > 0) setReveal((cur) => (cur ? { ...cur, g: d.gAmount } : cur));
+    } catch {
+      /* XP is already granted client-side; ignore G$ failure */
+    }
   };
 
   return (
@@ -109,6 +127,16 @@ export function DailyReward() {
               >
                 <Sparkles className="h-6 w-6 text-amber" /> +{reveal.reward} XP
               </motion.p>
+              {reveal.g ? (
+                <motion.p
+                  initial={{ opacity: 0, scale: 0.8 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ delay: 0.35, type: "spring", stiffness: 240, damping: 16 }}
+                  className="mt-1 inline-flex items-center gap-1.5 rounded-full bg-teal/15 px-3 py-1 text-lg font-black text-teal"
+                >
+                  + {reveal.g} G$ 💚
+                </motion.p>
+              ) : null}
               <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.4 }} className="mt-1 text-sm text-ink-dim">
                 Day {reveal.day} streak 🔥 — come back tomorrow for more.
               </motion.p>
