@@ -219,6 +219,7 @@ export function Settings() {
         <p className="mt-4 flex items-center gap-1.5 text-[11px] text-ink-faint">
           <Music className="h-3.5 w-3.5" /> The music changes to match the game you&apos;re playing.
         </p>
+        <p className="mt-1 text-[10px] text-ink-faint">Music by Kevin MacLeod (incompetech.com) · CC BY 4.0</p>
       </div>
     </section>
   );
