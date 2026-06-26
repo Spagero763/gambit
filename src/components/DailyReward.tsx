@@ -21,7 +21,7 @@ export function DailyReward() {
   const { address } = useAccount();
   const { signMessageAsync } = useSignMessage();
   const claimable = rewardClaimable(p);
-  const [reveal, setReveal] = useState<{ reward: number; day: number; g?: number } | null>(null);
+  const [reveal, setReveal] = useState<{ reward: number; day: number; g?: number; gReason?: string } | null>(null);
   const lvl = levelInfo(p.xp);
 
   const claim = async () => {
@@ -42,9 +42,10 @@ export function DailyReward() {
         body: JSON.stringify({ token }),
       });
       const d = await r.json();
-      if (d?.gAmount > 0) setReveal((cur) => (cur ? { ...cur, g: d.gAmount } : cur));
+      setReveal((cur) => (cur ? { ...cur, g: Number(d?.gAmount) || 0, gReason: d?.reason } : cur));
     } catch {
-      /* XP is already granted client-side; ignore G$ failure (e.g. sign rejected) */
+      // signature rejected or network error — XP is already granted client-side
+      setReveal((cur) => (cur ? { ...cur, gReason: "sign" } : cur));
     }
   };
 
@@ -140,7 +141,11 @@ export function DailyReward() {
                 >
                   + {reveal.g} G$ 💚
                 </motion.p>
-              ) : null}
+              ) : reveal.gReason ? (
+                <p className="mt-1 text-[12px] text-ink-faint">G$ reward: {gReasonText(reveal.gReason)}</p>
+              ) : (
+                <p className="mt-1 text-[12px] text-ink-faint">checking your G$ reward…</p>
+              )}
               <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.4 }} className="mt-1 text-sm text-ink-dim">
                 Day {reveal.day} streak 🔥 — come back tomorrow for more.
               </motion.p>
@@ -154,6 +159,28 @@ export function DailyReward() {
       </Portal>
     </>
   );
+}
+
+/** Friendly explanation when the G$ side of the daily reward didn't pay. */
+function gReasonText(reason?: string) {
+  switch (reason) {
+    case "already":
+      return "already claimed today — back tomorrow";
+    case "sign":
+    case "signin":
+      return "approve the free signature to claim it";
+    case "send-failed":
+      return "couldn't send right now — try again";
+    case "treasury-empty":
+      return "today's pool is empty";
+    case "no-treasury":
+    case "treasury-error":
+      return "temporarily unavailable";
+    case "no-profile":
+      return "save a profile to claim G$";
+    default:
+      return "unavailable";
+  }
 }
 
 function today() {

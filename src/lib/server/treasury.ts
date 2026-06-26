@@ -59,6 +59,7 @@ export async function payDailyG(to: string, amountHuman: number): Promise<`0x${s
     args: [getAddress(to), gWei(amountHuman)],
     type: "legacy", // Celo uses legacy transactions
   });
-  await pub.waitForTransactionReceipt({ hash });
+  const receipt = await pub.waitForTransactionReceipt({ hash });
+  if (receipt.status !== "success") throw new Error("G$ transfer reverted");
   return hash;
 }
