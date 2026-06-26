@@ -55,13 +55,13 @@ export function WalletSheet({ address, onClose }: { address: `0x${string}`; onCl
 
   return (
     <Portal>
-      <div className="fixed inset-0 z-50 flex items-start justify-center bg-void-900/70 px-4 pt-20 backdrop-blur-sm sm:pt-24" onClick={onClose}>
+      <div className="fixed inset-0 z-[80] grid place-items-center bg-void-900/70 px-4 backdrop-blur-sm" onClick={onClose}>
         <motion.div
-          initial={{ opacity: 0, y: -16 }}
+          initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.22 }}
           onClick={(e) => e.stopPropagation()}
-          className="w-full max-w-sm rounded-3xl border border-line bg-void-800 p-5 shadow-card"
+          className="max-h-[88dvh] w-full max-w-sm overflow-y-auto rounded-3xl border border-line bg-void-800 p-5 shadow-card"
         >
           <div className="flex items-center justify-between">
             <h2 className="text-base font-semibold tracking-tight">Your wallet</h2>
