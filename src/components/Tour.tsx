@@ -75,13 +75,18 @@ export function Tour() {
   const pad = 8;
   const below = rect ? rect.top < vh * 0.5 : true; // element high up → tooltip below it
 
+  // Card spans the width (with side margins) and pins below the element when it's
+  // up top, else above it — so it's always fully on-screen and the buttons are
+  // always tappable on small phones. Centered when there's no target.
   const cardStyle: React.CSSProperties = rect
     ? {
-        left: clamp(rect.left + rect.width / 2 - 150, 12, vw - 12 - 300),
-        ...(below ? { top: rect.bottom + 24 } : { bottom: vh - rect.top + 24 }),
-        width: 300,
+        left: 16,
+        right: 16,
+        margin: "0 auto",
+        maxWidth: 360,
+        ...(below ? { top: Math.min(rect.bottom + 20, vh - 200) } : { bottom: Math.min(vh - rect.top + 20, vh - 200) }),
       }
-    : { left: "50%", top: "50%", transform: "translate(-50%,-50%)", width: "min(88%,20rem)" };
+    : { left: 16, right: 16, margin: "0 auto", maxWidth: 360, top: "50%", transform: "translateY(-50%)" };
 
   return (
     <Portal>
