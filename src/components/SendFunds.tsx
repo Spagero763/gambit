@@ -9,6 +9,7 @@ import { ACTIVE_CHAIN_ID } from "@/lib/wagmi";
 import { tokensFor } from "@/lib/tokens";
 import { celo } from "viem/chains";
 import { useSendFunds, SendAsset } from "@/hooks/useSendFunds";
+import { Portal } from "@/components/Portal";
 import { cn } from "@/lib/cn";
 
 const EXPLORER: Record<number, string> = {
@@ -69,13 +70,14 @@ export function SendFunds({ address, onClose }: { address: `0x${string}`; onClos
   const explorer = EXPLORER[ACTIVE_CHAIN_ID] ?? EXPLORER[celo.id];
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center bg-void-900/70 backdrop-blur-sm sm:items-center" onClick={onClose}>
+    <Portal>
+    <div className="fixed inset-0 z-[80] grid place-items-center bg-void-900/70 px-4 backdrop-blur-sm" onClick={onClose}>
       <motion.div
-        initial={{ opacity: 0, y: 24 }}
+        initial={{ opacity: 0, y: 16 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.25 }}
         onClick={(e) => e.stopPropagation()}
-        className="w-full max-w-md rounded-t-3xl border border-line bg-void-800 p-5 shadow-card sm:rounded-3xl"
+        className="max-h-[88dvh] w-full max-w-md overflow-y-auto rounded-3xl border border-line bg-void-800 p-5 shadow-card"
       >
         <div className="flex items-center justify-between">
           <h2 className="text-lg font-semibold tracking-tight">Send funds</h2>
@@ -169,5 +171,6 @@ export function SendFunds({ address, onClose }: { address: `0x${string}`; onClos
         )}
       </motion.div>
     </div>
+    </Portal>
   );
 }

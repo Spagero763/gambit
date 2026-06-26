@@ -47,6 +47,24 @@ export function gWei(amountHuman: number): bigint {
   return parseUnits(amountHuman.toString(), DECIMALS);
 }
 
+/** Dry-run a tiny G$ transfer to surface why payouts fail (no tx sent). */
+export async function treasuryDryRun(): Promise<{ ok: boolean; error?: string }> {
+  try {
+    const account = privateKeyToAccount(treasuryKey());
+    const pub = createPublicClient({ chain: celo, transport: http(RPC) });
+    await pub.estimateContractGas({
+      address: GOODDOLLAR,
+      abi: ERC20_ABI,
+      functionName: "transfer",
+      args: [account.address, gWei(0.001)],
+      account,
+    });
+    return { ok: true };
+  } catch (e: any) {
+    return { ok: false, error: String(e?.shortMessage ?? e?.message ?? e).slice(0, 400) };
+  }
+}
+
 /** Send `amountHuman` G$ from the treasury to `to`. Server-only; key never leaves env. */
 export async function payDailyG(to: string, amountHuman: number): Promise<`0x${string}`> {
   const account = privateKeyToAccount(treasuryKey());
