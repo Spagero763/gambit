@@ -1,13 +1,26 @@
 import { NextRequest, NextResponse } from "next/server";
+import { formatUnits } from "viem";
 import { supabaseAdmin } from "@/lib/supabase";
 import { verifyToken } from "@/lib/server/profileToken";
-import { treasuryConfigured, treasuryGBalance, payDailyG, gWei } from "@/lib/server/treasury";
+import { treasuryConfigured, treasuryAddress, treasuryGBalance, payDailyG, gWei } from "@/lib/server/treasury";
 
 export const runtime = "nodejs";
 
 // G$ paid per daily claim (configurable; small by design — this is a faucet).
 const DAILY_G = Number(process.env.DAILY_G_AMOUNT ?? "1");
 const today = () => new Date().toISOString().slice(0, 10);
+
+/** Status check (no secrets): is the treasury set up and funded to pay $G? */
+export async function GET() {
+  const address = treasuryAddress();
+  if (!address) return NextResponse.json({ configured: false, dailyG: DAILY_G });
+  try {
+    const bal = await treasuryGBalance();
+    return NextResponse.json({ configured: true, address, gBalance: formatUnits(bal, 18), dailyG: DAILY_G });
+  } catch {
+    return NextResponse.json({ configured: true, address, error: "balance read failed" });
+  }
+}
 
 /**
  * Daily G$ reward. The XP half is handled client-side (localStorage); this pays
