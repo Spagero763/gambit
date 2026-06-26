@@ -13,6 +13,16 @@ export function treasuryConfigured() {
   return !!process.env.TREASURY_PRIVATE_KEY;
 }
 
+/** Public treasury address (no key). null when not configured. */
+export function treasuryAddress(): string | null {
+  if (!process.env.TREASURY_PRIVATE_KEY) return null;
+  try {
+    return privateKeyToAccount(treasuryKey()).address;
+  } catch {
+    return null;
+  }
+}
+
 function treasuryKey(): `0x${string}` {
   let k = process.env.TREASURY_PRIVATE_KEY?.trim();
   if (!k) throw new Error("Treasury not configured");
