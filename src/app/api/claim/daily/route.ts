@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { formatUnits } from "viem";
 import { supabaseAdmin } from "@/lib/supabase";
 import { verifyToken } from "@/lib/server/profileToken";
-import { treasuryConfigured, treasuryAddress, treasuryGBalance, payDailyG, gWei } from "@/lib/server/treasury";
+import { treasuryConfigured, treasuryAddress, treasuryGBalance, treasuryDryRun, payDailyG, gWei } from "@/lib/server/treasury";
 
 export const runtime = "nodejs";
 
@@ -16,7 +16,8 @@ export async function GET() {
   if (!address) return NextResponse.json({ configured: false, dailyG: DAILY_G });
   try {
     const bal = await treasuryGBalance();
-    return NextResponse.json({ configured: true, address, gBalance: formatUnits(bal, 18), dailyG: DAILY_G });
+    const dryRun = await treasuryDryRun();
+    return NextResponse.json({ configured: true, address, gBalance: formatUnits(bal, 18), dailyG: DAILY_G, dryRun });
   } catch {
     return NextResponse.json({ configured: true, address, error: "balance read failed" });
   }
