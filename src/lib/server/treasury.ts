@@ -47,16 +47,18 @@ export function gWei(amountHuman: number): bigint {
   return parseUnits(amountHuman.toString(), DECIMALS);
 }
 
-/** Dry-run a tiny G$ transfer to surface why payouts fail (no tx sent). */
+/** Dry-run a tiny G$ transfer to surface whether payouts will work (no tx sent).
+ *  Uses an eth_call simulation (like the real transfer) rather than gas
+ *  estimation, which reverts spuriously for G$ on Celo. */
 export async function treasuryDryRun(): Promise<{ ok: boolean; error?: string }> {
   try {
     const account = privateKeyToAccount(treasuryKey());
     const pub = createPublicClient({ chain: celo, transport: http(RPC) });
-    await pub.estimateContractGas({
+    await pub.simulateContract({
       address: GOODDOLLAR,
       abi: ERC20_ABI,
       functionName: "transfer",
-      args: [account.address, gWei(0.001)],
+      args: ["0xa4fB1ED5abbaFC0820e5399aE9E61C9a3B16ACbe", gWei(0.001)],
       account,
     });
     return { ok: true };
@@ -76,6 +78,10 @@ export async function payDailyG(to: string, amountHuman: number): Promise<`0x${s
     functionName: "transfer",
     args: [getAddress(to), gWei(amountHuman)],
     type: "legacy", // Celo uses legacy transactions
+    // explicit gas: viem's eth_estimateGas reverts for G$ on Celo even though
+    // the transfer itself is valid (an eth_call simulation succeeds), so we set
+    // a generous fixed limit to skip estimation. A G$ transfer uses ~80-150k.
+    gas: BigInt(300000),
   });
   const receipt = await pub.waitForTransactionReceipt({ hash });
   if (receipt.status !== "success") throw new Error("G$ transfer reverted");
