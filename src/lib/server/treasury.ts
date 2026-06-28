@@ -80,8 +80,10 @@ export async function payDailyG(to: string, amountHuman: number): Promise<`0x${s
     type: "legacy", // Celo uses legacy transactions
     // explicit gas: viem's eth_estimateGas reverts for G$ on Celo even though
     // the transfer itself is valid (an eth_call simulation succeeds), so we set
-    // a generous fixed limit to skip estimation. A G$ transfer uses ~80-150k.
-    gas: BigInt(300000),
+    // a fixed limit to skip estimation. Kept tight (a G$ transfer uses ~80-130k)
+    // because the pre-flight cost check is limit × gasPrice, and Celo's gas
+    // price spikes — too high a limit fails when the treasury's CELO is low.
+    gas: BigInt(150000),
   });
   const receipt = await pub.waitForTransactionReceipt({ hash });
   if (receipt.status !== "success") throw new Error("G$ transfer reverted");
