@@ -72,18 +72,20 @@ export async function payDailyG(to: string, amountHuman: number): Promise<`0x${s
   const account = privateKeyToAccount(treasuryKey());
   const wallet = createWalletClient({ account, chain: celo, transport: http(RPC) });
   const pub = createPublicClient({ chain: celo, transport: http(RPC) });
+  // G$ transfer needs ~210k gas. We set gas + gasPrice EXPLICITLY: viem's
+  // estimateGas reverts spuriously for G$, and its default fee logic doubles the
+  // gas price for the balance check, which fails when the treasury's CELO is low
+  // and Celo's gas price spikes. Using the plain network gas price keeps the
+  // pre-flight cost realistic.
+  const gasPrice = await pub.getGasPrice();
   const hash = await wallet.writeContract({
     address: GOODDOLLAR,
     abi: ERC20_ABI,
     functionName: "transfer",
     args: [getAddress(to), gWei(amountHuman)],
-    type: "legacy", // Celo uses legacy transactions
-    // explicit gas: viem's eth_estimateGas reverts for G$ on Celo even though
-    // the transfer itself is valid (an eth_call simulation succeeds), so we set
-    // a fixed limit to skip estimation. Kept tight (a G$ transfer uses ~80-130k)
-    // because the pre-flight cost check is limit × gasPrice, and Celo's gas
-    // price spikes — too high a limit fails when the treasury's CELO is low.
-    gas: BigInt(150000),
+    type: "legacy",
+    gas: BigInt(250000),
+    gasPrice,
   });
   const receipt = await pub.waitForTransactionReceipt({ hash });
   if (receipt.status !== "success") throw new Error("G$ transfer reverted");
