@@ -262,6 +262,7 @@ export function ChessGame({ difficulty = "normal" }: { difficulty?: Difficulty }
             onPointerDown={onDown}
             onPointerMove={onMove}
             onPointerUp={onUp}
+            data-coach="board"
             className="relative grid aspect-square grid-cols-8 grid-rows-8 overflow-hidden rounded-md ring-1 ring-black/40"
             style={{ touchAction: "none", boxShadow: "inset 0 2px 10px rgba(0,0,0,0.45)" }}
           >

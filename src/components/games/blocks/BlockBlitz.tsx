@@ -220,6 +220,7 @@ export function BlockBlitz({
       {/* board */}
       <div className="relative mx-auto mt-5 w-full max-w-[360px]">
         <div
+          data-coach="board"
           className="relative grid aspect-square grid-cols-8 gap-1 rounded-3xl border border-white/10 bg-[#0c0b18] p-2.5 shadow-card"
           style={{ boxShadow: "inset 0 2px 14px rgba(0,0,0,0.6), 0 20px 50px -20px rgba(0,0,0,0.8)" }}
           onPointerLeave={() => setHover(null)}
@@ -289,7 +290,7 @@ export function BlockBlitz({
         </div>
 
         {/* tray */}
-        <div className="mt-4 grid grid-cols-3 gap-2.5">
+        <div data-coach="tray" className="mt-4 grid grid-cols-3 gap-2.5">
           {tray.map((p) => {
             const active = p.id === selected;
             return (
