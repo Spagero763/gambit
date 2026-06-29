@@ -130,7 +130,7 @@ export function TicTacToe({ difficulty = "normal" }: { difficulty?: Difficulty }
 
         {/* board: grid lines come from cell borders so marks always sit dead-center */}
         <div className="relative aspect-square w-full rounded-3xl border border-line bg-void-700 p-3 shadow-card">
-          <div className="grid h-full w-full grid-cols-3 grid-rows-3">
+          <div data-coach="grid" className="grid h-full w-full grid-cols-3 grid-rows-3">
             {board.map((cell, i) => {
               const col = i % 3;
               const row = Math.floor(i / 3);

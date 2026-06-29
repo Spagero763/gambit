@@ -191,7 +191,7 @@ export function SnakesLadders({ difficulty = "normal" }: { difficulty?: Difficul
 
         <Board theme={theme} tokenPos={tokenPos} layout={layout} />
 
-        <div className="mt-5 flex items-center gap-4">
+        <div data-coach="dice" className="mt-5 flex items-center gap-4">
           <Dice value={dice} rolling={rolling} />
           <button
             onClick={() => roll(0)}
@@ -253,6 +253,7 @@ function Board({
   const ai = tokenPos(1);
   return (
     <div
+      data-coach="board"
       className={cn("relative aspect-square w-full overflow-hidden rounded-3xl border p-2 shadow-card", theme.border)}
       style={{ background: theme.boardBg, boxShadow: "inset 0 2px 20px rgba(0,0,0,0.5), 0 20px 50px -20px rgba(0,0,0,0.8)" }}
     >

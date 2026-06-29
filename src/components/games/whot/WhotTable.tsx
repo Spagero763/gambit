@@ -371,7 +371,7 @@ export function WhotTable({
         </button>
 
         <div className="flex flex-col items-center gap-1.5">
-          <div className="relative h-24 w-16">
+          <div data-coach="pile" className="relative h-24 w-16">
             <AnimatePresence mode="popLayout">
               {t && (
                 <motion.div key={t.id} initial={{ scale: 0.6, opacity: 0, rotate: -12 }} animate={{ scale: 1, opacity: 1, rotate: 0 }} exit={{ opacity: 0 }} transition={{ type: "spring", stiffness: 300, damping: 22 }} className="absolute inset-0">
@@ -408,7 +408,7 @@ export function WhotTable({
       </div>
 
       {/* your hand */}
-      <div className="relative flex h-32 items-end justify-center">
+      <div data-coach="hand" className="relative flex h-32 items-end justify-center">
         {youHand.map((c, i) => {
           const { rot, y } = fan(i, youHand.length);
           const legal = youLegal.has(c.id);

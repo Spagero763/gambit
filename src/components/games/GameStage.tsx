@@ -12,7 +12,7 @@ import { SnakesLadders } from "./snakes/SnakesLadders";
 import { StakedSnakes } from "./StakedSnakes";
 import { WhotGame } from "./whot/WhotGame";
 import { StakedWhot } from "./StakedWhot";
-import { GameIntro } from "./GameIntro";
+import { BoardCoach } from "./BoardCoach";
 import { GameCover } from "@/components/art/GameCover";
 import { Difficulty } from "@/lib/difficulty";
 import type { StakeCtx } from "./PlayFlow";
@@ -50,10 +50,11 @@ export function GameStage({
     default:
       body = <ComingSoon game={game} />;
   }
-  // first-time "how to play" card for this game (shown once)
+  // first-time on-board coach for free play (points the hand at the real board,
+  // tray, hand, dice…). Staked games skip it — those players know the rules.
   return (
     <>
-      <GameIntro slug={game.slug} />
+      {!stake && <BoardCoach slug={game.slug} />}
       {body}
     </>
   );
