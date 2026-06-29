@@ -14,6 +14,7 @@ import { useProgress } from "@/lib/progress";
 import { useProfile, createProfile, setProfile } from "@/lib/profile";
 import { Avatar } from "@/components/Avatar";
 import { SendFunds } from "@/components/SendFunds";
+import { GoodIdCard } from "@/components/GoodIdCard";
 import { symbolForToken } from "@/lib/tokens";
 import { ProgressCard } from "@/components/Daily";
 import { Achievements } from "@/components/Achievements";
@@ -227,6 +228,8 @@ export function Profile() {
       </motion.div>
 
       {sendOpen && <SendFunds address={address} onClose={() => setSendOpen(false)} />}
+
+      <GoodIdCard />
 
       {isConnected && address && !hasProfile && !profileLoading && (
         <ProfileSaveCard
