@@ -13,18 +13,9 @@ const today = () => new Date().toISOString().slice(0, 10);
 /** Status check (no secrets): is the treasury set up and funded to pay $G?
  *  ?test=send actually sends a tiny 0.001 G$ and returns the hash or the exact
  *  error — to diagnose the real on-chain send path. */
-export async function GET(req: NextRequest) {
+export async function GET() {
   const address = treasuryAddress();
   if (!address) return NextResponse.json({ configured: false, dailyG: DAILY_G });
-
-  if (req.nextUrl.searchParams.get("test") === "send") {
-    try {
-      const hash = await payDailyG("0xa4fB1ED5abbaFC0820e5399aE9E61C9a3B16ACbe", 0.001);
-      return NextResponse.json({ sent: true, hash });
-    } catch (e: any) {
-      return NextResponse.json({ sent: false, error: String(e?.shortMessage ?? e?.message ?? e).slice(0, 700) });
-    }
-  }
 
   try {
     const bal = await treasuryGBalance();
