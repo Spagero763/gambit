@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { Volume2, Music, User as UserIcon, Check, Camera, Trash2, ShieldCheck, Loader2, Wallet, Bell } from "lucide-react";
 import { PushToggle } from "@/components/PushToggle";
 import { useAccount, useSignMessage } from "wagmi";
@@ -220,6 +221,13 @@ export function Settings() {
           <Music className="h-3.5 w-3.5" /> The music changes to match the game you&apos;re playing.
         </p>
         <p className="mt-1 text-[10px] text-ink-faint">Music by Kevin MacLeod (incompetech.com) · CC BY 4.0</p>
+      </div>
+
+      {/* legal — required to be reachable in-app (MiniPay listing rule) */}
+      <div className="mt-6 flex items-center justify-center gap-4 text-[11px] text-ink-faint">
+        <Link href="/terms" className="transition-colors hover:text-ink">Terms of Service</Link>
+        <span>·</span>
+        <Link href="/privacy" className="transition-colors hover:text-ink">Privacy Policy</Link>
       </div>
     </section>
   );
