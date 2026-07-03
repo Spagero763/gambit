@@ -1,6 +1,6 @@
 "use client";
 
-import { Settings as SettingsIcon } from "lucide-react";
+import { Settings as SettingsIcon, HelpCircle } from "lucide-react";
 import Link from "next/link";
 import { motion, useScroll, useTransform } from "framer-motion";
 import { Logo } from "./Logo";
@@ -31,6 +31,13 @@ export function Header() {
           </motion.div>
         </Link>
         <div className="flex items-center gap-2">
+          <button
+            aria-label="How Gambit works"
+            onClick={() => window.dispatchEvent(new Event("gambit:tour"))}
+            className="grid h-10 w-10 place-items-center rounded-xl border border-line bg-void-700 text-ink-dim transition-colors hover:text-ink"
+          >
+            <HelpCircle className="h-[18px] w-[18px]" />
+          </button>
           <Link
             href="/settings"
             aria-label="Settings"

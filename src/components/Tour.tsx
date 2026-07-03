@@ -13,13 +13,14 @@ interface Step {
 }
 
 const STEPS: Step[] = [
-  { title: "Welcome to Gambit 👋", body: "Play classic games and win real money — free vs the bot, or stake USDm/G$ in 1v1s. Here's the quick tour." },
-  { sel: '[data-tour="wallet"]', title: "Your wallet", body: "Tap here anytime to see your balances and withdraw your winnings — no crypto know-how needed." },
-  { sel: '[data-tour="daily"]', title: "Daily reward", body: "Come back each day and tap this for free XP — and a little real $G straight to your wallet." },
-  { sel: '[data-tour="games"]', title: "Pick a game", body: "Tap any game. Play free against the bot, or choose 'Staked 1v1' to put USDm/$G on the line and win the pot." },
-  { sel: '[data-tour="cups"]', title: "Cups", body: "Tournaments and prize cups — compete for bigger pots." },
-  { sel: '[data-tour="ranks"]', title: "Ranks", body: "The leaderboard. Win matches to climb the top earners." },
-  { sel: '[data-tour="you"]', title: "You", body: "Your profile, stats, XP and settings all live here. That's it — go play!" },
+  { title: "Welcome to Gambit 👋", body: "The games you grew up playing, for real money. Warm up free against the bot, then challenge real people. Quick tour, 30 seconds." },
+  { sel: '[data-tour="wallet"]', title: "Your money lives here", body: "Think of it as your game account. Tap anytime to see your balance, add money, or send your winnings out. No crypto knowledge needed." },
+  { sel: '[data-tour="daily"]', title: "Free money, daily", body: "Come back every day and tap this. You get XP plus a little real G$ paid straight into your wallet. It costs you nothing." },
+  { sel: '[data-tour="challenge"]', title: "The Daily Challenge", body: "One board, the whole world plays it, you get one shot at your score. Beat your friends and rub it in." },
+  { sel: '[data-tour="games"]', title: "Pick your game", body: "Tap any game to play free. When you're ready, choose Staked 1v1, put money on it, and the winner takes 95% of the pot." },
+  { sel: '[data-tour="cups"]', title: "Cups", body: "Tournaments with bigger pots. There's also a free Weekly Cup where verified humans split a real prize." },
+  { sel: '[data-tour="ranks"]', title: "Ranks", body: "The leaderboard. Win matches to climb it." },
+  { sel: '[data-tour="you"]', title: "You", body: "Your profile, match history, winnings and settings. Tap the ? up top anytime to see this tour again. Now go play!" },
 ];
 
 const clamp = (v: number, lo: number, hi: number) => Math.min(hi, Math.max(lo, v));
@@ -42,6 +43,13 @@ export function Tour() {
     }
     const t = setTimeout(() => setStep(0), 900); // let the first paint settle
     return () => clearTimeout(t);
+  }, []);
+
+  // the header's ? button (or anything else) can reopen the tour anytime
+  useEffect(() => {
+    const start = () => setStep(0);
+    window.addEventListener("gambit:tour", start);
+    return () => window.removeEventListener("gambit:tour", start);
   }, []);
 
   useEffect(() => {
