@@ -3,6 +3,7 @@ import { supabaseAdmin } from "@/lib/supabase";
 import { verifyToken } from "@/lib/server/profileToken";
 import { goodIdRoot } from "@/lib/server/goodid";
 import { treasuryConfigured, treasuryUsdmBalance, payUsdm } from "@/lib/server/treasury";
+import { cupContract, cupWeekSettledOnChain, cupVaultBalance, settleCupOnChain } from "@/lib/server/cupChain";
 import { weekIndex, weekKey, weekSeed, weekStart, weekEnd, CUP_SPLIT } from "@/lib/cup";
 import { notify } from "@/lib/server/push";
 import { parseUnits } from "viem";
@@ -198,36 +199,68 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ ok: true, settled: true, winners: [] });
       }
 
-      if (!treasuryConfigured()) {
-        await db.from("cup_weeks").update({ settle_error: "treasury not configured" }).eq("week", wk);
-        return NextResponse.json({ error: "Treasury not configured" }, { status: 500 });
-      }
-      const owed = winners.filter((w) => !w.tx).reduce((s, w) => s + w.amount, 0);
-      if (owed > 0) {
-        const bal = await treasuryUsdmBalance();
-        if (bal < parseUnits(owed.toString(), 18)) {
-          await db.from("cup_weeks").update({ settle_error: "treasury needs USDm funding" }).eq("week", wk);
-          return NextResponse.json({ error: "Treasury needs USDm funding" }, { status: 500 });
-        }
-      }
-
-      // pay one by one, persisting each tx so a crash/retry never double-pays
       const MEDALS = ["🥇 Weekly Cup champion", "🥈 Weekly Cup 2nd", "🥉 Weekly Cup 3rd"];
-      for (let idx = 0; idx < winners.length; idx++) {
-        const w = winners[idx];
-        if (w.tx) continue;
+      const unpaid = winners.filter((w) => !w.tx);
+      const owed = unpaid.reduce((s, w) => s + w.amount, 0);
+
+      if (cupContract() && unpaid.length === winners.length) {
+        // preferred: ONE relayer tx via the WeeklyCup vault pays the whole
+        // podium; the contract enforces once-per-week and emits WeekSettled.
         try {
-          w.tx = await payUsdm(w.address, w.amount);
+          if (await cupWeekSettledOnChain(i)) {
+            // paid on-chain in a previous attempt whose tx we lost — record that
+            winners.forEach((w) => (w.tx = w.tx ?? "onchain"));
+          } else {
+            if ((await cupVaultBalance()) < parseUnits(owed.toString(), 18)) {
+              await db.from("cup_weeks").update({ settle_error: "cup vault needs USDm funding" }).eq("week", wk);
+              return NextResponse.json({ error: "Cup vault needs USDm funding" }, { status: 500 });
+            }
+            const tx = await settleCupOnChain(i, winners);
+            winners.forEach((w) => (w.tx = tx));
+            winners.forEach((w, idx) =>
+              void notify([w.address], {
+                title: `${MEDALS[idx]}!`,
+                body: `${w.amount} USDm just landed in your wallet. 🎉`,
+                url: "/tournaments",
+              })
+            );
+          }
           await db.from("cup_weeks").update({ winners, settle_error: null }).eq("week", wk);
-          void notify([w.address], {
-            title: `${MEDALS[idx]}!`,
-            body: `${w.amount} USDm just landed in your wallet. 🎉`,
-            url: "/tournaments",
-          });
         } catch (e: any) {
-          const settle_error = String(e?.shortMessage ?? e?.message ?? "pay failed").slice(0, 300);
+          const settle_error = String(e?.shortMessage ?? e?.message ?? "settle failed").slice(0, 300);
           await db.from("cup_weeks").update({ winners, settle_error }).eq("week", wk);
           return NextResponse.json({ error: settle_error, winners }, { status: 500 });
+        }
+      } else {
+        // fallback: direct treasury transfers (also finishes a legacy partial payout)
+        if (!treasuryConfigured()) {
+          await db.from("cup_weeks").update({ settle_error: "treasury not configured" }).eq("week", wk);
+          return NextResponse.json({ error: "Treasury not configured" }, { status: 500 });
+        }
+        if (owed > 0) {
+          const bal = await treasuryUsdmBalance();
+          if (bal < parseUnits(owed.toString(), 18)) {
+            await db.from("cup_weeks").update({ settle_error: "treasury needs USDm funding" }).eq("week", wk);
+            return NextResponse.json({ error: "Treasury needs USDm funding" }, { status: 500 });
+          }
+        }
+        // pay one by one, persisting each tx so a crash/retry never double-pays
+        for (let idx = 0; idx < winners.length; idx++) {
+          const w = winners[idx];
+          if (w.tx) continue;
+          try {
+            w.tx = await payUsdm(w.address, w.amount);
+            await db.from("cup_weeks").update({ winners, settle_error: null }).eq("week", wk);
+            void notify([w.address], {
+              title: `${MEDALS[idx]}!`,
+              body: `${w.amount} USDm just landed in your wallet. 🎉`,
+              url: "/tournaments",
+            });
+          } catch (e: any) {
+            const settle_error = String(e?.shortMessage ?? e?.message ?? "pay failed").slice(0, 300);
+            await db.from("cup_weeks").update({ winners, settle_error }).eq("week", wk);
+            return NextResponse.json({ error: settle_error, winners }, { status: 500 });
+          }
         }
       }
 
