@@ -1,14 +1,16 @@
 "use client";
 
 import { useState } from "react";
-import { HelpCircle, Gamepad2, Coins, Trophy, ShieldCheck } from "lucide-react";
+import { HelpCircle, Gamepad2, Coins, Trophy, Wallet, Send } from "lucide-react";
 import { Modal } from "./Modal";
 
+// The whole money journey in five steps a first-timer can follow.
 const STEPS = [
-  { icon: Gamepad2, title: "Pick a game", body: "Chess, Whot, tic-tac-toe, snakes & ladders or a block puzzle." },
-  { icon: Coins, title: "Play free, or stake", body: "Practise free vs the bot — or put USDm on a 1v1 against a real person." },
-  { icon: Trophy, title: "Winner takes the pot", body: "Win and you collect both stakes (minus a small 5% fee). A draw refunds both." },
-  { icon: ShieldCheck, title: "Safe & on-chain", body: "Stakes sit in an audited escrow contract on Celo and pay out automatically. If a game stalls, funds are always reclaimable." },
+  { icon: Wallet, title: "Sign in, get a wallet", body: "Just your email. A wallet is created for you, think of it as your game account. Add money from MiniPay or any Celo wallet whenever you want." },
+  { icon: Gamepad2, title: "Warm up free", body: "Every game is free against the bot. No deposit, no catch, play all day." },
+  { icon: Coins, title: "Put money on it", body: "Ready? Stake USDm or G$ on a 1v1 against a real person. Both stakes sit locked in a contract nobody can touch, not even us." },
+  { icon: Trophy, title: "Winner takes 95%", body: "Win and the pot lands in your wallet in seconds. A draw refunds both players. If a game stalls, your money is always reclaimable." },
+  { icon: Send, title: "Cash out anytime", body: "Your money is yours. Send winnings to any wallet from your profile whenever you like." },
 ];
 
 /** "How it works" button + modal. Manual only — the first-run tour is Onboarding. */
