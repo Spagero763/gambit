@@ -39,20 +39,44 @@ export async function notify(addresses: string[], payload: PushPayload): Promise
       .select("endpoint,sub")
       .in("address", lower);
     if (!subs?.length) return;
-    const json = JSON.stringify(payload);
-    await Promise.allSettled(
-      subs.map(async (row: { endpoint: string; sub: any }) => {
-        try {
-          await webpush.sendNotification(row.sub, json);
-        } catch (e: any) {
-          // endpoint gone (user revoked / browser cleared) — prune it
-          if (e?.statusCode === 404 || e?.statusCode === 410) {
-            await db.from("push_subs").delete().eq("endpoint", row.endpoint);
-          }
-        }
-      })
-    );
+    await sendAll(db, subs, payload);
   } catch {
     /* never let push errors surface into game flows */
   }
+}
+
+/** Notify EVERY subscribed device except `except` — open-challenge broadcasts.
+ *  Capped so a busy day can't turn into a notification storm. */
+export async function broadcast(payload: PushPayload, except?: string): Promise<void> {
+  try {
+    if (!ensureConfigured()) return;
+    const db = supabaseAdmin();
+    let q = db.from("push_subs").select("endpoint,sub,address").limit(500);
+    if (except) q = q.neq("address", except.toLowerCase());
+    const { data: subs } = await q;
+    if (!subs?.length) return;
+    await sendAll(db, subs, payload);
+  } catch {
+    /* never let push errors surface into game flows */
+  }
+}
+
+async function sendAll(
+  db: ReturnType<typeof supabaseAdmin>,
+  subs: { endpoint: string; sub: any }[],
+  payload: PushPayload
+): Promise<void> {
+  const json = JSON.stringify(payload);
+  await Promise.allSettled(
+    subs.map(async (row: { endpoint: string; sub: any }) => {
+      try {
+        await webpush.sendNotification(row.sub, json);
+      } catch (e: any) {
+        // endpoint gone (user revoked / browser cleared) — prune it
+        if (e?.statusCode === 404 || e?.statusCode === 410) {
+          await db.from("push_subs").delete().eq("endpoint", row.endpoint);
+        }
+      }
+    })
+  );
 }
