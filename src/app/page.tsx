@@ -2,12 +2,14 @@ import { Backdrop } from "@/components/Backdrop";
 import { Header } from "@/components/Header";
 import { Hero } from "@/components/Hero";
 import { DailyReward } from "@/components/DailyReward";
-import { SaveProgressPrompt } from "@/components/SaveProgressPrompt";
-import { DailyStrip } from "@/components/Daily";
-import { ActiveGames } from "@/components/ActiveGames";
-import { GameShowcase } from "@/components/GameShowcase";
 import { GameGrid } from "@/components/GameGrid";
 import { BottomNav } from "@/components/BottomNav";
+import {
+  LazyActiveGames,
+  LazyDailyStrip,
+  LazyGameShowcase,
+  LazySaveProgressPrompt,
+} from "@/components/HomeLazy";
 
 export default function Home() {
   return (
@@ -17,11 +19,11 @@ export default function Home() {
       <Hero />
       <div className="px-5">
         <DailyReward />
-        <SaveProgressPrompt />
-        <ActiveGames />
-        <DailyStrip />
+        <LazySaveProgressPrompt />
+        <LazyActiveGames />
+        <LazyDailyStrip />
       </div>
-      <GameShowcase />
+      <LazyGameShowcase />
       <GameGrid />
       <BottomNav />
     </main>
