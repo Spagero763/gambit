@@ -10,6 +10,7 @@ import { tokensFor } from "@/lib/tokens";
 import { celo } from "viem/chains";
 import { useSendFunds, SendAsset } from "@/hooks/useSendFunds";
 import { Portal } from "@/components/Portal";
+import { ExternalA } from "@/components/ExternalA";
 import { cn } from "@/lib/cn";
 
 const EXPLORER: Record<number, string> = {
@@ -92,9 +93,9 @@ export function SendFunds({ address, onClose }: { address: `0x${string}`; onClos
             <p className="mt-4 text-sm font-medium text-ink">Sent {amount} {asset.symbol}</p>
             <p className="mt-1 text-xs text-ink-faint">to {to.slice(0, 6)}…{to.slice(-4)}</p>
             {txHash && (
-              <a href={`${explorer}${txHash}`} target="_blank" rel="noreferrer" className="mt-3 inline-flex items-center gap-1.5 text-xs text-teal hover:underline">
+              <ExternalA href={`${explorer}${txHash}`} className="mt-3 inline-flex items-center gap-1.5 text-xs text-teal hover:underline">
                 View on explorer <ExternalLink className="h-3 w-3" />
-              </a>
+              </ExternalA>
             )}
             <button onClick={onClose} className="btn-primary mt-5 w-full rounded-xl py-3 text-sm shadow-glow">Done</button>
           </div>

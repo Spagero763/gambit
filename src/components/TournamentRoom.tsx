@@ -18,6 +18,7 @@ import { tokensFor, symbolForToken, decimalsForToken } from "@/lib/tokens";
 import { hasToken, signIn } from "@/lib/profile";
 import { useProfiles, displayName, avatarHex } from "@/lib/profiles";
 import { Avatar } from "@/components/Avatar";
+import { ExternalA } from "@/components/ExternalA";
 import {
   fetchTournament,
   joinTournament,
@@ -405,9 +406,9 @@ export function TournamentRoom({ id }: { id: string }) {
             <p className="mt-1 font-semibold text-ink">Tournament settled</p>
             <p className="text-sm text-ink-dim">The pot has been paid out on-chain.</p>
             {explorer && t.settle_tx && (
-              <a href={`${explorer}${t.settle_tx}`} target="_blank" rel="noreferrer" className="mt-2 inline-flex items-center gap-1.5 text-[12px] text-teal">
+              <ExternalA href={`${explorer}${t.settle_tx}`} className="mt-2 inline-flex items-center gap-1.5 text-[12px] text-teal">
                 View payout <ExternalLink className="h-3.5 w-3.5" />
-              </a>
+              </ExternalA>
             )}
             {winners.length >= 3 && (
               <button onClick={() => setPodium(true)} className="mx-auto mt-3 block rounded-xl border border-line bg-void-800 px-4 py-2 text-[12px] font-medium text-ink-dim transition-colors hover:text-ink">

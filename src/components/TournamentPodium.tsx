@@ -6,6 +6,7 @@ import { Crown, ExternalLink, X } from "lucide-react";
 import { Avatar } from "@/components/Avatar";
 import { Confetti } from "@/components/motion/Confetti";
 import { PublicProfile, displayName, avatarHex } from "@/lib/profiles";
+import { ExternalA } from "@/components/ExternalA";
 import { play } from "@/lib/sfx";
 
 /**
@@ -158,14 +159,12 @@ export function TournamentPodium({
         className="mt-7 flex flex-col items-center gap-3"
       >
         {settleTx && explorer && (
-          <a
+          <ExternalA
             href={`${explorer}${settleTx}`}
-            target="_blank"
-            rel="noreferrer"
             className="inline-flex items-center gap-1.5 rounded-full bg-white/10 px-4 py-2 text-xs font-semibold text-ink"
           >
             View payout on Celoscan <ExternalLink className="h-3 w-3" />
-          </a>
+          </ExternalA>
         )}
         <button onClick={onClose} className="btn-primary rounded-2xl px-8 py-3 text-sm shadow-glow">
           Continue

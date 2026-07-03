@@ -10,6 +10,7 @@ import { Confetti } from "@/components/motion/Confetti";
 import { friendlyError } from "@/lib/errors";
 import { symbolForToken } from "@/lib/tokens";
 import { inviteUrl, shareOrCopy } from "@/lib/share";
+import { ExternalA } from "@/components/ExternalA";
 import { cn } from "@/lib/cn";
 
 const FEE = 0.05;
@@ -127,14 +128,12 @@ export function SettleOverlay({
             </div>
           )}
           {settleTx && chainId && (
-            <a
+            <ExternalA
               href={`${EXPLORER[chainId] ?? ""}${settleTx}`}
-              target="_blank"
-              rel="noreferrer"
               className="mt-3 inline-flex items-center gap-1.5 rounded-full bg-white/10 px-3 py-1.5 text-xs font-semibold text-ink"
             >
               {result === "lose" ? "View result" : "View payout on Celoscan"} <ExternalLink className="h-3 w-3" />
-            </a>
+            </ExternalA>
           )}
           <div className="mt-4 flex items-center justify-center gap-2">
             {result === "win" && (

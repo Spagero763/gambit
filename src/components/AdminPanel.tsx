@@ -5,6 +5,7 @@ import { ShieldCheck, Wallet, Loader2, Fuel, RefreshCw, ExternalLink } from "luc
 import { useAccount, useSignMessage } from "wagmi";
 import { usePrivy } from "@privy-io/react-auth";
 import { hasToken, signIn, getToken } from "@/lib/profile";
+import { ExternalA } from "@/components/ExternalA";
 import { cn } from "@/lib/cn";
 
 const OWNER = "0x32a3596c25a98950e850e3531a0aa87f1506e5d7";
@@ -161,7 +162,7 @@ function Row({ title, sub, chain, tx, children }: { title: string; sub: string; 
           <p className="truncate text-[11px] text-ink-faint">{sub}</p>
         </div>
         {tx && chain && EXPLORER[chain] && (
-          <a href={`${EXPLORER[chain]}${tx}`} target="_blank" rel="noreferrer" className="shrink-0 text-ink-faint hover:text-teal"><ExternalLink className="h-3.5 w-3.5" /></a>
+          <ExternalA href={`${EXPLORER[chain]}${tx}`} className="shrink-0 text-ink-faint hover:text-teal"><ExternalLink className="h-3.5 w-3.5" /></ExternalA>
         )}
       </div>
       <div className="mt-2 flex flex-wrap gap-2">{children}</div>
