@@ -1,6 +1,10 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
+  experimental: {
+    // import only the icons/primitives each page uses instead of whole packages
+    optimizePackageImports: ["lucide-react", "framer-motion"],
+  },
   webpack: (config) => {
     config.externals.push("pino-pretty", "lokijs", "encoding");
     config.resolve.fallback = {
