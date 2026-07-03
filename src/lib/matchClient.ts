@@ -126,3 +126,13 @@ export async function claimWin(id: bigint, player: string): Promise<{ ok: boolea
   });
   return res.json();
 }
+
+/** Resign: concede the match, opponent wins the pot instantly. Authenticated. */
+export async function resignMatch(id: bigint, player: string): Promise<{ ok: boolean; settled?: boolean; winner?: string; error?: string }> {
+  const res = await fetch("/api/match/resign", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ id: id.toString(), player, token: getToken(player) }),
+  });
+  return res.json();
+}
