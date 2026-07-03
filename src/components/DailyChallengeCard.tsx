@@ -21,7 +21,7 @@ export function DailyChallengeCard() {
     <Link
       href="/daily"
       data-tour="challenge"
-      className="mt-3 flex items-center gap-3 rounded-2xl border border-amber/25 bg-gradient-to-r from-amber/[0.08] to-transparent p-4 transition-colors hover:border-amber/40"
+      className="mx-auto mt-3 flex w-full max-w-2xl items-center gap-3 rounded-2xl border border-amber/25 bg-gradient-to-r from-amber/[0.08] to-transparent p-4 transition-colors hover:border-amber/40"
     >
       <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-amber/15 text-amber">
         {state.done ? <Check className="h-5 w-5" /> : <CalendarDays className="h-5 w-5" />}
