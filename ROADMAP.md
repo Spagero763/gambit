@@ -1,44 +1,68 @@
 # Gambit roadmap
 
-Status tracker for the build. Updated as work lands.
+The master plan. Goal: real users, real transactions, a growth curve that stands up to VC and grant scrutiny. Mobile, iOS and desktop all first class. Results over deadlines.
 
-## Done
+## Shipped
 
-- **App shell**: Next.js 14 + TypeScript + Tailwind, dark arcade design system, animated background, route transitions, custom logo and iconography (no emoji), bottom-nav routing.
-- **Lobby**: cover-art game tiles, live counts, hero.
-- **Games (all playable vs AI/bots, free):**
-  - Chess — vector pieces, drag + tap, legal moves, check, promotion picker, clocks, player cards + captured trays, Easy/Normal/Hard.
-  - Tic-Tac-Toe — drawn marks, scoreboard, Easy/Normal/Hard.
-  - Snakes & Ladders — state-driven tokens, four board themes, difficulty changes the board layout.
-  - Block Blitz — 8x8 block-placement puzzle, combos, best score.
-  - Naija Whot — verified ruleset, 2 to 6 players with bots, tournament (semi-final, final) and a winner celebration.
-- **Leaderboard / Profile / Events** screens.
-- **Wallet**: wagmi v2 injected connector with MiniPay auto-connect.
-- **Escrow contract**: `contracts/ArcadeEscrow.sol` with 8 passing Foundry tests (1v1 winner-takes-pot, draw refund, cancel/refund, relayer-only settle, 3 to 8 seat pot split). Security-reviewed.
+- App shell, dark arcade design system, bottom-nav routing, route transitions.
+- Five games playable free vs bots: Chess, Naija Whot, Tic-Tac-Toe, Snakes & Ladders, Block Blitz.
+- Staked 1v1s (USDm, USDC, G$) through `ArcadeEscrow` on Celo mainnet, source verified, server-authoritative real-time play, relayer settlement.
+- Staked tournaments: score race, knockout brackets, Whot survival table; on-chain 50/30/20 pot split.
+- Privy auth (email/social + wallet), embedded wallets, wallet sheet, send/withdraw.
+- Daily reward: XP + 1 G$ from the treasury, once per day per profile.
+- GoodID (GoodDollar face verification) on the profile.
+- Free Weekly Cup: GoodID-gated (one entry per verified human), same seeded board for all, top 3 split a USDm prize from the on-chain `WeeklyCup` vault (deployed, 8 passing tests).
+- On-board coach (pointing hand) for first-time play in every game.
+- Per-game music, push notifications, admin panel, Dune dashboard, public repo.
 
-## In progress
+## The plan
 
-- Wiring the **stake -> play -> payout** loop into one game (tic-tac-toe rooms) end to end.
+### Phase 0 — Distribution first: MiniPay
+MiniPay pays builders in CELO for mini apps with real transaction activity, plus funded growth campaigns. The audience is already inside the app; we go to them.
+- Full MiniPay container compatibility (injected wallet, viewport, their design standards).
+- Gas payable in stablecoins (CIP-64 fee abstraction) so users never need CELO.
+- Pass the submission checklist, get listed on the discovery page, then qualify for the builders incentive.
 
-## Next
+### Phase 1 — Growth loops in the product
+- **Daily Challenge with a shareable result card**: one seeded board for everyone each day; finishing produces a spoiler-free score card that posts to WhatsApp/X in one tap. The Wordle loop.
+- **Referral bonus with real money**: invite a friend, both get a small G$/USDm bonus after their first match. Treasury-funded, capped to one per verified human.
+- **Streak multipliers** on the daily claim; achievement badges worth sharing.
+- **Challenge links** (bring your own opponent into a staked match) and **push broadcasts** when someone opens a stake, so an empty lobby still finds players.
 
-- Wire the **stake -> play -> payout** loop into one game (tic-tac-toe rooms) end to end.
-- Deploy ArcadeEscrow to mainnet (need fee wallet + relayer addresses).
-- Verify on Talent Protocol (done: URL + meta tag live).
-- Deploy `ArcadeEscrow` after hardening; wire the rest of the staked modes (Whot pots, Block Blitz same-seed pools).
-- Online human-vs-human play (real-time sync) so staked 1v1 has a real opponent.
+### Phase 2 — A layman can use everything
+- **First-run journey**: land, sign in with just an email, "this is your wallet, think of it as your game account", play a free game inside 30 seconds, only then meet staking.
+- **Coach 2.0**: the pointing hand covers the whole app (wallet, deposit, withdraw, settings, cup, tournaments), reopenable anytime from a help button, not once-and-gone.
+- **Plain language pass over every word in the app**: buttons, errors, empty states, notifications. No jargon a first-timer has to google.
+- **Hero copy** (locked, no dashes): headline "Think you'd win? Put money on it." Subhead: "The games you grew up playing, now with real opponents and a real pot. Winner takes 95%, paid to your wallet the second the game ends. Warm up free until you're ready." Chips: Warm up free / Winner takes 95% / Paid in seconds / How it works.
+- **How Gambit works** page: five picture cards, money in, play free, stake, win, cash out.
+- **Forfeit/resign in every game and tournament**: confirmation step, short grace window at match start, resigner loses and the opponent is paid instantly through the existing settle path. Kills the 30-minute hostage wait.
 
-## Before mainnet — contract hardening checklist
+### Phase 3 — Motion, feel and sound (the anti-generic pass)
+Gambit's motion language comes from the games themselves, not agency gimmicks. Transform/opacity only, 60fps on cheap Androids, respects reduced motion.
+- **Card-sweep page/tab transitions**: navigating deals the next page in like a card snapped onto the table.
+- **Game juice**: Block Blitz line clears shatter with debris and a screen kick; chess captures land with impact; Whot cards flick with spin and weight; dice tumble; wins get a ceremony (chips rain, payout counts up), losses a quick low fade.
+- **Shared-element lobby transition**: tap a game card and the card itself grows into the board.
+- **Micro-interactions everywhere**: buttons compress, balances tick, tab icons pop.
+- **Sound identity**: modern CC0 music refresh (Pixabay/OpenGameArt, afrobeats-adjacent lobby energy, tension loops for the chess clock) plus an SFX layer wired to the same events as the juice: card snap, dice clatter, shatter, chip payout, win sting. Per-game volume in settings.
 
-From the security review:
+### Phase 4 — Performance and scale (before the crowd, not after the crash)
+- Bundle diet: audit what Privy/wagmi pull into every route, lazy-load game engines, target under 250kB first load.
+- Replace polling with Supabase Realtime subscriptions for matches and tournaments.
+- Indexes on hot queries, rate limits on API routes, connection pooling check.
+- RPC fallbacks so a forno hiccup never freezes wallet reads.
+- Load test the hot routes (k6) and fix what breaks at 500 concurrent.
+- Image/audio compression; PWA offline for free games.
 
-- [x] **(high)** Time-bounded, permissionless stale-match refund (`reclaimStalled`) plus relayer `abortMatch`, using a dedicated `activatedAt` timestamp.
-- [x] **(med)** Token allowlist (owner-curated) and safe transfer handling for no-return (USDT-style) and fee-on-transfer tokens.
-- [x] **(low)** Exact-length ranking required for pot settlement.
-- [x] **(low)** Join deadline frozen at creation.
-- [ ] **(med, deploy-time)** Use a multisig as the relayer; consider a delay on `setRelayer`.
+### Phase 5 — Desktop, polish, proof
+- A real desktop layout (two-column lobby, side-by-side game and chat/history), not a stretched phone.
+- Public live stats page pulled from the chain: players, matches, settlements, prizes paid. Undeniable numbers for VCs and grants.
+- Dune dashboard maintained, weekly KarmaGAP updates, both verified contracts front and center.
+- Badges, seasonal events, the pitch memo when the curve exists.
 
 ## Principles
 
-- Bot play is free (practice, XP, leaderboard). On-chain stakes are human vs human, or human vs a separately funded wallet, never a rigged unbeatable bot.
-- Mobile-first, MiniPay-compatible, gas payable in cUSD.
+- Bot play is free. On-chain stakes are human vs human, never a rigged bot as the house.
+- Free entry stays gasless for players; money moves on-chain where trust matters.
+- One verified human, one entry, everywhere prizes exist (GoodID root, server-enforced).
+- Honest numbers in every application and update. No vanity metrics.
+- Copy sounds like a person across the table, never a feature list. No dashes.
