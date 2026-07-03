@@ -6,6 +6,7 @@ import { motion } from "framer-motion";
 import { ArrowLeft, Flame, Play, Share2, Check, CalendarDays } from "lucide-react";
 import { useAccount } from "wagmi";
 import { BlockBlitz } from "@/components/games/blocks/BlockBlitz";
+import { BottomNav } from "@/components/BottomNav";
 import { dayNumber, daySeed, msToNextBoard, dailyResult, dailyStreak, recordDaily, shareText, DailyResult } from "@/lib/daily";
 import { shareOrCopy } from "@/lib/share";
 
@@ -62,6 +63,8 @@ export function DailyChallenge() {
     setTimeout(() => setShared("idle"), 2000);
   };
 
+  // playing: the game owns the whole screen, exactly like free play — no
+  // bottom nav overlapping the piece tray (it was blocking view AND drags)
   if (phase === "play") {
     return (
       <BlockBlitz
@@ -137,6 +140,7 @@ export function DailyChallenge() {
           </div>
         )}
       </motion.div>
+      <BottomNav />
     </section>
   );
 }

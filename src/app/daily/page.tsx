@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import { Backdrop } from "@/components/Backdrop";
-import { BottomNav } from "@/components/BottomNav";
 import { DailyChallenge } from "@/components/DailyChallenge";
 
 export const metadata: Metadata = {
@@ -13,7 +12,6 @@ export default function DailyPage() {
     <main className="relative min-h-[100dvh]">
       <Backdrop />
       <DailyChallenge />
-      <BottomNav />
     </main>
   );
 }
