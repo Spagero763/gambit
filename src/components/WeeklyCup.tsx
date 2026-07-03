@@ -95,6 +95,39 @@ export function WeeklyCup() {
 
   if (!cup) return null;
 
+  // Coming Soon: the cup is announced but entries haven't opened yet. Show the
+  // full pitch (prize, rules) so it builds appetite, with no join button.
+  if (!cup.open) {
+    return (
+      <motion.div
+        initial={{ opacity: 0, y: 8 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="mt-4 overflow-hidden rounded-3xl border border-teal/25 bg-gradient-to-br from-teal/[0.08] to-transparent p-5 shadow-card"
+      >
+        <div className="flex items-center gap-3">
+          <span className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-teal/15 text-teal">
+            <Trophy className="h-5 w-5" />
+          </span>
+          <div className="min-w-0 flex-1">
+            <div className="flex items-center gap-2">
+              <h2 className="font-display text-lg font-bold">Weekly Cup</h2>
+              <span className="rounded-full bg-amber/15 px-2 py-0.5 text-[10px] font-semibold text-amber">
+                COMING SOON
+              </span>
+            </div>
+            <p className="text-[12px] text-ink-dim">
+              Free entry, verified humans only. Everyone plays the same board all week and the top 3 split{" "}
+              <span className="font-semibold text-ink">{cup.prize} USDm</span>, paid from an on chain prize vault.
+            </p>
+          </div>
+        </div>
+        <p className="mt-3 rounded-xl bg-void-800 px-3 py-2 text-center text-[12px] text-ink-faint">
+          Entries open very soon. Get verified on your Profile now so you can enter the second it does.
+        </p>
+      </motion.div>
+    );
+  }
+
   const podium = cup.last?.status === "settled" ? cup.last.winners ?? [] : [];
 
   return (

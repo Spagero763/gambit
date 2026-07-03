@@ -17,6 +17,7 @@ export interface CupWinner {
 
 export interface CupView {
   week: string;
+  open: boolean;
   seed: number;
   startsAt: number;
   endsAt: number;

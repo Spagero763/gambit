@@ -18,6 +18,9 @@ export const runtime = "nodejs";
  * a human with five linked wallets still gets exactly one seat.
  */
 const PRIZE_USDM = Number(process.env.CUP_PRIZE_USDM ?? "5");
+// The cup shows as Coming Soon until opening day — set CUP_OPEN=1 in Vercel to
+// open entries (no redeploy needed). Settlement of past weeks stays available.
+const CUP_OPEN = process.env.CUP_OPEN === "1";
 
 const clampScore = (v: unknown) => {
   const n = Math.floor(Number(v));
@@ -56,6 +59,7 @@ export async function GET(req: NextRequest) {
 
     return NextResponse.json({
       week: wk,
+      open: CUP_OPEN,
       seed: weekSeed(i),
       startsAt: weekStart(i),
       endsAt: weekEnd(i),
@@ -79,6 +83,9 @@ export async function POST(req: NextRequest) {
     const db = supabaseAdmin();
 
     if (action === "join") {
+      if (!CUP_OPEN) {
+        return NextResponse.json({ error: "The Weekly Cup opens soon — watch this space" }, { status: 403 });
+      }
       const addr = String(body.address ?? "").toLowerCase();
       if (!addr || verifyToken(String(body.auth)) !== addr) {
         return NextResponse.json({ error: "Sign in to enter the cup" }, { status: 401 });
