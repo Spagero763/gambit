@@ -3,6 +3,7 @@ import { formatUnits } from "viem";
 import { supabaseAdmin } from "@/lib/supabase";
 import { verifyToken } from "@/lib/server/profileToken";
 import { treasuryConfigured, treasuryAddress, treasuryGBalance, treasuryDryRun, payDailyG, gWei } from "@/lib/server/treasury";
+import { claimContract, claimVaultBalance, claimedOnChain, payClaimOnChain } from "@/lib/server/claimChain";
 
 export const runtime = "nodejs";
 
@@ -14,6 +15,17 @@ const today = () => new Date().toISOString().slice(0, 10);
  *  ?test=send actually sends a tiny 0.001 G$ and returns the hash or the exact
  *  error — to diagnose the real on-chain send path. */
 export async function GET() {
+  // preferred: the on-chain claim vault (every claim is a public contract event)
+  const vault = claimContract();
+  if (vault) {
+    try {
+      const bal = await claimVaultBalance();
+      return NextResponse.json({ configured: true, contract: vault, gBalance: formatUnits(bal, 18), dailyG: DAILY_G, onchain: true });
+    } catch {
+      return NextResponse.json({ configured: true, contract: vault, error: "vault read failed" });
+    }
+  }
+
   const address = treasuryAddress();
   if (!address) return NextResponse.json({ configured: false, dailyG: DAILY_G });
 
@@ -52,6 +64,29 @@ export async function POST(req: NextRequest) {
       prof = { address: addr, last_g_claim: null };
     }
     if (prof.last_g_claim === today()) return NextResponse.json({ gAmount: 0, reason: "already" });
+
+    // preferred path: the on-chain claim vault. The contract enforces once per
+    // person per day (keyed on wallet + day), and every claim is a public
+    // RewardPaid event tagged "daily" — readable by anyone on Celoscan.
+    if (claimContract()) {
+      try {
+        if (await claimedOnChain(addr)) {
+          await db.from("profiles").update({ last_g_claim: today() }).eq("address", addr);
+          return NextResponse.json({ gAmount: 0, reason: "already" });
+        }
+        if ((await claimVaultBalance()) < gWei(DAILY_G)) {
+          return NextResponse.json({ gAmount: 0, reason: "treasury-empty" });
+        }
+        const tx = await payClaimOnChain(addr, DAILY_G);
+        await db.from("profiles").update({ last_g_claim: today() }).eq("address", addr);
+        return NextResponse.json({ gAmount: DAILY_G, tx, onchain: true });
+      } catch {
+        return NextResponse.json({ gAmount: 0, reason: "send-failed" });
+      }
+    }
+
+    // fallback: direct treasury transfer (still an on-chain ERC20 transfer,
+    // just from the treasury wallet instead of the vault contract)
     if (!treasuryConfigured()) return NextResponse.json({ gAmount: 0, reason: "no-treasury" });
 
     let bal = BigInt(0);
