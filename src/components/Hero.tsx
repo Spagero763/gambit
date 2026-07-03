@@ -8,14 +8,14 @@ import { Magnetic } from "./motion/Magnetic";
 const ease = [0.22, 1, 0.36, 1] as const;
 
 const FACTS = [
-  { icon: Cpu, label: "Free vs the bot" },
-  { icon: Coins, label: "95% to the winner" },
-  { icon: ShieldCheck, label: "Settled on-chain" },
+  { icon: Cpu, label: "Warm up free" },
+  { icon: Coins, label: "Winner takes 95%" },
+  { icon: ShieldCheck, label: "Paid in seconds" },
 ];
 
 // Headline as words so each one can rise out of a blur on its own spring.
-const LINE_1 = ["Play", "classic", "games."];
-const LINE_2 = ["Back", "yourself", "for"];
+const LINE_1 = ["Think", "you'd", "win?"];
+const LINE_2 = ["Put", "money", "on"];
 
 const container = {
   hidden: {},
@@ -70,7 +70,7 @@ export function Hero() {
             </motion.span>
           ))}
           <motion.span variants={word} className="text-shimmer inline-block will-change-transform">
-            USDm.
+            it.
           </motion.span>
         </span>
       </motion.h1>
@@ -81,9 +81,9 @@ export function Hero() {
         transition={{ duration: 0.45, ease, delay: 0.42 }}
         className="mt-3 max-w-md text-[15px] leading-relaxed text-ink-dim"
       >
-        Chess, Whot, tic-tac-toe, snakes &amp; ladders and a block puzzle. Play
-        free against the bot, or stake USDm or G$ on a 1v1 and win real money —
-        the winner takes the pot, settled on-chain.
+        The games you grew up playing, now with real opponents and a real pot.
+        Winner takes 95%, paid to your wallet the second the game ends. Warm up
+        free until you&apos;re ready.
       </motion.p>
 
       <motion.div
