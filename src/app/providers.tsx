@@ -6,6 +6,7 @@ import { WagmiProvider } from "@privy-io/wagmi";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { celo, celoSepolia } from "viem/chains";
 import { config, ACTIVE_CHAIN_ID } from "@/lib/wagmi";
+import { MiniPayConnect } from "@/components/MiniPayConnect";
 
 // Public Privy app id (safe in the client). Override via env if it ever rotates.
 const PRIVY_APP_ID = process.env.NEXT_PUBLIC_PRIVY_APP_ID ?? "cmqkrw0fi000l0dldcurqz6nt";
@@ -33,7 +34,10 @@ export function Providers({ children }: { children: ReactNode }) {
       }}
     >
       <QueryClientProvider client={queryClient}>
-        <WagmiProvider config={config}>{children}</WagmiProvider>
+        <WagmiProvider config={config}>
+          <MiniPayConnect />
+          {children}
+        </WagmiProvider>
       </QueryClientProvider>
     </PrivyProvider>
   );
