@@ -9,6 +9,7 @@ import { fetchWhot, whotAction, WhotView } from "@/lib/matchClient";
 import { Card, Shape, SHAPE_LABEL, isLegal } from "@/lib/games/whot";
 import { WhotCardBack, WhotCardFace, WhotShape } from "./whot/WhotCard";
 import { SettleOverlay } from "./SettleOverlay";
+import { ResignButton } from "./ResignButton";
 import { TimeoutClaim } from "./TimeoutClaim";
 import { MatchChat } from "./MatchChat";
 import { play } from "@/lib/sfx";
@@ -144,8 +145,11 @@ export function StakedWhot({ matchId, you, onExit }: { matchId: bigint; you: `0x
             <ArrowLeft className="h-4 w-4" /> Lobby
           </Link>
         )}
-        <span className="rounded-full border border-line bg-void-700 px-3 py-1.5 text-xs font-semibold text-teal">
-          Staked · #{matchId.toString()}
+        <span className="inline-flex items-center gap-2">
+          {view?.status === "active" && <ResignButton matchId={matchId} you={me} />}
+          <span className="rounded-full border border-line bg-void-700 px-3 py-1.5 text-xs font-semibold text-teal">
+            Staked · #{matchId.toString()}
+          </span>
         </span>
       </div>
 

@@ -9,6 +9,7 @@ import { supabase } from "@/lib/supabase";
 import { submitMove } from "@/lib/matchClient";
 import { ChessPiece } from "./chess/ChessPiece";
 import { SettleOverlay } from "./SettleOverlay";
+import { ResignButton } from "./ResignButton";
 import { TimeoutClaim } from "./TimeoutClaim";
 import { MatchChat } from "./MatchChat";
 import { useProfiles, displayName } from "@/lib/profiles";
@@ -187,8 +188,11 @@ export function StakedChess({ matchId, you, onExit }: { matchId: bigint; you: `0
             <ArrowLeft className="h-4 w-4" /> Lobby
           </Link>
         )}
-        <span className="rounded-full border border-line bg-void-700 px-3 py-1.5 text-xs font-semibold text-teal">
-          Staked · #{matchId.toString()}
+        <span className="inline-flex items-center gap-2">
+          {match?.status === "active" && <ResignButton matchId={matchId} you={me} />}
+          <span className="rounded-full border border-line bg-void-700 px-3 py-1.5 text-xs font-semibold text-teal">
+            Staked · #{matchId.toString()}
+          </span>
         </span>
       </div>
 
