@@ -17,7 +17,7 @@ export const runtime = "nodejs";
  * whitelisted GoodDollar identity, and the UNIQUE(week, root) constraint means
  * a human with five linked wallets still gets exactly one seat.
  */
-const PRIZE_USDM = Number(process.env.CUP_PRIZE_USDM ?? "5");
+const PRIZE_USDM = Number(process.env.CUP_PRIZE_USDM ?? "10");
 // The cup shows as Coming Soon until opening day — set CUP_OPEN=1 in Vercel to
 // open entries (no redeploy needed). Settlement of past weeks stays available.
 const CUP_OPEN = process.env.CUP_OPEN === "1";
