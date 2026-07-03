@@ -13,6 +13,7 @@ import { ACTIVE_CHAIN_ID } from "@/lib/wagmi";
 import { tokensFor, StakeToken, symbolForToken, decimalsForToken } from "@/lib/tokens";
 import { hasToken, signIn } from "@/lib/profile";
 import { registerTournament, listTournaments, TournamentRow } from "@/lib/tournamentClient";
+import { WeeklyCup } from "@/components/WeeklyCup";
 import { cn } from "@/lib/cn";
 
 const FEE = 0.05;
@@ -121,6 +122,9 @@ export function Tournaments() {
           <p className="text-sm text-ink-dim">Knockout rounds — survive the cuts to the final. Top 3 split the pot 50/30/20.</p>
         </div>
       </div>
+
+      {/* Free weekly cup — GoodID-gated, treasury-funded */}
+      <WeeklyCup />
 
       {/* Create */}
       <div className="mt-6 rounded-3xl glass p-5 shadow-card">
