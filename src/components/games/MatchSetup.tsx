@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { ArrowLeft, Bot, Swords, Wallet, Loader2, ShieldCheck, Copy, Check, AlertTriangle, HelpCircle } from "lucide-react";
+import { ArrowLeft, Bot, Swords, Wallet, Loader2, ShieldCheck, Copy, Check, AlertTriangle, HelpCircle, Share2 } from "lucide-react";
 import Link from "next/link";
 import { StakeRules } from "./StakeRules";
 import { useAccount, useSwitchChain, useSignMessage, useBalance } from "wagmi";
@@ -13,6 +13,7 @@ import { Difficulty, DIFFICULTIES, SUPPORTS_DIFFICULTY } from "@/lib/difficulty"
 import { useStakeMatch, useMatchState } from "@/hooks/useStakeMatch";
 import { hasToken, signIn } from "@/lib/profile";
 import { registerMatch, joinServerMatch } from "@/lib/matchClient";
+import { shareOrCopy } from "@/lib/share";
 import { ACTIVE_CHAIN_ID } from "@/lib/wagmi";
 import { tokensFor, StakeToken } from "@/lib/tokens";
 import { parseUnits, formatUnits } from "viem";
@@ -48,6 +49,7 @@ export function MatchSetup({
   const [difficulty, setDifficulty] = useState<Difficulty>("normal");
   const [joinId, setJoinId] = useState("");
   const [copied, setCopied] = useState(false);
+  const [invited, setInvited] = useState<"idle" | "shared" | "copied">("idle");
   const { address, isConnected } = useAccount();
   const { login } = usePrivy();
   const { switchChain } = useSwitchChain();
@@ -404,6 +406,24 @@ export function MatchSetup({
                     >
                       #{matchId.toString()}
                       {copied ? <Check className="h-4 w-4 text-teal" /> : <Copy className="h-4 w-4 text-ink-faint" />}
+                    </button>
+                    {/* the challenge link: drops your friend straight on the
+                        prefilled join screen — bring your own opponent */}
+                    <button
+                      onClick={async () => {
+                        const url = `${window.location.origin}/play/${game.slug}?room=${matchId.toString()}&stake=${stake}&token=${token.address}`;
+                        const r = await shareOrCopy({
+                          title: "Gambit challenge",
+                          text: `⚔️ I put ${stake} ${token.symbol} on ${game.name}. Join my room and let's settle it.`,
+                          url,
+                        });
+                        if (r !== "failed") setInvited(r);
+                        setTimeout(() => setInvited("idle"), 2000);
+                      }}
+                      className="btn-primary mx-auto mt-3 flex w-full items-center justify-center gap-2 rounded-xl py-2.5 text-[13px] shadow-glow"
+                    >
+                      {invited === "idle" ? <Share2 className="h-4 w-4" /> : <Check className="h-4 w-4" />}
+                      {invited === "copied" ? "Link copied!" : invited === "shared" ? "Challenge sent!" : "Challenge a friend"}
                     </button>
                     <p className="mt-3 flex items-center justify-center gap-1.5 text-[11px] text-ink-faint">
                       <Loader2 className="h-3.5 w-3.5 animate-spin" /> Waiting for opponent to join
