@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { creditReferrals } from "@/lib/server/referral";
 import { supabaseAdmin } from "@/lib/supabase";
 import { settleOnChain, relayerConfigured, readMatchOnChain, relayerDiagnostics } from "@/lib/server/settle";
 import { limited } from "@/lib/server/rateLimit";
@@ -86,6 +87,7 @@ export async function POST(req: NextRequest) {
       const settleTx = await settleOnChain(BigInt(id), winner, settleChainId);
       // persist the corrected chain too, so the row matches on-chain reality
       await db.from("matches").update({ status: "settled", settle_tx: settleTx, winner, chain_id: settleChainId, settle_error: null }).eq("id", Number(id));
+      void creditReferrals([match.creator, match.opponent]);
       return NextResponse.json({ ok: true, settled: true, refunded: !winner, settleTx, chainId: settleChainId });
     } catch (e: any) {
       const settle_error = String(e?.shortMessage ?? e?.message ?? "settle failed").slice(0, 300);

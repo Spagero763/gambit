@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { creditReferrals } from "@/lib/server/referral";
 import { supabaseAdmin } from "@/lib/supabase";
 import { settleOnChain, relayerConfigured } from "@/lib/server/settle";
 import { advanceBracket } from "@/lib/server/bracket";
@@ -60,6 +61,7 @@ export async function POST(req: NextRequest) {
     try {
       const settleTx = await settleOnChain(BigInt(id), me, Number(match.chain_id));
       await db.from("matches").update({ status: "settled", settle_tx: settleTx, settle_error: null }).eq("id", Number(id));
+      void creditReferrals([match.creator, match.opponent]);
       return NextResponse.json({ ok: true, settled: true, winner: me, settleTx });
     } catch (e: any) {
       const settle_error = String(e?.shortMessage ?? e?.message ?? "settle failed").slice(0, 300);

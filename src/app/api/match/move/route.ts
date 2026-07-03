@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { creditReferrals } from "@/lib/server/referral";
 import { supabaseAdmin } from "@/lib/supabase";
 import { applyTtt, TttState } from "@/lib/server/ttt";
 import { applyChessMove, ChessState } from "@/lib/server/chess";
@@ -154,6 +155,10 @@ export async function POST(req: NextRequest) {
       .from("matches")
       .update({ status: "settled", settle_tx: settleTx, settle_error: null })
       .eq("id", Number(id));
+
+    // first staked match for an invited player? pay the referral bonus
+    // (idempotent — the vault pays each key once, so every settle may try)
+    void creditReferrals([match.creator, match.opponent]);
 
     // result pushes: paid winner / refunded draw / commiserate loser
     const seats = [match.creator, match.opponent].filter(Boolean) as string[];
