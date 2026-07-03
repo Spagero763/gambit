@@ -326,8 +326,14 @@ function InviteCard({ address }: { address: string }) {
   const [copied, setCopied] = useState(false);
   return (
     <div className="rounded-2xl border border-line bg-void-700 p-5 shadow-card">
-      <p className="text-sm font-semibold text-ink">Invite friends</p>
-      <p className="mt-0.5 text-[12px] text-ink-dim">Share your link — challenge friends to a staked 1v1.</p>
+      <div className="flex items-center gap-2">
+        <p className="text-sm font-semibold text-ink">Invite friends</p>
+        <span className="rounded-full bg-amber/15 px-2 py-0.5 text-[10px] font-semibold text-amber">BONUSES SOON</span>
+      </div>
+      <p className="mt-0.5 text-[12px] text-ink-dim">
+        Share your link and challenge friends to a staked 1v1. Soon: you both earn USDm when they play their first
+        staked match, paid from an on chain rewards vault.
+      </p>
       <div className="mt-3 flex items-center gap-2">
         <div className="flex-1 truncate rounded-xl border border-line bg-void-800 px-3 py-2.5 text-[12px] text-ink-dim">
           {url.replace(/^https?:\/\//, "")}

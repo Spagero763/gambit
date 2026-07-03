@@ -36,19 +36,6 @@ export function Hero() {
 
   return (
     <section className="mx-auto w-full max-w-2xl px-5 pt-5">
-      <motion.div
-        initial={{ opacity: 0, y: 10, scale: 0.96 }}
-        animate={{ opacity: 1, y: 0, scale: 1 }}
-        transition={{ duration: 0.4, ease }}
-        className="inline-flex items-center gap-2 rounded-full border border-line bg-void-700 px-3 py-1 text-xs text-ink-dim"
-      >
-        <span className="relative flex h-1.5 w-1.5">
-          <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-teal opacity-60" />
-          <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-teal" />
-        </span>
-        Skill games on Celo
-      </motion.div>
-
       <motion.h1
         variants={reduce ? undefined : container}
         initial={reduce ? { opacity: 0 } : "hidden"}
