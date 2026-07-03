@@ -11,6 +11,7 @@ import {
 import { ERC20_ABI } from "@/lib/escrow";
 import { friendlyError } from "@/lib/errors";
 import { ACTIVE_CHAIN_ID } from "@/lib/wagmi";
+import { miniPayTx, skipGasPreflight } from "@/lib/minipay";
 
 // keep a little CELO back so the wallet can still pay this transfer's gas
 const MIN_GAS_WEI = BigInt(2_000_000_000_000_000); // 0.002 CELO
@@ -54,14 +55,15 @@ export function useSendFunds() {
         let hash: `0x${string}`;
         if (asset.kind === "native") {
           const value = parseUnits(amount, 18);
-          // must leave enough behind to pay this send's own gas
-          if (value + MIN_GAS_WEI > gas) {
+          // must leave enough behind to pay this send's own gas (MiniPay pays
+          // fees from stablecoins, so its users don't need the CELO cushion)
+          if (!skipGasPreflight() && value + MIN_GAS_WEI > gas) {
             throw new Error("Not enough CELO — leave a little behind to cover the network fee.");
           }
           setStep("sending");
-          hash = await sendTransactionAsync({ to: dest as `0x${string}`, value });
+          hash = await sendTransactionAsync({ to: dest as `0x${string}`, value, ...miniPayTx() });
         } else {
-          if (gas < MIN_GAS_WEI) {
+          if (!skipGasPreflight() && gas < MIN_GAS_WEI) {
             throw new Error("This wallet needs a little CELO for the network fee — send it ~0.01 CELO and retry.");
           }
           const value = parseUnits(amount, asset.decimals);
@@ -78,6 +80,7 @@ export function useSendFunds() {
             abi: ERC20_ABI,
             functionName: "transfer",
             args: [dest as `0x${string}`, value],
+            ...miniPayTx(),
           });
         }
 

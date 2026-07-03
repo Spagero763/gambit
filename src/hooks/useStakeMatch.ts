@@ -17,6 +17,7 @@ import {
 import { StakeToken } from "@/lib/tokens";
 import { friendlyError } from "@/lib/errors";
 import { ACTIVE_CHAIN_ID } from "@/lib/wagmi";
+import { miniPayTx, skipGasPreflight } from "@/lib/minipay";
 
 // enough CELO for a few transactions' gas — below this, wallets show scary
 // fee estimates or "unavailable", so we catch it with a clear message first
@@ -56,7 +57,8 @@ export function useStakeMatch() {
         publicClient.readContract({ address: tokenAddress, abi: ERC20_ABI, functionName: "balanceOf", args: [address] }) as Promise<bigint>,
       ]);
       if (bal < amount) throw new Error(`Not enough ${symbol} in this wallet to cover the stake.`);
-      if (gas < MIN_GAS_WEI) throw new Error("This wallet needs a little CELO for network fees — send it ~0.01 CELO and retry.");
+      // MiniPay users hold no CELO — the wallet pays gas from their stablecoins
+      if (!skipGasPreflight() && gas < MIN_GAS_WEI) throw new Error("This wallet needs a little CELO for network fees — send it ~0.01 CELO and retry.");
     },
     [address, publicClient]
   );
@@ -82,6 +84,7 @@ export function useStakeMatch() {
           abi: ERC20_ABI,
           functionName: "approve",
           args: [escrow, maxUint256],
+          ...miniPayTx(),
         });
         const receipt = await publicClient.waitForTransactionReceipt({ hash });
         if (receipt.status !== "success") throw new Error("Token approval failed on-chain");
@@ -107,6 +110,7 @@ export function useStakeMatch() {
           abi: ESCROW_ABI,
           functionName: "createMatch",
           args: [stakeToken.address, amount, gameType, capacity],
+          ...miniPayTx(),
         });
         const receipt = await publicClient.waitForTransactionReceipt({ hash });
         // waitForTransactionReceipt does NOT throw on revert — a reverted
@@ -167,6 +171,7 @@ export function useStakeMatch() {
           abi: ESCROW_ABI,
           functionName: "joinMatch",
           args: [id],
+          ...miniPayTx(),
         });
         const receipt = await publicClient.waitForTransactionReceipt({ hash });
         if (receipt.status !== "success") {
@@ -196,6 +201,7 @@ export function useStakeMatch() {
           abi: ESCROW_ABI,
           functionName: "cancelMatch",
           args: [matchId],
+          ...miniPayTx(),
         });
         const receipt = await publicClient.waitForTransactionReceipt({ hash });
         if (receipt.status !== "success") throw new Error("Cancel reverted — the room may have already started");
@@ -220,6 +226,7 @@ export function useStakeMatch() {
           abi: ESCROW_ABI,
           functionName: "reclaimStalled",
           args: [matchId],
+          ...miniPayTx(),
         });
         const receipt = await publicClient.waitForTransactionReceipt({ hash });
         if (receipt.status !== "success") throw new Error("Reclaim reverted — the settle window may not have lapsed yet");
