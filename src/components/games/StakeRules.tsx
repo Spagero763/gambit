@@ -6,18 +6,18 @@ import { Game } from "@/lib/games";
 
 const GAME_RULES: Record<string, string> = {
   chess: "Standard chess. Deliver checkmate to win. You also win if your opponent runs out of time or abandons.",
-  "tic-tac-toe": "Get three of your marks in a row — across, down, or diagonally.",
+  "tic-tac-toe": "Get three of your marks in a row, across, down, or diagonally.",
   snakes: "Take turns rolling a die toward square 100. Ladders lift you up, snakes drop you down. Land exactly on 100 to win.",
-  whot: "Match the top card by shape or number, and use specials (Pick Two, Hold On, Suspension…). First to shed every card wins.",
-  blocks: "Solo puzzle — score-based, not staked.",
+  whot: "Match the top card by shape or number, and use specials (Pick Two, Hold On, Suspension). First to shed every card wins.",
+  blocks: "Solo puzzle, scored not staked.",
 };
 
 const TERMS = [
   { icon: Coins, text: "Both players stake the same USDm amount into an on-chain escrow." },
-  { icon: Trophy, text: "Win and you take the pot — both stakes, minus a 5% fee." },
+  { icon: Trophy, text: "Win and you take the pot: both stakes, minus a 5% fee." },
   { icon: Scale, text: "A draw refunds both players in full." },
   { icon: AlarmClock, text: "If your opponent abandons, you can claim the win after 2 minutes." },
-  { icon: ShieldCheck, text: "Funds are held in an audited escrow and pay out automatically. Nothing can get stuck — stalled stakes are always reclaimable." },
+  { icon: ShieldCheck, text: "Funds are held in an audited escrow and pay out automatically. Nothing can get stuck, and stalled stakes are always reclaimable." },
 ];
 
 export function StakeRules({ game, open, onClose }: { game: Game; open: boolean; onClose: () => void }) {

@@ -64,7 +64,7 @@ export function SettleOverlay({
     setMsg(null);
     try {
       const r = await retrySettle(matchId);
-      if (!r.settled) setMsg(r.error ?? "Still not settled — try again in a moment.");
+      if (!r.settled) setMsg(r.error ?? "Still not settled. Try again in a moment.");
       // on success the realtime subscription flips status to "settled"
     } catch (e: any) {
       setMsg(e?.message ?? "Retry failed");
@@ -87,7 +87,7 @@ export function SettleOverlay({
           </p>
           {(settleError || msg) && (
             <p className="mx-auto mt-2 max-w-[16rem] text-[11px] leading-snug text-rose">
-              {friendlyError(msg || settleError, "The payout hit a snag — tap retry.")}
+              {friendlyError(msg || settleError, "The payout hit a snag. Tap retry.")}
             </p>
           )}
           <button
@@ -141,7 +141,7 @@ export function SettleOverlay({
                 onClick={() =>
                   shareOrCopy({
                     title: "Gambit",
-                    text: "I just won a staked match on Gambit ♟ — come play me.",
+                    text: "I just won a staked match on Gambit ♟. Come play me.",
                     url: inviteUrl(shareAddress),
                   })
                 }

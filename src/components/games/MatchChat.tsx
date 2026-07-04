@@ -150,7 +150,7 @@ export function MatchChat({ matchId, me }: { matchId: bigint; me: string }) {
 
             <div ref={listRef} className="flex-1 space-y-2 overflow-y-auto px-3 py-3">
               {msgs.length === 0 && (
-                <p className="py-4 text-center text-[12px] text-ink-faint">Say hi — only you two can see this.</p>
+                <p className="py-4 text-center text-[12px] text-ink-faint">Say hi. Only you two can see this.</p>
               )}
               {msgs.map((m) => {
                 const mine = m.sender === meLower;

@@ -377,7 +377,7 @@ export function MatchSetup({
                   <ShieldCheck className="h-4 w-4" /> Sign in to stake (free, no gas)
                 </button>
                 <p className="mt-2 text-center text-[11px] text-ink-faint">
-                  One free signature proves it&apos;s you — so only you can play your moves.
+                  One free signature proves it&apos;s you, so only you can play your moves.
                 </p>
               </div>
             ) : matchId ? (
