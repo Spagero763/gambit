@@ -28,7 +28,6 @@ export function Achievements() {
           const { value, goal } = a.measure(p);
           const done = value >= goal;
           const pct = Math.min(100, Math.round((value / goal) * 100));
-          const Icon = a.icon;
           return (
             <motion.div
               key={a.id}
@@ -42,11 +41,12 @@ export function Achievements() {
               )}
               style={done ? { boxShadow: `inset 0 0 0 1px ${TIER_COLOR[a.tier]}40` } : undefined}
             >
-              <Icon
-                className={cn("h-7 w-7 transition", !done && "text-ink-faint opacity-40")}
-                style={done ? { color: TIER_COLOR[a.tier], filter: `drop-shadow(0 2px 6px ${TIER_COLOR[a.tier]}55)` } : undefined}
-                strokeWidth={2}
-              />
+              <span
+                className={cn("text-2xl leading-none transition", !done && "opacity-30 grayscale")}
+                style={done ? { filter: `drop-shadow(0 2px 6px ${TIER_COLOR[a.tier]}55)` } : undefined}
+              >
+                {a.icon}
+              </span>
               <span className={cn("mt-1.5 text-[11px] font-semibold leading-tight", done ? "text-ink" : "text-ink-faint")}>{a.name}</span>
               {done ? (
                 <span className="mt-0.5 text-[9px] font-bold uppercase tracking-wide" style={{ color: TIER_COLOR[a.tier] }}>
@@ -73,11 +73,10 @@ export function AchievementToast() {
   const p = useProgress();
   const { newly, dismiss } = useNewAchievements(p);
   const current = newly[0];
-  const Icon = current?.icon;
 
   return (
     <AnimatePresence>
-      {current && Icon && (
+      {current && (
         <motion.button
           key={current.id}
           onClick={dismiss}
@@ -92,10 +91,10 @@ export function AchievementToast() {
           <motion.span
             animate={{ rotate: [0, -12, 12, 0], scale: [1, 1.15, 1] }}
             transition={{ duration: 0.9, repeat: 2 }}
-            className="grid h-11 w-11 shrink-0 place-items-center rounded-xl"
-            style={{ background: `${TIER_COLOR[current.tier]}22`, color: TIER_COLOR[current.tier] }}
+            className="grid h-11 w-11 shrink-0 place-items-center rounded-xl text-2xl"
+            style={{ background: `${TIER_COLOR[current.tier]}22` }}
           >
-            <Icon className="h-5 w-5" strokeWidth={2.2} />
+            {current.icon}
           </motion.span>
           <span className="min-w-0">
             <span className="block text-[10px] font-bold uppercase tracking-wide" style={{ color: TIER_COLOR[current.tier] }}>

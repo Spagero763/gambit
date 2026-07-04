@@ -71,7 +71,7 @@ export function DailyReward() {
             <Gift className="h-5 w-5" />
           </motion.span>
           <span className="min-w-0 flex-1">
-            <span className="block text-sm font-bold text-ink">Daily reward ready</span>
+            <span className="block text-sm font-bold text-ink">Daily reward ready 🎁</span>
             <span className="block text-[12px] text-ink-dim">
               {p.streak > 0 ? `Day ${p.streak + (p.lastPlayed === today() ? 0 : 1)}. Tap to claim your XP` : "Tap to claim free XP and start a streak"}
             </span>
@@ -139,7 +139,7 @@ export function DailyReward() {
                   transition={{ delay: 0.35, type: "spring", stiffness: 240, damping: 16 }}
                   className="mt-1 inline-flex items-center gap-1.5 rounded-full bg-teal/15 px-3 py-1 text-lg font-black text-teal"
                 >
-                  + {reveal.g} G$
+                  + {reveal.g} G$ 💚
                 </motion.p>
               ) : reveal.gReason ? (
                 <p className="mt-1 text-[12px] text-ink-faint">G$ reward: {gReasonText(reveal.gReason)}</p>
@@ -147,7 +147,7 @@ export function DailyReward() {
                 <p className="mt-1 text-[12px] text-ink-faint">checking your G$ reward…</p>
               )}
               <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.4 }} className="mt-1 text-sm text-ink-dim">
-                Day {reveal.day} streak. Come back tomorrow for more.
+                Day {reveal.day} streak 🔥 — come back tomorrow for more.
               </motion.p>
               <button onClick={() => setReveal(null)} className="btn-primary mt-6 w-full rounded-2xl py-3 text-sm shadow-glow">
                 Nice!

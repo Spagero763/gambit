@@ -41,7 +41,7 @@ export function TournamentPodium({
   // visual order: 2nd, 1st, 3rd
   const order = [1, 0, 2].filter((i) => winners[i]);
   const HEIGHTS = [128, 92, 72]; // by rank (1st tallest)
-  const MEDes = ["#e3b341", "#cbd0db", "#c08457"]; // gold / silver / bronze
+  const MEDes = ["🥇", "🥈", "🥉"];
 
   return (
     <motion.div
@@ -145,7 +145,7 @@ export function TournamentPodium({
                         : "linear-gradient(180deg, rgba(192,132,87,0.28), rgba(192,132,87,0.07))",
                 }}
               >
-                <p className="mt-2 text-center font-display text-2xl font-black" style={{ color: MEDes[rank] }}>{rank + 1}</p>
+                <p className="mt-2 text-center text-xl">{MEDes[rank]}</p>
               </motion.div>
             </div>
           );
