@@ -43,7 +43,7 @@ export function GoodIdCard() {
           <span className="rounded-full bg-void-600 px-2 py-0.5 text-[10px] font-semibold text-ink-faint">Optional</span>
         </div>
         <p className="mt-0.5 text-[12px] leading-snug text-ink-dim">
-          You can play and stake without this. A quick GoodDollar face check just unlocks the <span className="text-ink">free prize tournaments</span> — one entry per person, no bots.
+          You can play and stake without this. A quick GoodDollar face check just unlocks the <span className="text-ink">free prize tournaments</span>. One entry per person, no bots.
         </p>
         <button
           onClick={async () => {

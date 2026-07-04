@@ -167,7 +167,7 @@ export function SendFunds({ address, onClose }: { address: `0x${string}`; onClos
               {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
               {step === "sending" ? "Confirm in wallet…" : step === "confirming" ? "Sending…" : `Send ${asset.symbol}`}
             </button>
-            <p className="mt-2 text-center text-[11px] text-ink-faint">Sends on the Celo network. Double-check the address — transfers can&apos;t be undone.</p>
+            <p className="mt-2 text-center text-[11px] text-ink-faint">Sends on the Celo network. Double check the address, transfers cannot be undone.</p>
           </>
         )}
       </motion.div>

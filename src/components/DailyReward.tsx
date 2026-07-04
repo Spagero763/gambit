@@ -73,7 +73,7 @@ export function DailyReward() {
           <span className="min-w-0 flex-1">
             <span className="block text-sm font-bold text-ink">Daily reward ready 🎁</span>
             <span className="block text-[12px] text-ink-dim">
-              {p.streak > 0 ? `Day ${p.streak + (p.lastPlayed === today() ? 0 : 1)} — tap to claim your XP` : "Tap to claim free XP and start a streak"}
+              {p.streak > 0 ? `Day ${p.streak + (p.lastPlayed === today() ? 0 : 1)}. Tap to claim your XP` : "Tap to claim free XP and start a streak"}
             </span>
           </span>
           <span className="rounded-full bg-amber px-3 py-1.5 text-[12px] font-bold text-void">Claim</span>
@@ -84,7 +84,7 @@ export function DailyReward() {
             <Gift className="h-4 w-4" />
           </span>
           <span className="min-w-0 flex-1">
-            <span className="block text-[13px] font-semibold text-ink">Reward claimed — back tomorrow</span>
+            <span className="block text-[13px] font-semibold text-ink">Reward claimed. Back tomorrow</span>
             <span className="flex items-center gap-2 text-[11px] text-ink-faint">
               <span className="inline-flex items-center gap-1 text-amber"><Flame className="h-3 w-3" /> {p.streak} day streak</span>
               <span>·</span>
@@ -165,12 +165,12 @@ export function DailyReward() {
 function gReasonText(reason?: string) {
   switch (reason) {
     case "already":
-      return "already claimed today — back tomorrow";
+      return "already claimed today, back tomorrow";
     case "sign":
     case "signin":
       return "approve the free signature to claim it";
     case "send-failed":
-      return "couldn't send right now — try again";
+      return "couldn't send right now, try again";
     case "treasury-empty":
       return "today's pool is empty";
     case "no-treasury":

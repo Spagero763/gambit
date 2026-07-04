@@ -68,7 +68,7 @@ export function PushToggle() {
         )}
       </button>
       {disabled && (
-        <p className="mt-1 text-[11px] text-ink-faint">Sign in first — alerts are tied to your account.</p>
+        <p className="mt-1 text-[11px] text-ink-faint">Sign in first. Alerts are tied to your account.</p>
       )}
     </div>
   );
