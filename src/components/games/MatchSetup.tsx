@@ -374,7 +374,7 @@ export function MatchSetup({
                   }}
                   className="btn-primary flex w-full items-center justify-center gap-2 rounded-2xl py-3.5 text-sm shadow-glow"
                 >
-                  <ShieldCheck className="h-4 w-4" /> Sign in to stake (free, no gas)
+                  <ShieldCheck className="h-4 w-4" /> Sign in to stake (free, no network fee)
                 </button>
                 <p className="mt-2 text-center text-[11px] text-ink-faint">
                   One free signature proves it&apos;s you, so only you can play your moves.

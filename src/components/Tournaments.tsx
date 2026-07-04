@@ -261,7 +261,7 @@ export function Tournaments() {
             }}
             className="btn-primary mt-4 flex w-full items-center justify-center gap-2 rounded-2xl py-3.5 text-sm shadow-glow"
           >
-            <ShieldCheck className="h-4 w-4" /> Sign in (free, no gas)
+            <ShieldCheck className="h-4 w-4" /> Sign in (free, no network fee)
           </button>
         ) : (
           <button onClick={create} disabled={busy || !ready || !validStake} className="btn-primary mt-4 flex w-full items-center justify-center gap-2 rounded-2xl py-3.5 text-sm shadow-glow disabled:opacity-60">

@@ -429,7 +429,7 @@ export function TournamentRoom({ id }: { id: string }) {
             onClick={async () => { if (!address) return; try { await signIn(address, (a) => signMessageAsync({ message: a.message })); setAuthed(true); } catch {} }}
             className="btn-primary flex w-full items-center justify-center gap-2 rounded-2xl py-3.5 text-sm shadow-glow"
           >
-            <ShieldCheck className="h-4 w-4" /> Sign in (free, no gas)
+            <ShieldCheck className="h-4 w-4" /> Sign in (free, no network fee)
           </button>
         ) : !joined ? (
           t.status !== "open" ? (

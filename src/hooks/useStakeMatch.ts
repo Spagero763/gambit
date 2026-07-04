@@ -58,7 +58,7 @@ export function useStakeMatch() {
       ]);
       if (bal < amount) throw new Error(`Not enough ${symbol} in this wallet to cover the stake.`);
       // MiniPay users hold no CELO — the wallet pays gas from their stablecoins
-      if (!skipGasPreflight() && gas < MIN_GAS_WEI) throw new Error("This wallet needs a little CELO for network fees — send it ~0.01 CELO and retry.");
+      if (!skipGasPreflight() && gas < MIN_GAS_WEI) throw new Error("This wallet needs a little CELO for the network fee. Send it about 0.01 CELO and try again.");
     },
     [address, publicClient]
   );

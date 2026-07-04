@@ -58,13 +58,13 @@ export function useSendFunds() {
           // must leave enough behind to pay this send's own gas (MiniPay pays
           // fees from stablecoins, so its users don't need the CELO cushion)
           if (!skipGasPreflight() && value + MIN_GAS_WEI > gas) {
-            throw new Error("Not enough CELO — leave a little behind to cover the network fee.");
+            throw new Error("Not enough CELO. Leave a little behind to cover the network fee.");
           }
           setStep("sending");
           hash = await sendTransactionAsync({ to: dest as `0x${string}`, value, ...miniPayTx() });
         } else {
           if (!skipGasPreflight() && gas < MIN_GAS_WEI) {
-            throw new Error("This wallet needs a little CELO for the network fee — send it ~0.01 CELO and retry.");
+            throw new Error("This wallet needs a little CELO for the network fee. Send it about 0.01 CELO and try again.");
           }
           const value = parseUnits(amount, asset.decimals);
           const bal = (await publicClient.readContract({
