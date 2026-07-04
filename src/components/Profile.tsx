@@ -14,6 +14,7 @@ import { useProgress } from "@/lib/progress";
 import { useProfile, createProfile, setProfile } from "@/lib/profile";
 import { Avatar } from "@/components/Avatar";
 import { SendFunds } from "@/components/SendFunds";
+import { AnimatedNumber } from "@/components/motion/AnimatedNumber";
 import { GoodIdCard } from "@/components/GoodIdCard";
 import { symbolForToken } from "@/lib/tokens";
 import { ProgressCard } from "@/components/Daily";
@@ -192,7 +193,7 @@ export function Profile() {
     );
   }
 
-  const amount = bal ? Number(bal.formatted).toFixed(2) : "0.00";
+  const amount = bal ? Number(bal.formatted) : 0;
 
   return (
     <section className="mx-auto w-full max-w-2xl px-5 pb-28 pt-2">
@@ -215,7 +216,7 @@ export function Profile() {
         </div>
         <div className="ml-auto flex flex-col items-end gap-1.5">
           <div className="text-right">
-            <p className="nums text-lg font-semibold text-ink">{amount}</p>
+            <AnimatedNumber value={amount} decimals={2} className="text-lg font-semibold text-ink" />
             <p className="text-[11px] text-ink-faint">USDm balance</p>
           </div>
           <button
