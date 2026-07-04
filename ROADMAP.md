@@ -14,6 +14,17 @@ The master plan. Goal: real users, real transactions, a growth curve that stands
 - Free Weekly Cup: GoodID-gated (one entry per verified human), same seeded board for all, top 3 split a USDm prize from the on-chain `WeeklyCup` vault (deployed, 8 passing tests).
 - On-board coach (pointing hand) for first-time play in every game.
 - Per-game music, push notifications, admin panel, Dune dashboard, public repo.
+- MiniPay compatibility: silent auto-connect, legacy transactions, no-CELO gas, container-safe links, Terms and Privacy pages, listing icon.
+- Daily Challenge (one seeded board a day) with a shareable score card and streaks.
+- Challenge-a-friend share links and open-room push broadcasts.
+- Referral engine and RewardsVault contract (0.10 USDm each side, key-deduped on-chain), gated off until opening day.
+- Resign/forfeit in every staked game and tournament, with a mobile-safe confirm sheet.
+- Onboarding: challenge-voice hero, replayable Coach 2.0, five-step How-it-works.
+- Daily G$ claims routed through an on-chain claim vault; cup and referrals gated behind env flags (Coming Soon).
+- Motion foundation: shared tokens, reduced-motion-safe page transition, tactile button press, count-up numbers on money.
+- Game juice: Block Blitz board kick on line clears (existing dice tumble, card flick, win confetti and synthesized SFX already in place).
+- Plain-language pass: no dashes in any user-facing copy.
+- RPC failover across forno, Ankr and dRPC for wallet reads and the cup identity gate.
 
 ## The plan
 
