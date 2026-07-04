@@ -96,7 +96,7 @@ export function GameIntro({ slug }: { slug: string }) {
               <button onClick={close} aria-label="Close" className="absolute right-3 top-3 text-ink-faint hover:text-ink">
                 <X className="h-4 w-4" />
               </button>
-              <p className="text-lg font-bold text-ink">👆 {intro.title}</p>
+              <p className="text-lg font-bold text-ink">{intro.title}</p>
               <ul className="mt-3 space-y-2.5">
                 {intro.lines.map((l, i) => (
                   <li key={i} className="flex gap-2.5 text-[13px] leading-snug text-ink-dim">

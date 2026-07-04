@@ -12,7 +12,7 @@ import { BlockBlitz } from "@/components/games/blocks/BlockBlitz";
 import { cn } from "@/lib/cn";
 
 const short = (a: string) => `${a.slice(0, 6)}…${a.slice(-4)}`;
-const MEDAL = ["🥇", "🥈", "🥉"];
+const MEDAL_COLOR = ["#e3b341", "#cbd0db", "#c08457"]; // gold / silver / bronze
 
 function timeLeft(endsAt: number) {
   const ms = Math.max(0, endsAt - Date.now());
@@ -165,7 +165,7 @@ export function WeeklyCup() {
                 e.address === address?.toLowerCase() ? "bg-teal/10 text-ink" : "text-ink-dim"
               )}
             >
-              <span className="w-6 text-center">{MEDAL[i] ?? `${i + 1}.`}</span>
+              <span className="w-6 text-center font-bold" style={i < 3 ? { color: MEDAL_COLOR[i] } : undefined}>{i + 1}</span>
               <span className="font-mono text-xs">{short(e.address)}</span>
               {e.address === address?.toLowerCase() && (
                 <span className="rounded-full bg-teal/15 px-1.5 text-[10px] font-semibold text-teal">you</span>
@@ -219,7 +219,7 @@ export function WeeklyCup() {
           <div className="mt-1.5 flex flex-wrap gap-x-4 gap-y-1">
             {podium.map((w, i) => (
               <span key={w.address} className="text-[12px] text-ink-dim">
-                {MEDAL[i]} <span className="font-mono">{short(w.address)}</span>{" "}
+                <span className="font-bold" style={{ color: MEDAL_COLOR[i] }}>{i + 1}.</span> <span className="font-mono">{short(w.address)}</span>{" "}
                 <span className="text-teal">+{w.amount} USDm</span>
               </span>
             ))}

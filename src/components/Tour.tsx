@@ -13,7 +13,7 @@ interface Step {
 }
 
 const STEPS: Step[] = [
-  { title: "Welcome to Gambit 👋", body: "The games you grew up playing, for real money. Warm up free against the bot, then challenge real people. Quick tour, 30 seconds." },
+  { title: "Welcome to Gambit", body: "The games you grew up playing, for real money. Warm up free against the bot, then challenge real people. Quick tour, 30 seconds." },
   { sel: '[data-tour="wallet"]', title: "Your money lives here", body: "Think of it as your game account. Tap anytime to see your balance, add money, or send your winnings out. No crypto knowledge needed." },
   { sel: '[data-tour="daily"]', title: "Free money, daily", body: "Come back every day and tap this. You get XP plus a little real G$ paid straight into your wallet. It costs you nothing." },
   { sel: '[data-tour="challenge"]', title: "The Daily Challenge", body: "One board, the whole world plays it, you get one shot at your score. Beat your friends and rub it in." },
@@ -114,19 +114,23 @@ export function Tour() {
           />
         )}
 
-        {/* pointing hand at the element */}
+        {/* directional pointer at the element — a solid triangle (pure geometry) */}
         {rect && (
           <motion.div
-            className="pointer-events-none absolute text-2xl"
+            className="pointer-events-none absolute"
             style={{
-              left: clamp(rect.left + rect.width / 2 - 12, 8, vw - 32),
-              ...(below ? { top: rect.bottom + 2 } : { top: rect.top - 34 }),
+              left: clamp(rect.left + rect.width / 2 - 8, 8, vw - 24),
+              ...(below ? { top: rect.bottom + 4 } : { top: rect.top - 16 }),
+              width: 0,
+              height: 0,
+              borderLeft: "8px solid transparent",
+              borderRight: "8px solid transparent",
+              ...(below ? { borderBottom: "11px solid #3ecf8e" } : { borderTop: "11px solid #3ecf8e" }),
+              filter: "drop-shadow(0 2px 5px rgba(62,207,142,0.55))",
             }}
             animate={{ y: below ? [0, 6, 0] : [0, -6, 0] }}
             transition={{ duration: 1, repeat: Infinity }}
-          >
-            {below ? "👆" : "👇"}
-          </motion.div>
+          />
         )}
 
         {/* tooltip card */}

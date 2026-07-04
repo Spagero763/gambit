@@ -136,16 +136,20 @@ export function BoardCoach({ slug }: { slug: string }) {
 
         {rect && (
           <motion.div
-            className="pointer-events-none absolute text-2xl"
+            className="pointer-events-none absolute"
             style={{
-              left: clamp(rect.left + rect.width / 2 - 12, 8, (typeof window !== "undefined" ? window.innerWidth : 390) - 32),
-              ...(below ? { top: rect.bottom + 2 } : { top: rect.top - 34 }),
+              left: clamp(rect.left + rect.width / 2 - 8, 8, (typeof window !== "undefined" ? window.innerWidth : 390) - 24),
+              ...(below ? { top: rect.bottom + 4 } : { top: rect.top - 16 }),
+              width: 0,
+              height: 0,
+              borderLeft: "8px solid transparent",
+              borderRight: "8px solid transparent",
+              ...(below ? { borderBottom: "11px solid #3ecf8e" } : { borderTop: "11px solid #3ecf8e" }),
+              filter: "drop-shadow(0 2px 5px rgba(62,207,142,0.55))",
             }}
             animate={{ y: below ? [0, 7, 0] : [0, -7, 0] }}
             transition={{ duration: 1, repeat: Infinity }}
-          >
-            {below ? "👆" : "👇"}
-          </motion.div>
+          />
         )}
 
         <motion.div
