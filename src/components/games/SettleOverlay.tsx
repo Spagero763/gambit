@@ -7,6 +7,7 @@ import { formatUnits } from "viem";
 import { retrySettle } from "@/lib/matchClient";
 import { useStakeMatch } from "@/hooks/useStakeMatch";
 import { Confetti } from "@/components/motion/Confetti";
+import { AnimatedNumber } from "@/components/motion/AnimatedNumber";
 import { friendlyError } from "@/lib/errors";
 import { symbolForToken } from "@/lib/tokens";
 import { inviteUrl, shareOrCopy } from "@/lib/share";
@@ -123,7 +124,12 @@ export function SettleOverlay({
               <CheckCircle2 className="h-5 w-5 shrink-0 text-teal" />
               <p className="text-left text-sm font-semibold text-teal">
                 {result === "draw" ? "Stake refunded to your wallet" : "Paid to your wallet"}
-                {payout ? <span className="nums"> · {payout.toFixed(2)} {symbol}</span> : null}
+                {payout ? (
+                  <>
+                    {" · "}
+                    <AnimatedNumber value={payout} decimals={2} suffix={` ${symbol}`} />
+                  </>
+                ) : null}
               </p>
             </div>
           )}
