@@ -10,6 +10,8 @@ import { aggregateStandings, Standing } from "@/lib/leaderboard";
 import { useProfiles, displayName, avatarHex, shortAddr, PublicProfile } from "@/lib/profiles";
 import { useProfile } from "@/lib/profile";
 import { levelInfo } from "@/lib/progress";
+import { rankForXp } from "@/lib/rank";
+import { RankBadge } from "@/components/RankBadge";
 import { tokensFor } from "@/lib/tokens";
 import { ACTIVE_CHAIN_ID } from "@/lib/wagmi";
 import { Avatar } from "@/components/Avatar";
@@ -244,6 +246,7 @@ const MEDAL = ["text-amber", "text-ink-dim", "text-[#c08457]"];
 
 function PointsRowItem({ p, rank, isMe }: { p: PointsRow; rank: number; isMe: boolean }) {
   const lvl = levelInfo(p.xp);
+  const tier = rankForXp(p.xp);
   const name = p.name?.trim() || shortAddr(p.address);
   return (
     <motion.li
@@ -261,7 +264,9 @@ function PointsRowItem({ p, rank, isMe }: { p: PointsRow; rank: number; isMe: bo
           {name} {isMe && <span className="text-teal">· you</span>}
         </p>
         <p className="flex items-center gap-1.5 text-[11px] text-ink-faint">
-          <span className="rounded bg-void-600 px-1.5 py-0.5 font-semibold text-teal">Lv {lvl.level}</span>
+          <RankBadge rank={tier} size={15} />
+          <span className="font-semibold" style={{ color: tier.color }}>{tier.name}</span>
+          <span>Lv {lvl.level}</span>
           {p.streak > 0 && (
             <span className="inline-flex items-center gap-0.5 text-amber">
               <Flame className="h-3 w-3" /> {p.streak}
