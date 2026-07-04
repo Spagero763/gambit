@@ -8,7 +8,6 @@ import { supabase } from "@/lib/supabase";
 import { symbolForToken, decimalsForToken } from "@/lib/tokens";
 import { GAMES } from "@/lib/games";
 import { Counter } from "@/components/Counter";
-import { SkeletonTiles, SkeletonRows } from "@/components/Skeleton";
 import { cn } from "@/lib/cn";
 
 const ease = [0.22, 1, 0.36, 1] as const;
@@ -137,10 +136,7 @@ export function Stats() {
       </p>
 
       {loading ? (
-        <div className="mt-5 space-y-3">
-          <SkeletonTiles tiles={6} />
-          <SkeletonRows rows={4} />
-        </div>
+        <p className="mt-6 rounded-2xl border border-line bg-void-700 px-4 py-10 text-center text-sm text-ink-faint">Loading…</p>
       ) : (
         <>
           <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-3">
