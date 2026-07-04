@@ -26,27 +26,26 @@ The master plan. Goal: real users, real transactions, a growth curve that stands
 - Plain-language pass: no dashes in any user-facing copy.
 - RPC failover across forno, Ankr and dRPC for wallet reads and the cup identity gate.
 
-## MiniPay Readiness (from Celopedia, the official Celo builder skill)
+## MiniPay Readiness (audited against Celopedia + real evidence)
 
-Celopedia's `minipay-requirements.md` and `minipay-app-fit.md` are the real listing bar. Audit of Gambit against them:
+Celopedia's `minipay-requirements.md` / `minipay-app-fit.md` are useful *generic* guidance, but they describe a builder using the **raw** MiniPay injected wallet. Gambit connects through **Privy**, which bridges to MiniPay and handles signing. Ground truth beats the snapshot:
 
-**Hard blocks (must fix before any MiniPay submission):**
-- **`personal_sign` is a hard technical block.** MiniPay's injected wallet does not support message signing, and Gambit's whole session-token auth (`signIn` in `src/lib/profile.ts`) signs a message to gate staking, daily claim, cup entry and tournaments. It "worked" in testing only because the tester signed in with email (Privy embedded wallet), not MiniPay's native wallet. For a real listing we must rework auth so the core flow needs only `eth_sendTransaction` / the wallet address, no off-chain signature.
-- **Never show or require CELO.** SendFunds lists CELO as a sendable asset and several error strings say "add a little CELO". Inside MiniPay, CELO must be removed from balances, selectors and copy (fees are abstracted). Gate all of this on `inMiniPay()`.
+**Proven working (do not "fix"):**
+- Gambit **runs inside MiniPay today** — connected via Privy ("Successfully connected with MiniPay · Protected by Privy"), balances load, daily claim (which signs) works. Tested on device.
+- Gambit placed **7th of 50 in June Proof of Ship**, so it already clears every hard gate: verified mainnet contracts, public repo, live URL, talent.app registration, `isMiniPay()` hook.
+- `personal_sign` is **not** a blocker for us — Privy handles signing; the generic "MiniPay can't sign" rule is about the bare provider, not our stack.
 
-**Required for listing:**
-- **No raw `0x…` as the primary identifier** — use the display-name alias everywhere (already have names; make them the default, 0x only as a faint secondary).
-- **Low balance → Add Cash deeplink** (`https://link.minipay.xyz/add_cash?tokens=USDm,USDC,USDT`) instead of an error.
-- **Preferred stablecoin** — default the token selector to the user's highest-balance stablecoin.
-- **Copy rules** — "gas"/"gas fee" → "network fee" (partly done); no "crypto".
-- **Public stats page** — DAU/MAU/retention + on-chain tx, volume, fees, failed-tx rate (also our Phase 5 proof page).
-- **In-app support link** (Telegram/WhatsApp/email) reachable from the app + a committed 24h critical-fix SLA.
-- **Images SVG/WebP** (our icon and covers are PNG); **JS bundle under 2 MB**.
-- **Two-stage submission**: Stage 1 intake at `minipay.to/mini-apps` (needs 3+ screenshots ≤500 KB), then a call, then the Stage 2 readiness form. Do NOT submit half-built — MiniPay deprioritises rough submissions.
+**Deliberate product decisions (not gaps):**
+- **CELO stays visible.** Gambit pays network fees in CELO, so players genuinely need a little. Hiding it would just cause failed transactions with no explanation. Showing it is the honest call. (Owner decision, 2026-07.)
 
-**Positioning:** Celo lists "Gambling" on the avoid list, but "games with real reward mechanics and USDm prize pools" and "X-to-earn" are Tier 1. Gambit must present as **skill gaming with prize pools**, leaning on the free Weekly Cup and skill framing, not betting language.
+**Genuinely worthwhile, framed as enhancements (never blockers):**
+- **Copy** — say "network fee" not "gas"; keep CELO. Friendlier for non-crypto players. (Done.)
+- **Public stats page** — DAU/MAU/retention + on-chain tx/volume/fees. Also our Phase 5 proof page; strengthens a future MiniPay/VC review.
+- **In-app support link** (Telegram/WhatsApp/email) + a 24h critical-fix intent.
+- **SVG/WebP assets**, confirm JS bundle < 2 MB.
+- **Positioning:** present as **skill gaming with prize pools / X-to-earn** (Tier 1), leaning on the free Weekly Cup — not betting language.
 
-**Proof of Ship hard gates (we're submitted for July):** contract on mainnet (done), public repo (done), live URL (done), **registered on talent.app** (confirm), MiniPay hook (done, a scoring booster). Quality review explicitly penalises AI-slop copy and broken mobile flows — our anti-AI pass helps here.
+**Submission:** Stage 1 intake is `minipay.to/mini-apps` (needs 3+ screenshots ≤500 KB), then a call, then a Stage 2 readiness form. No rush — Proof of Ship is the right venue now; submit MiniPay when we choose to, not because a checklist says we must.
 
 ## The plan
 
