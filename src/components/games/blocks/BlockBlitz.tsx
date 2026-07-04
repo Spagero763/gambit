@@ -29,28 +29,17 @@ const FILL: Record<Accent, string> = {
   rose: "bg-gradient-to-br from-rose to-[#d6437a]",
 };
 
-/** A tactile, gem-like block tile: real material depth, a specular highlight,
- *  a rounded top facet and a shaded underside so it reads as a physical piece
- *  rather than a flat coloured square. */
+/** A glossy, beveled block tile. */
 function Block({ accent, className }: { accent: Accent; className?: string }) {
   return (
     <span
-      className={cn("absolute inset-0 overflow-hidden rounded-[7px]", FILL[accent], className)}
+      className={cn("absolute inset-0 overflow-hidden rounded-[6px]", FILL[accent], className)}
       style={{
         boxShadow:
-          "inset 0 2px 2px rgba(255,255,255,0.55), inset 0 -5px 7px rgba(0,0,0,0.42), inset 0 0 0 1px rgba(255,255,255,0.14), 0 2px 4px rgba(0,0,0,0.5)",
+          "inset 0 2px 1px rgba(255,255,255,0.45), inset 0 -3px 4px rgba(0,0,0,0.35), 0 1px 2px rgba(0,0,0,0.4)",
       }}
     >
-      {/* specular gloss, offset like a light hitting the top-left */}
-      <span
-        className="pointer-events-none absolute inset-0"
-        style={{ background: "radial-gradient(62% 46% at 30% 20%, rgba(255,255,255,0.5), transparent 60%)" }}
-      />
-      {/* underside shade for roundness */}
-      <span
-        className="pointer-events-none absolute inset-x-0 bottom-0 h-2/5"
-        style={{ background: "linear-gradient(to top, rgba(0,0,0,0.22), transparent)" }}
-      />
+      <span className="absolute inset-x-0 top-0 h-1/3 rounded-t-[6px] bg-white/25" />
     </span>
   );
 }
