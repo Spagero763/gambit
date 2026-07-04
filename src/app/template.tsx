@@ -5,9 +5,8 @@ import { ease } from "@/lib/motion";
 
 /**
  * App Router re-mounts this template on every navigation, so it doubles as a
- * page-enter transition: a quick rise and settle, like the next screen is
- * dealt in. Transform and opacity only (no page-wide blur, which janks on weak
- * GPUs), and fully skipped for reduced-motion.
+ * page-enter transition: rise out of a soft blur with a scale settle (the feel
+ * the app has always had). Skipped entirely for reduced-motion.
  */
 export default function Template({ children }: { children: React.ReactNode }) {
   const reduce = useReducedMotion();
@@ -15,9 +14,9 @@ export default function Template({ children }: { children: React.ReactNode }) {
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 14, scale: 0.994 }}
-      animate={{ opacity: 1, y: 0, scale: 1 }}
-      transition={{ duration: 0.4, ease }}
+      initial={{ opacity: 0, y: 16, scale: 0.992, filter: "blur(8px)" }}
+      animate={{ opacity: 1, y: 0, scale: 1, filter: "blur(0px)" }}
+      transition={{ duration: 0.45, ease }}
     >
       {children}
     </motion.div>
