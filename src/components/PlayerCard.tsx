@@ -1,0 +1,124 @@
+"use client";
+
+import { useState } from "react";
+import { motion } from "framer-motion";
+import { Share2, Check } from "lucide-react";
+import { useAccount } from "wagmi";
+import { useProgress, levelInfo } from "@/lib/progress";
+import { useSettings, AVATAR_HEX } from "@/lib/settings";
+import { rankForXp } from "@/lib/rank";
+import { Avatar } from "@/components/Avatar";
+import { RankBadge } from "@/components/RankBadge";
+import { AnimatedNumber } from "@/components/motion/AnimatedNumber";
+import { inviteUrl, shareOrCopy } from "@/lib/share";
+
+const short = (a?: string) => (a ? `${a.slice(0, 6)}…${a.slice(-4)}` : "Player");
+
+/**
+ * The premium player identity card: avatar + rank emblem, named rank and
+ * level, a progress bar to the next rank, headline stats, and a one-tap share.
+ * The rank tints the whole card, so a Gold player's card literally looks
+ * golden. This is the status artifact players chase and show off.
+ */
+export function PlayerCard() {
+  const { address } = useAccount();
+  const p = useProgress();
+  const [settings] = useSettings();
+  const [shared, setShared] = useState<"idle" | "shared" | "copied">("idle");
+
+  const { level } = levelInfo(p.xp);
+  const rank = rankForXp(p.xp);
+  const winRate = p.played > 0 ? Math.round((p.wins / p.played) * 100) : 0;
+  const name = settings.name || short(address);
+
+  const share = async () => {
+    const r = await shareOrCopy({
+      title: "Gambit",
+      text: `I'm ${rank.name} on Gambit — Level ${level}, ${winRate}% win rate. Think you can beat me?`,
+      url: inviteUrl(address),
+    });
+    if (r !== "failed") setShared(r);
+    setTimeout(() => setShared("idle"), 2000);
+  };
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="relative overflow-hidden rounded-3xl border p-5 shadow-card"
+      style={{ borderColor: `${rank.color}44`, background: `linear-gradient(150deg, ${rank.glow}, transparent 70%)` }}
+    >
+      {/* soft rank-coloured glow anchored top-right */}
+      <div
+        aria-hidden
+        className="pointer-events-none absolute -right-10 -top-12 h-40 w-40 rounded-full blur-2xl"
+        style={{ background: rank.glow }}
+      />
+
+      <div className="relative flex items-center gap-3.5">
+        <div className="relative">
+          <span className="block rounded-2xl p-[2px]" style={{ background: `linear-gradient(140deg, ${rank.color}, ${rank.color}44)` }}>
+            <Avatar
+              image={settings.avatarImage || undefined}
+              color={AVATAR_HEX[settings.avatar] ?? AVATAR_HEX.teal}
+              name={settings.name || (address ? address.slice(2, 4) : "GB")}
+              size={52}
+              rounded="rounded-[14px]"
+            />
+          </span>
+          <span className="absolute -bottom-1.5 -right-1.5">
+            <RankBadge rank={rank} size={26} />
+          </span>
+        </div>
+
+        <div className="min-w-0 flex-1">
+          <p className="truncate text-base font-bold tracking-tight text-ink">{name}</p>
+          <p className="text-[13px] font-semibold" style={{ color: rank.color }}>
+            {rank.name} · Level {level}
+          </p>
+        </div>
+
+        <button
+          onClick={share}
+          className="pressable inline-flex shrink-0 items-center gap-1.5 rounded-xl border border-line bg-void-800 px-3 py-2 text-[12px] font-medium text-ink-dim transition-colors hover:text-ink"
+        >
+          {shared === "idle" ? <Share2 className="h-3.5 w-3.5" /> : <Check className="h-3.5 w-3.5 text-teal" />}
+          {shared === "copied" ? "Copied" : shared === "shared" ? "Shared" : "Share"}
+        </button>
+      </div>
+
+      {/* progress to next rank */}
+      <div className="relative mt-4">
+        <div className="flex items-center justify-between text-[11px] text-ink-faint">
+          <span>{rank.next ? `Climbing to ${rank.next.name}` : "Top rank reached"}</span>
+          <span className="nums">{Math.round(rank.progress * 100)}%</span>
+        </div>
+        <div className="mt-1.5 h-2 overflow-hidden rounded-full bg-void-800">
+          <motion.div
+            className="h-full rounded-full"
+            style={{ background: `linear-gradient(90deg, ${rank.color}, ${rank.next?.color ?? rank.color})` }}
+            initial={{ width: 0 }}
+            animate={{ width: `${Math.round(rank.progress * 100)}%` }}
+            transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
+          />
+        </div>
+      </div>
+
+      {/* headline stats */}
+      <div className="relative mt-4 grid grid-cols-3 gap-2">
+        <Stat label="Win rate" value={winRate} suffix="%" />
+        <Stat label="Played" value={p.played} />
+        <Stat label="Day streak" value={p.streak} />
+      </div>
+    </motion.div>
+  );
+}
+
+function Stat({ label, value, suffix }: { label: string; value: number; suffix?: string }) {
+  return (
+    <div className="rounded-2xl border border-line bg-void-800/60 px-3 py-2.5 text-center">
+      <AnimatedNumber value={value} suffix={suffix} className="block text-lg font-bold text-ink" />
+      <p className="mt-0.5 text-[10px] text-ink-faint">{label}</p>
+    </div>
+  );
+}

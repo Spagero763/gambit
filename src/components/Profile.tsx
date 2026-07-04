@@ -15,6 +15,7 @@ import { useProfile, createProfile, setProfile } from "@/lib/profile";
 import { Avatar } from "@/components/Avatar";
 import { SendFunds } from "@/components/SendFunds";
 import { AnimatedNumber } from "@/components/motion/AnimatedNumber";
+import { PlayerCard } from "@/components/PlayerCard";
 import { GoodIdCard } from "@/components/GoodIdCard";
 import { symbolForToken } from "@/lib/tokens";
 import { ProgressCard } from "@/components/Daily";
@@ -229,6 +230,10 @@ export function Profile() {
       </motion.div>
 
       {sendOpen && <SendFunds address={address} onClose={() => setSendOpen(false)} />}
+
+      <div className="mt-5">
+        <PlayerCard />
+      </div>
 
       <GoodIdCard />
 
