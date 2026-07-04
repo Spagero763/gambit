@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { motion } from "framer-motion";
 import { formatUnits } from "viem";
-import { Users, Activity, Swords, Coins, Trophy, Flame } from "lucide-react";
+import { Users, Activity, Swords, Coins, Trophy, Flame, ShieldCheck } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { symbolForToken, decimalsForToken } from "@/lib/tokens";
 import { GAMES } from "@/lib/games";
@@ -122,7 +122,18 @@ export function Stats() {
   return (
     <section className="mx-auto w-full max-w-2xl px-5 pb-28 pt-2">
       <h1 className="text-2xl font-semibold tracking-tight">Stats</h1>
-      <p className="mt-1 text-sm text-ink-dim">Live activity across Gambit.</p>
+      <p className="mt-1 flex flex-wrap items-center gap-1.5 text-sm text-ink-dim">
+        <ShieldCheck className="h-4 w-4 shrink-0 text-teal" />
+        Real activity, settled on Celo.
+        <a
+          href="https://celoscan.io/address/0xB34548Ad3A45C2a571f99341e5fb32abB4FACd05"
+          target="_blank"
+          rel="noreferrer"
+          className="text-teal underline decoration-teal/40 underline-offset-2 hover:decoration-teal"
+        >
+          Verify it yourself
+        </a>
+      </p>
 
       {loading ? (
         <p className="mt-6 rounded-2xl border border-line bg-void-700 px-4 py-10 text-center text-sm text-ink-faint">Loading…</p>
