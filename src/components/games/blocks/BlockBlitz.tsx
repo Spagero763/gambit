@@ -343,7 +343,7 @@ export function BlockBlitz({
                 <p className="text-2xl font-semibold tracking-tight text-rose">No moves left</p>
                 <p className="mt-1 text-sm text-ink-dim">Final score {score}</p>
                 {tournament && (
-                  <p className="mt-2 text-[11px] text-teal">Run submitted — your best score counts. Same board, try to beat it.</p>
+                  <p className="mt-2 text-[11px] text-teal">Run submitted. Your best score counts. Same board, try to beat it.</p>
                 )}
                 <button
                   onClick={reset}
