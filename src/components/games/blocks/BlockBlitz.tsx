@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useMemo, useRef, useState } from "react";
-import { AnimatePresence, motion } from "framer-motion";
+import { AnimatePresence, motion, useAnimationControls, useReducedMotion } from "framer-motion";
 import { ArrowLeft, RotateCcw } from "lucide-react";
 import Link from "next/link";
 import {
@@ -71,6 +71,8 @@ export function BlockBlitz({
   const [best, setBest] = useState(0);
   const [combo, setCombo] = useState(0);
   const [flash, setFlash] = useState<string | null>(null);
+  const boardKick = useAnimationControls();
+  const reduce = useReducedMotion();
   const [over, setOver] = useState(false);
   const { address } = useAccount();
 
@@ -109,6 +111,14 @@ export function BlockBlitz({
       setFlash(`+${lines * 10 * nextCombo}${lines > 1 ? `  ×${lines}` : ""}`);
       setTimeout(() => setFlash(null), 700);
       play("clear");
+      // screen kick that grows with the number of lines cleared
+      if (!reduce) {
+        const mag = Math.min(3 + lines * 2, 10);
+        void boardKick.start({
+          x: [0, -mag, mag, -mag * 0.6, mag * 0.6, 0],
+          transition: { duration: 0.26, ease: "easeOut" },
+        });
+      }
     } else {
       nextCombo = 0;
       play("place");
@@ -219,7 +229,8 @@ export function BlockBlitz({
 
       {/* board */}
       <div className="relative mx-auto mt-5 w-full max-w-[360px]">
-        <div
+        <motion.div
+          animate={boardKick}
           data-coach="board"
           className="relative grid aspect-square grid-cols-8 gap-1 rounded-3xl border border-white/10 bg-[#0c0b18] p-2.5 shadow-card"
           style={{ boxShadow: "inset 0 2px 14px rgba(0,0,0,0.6), 0 20px 50px -20px rgba(0,0,0,0.8)" }}
@@ -287,7 +298,7 @@ export function BlockBlitz({
               </motion.div>
             )}
           </AnimatePresence>
-        </div>
+        </motion.div>
 
         {/* tray */}
         <div data-coach="tray" className="mt-4 grid grid-cols-3 gap-2.5">
