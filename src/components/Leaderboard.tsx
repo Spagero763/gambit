@@ -12,6 +12,7 @@ import { useProfile } from "@/lib/profile";
 import { levelInfo } from "@/lib/progress";
 import { rankForXp } from "@/lib/rank";
 import { RankBadge } from "@/components/RankBadge";
+import { SkeletonRows } from "@/components/Skeleton";
 import { tokensFor } from "@/lib/tokens";
 import { ACTIVE_CHAIN_ID } from "@/lib/wagmi";
 import { Avatar } from "@/components/Avatar";
@@ -228,7 +229,7 @@ export function Leaderboard() {
 }
 
 function Loading() {
-  return <p className="mt-4 rounded-2xl border border-line bg-void-700 px-4 py-8 text-center text-sm text-ink-faint">Loading…</p>;
+  return <SkeletonRows rows={6} className="mt-4" />;
 }
 function Empty({ title, sub }: { title: string; sub: string }) {
   return (
