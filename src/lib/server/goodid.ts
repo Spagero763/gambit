@@ -1,5 +1,6 @@
-import { createPublicClient, http, getAddress, parseAbi, zeroAddress } from "viem";
+import { createPublicClient, getAddress, parseAbi, zeroAddress } from "viem";
 import { celo } from "viem/chains";
+import { celoReadTransport } from "@/lib/server/rpc";
 
 // GoodDollar IdentityV2 on Celo mainnet (production — same table the
 // citizen-sdk uses client-side). We read it server-side so the Weekly Cup's
@@ -8,7 +9,7 @@ const IDENTITY = "0xC361A6E67822a0EDc17D899227dd9FC50BD62F42" as const;
 
 const identityAbi = parseAbi(["function getWhitelistedRoot(address account) view returns (address)"]);
 
-const pub = createPublicClient({ chain: celo, transport: http("https://forno.celo.org") });
+const pub = createPublicClient({ chain: celo, transport: celoReadTransport() });
 
 /**
  * The wallet's whitelisted ROOT identity, or null if not a verified human.
