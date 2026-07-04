@@ -206,8 +206,15 @@ export function ChessGame({ difficulty = "normal" }: { difficulty?: Difficulty }
   // flag-fall: whoever hits 0 first loses (you = lose, bot = win)
   useEffect(() => {
     if (result) return;
-    if (wTime <= 0) setResult("lose");
-    else if (bTime <= 0) setResult("win");
+    if (wTime <= 0) {
+      setResult("lose");
+      play("lose");
+      recordResult("chess", "lose");
+    } else if (bTime <= 0) {
+      setResult("win");
+      play("win");
+      recordResult("chess", "win");
+    }
   }, [wTime, bTime, result]);
 
   const board = game.board();
