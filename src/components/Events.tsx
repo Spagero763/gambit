@@ -115,7 +115,7 @@ export function Events() {
             <Trophy className="h-5 w-5" />
           </span>
           <p className="mt-4 text-sm text-ink-dim">No scores yet this week.</p>
-          <p className="mt-1 text-[12px] text-ink-faint">Be the first — play Block Blitz to claim the top spot.</p>
+          <p className="mt-1 text-[12px] text-ink-faint">Be the first. Play Block Blitz to claim the top spot.</p>
         </div>
       ) : (
         <ul className="space-y-2">

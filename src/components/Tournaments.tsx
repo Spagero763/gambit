@@ -119,7 +119,7 @@ export function Tournaments() {
         </span>
         <div>
           <h1 className="font-display text-2xl font-bold">Tournaments</h1>
-          <p className="text-sm text-ink-dim">Knockout rounds — survive the cuts to the final. Top 3 split the pot 50/30/20.</p>
+          <p className="text-sm text-ink-dim">Knockout rounds. Survive the cuts to the final. Top 3 split the pot 50/30/20.</p>
         </div>
       </div>
 
@@ -147,9 +147,9 @@ export function Tournaments() {
         </div>
         <p className="mb-3 text-[11px] text-ink-faint">
           {isBracket
-            ? "Knockout bracket · two semi-finals on separate boards, then the final — losers fight for bronze."
+            ? "Knockout bracket · two semi-finals on separate boards, then the final. Losers fight for bronze."
             : isTable
-              ? "Survival table · 3–8 players, one board. Finish your cards to claim 1st, 2nd, 3rd — the podium splits the pot."
+              ? "Survival table · 3 to 8 players, one board. Finish your cards to claim 1st, 2nd, 3rd. The podium splits the pot."
               : "Score race · everyone plays the same board each round, the bottom half is cut until the final three."}
         </p>
 

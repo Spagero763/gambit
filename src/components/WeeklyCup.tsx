@@ -206,7 +206,7 @@ export function WeeklyCup() {
             className="btn-primary inline-flex w-full items-center justify-center gap-2 rounded-xl py-3 text-sm shadow-glow disabled:opacity-60"
           >
             {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <BadgeCheck className="h-4 w-4" />}
-            Enter this week&apos;s cup — free
+            Enter this week&apos;s cup, free
           </button>
         )}
         {err && <p className="mt-2 text-center text-[12px] text-rose">{err}</p>}

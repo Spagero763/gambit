@@ -119,7 +119,7 @@ export function Leaderboard() {
     <section className="mx-auto w-full max-w-2xl px-5 pb-28 pt-2">
       <h1 className="text-2xl font-semibold tracking-tight">Leaderboard</h1>
       <p className="mt-1 text-sm text-ink-dim">
-        {isPoints ? "Top players by XP — earned just by playing." : "Top players by settled staked matches."}
+        {isPoints ? "Top players by XP, earned just by playing." : "Top players by settled staked matches."}
       </p>
 
       {needsName && (
@@ -132,7 +132,7 @@ export function Leaderboard() {
           </span>
           <span className="min-w-0">
             <span className="block text-sm font-semibold text-ink">Claim your player name</span>
-            <span className="block text-[12px] text-ink-dim">Set a name and photo so the board shows you — not your 0x address.</span>
+            <span className="block text-[12px] text-ink-dim">Set a name and photo so the board shows you, not your 0x address.</span>
           </span>
         </Link>
       )}
