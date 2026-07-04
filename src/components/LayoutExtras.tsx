@@ -10,6 +10,7 @@ import { useEffect, useState } from "react";
 const MusicPlayer = dynamic(() => import("@/components/audio/MusicPlayer").then((m) => m.MusicPlayer), { ssr: false });
 const Tour = dynamic(() => import("@/components/Tour").then((m) => m.Tour), { ssr: false });
 const AchievementToast = dynamic(() => import("@/components/Achievements").then((m) => m.AchievementToast), { ssr: false });
+const RankUpCelebration = dynamic(() => import("@/components/RankUpCelebration").then((m) => m.RankUpCelebration), { ssr: false });
 const ProfileSync = dynamic(() => import("@/components/ProfileSync").then((m) => m.ProfileSync), { ssr: false });
 
 export function LayoutExtras() {
@@ -26,6 +27,7 @@ export function LayoutExtras() {
     <>
       <ProfileSync />
       <AchievementToast />
+      <RankUpCelebration />
       <MusicPlayer />
       <Tour />
     </>
