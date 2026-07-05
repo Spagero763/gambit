@@ -7,6 +7,7 @@ import { useAccount, useSignMessage } from "wagmi";
 import { usePrivy } from "@privy-io/react-auth";
 import { useGoodId } from "@/hooks/useGoodId";
 import { hasToken, signIn } from "@/lib/profile";
+import { supabase } from "@/lib/supabase";
 import { fetchCup, joinCup, submitCupScore, settleLastCup, CupView } from "@/lib/cupClient";
 import { BlockBlitz } from "@/components/games/blocks/BlockBlitz";
 import { cn } from "@/lib/cn";
@@ -54,8 +55,16 @@ export function WeeklyCup() {
 
   useEffect(() => {
     if (playing) return;
-    const t = setInterval(refresh, 8000);
-    return () => clearInterval(t);
+    // realtime nudges when someone enters or posts a score; slow fallback poll
+    const channel = supabase
+      ?.channel("weekly-cup")
+      .on("postgres_changes", { event: "*", schema: "public", table: "cup_entries" }, () => refresh())
+      .subscribe();
+    const t = setInterval(refresh, 20000);
+    return () => {
+      if (channel) supabase?.removeChannel(channel);
+      clearInterval(t);
+    };
   }, [refresh, playing]);
 
   const enter = async () => {
