@@ -9,6 +9,7 @@ import { useAccount, useSwitchChain, useSignMessage } from "wagmi";
 import { usePrivy } from "@privy-io/react-auth";
 import { parseUnits, formatUnits } from "viem";
 import { useStakeMatch } from "@/hooks/useStakeMatch";
+import { supabase } from "@/lib/supabase";
 import { ACTIVE_CHAIN_ID } from "@/lib/wagmi";
 import { tokensFor, StakeToken, symbolForToken, decimalsForToken } from "@/lib/tokens";
 import { hasToken, signIn } from "@/lib/profile";
@@ -70,8 +71,16 @@ export function Tournaments() {
   }, []);
   useEffect(() => {
     refresh();
-    const t = setInterval(refresh, 6000);
-    return () => clearInterval(t);
+    // realtime nudges from cup rows changing; poll becomes a slow safety net
+    const channel = supabase
+      ?.channel("cups-list")
+      .on("postgres_changes", { event: "*", schema: "public", table: "tournaments" }, () => refresh())
+      .subscribe();
+    const t = setInterval(refresh, 15000);
+    return () => {
+      if (channel) supabase?.removeChannel(channel);
+      clearInterval(t);
+    };
   }, [refresh]);
 
   const validStake = Number.isFinite(stake) && stake > 0;
