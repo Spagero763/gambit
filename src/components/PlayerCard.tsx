@@ -7,6 +7,7 @@ import { useAccount } from "wagmi";
 import { useProgress, levelInfo } from "@/lib/progress";
 import { useSettings, AVATAR_HEX } from "@/lib/settings";
 import { rankForXp } from "@/lib/rank";
+import { seasonName, seasonXp, seasonDaysLeft } from "@/lib/season";
 import { Avatar } from "@/components/Avatar";
 import { RankBadge } from "@/components/RankBadge";
 import { AnimatedNumber } from "@/components/motion/AnimatedNumber";
@@ -109,6 +110,17 @@ export function PlayerCard() {
         <Stat label="Win rate" value={winRate} suffix="%" />
         <Stat label="Played" value={p.played} />
         <Stat label="Day streak" value={p.streak} />
+      </div>
+
+      {/* monthly season: a fresh climb every month, rank stays forever */}
+      <div className="relative mt-3 flex items-center justify-between rounded-2xl border border-line bg-void-800/60 px-3.5 py-2.5">
+        <div>
+          <p className="text-[11px] font-semibold uppercase tracking-wide text-ink-faint">{seasonName()} season</p>
+          <p className="text-[13px] font-bold text-ink">
+            +{seasonXp(p.xp).toLocaleString()} <span className="text-[11px] font-medium text-ink-dim">XP this month</span>
+          </p>
+        </div>
+        <p className="text-[11px] text-ink-faint">resets in {seasonDaysLeft()}d</p>
       </div>
     </motion.div>
   );
