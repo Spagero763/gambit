@@ -23,7 +23,7 @@ export function Header() {
       />
       <motion.div
         style={{ paddingTop: padY, paddingBottom: padY }}
-        className="relative mx-auto flex w-full max-w-2xl items-center justify-between px-5"
+        className="relative mx-auto flex w-full max-w-2xl items-center justify-between px-5 lg:max-w-6xl"
       >
         <Link href="/" aria-label="Home">
           <motion.div style={{ scale: logoScale, transformOrigin: "left center" }} whileTap={{ scale: 0.94 }}>

@@ -17,13 +17,16 @@ export default function Home() {
     <main className="relative min-h-[100dvh]">
       <Backdrop />
       <Header />
-      <Hero />
-      <div className="px-5">
-        <DailyReward />
-        <DailyChallengeCard />
-        <LazySaveProgressPrompt />
-        <LazyActiveGames />
-        <LazyDailyStrip />
+      {/* desktop: hero sits beside the daily column; mobile stacks unchanged */}
+      <div className="mx-auto w-full lg:grid lg:max-w-6xl lg:grid-cols-2 lg:items-center lg:gap-8 lg:px-5 lg:pt-6">
+        <Hero />
+        <div className="px-5 lg:px-0">
+          <DailyReward />
+          <DailyChallengeCard />
+          <LazySaveProgressPrompt />
+          <LazyActiveGames />
+          <LazyDailyStrip />
+        </div>
       </div>
       <LazyGameShowcase />
       <GameGrid />
