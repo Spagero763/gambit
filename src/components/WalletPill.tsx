@@ -6,7 +6,10 @@ import { useAccount, useBalance } from "wagmi";
 import { usePrivy } from "@privy-io/react-auth";
 import { CUSD_ADDRESS } from "@/lib/wagmi";
 import { useSettings, AVATAR_HEX } from "@/lib/settings";
+import { useProgress } from "@/lib/progress";
+import { rankForXp } from "@/lib/rank";
 import { Avatar } from "@/components/Avatar";
+import { RankBadge } from "@/components/RankBadge";
 import { WalletSheet } from "@/components/WalletSheet";
 
 function short(addr?: string) {
@@ -19,6 +22,8 @@ export function WalletPill() {
   const { data: bal } = useBalance({ address, token: CUSD_ADDRESS, query: { enabled: !!address } });
   const [settings] = useSettings();
   const [open, setOpen] = useState(false);
+  const progress = useProgress();
+  const rank = rankForXp(progress.xp);
 
   if (!ready) return <div className="h-10 w-28 rounded-xl border border-line bg-void-700" />;
 
@@ -32,13 +37,19 @@ export function WalletPill() {
           data-tour="wallet"
           className="flex items-center gap-2 rounded-xl border border-line bg-void-700 py-1.5 pl-2 pr-3 text-left transition-colors hover:border-line-strong"
         >
-          <Avatar
-            image={settings.avatarImage || undefined}
-            color={AVATAR_HEX[settings.avatar] ?? AVATAR_HEX.teal}
-            name={settings.name || address.slice(2, 4)}
-            size={28}
-            rounded="rounded-lg"
-          />
+          <span className="relative shrink-0">
+            <Avatar
+              image={settings.avatarImage || undefined}
+              color={AVATAR_HEX[settings.avatar] ?? AVATAR_HEX.teal}
+              name={settings.name || address.slice(2, 4)}
+              size={28}
+              rounded="rounded-lg"
+            />
+            {/* your rank, visible on every screen */}
+            <span className="absolute -bottom-1 -right-1">
+              <RankBadge rank={rank} size={14} />
+            </span>
+          </span>
           <div className="leading-tight">
             <p className="font-mono text-[11px] text-ink">{short(address)}</p>
             <p className="nums text-[10px] text-teal">{amount} USDm</p>
