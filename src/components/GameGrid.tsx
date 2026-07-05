@@ -10,7 +10,7 @@ export function GameGrid() {
   const live = GAMES.filter((g) => g.status === "live").length;
 
   return (
-    <section data-tour="games" className="mx-auto w-full max-w-2xl px-5 pb-28 pt-7">
+    <section data-tour="games" className="mx-auto w-full max-w-2xl px-5 pb-28 pt-7 lg:max-w-6xl">
       <div className="mb-3.5 flex items-end justify-between">
         <div className="flex items-center gap-2">
           <h2 className="text-[15px] font-semibold tracking-tight text-ink">Games</h2>
@@ -26,7 +26,7 @@ export function GameGrid() {
         </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-2 gap-3 lg:grid-cols-3 lg:gap-4">
         <GameCard game={featured} index={0} featured />
         {rest.map((game, i) => (
           <GameCard key={game.slug} game={game} index={i + 1} />
