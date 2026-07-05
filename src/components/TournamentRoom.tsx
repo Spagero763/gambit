@@ -16,6 +16,7 @@ import { useStakeMatch } from "@/hooks/useStakeMatch";
 import { ACTIVE_CHAIN_ID } from "@/lib/wagmi";
 import { tokensFor, symbolForToken, decimalsForToken } from "@/lib/tokens";
 import { hasToken, signIn } from "@/lib/profile";
+import { supabase } from "@/lib/supabase";
 import { useProfiles, displayName, avatarHex } from "@/lib/profiles";
 import { Avatar } from "@/components/Avatar";
 import { ExternalA } from "@/components/ExternalA";
@@ -138,9 +139,19 @@ export function TournamentRoom({ id }: { id: string }) {
   }, [now, view?.tournament, tid, refresh]);
   useEffect(() => {
     refresh();
-    const t = setInterval(refresh, 4000);
-    return () => clearInterval(t);
-  }, [refresh]);
+    // realtime: cup row changes and bracket sub-matches (in `matches`) nudge a
+    // refresh instantly; the poll drops to a slower safety net
+    const channel = supabase
+      ?.channel(`cup-${tid.toString()}`)
+      .on("postgres_changes", { event: "*", schema: "public", table: "tournaments" }, () => refresh())
+      .on("postgres_changes", { event: "*", schema: "public", table: "matches" }, () => refresh())
+      .subscribe();
+    const t = setInterval(refresh, 10000);
+    return () => {
+      if (channel) supabase?.removeChannel(channel);
+      clearInterval(t);
+    };
+  }, [refresh, tid]);
 
   // when my bracket match finishes, hold the result a moment then bring me
   // back to the tournament table so I watch the winner advance
