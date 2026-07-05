@@ -38,7 +38,7 @@ export function GameShowcase() {
   const Scene = active.Scene;
 
   return (
-    <section className="mx-auto w-full max-w-2xl px-5 pt-4">
+    <section className="mx-auto w-full max-w-2xl px-5 pt-4 lg:max-w-4xl">
       <div
         className="relative overflow-hidden rounded-3xl border border-line bg-void-700 shadow-pop"
         onMouseEnter={() => setPaused(true)}
