@@ -72,9 +72,15 @@ export function ActiveGames() {
       }
     };
     load();
-    const t = setInterval(load, 8000);
+    // realtime on my matches; the poll drops to a slow safety net
+    const channel = supabase
+      ?.channel(`active-${me}`)
+      .on("postgres_changes", { event: "*", schema: "public", table: "matches" }, () => load())
+      .subscribe();
+    const t = setInterval(load, 25000);
     return () => {
       live = false;
+      if (channel) supabase?.removeChannel(channel);
       clearInterval(t);
     };
   }, [me]);
