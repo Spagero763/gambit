@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Volume2, Music, User as UserIcon, Check, Camera, Trash2, ShieldCheck, Loader2, Wallet, Bell } from "lucide-react";
+import { Volume2, Music, User as UserIcon, Check, Camera, Trash2, ShieldCheck, Loader2, Wallet, Bell, LifeBuoy } from "lucide-react";
 import { PushToggle } from "@/components/PushToggle";
 import { useAccount, useSignMessage } from "wagmi";
 import { usePrivy } from "@privy-io/react-auth";
@@ -223,8 +223,24 @@ export function Settings() {
         <p className="mt-1 text-[10px] text-ink-faint">Music by Kevin MacLeod (incompetech.com) · CC BY 4.0</p>
       </div>
 
+      {/* support — a real human answers; required to be reachable in-app */}
+      <a
+        href="https://github.com/Spagero763/gambit/issues"
+        target="_blank"
+        rel="noreferrer"
+        className="mt-6 flex items-center gap-3 rounded-2xl border border-line bg-void-700 p-4 transition-colors hover:border-line-strong"
+      >
+        <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-void-600 text-teal">
+          <LifeBuoy className="h-4 w-4" />
+        </span>
+        <span className="min-w-0">
+          <span className="block text-sm font-medium text-ink">Need help?</span>
+          <span className="block text-[11px] text-ink-faint">Report a problem or ask a question. We reply fast.</span>
+        </span>
+      </a>
+
       {/* legal — required to be reachable in-app (MiniPay listing rule) */}
-      <div className="mt-6 flex items-center justify-center gap-4 text-[11px] text-ink-faint">
+      <div className="mt-4 flex items-center justify-center gap-4 text-[11px] text-ink-faint">
         <Link href="/terms" className="transition-colors hover:text-ink">Terms of Service</Link>
         <span>·</span>
         <Link href="/privacy" className="transition-colors hover:text-ink">Privacy Policy</Link>
