@@ -77,7 +77,7 @@ export function Lobby() {
   }, [refresh]);
 
   return (
-    <section className="mx-auto w-full max-w-2xl px-5 pb-28 pt-2">
+    <section className="mx-auto w-full max-w-2xl px-5 pb-28 pt-2 lg:max-w-3xl">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-semibold tracking-tight">Live games</h1>

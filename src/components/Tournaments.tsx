@@ -121,7 +121,7 @@ export function Tournaments() {
   };
 
   return (
-    <div className="mx-auto w-full max-w-2xl px-5 pb-28 pt-4">
+    <div className="mx-auto w-full max-w-2xl px-5 pb-28 pt-4 lg:max-w-3xl">
       <div className="flex items-center gap-3">
         <span className="grid h-11 w-11 place-items-center rounded-2xl bg-amber/15 text-amber">
           <Trophy className="h-5 w-5" />

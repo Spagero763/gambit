@@ -118,7 +118,7 @@ export function Leaderboard() {
   const isPoints = sort === "points";
 
   return (
-    <section className="mx-auto w-full max-w-2xl px-5 pb-28 pt-2">
+    <section className="mx-auto w-full max-w-2xl px-5 pb-28 pt-2 lg:max-w-3xl">
       <h1 className="text-2xl font-semibold tracking-tight">Leaderboard</h1>
       <p className="mt-1 text-sm text-ink-dim">
         {isPoints ? "Top players by XP, earned just by playing." : "Top players by settled staked matches."}

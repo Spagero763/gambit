@@ -120,7 +120,7 @@ export function Stats() {
   const paidEntries = Object.entries(s.paid);
 
   return (
-    <section className="mx-auto w-full max-w-2xl px-5 pb-28 pt-2">
+    <section className="mx-auto w-full max-w-2xl px-5 pb-28 pt-2 lg:max-w-3xl">
       <h1 className="text-2xl font-semibold tracking-tight">Stats</h1>
       <p className="mt-1 flex flex-wrap items-center gap-1.5 text-sm text-ink-dim">
         <ShieldCheck className="h-4 w-4 shrink-0 text-teal" />

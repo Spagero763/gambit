@@ -170,7 +170,7 @@ export function Profile() {
 
   if (!isConnected || !address) {
     return (
-      <section className="mx-auto w-full max-w-2xl px-5 pb-28 pt-2">
+      <section className="mx-auto w-full max-w-2xl px-5 pb-28 pt-2 lg:max-w-3xl">
         <h1 className="text-2xl font-semibold tracking-tight">Profile</h1>
         <div className="mt-6 rounded-2xl border border-line bg-void-700 p-8 text-center shadow-card">
           <span className="mx-auto grid h-12 w-12 place-items-center rounded-xl bg-void-600 text-teal">
@@ -197,7 +197,7 @@ export function Profile() {
   const amount = bal ? Number(bal.formatted) : 0;
 
   return (
-    <section className="mx-auto w-full max-w-2xl px-5 pb-28 pt-2">
+    <section className="mx-auto w-full max-w-2xl px-5 pb-28 pt-2 lg:max-w-3xl">
       <motion.div
         initial={{ opacity: 0, y: 8 }}
         animate={{ opacity: 1, y: 0 }}
