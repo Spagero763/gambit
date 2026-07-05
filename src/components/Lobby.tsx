@@ -63,8 +63,17 @@ export function Lobby() {
 
   useEffect(() => {
     refresh();
-    const t = setInterval(refresh, 6000);
-    return () => clearInterval(t);
+    // realtime: any change to matches (a room opening, filling, settling)
+    // refreshes the list instantly; the poll is just a slow safety net
+    const channel = supabase
+      ?.channel("lobby-rooms")
+      .on("postgres_changes", { event: "*", schema: "public", table: "matches" }, () => refresh())
+      .subscribe();
+    const t = setInterval(refresh, 20000);
+    return () => {
+      if (channel) supabase?.removeChannel(channel);
+      clearInterval(t);
+    };
   }, [refresh]);
 
   return (
