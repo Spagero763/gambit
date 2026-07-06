@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { recoverMessageAddress } from "viem";
 import { supabaseAdmin } from "@/lib/supabase";
 import { createToken } from "@/lib/server/profileToken";
+import { creditVerifiedReferral } from "@/lib/server/referral";
 
 export const runtime = "nodejs";
 
@@ -116,6 +117,11 @@ export async function POST(req: NextRequest) {
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
     const withCode = await ensureRefCode(db, data ?? { ...row, ref_code: null });
+
+    // referred friend who has played and verified as human -> pay the inviter
+    // (fire and forget; the on-chain key makes double-pay impossible)
+    if (referred_by && row.played > 0) void creditVerifiedReferral(addr);
+
     return NextResponse.json({ profile: withCode ?? row, token: createToken(addr) });
   } catch (e: any) {
     return NextResponse.json({ error: e?.message ?? "Failed" }, { status: 500 });

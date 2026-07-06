@@ -11,16 +11,23 @@ import {
 import { privateKeyToAccount } from "viem/accounts";
 import { celo } from "viem/chains";
 import { supabaseAdmin } from "@/lib/supabase";
+import { goodIdRoot } from "@/lib/server/goodid";
 import { notify } from "@/lib/server/push";
 
-// Referral bonus: when a player who was invited (profiles.referred_by) settles
-// their FIRST staked match, inviter and invitee each get REFERRAL_USDM from
-// the on-chain RewardsVault. The vault pays each key exactly once, so this is
-// safe to call from every settle path — the chain itself remembers who has
-// been paid, no extra bookkeeping table needed.
+// Referral bonus: the INVITER earns REFERRAL_USDM from the on-chain
+// RewardsVault when an invited friend activates. Two activation paths:
+//
+//   1. the friend settles their FIRST staked match (economics self-defend:
+//      faking it costs more than the bonus), or
+//   2. the friend verifies they're a real human (GoodDollar) and has played —
+//      so non-stakers count too, and verification is the anti-farming gate.
+//
+// Either way the payment key is derived from the FRIEND's wallet, and the
+// vault pays each key exactly once — one bonus per friend, ever, enforced
+// on-chain. No bookkeeping table needed.
 //
 // Env:
-//   REFERRAL_USDM     amount per person (default 0 = programme off)
+//   REFERRAL_USDM     amount the inviter earns per friend (default 0 = off)
 //   REWARDS_CONTRACT  the RewardsVault address (unset = off)
 const RPC = "https://forno.celo.org";
 
@@ -47,8 +54,56 @@ function relayerKey(): `0x${string}` {
   return k as `0x${string}`;
 }
 
-const refKey = (invitee: string) =>
+export const refKey = (invitee: string) =>
   keccak256(encodePacked(["string", "address"], ["referral", getAddress(invitee)]));
+
+/** Has this friend's referral already been paid out? Public read. */
+export async function referralPaid(invitee: string): Promise<boolean> {
+  const addr = vault();
+  if (!addr) return false;
+  const pub = createPublicClient({ chain: celo, transport: http(RPC) });
+  return (await pub.readContract({ address: addr, abi: vaultAbi, functionName: "paid", args: [refKey(invitee)] })) as boolean;
+}
+
+/** Core: pay the inviter for one activated friend, exactly once. */
+async function payInviterFor(invitee: string): Promise<boolean> {
+  const amt = amount();
+  const addr = vault();
+  if (!amt || !addr || !process.env.RELAYER_PRIVATE_KEY) return false;
+
+  const db = supabaseAdmin();
+  const pub = createPublicClient({ chain: celo, transport: http(RPC) });
+
+  const { data: prof } = await db.from("profiles").select("referred_by").eq("address", invitee).maybeSingle();
+  const inviter = (prof?.referred_by as string | null)?.toLowerCase();
+  if (!inviter || inviter === invitee) return false;
+
+  const key = refKey(invitee);
+  if (await pub.readContract({ address: addr, abi: vaultAbi, functionName: "paid", args: [key] })) return false;
+
+  const account = privateKeyToAccount(relayerKey());
+  const wallet = createWalletClient({ account, chain: celo, transport: http(RPC) });
+  const gasPrice = await pub.getGasPrice();
+  const wei = parseUnits(amt.toString(), 18); // USDm is 18 decimals
+  const hash = await wallet.writeContract({
+    address: addr,
+    abi: vaultAbi,
+    functionName: "payReward",
+    args: [key, "referral", [getAddress(inviter)], [wei]],
+    type: "legacy",
+    gas: BigInt(300000),
+    gasPrice,
+  });
+  const receipt = await pub.waitForTransactionReceipt({ hash });
+  if (receipt.status !== "success") return false;
+
+  void notify([inviter], {
+    title: "Referral bonus paid 💸",
+    body: `Your friend is playing on Gambit. ${amt} USDm just hit your wallet.`,
+    url: "/profile",
+  });
+  return true;
+}
 
 /**
  * Fire-and-forget after a staked match settles: pay the referral bonus for any
@@ -57,52 +112,34 @@ const refKey = (invitee: string) =>
  */
 export async function creditReferrals(players: (string | null | undefined)[]): Promise<void> {
   try {
-    const amt = amount();
-    const addr = vault();
-    if (!amt || !addr || !process.env.RELAYER_PRIVATE_KEY) return;
-
-    const db = supabaseAdmin();
-    const pub = createPublicClient({ chain: celo, transport: http(RPC) });
-
     for (const raw of players) {
       const p = raw?.toLowerCase();
       if (!p) continue;
       try {
-        const { data: prof } = await db.from("profiles").select("referred_by").eq("address", p).maybeSingle();
-        const inviter = (prof?.referred_by as string | null)?.toLowerCase();
-        if (!inviter || inviter === p) continue;
-
-        const key = refKey(p);
-        if (await pub.readContract({ address: addr, abi: vaultAbi, functionName: "paid", args: [key] })) continue;
-
-        const account = privateKeyToAccount(relayerKey());
-        const wallet = createWalletClient({ account, chain: celo, transport: http(RPC) });
-        const gasPrice = await pub.getGasPrice();
-        const wei = parseUnits(amt.toString(), 18); // USDm is 18 decimals
-        // the bonus goes to the INVITER only — the invited player's reward is
-        // the game itself (owner decision, 2026-07-06)
-        const hash = await wallet.writeContract({
-          address: addr,
-          abi: vaultAbi,
-          functionName: "payReward",
-          args: [key, "referral", [getAddress(inviter)], [wei]],
-          type: "legacy",
-          gas: BigInt(300000),
-          gasPrice,
-        });
-        const receipt = await pub.waitForTransactionReceipt({ hash });
-        if (receipt.status !== "success") continue;
-
-        void notify([inviter], {
-          title: "Referral bonus paid 💸",
-          body: `Your friend played their first staked match. ${amt} USDm just hit your wallet.`,
-          url: "/profile",
-        });
+        await payInviterFor(p);
       } catch {
         /* next player — the vault key makes retries safe on a future settle */
       }
     }
   } catch {
     /* referral must never break settlement */
+  }
+}
+
+/**
+ * Free-play path: the friend hasn't staked, but they've played AND verified
+ * they're a real human (GoodDollar). Verification is what stops account
+ * farming here. Fire-and-forget from the profile sync.
+ */
+export async function creditVerifiedReferral(invitee: string): Promise<void> {
+  try {
+    const p = invitee.toLowerCase();
+    if (!amount() || !vault()) return;
+    if (await referralPaid(p)) return; // cheap short-circuit before the identity read
+    const root = await goodIdRoot(p);
+    if (!root) return; // not a verified human yet — the staked path can still pay later
+    await payInviterFor(p);
+  } catch {
+    /* never break the caller */
   }
 }
