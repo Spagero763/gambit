@@ -95,9 +95,19 @@ export function WeeklyCup() {
   };
 
   if (playing && cup) {
+    // full-screen overlay above the page (header, create form, nav), so the
+    // board gets the same clean canvas as free play — nothing bleeds through
     return (
-      <div className="mt-4">
-        <BlockBlitz seed={cup.seed} onSubmit={submit} onExit={() => setPlaying(false)} />
+      <div className="fixed inset-0 z-[60] overflow-y-auto bg-void">
+        <BlockBlitz
+          seed={cup.seed}
+          initialBest={cup.me?.score ?? 0}
+          onSubmit={submit}
+          onExit={() => {
+            setPlaying(false);
+            void refresh();
+          }}
+        />
       </div>
     );
   }
