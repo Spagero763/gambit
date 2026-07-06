@@ -11,8 +11,14 @@ import { cn } from "@/lib/cn";
 const OWNER = "0x32a3596c25a98950e850e3531a0aa87f1506e5d7";
 const EXPLORER: Record<number, string> = { 42220: "https://celoscan.io/tx/", 11142220: "https://sepolia.celoscan.io/tx/" };
 
+interface Vault {
+  address: string | null;
+  balance: number;
+  low: boolean;
+}
 interface Status {
   relayer: { address: string; balanceCELO: number; lowGas: boolean } | null;
+  vaults: { cup: Vault | null; claims: Vault | null; referral: Vault | null } | null;
   matches: any[];
   tournaments: any[];
 }
@@ -106,6 +112,39 @@ export function AdminPanel() {
         {data?.relayer?.lowGas && <span className="rounded-full bg-rose/15 px-2 py-1 text-[10px] font-bold text-rose">LOW — TOP UP</span>}
       </div>
 
+      {/* prize vaults: balances + low warnings + one-tap cup settle */}
+      {data?.vaults && (
+        <div className="mt-3 grid grid-cols-3 gap-2">
+          <VaultCard label="Cup" unit="USDm" v={data.vaults.cup} />
+          <VaultCard label="Claims" unit="G$" v={data.vaults.claims} />
+          <VaultCard label="Referral" unit="USDm" v={data.vaults.referral} />
+        </div>
+      )}
+      <button
+        onClick={async () => {
+          setBusyId("settleCup");
+          setMsg(null);
+          try {
+            const r = await fetch("/api/cup", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ action: "settle" }),
+            });
+            const d = await r.json();
+            setMsg(d.settled ? `✓ cup settled · ${(d.winners ?? []).length} winner(s) paid` : d.error ?? "cup: nothing to settle");
+            await load();
+          } catch (e: any) {
+            setMsg(e?.message ?? "cup settle failed");
+          } finally {
+            setBusyId(null);
+          }
+        }}
+        disabled={busyId === "settleCup"}
+        className="mt-2 w-full rounded-xl border border-line bg-void-800 py-2.5 text-[12px] font-medium text-ink-dim transition-colors hover:text-ink disabled:opacity-60"
+      >
+        {busyId === "settleCup" ? "Settling last week's cup…" : "Settle last week's cup now"}
+      </button>
+
       {msg && <p className="mt-3 rounded-xl border border-line bg-void-800 px-3 py-2 text-center text-[12px] text-ink-dim">{msg}</p>}
 
       {/* manual recovery */}
@@ -178,4 +217,23 @@ function Btn({ children, onClick, busy, tone }: { children: React.ReactNode; onC
 }
 function Empty() {
   return <p className="rounded-2xl border border-dashed border-line px-4 py-4 text-center text-[12px] text-ink-faint">Nothing — all clear ✓</p>;
+}
+function VaultCard({ label, unit, v }: { label: string; unit: string; v: Vault | null }) {
+  if (!v) {
+    return (
+      <div className="rounded-2xl border border-dashed border-line p-3 text-center">
+        <p className="text-[11px] text-ink-faint">{label}</p>
+        <p className="mt-1 text-[11px] text-ink-faint">not set</p>
+      </div>
+    );
+  }
+  return (
+    <div className={cn("rounded-2xl border p-3 text-center", v.low ? "border-rose/40 bg-rose/[0.06]" : "border-line bg-void-800")}>
+      <p className="text-[11px] text-ink-faint">{label}</p>
+      <p className={cn("nums mt-0.5 text-lg font-bold", v.low ? "text-rose" : "text-ink")}>
+        {v.balance.toLocaleString(undefined, { maximumFractionDigits: 2 })} <span className="text-[10px] font-medium text-ink-faint">{unit}</span>
+      </p>
+      {v.low && <p className="text-[9px] font-bold uppercase text-rose">top up</p>}
+    </div>
+  );
 }
