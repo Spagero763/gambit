@@ -16,6 +16,7 @@ import { Avatar } from "@/components/Avatar";
 import { SendFunds } from "@/components/SendFunds";
 import { AnimatedNumber } from "@/components/motion/AnimatedNumber";
 import { PlayerCard } from "@/components/PlayerCard";
+import { ReferralBoard } from "@/components/ReferralBoard";
 import { GoodIdCard } from "@/components/GoodIdCard";
 import { symbolForToken } from "@/lib/tokens";
 import { ProgressCard } from "@/components/Daily";
@@ -266,6 +267,7 @@ export function Profile() {
 
       <div className="mt-4">
         <InviteCard refCode={(myProfile as any)?.ref_code ?? address} />
+        <ReferralBoard address={address.toLowerCase()} />
       </div>
 
       <Achievements />
