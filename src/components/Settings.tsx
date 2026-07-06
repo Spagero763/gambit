@@ -223,19 +223,19 @@ export function Settings() {
         <p className="mt-1 text-[10px] text-ink-faint">Music by Kevin MacLeod (incompetech.com) · CC BY 4.0</p>
       </div>
 
-      {/* support — a real human answers; required to be reachable in-app */}
+      {/* support — a real human answers on WhatsApp; required to be reachable in-app */}
       <a
-        href="https://github.com/Spagero763/gambit/issues"
+        href="https://wa.me/2348060158364?text=Hi%20Gambit%20support%2C%20I%20need%20help%20with"
         target="_blank"
         rel="noreferrer"
-        className="mt-6 flex items-center gap-3 rounded-2xl border border-line bg-void-700 p-4 transition-colors hover:border-line-strong"
+        className="mt-6 flex items-center gap-3 rounded-2xl border border-teal/30 bg-teal/[0.06] p-4 transition-colors hover:border-teal/50"
       >
-        <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-void-600 text-teal">
+        <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-teal/15 text-teal">
           <LifeBuoy className="h-4 w-4" />
         </span>
         <span className="min-w-0">
-          <span className="block text-sm font-medium text-ink">Need help?</span>
-          <span className="block text-[11px] text-ink-faint">Report a problem or ask a question. We reply fast.</span>
+          <span className="block text-sm font-medium text-ink">Need help? Message us on WhatsApp</span>
+          <span className="block text-[11px] text-ink-faint">Payment issues, stuck games, anything. A real person replies fast.</span>
         </span>
       </a>
 
