@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { AnimatePresence, motion, useAnimationControls, useReducedMotion } from "framer-motion";
 import { ArrowLeft, RotateCcw } from "lucide-react";
 import Link from "next/link";
@@ -48,6 +48,7 @@ export function BlockBlitz({
   seed: seedProp,
   onSubmit,
   onExit,
+  initialBest,
 }: {
   /** When set, everyone plays this exact board (tournament mode). */
   seed?: number;
@@ -55,6 +56,8 @@ export function BlockBlitz({
   onSubmit?: (score: number) => void;
   /** Replaces the "Lobby" link with a custom back action (tournament mode). */
   onExit?: () => void;
+  /** Your best score so far this round/week, so replays show the real target. */
+  initialBest?: number;
 } = {}) {
   const tournament = seedProp !== undefined;
   const seed = useRef(seedProp ?? 7);
@@ -68,7 +71,11 @@ export function BlockBlitz({
   const [selected, setSelected] = useState<string | null>(tray[0]?.id ?? null);
   const [hover, setHover] = useState<{ r: number; c: number } | null>(null);
   const [score, setScore] = useState(0);
-  const [best, setBest] = useState(0);
+  const [best, setBest] = useState(initialBest ?? 0);
+  // the caller's best can arrive after mount (async fetch) — never lose it
+  useEffect(() => {
+    if (initialBest) setBest((b) => Math.max(b, initialBest));
+  }, [initialBest]);
   const [combo, setCombo] = useState(0);
   const [flash, setFlash] = useState<string | null>(null);
   const boardKick = useAnimationControls();

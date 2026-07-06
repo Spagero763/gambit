@@ -258,6 +258,7 @@ export function TournamentRoom({ id }: { id: string }) {
       <div className="fixed inset-0 z-[60] overflow-y-auto bg-void">
         <BlockBlitz
           seed={roundSeed(t.seed, round)}
+          initialBest={myScore ?? 0}
           onExit={() => { setPlaying(false); refresh(); }}
           onSubmit={async (score) => {
             try { await submitTournamentScore(tid, me, score); refresh(); } catch {}
