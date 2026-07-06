@@ -17,6 +17,36 @@ const clampInt = (v: unknown, max = 1e9) => {
   return Number.isFinite(n) && n >= 0 ? Math.min(n, max) : 0;
 };
 
+// Short, human-friendly referral code (no wallet details in the link).
+const CODE_CHARS = "abcdefghijklmnopqrstuvwxyz0123456789";
+function newRefCode(): string {
+  const bytes = crypto.getRandomValues(new Uint8Array(7));
+  return Array.from(bytes, (b) => CODE_CHARS[b % 36]).join("");
+}
+
+/** Make sure a profile has a ref_code; returns the (possibly updated) row.
+ *  Fails soft if the column doesn't exist yet, so profiles keep working. */
+async function ensureRefCode(db: ReturnType<typeof supabaseAdmin>, row: any) {
+  if (!row || row.ref_code) return row;
+  try {
+    for (let i = 0; i < 3; i++) {
+      const code = newRefCode();
+      const { data, error } = await db
+        .from("profiles")
+        .update({ ref_code: code })
+        .eq("address", row.address)
+        .is("ref_code", null)
+        .select("*")
+        .maybeSingle();
+      if (!error && data) return data;
+      if (error && !String(error.message).includes("duplicate")) return row; // column missing etc.
+    }
+  } catch {
+    /* keep the row as-is */
+  }
+  return row;
+}
+
 /** GET /api/profile?address=0x... -> { profile } */
 export async function GET(req: NextRequest) {
   const address = req.nextUrl.searchParams.get("address")?.toLowerCase();
@@ -24,7 +54,8 @@ export async function GET(req: NextRequest) {
   try {
     const db = supabaseAdmin();
     const { data } = await db.from("profiles").select("*").eq("address", address).maybeSingle();
-    return NextResponse.json({ profile: data ?? null });
+    const withCode = await ensureRefCode(db, data);
+    return NextResponse.json({ profile: withCode ?? null });
   } catch {
     // Supabase not configured — behave as "no profile" so the app still runs.
     return NextResponse.json({ profile: null });
@@ -50,12 +81,22 @@ export async function POST(req: NextRequest) {
     const img = typeof profile?.avatarImage === "string" && profile.avatarImage.length < 120000 ? profile.avatarImage : null;
     const db = supabaseAdmin();
 
-    // referral is set once, on first creation, and never to yourself
+    // referral is set once, on first creation, and never to yourself. The ref
+    // can be a wallet address (legacy links) or a short ref_code.
     const { data: existing } = await db.from("profiles").select("referred_by").eq("address", addr).maybeSingle();
     let referred_by: string | null = (existing?.referred_by as string | null) ?? null;
     if (!referred_by && typeof referredBy === "string") {
-      const r = referredBy.toLowerCase();
-      if (r !== addr && /^0x[0-9a-f]{40}$/.test(r)) referred_by = r;
+      const r = referredBy.toLowerCase().trim();
+      if (/^0x[0-9a-f]{40}$/.test(r)) {
+        if (r !== addr) referred_by = r;
+      } else if (/^[a-z0-9]{5,12}$/.test(r)) {
+        try {
+          const { data: inviter } = await db.from("profiles").select("address").eq("ref_code", r).maybeSingle();
+          if (inviter?.address && inviter.address !== addr) referred_by = inviter.address;
+        } catch {
+          /* ref_code column missing — ignore the code */
+        }
+      }
     }
 
     const row = {
@@ -74,7 +115,8 @@ export async function POST(req: NextRequest) {
     const { data, error } = await db.from("profiles").upsert(row, { onConflict: "address" }).select("*").maybeSingle();
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
-    return NextResponse.json({ profile: data ?? row, token: createToken(addr) });
+    const withCode = await ensureRefCode(db, data ?? { ...row, ref_code: null });
+    return NextResponse.json({ profile: withCode ?? row, token: createToken(addr) });
   } catch (e: any) {
     return NextResponse.json({ error: e?.message ?? "Failed" }, { status: 500 });
   }

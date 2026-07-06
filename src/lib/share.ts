@@ -9,10 +9,12 @@ function origin(): string {
   return "https://gambit-rose.vercel.app";
 }
 
-/** A shareable invite link carrying the inviter's referral code. */
-export function inviteUrl(address?: string | null): string {
+/** A shareable invite link carrying the inviter's referral code. Prefers a
+ *  short ref code (no wallet details in the link); a wallet address still
+ *  works for older links. */
+export function inviteUrl(ref?: string | null): string {
   const base = origin();
-  return address ? `${base}/?ref=${address.toLowerCase()}` : base;
+  return ref ? `${base}/?ref=${ref.toLowerCase()}` : base;
 }
 
 /** Native share sheet when available, else copy to clipboard. Returns "shared" | "copied" | "failed". */
@@ -33,12 +35,13 @@ export async function shareOrCopy(data: { title?: string; text?: string; url: st
   }
 }
 
-/** Read ?ref=<address> from the URL once and remember it (until they sign up). */
+/** Read ?ref=<code or address> from the URL once and remember it (until they sign up). */
 export function captureRef(): void {
   if (typeof window === "undefined") return;
   try {
     const ref = new URLSearchParams(window.location.search).get("ref");
-    if (ref && /^0x[0-9a-fA-F]{40}$/.test(ref) && !localStorage.getItem(REF_KEY)) {
+    const valid = ref && (/^0x[0-9a-fA-F]{40}$/.test(ref) || /^[a-z0-9]{5,12}$/i.test(ref));
+    if (valid && !localStorage.getItem(REF_KEY)) {
       localStorage.setItem(REF_KEY, ref.toLowerCase());
     }
   } catch {

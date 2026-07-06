@@ -101,7 +101,7 @@ export function Profile() {
   const [sendOpen, setSendOpen] = useState(false);
   const [rows, setRows] = useState<MatchRow[] | null>(null);
   const prog = useProgress();
-  const { hasProfile, loading: profileLoading } = useProfile();
+  const { hasProfile, loading: profileLoading, profile: myProfile } = useProfile();
   const { signMessageAsync } = useSignMessage();
 
   const me = address?.toLowerCase();
@@ -265,7 +265,7 @@ export function Profile() {
       </div>
 
       <div className="mt-4">
-        <InviteCard address={address} />
+        <InviteCard refCode={(myProfile as any)?.ref_code ?? address} />
       </div>
 
       <Achievements />
@@ -327,30 +327,43 @@ export function Profile() {
   );
 }
 
-function InviteCard({ address }: { address: string }) {
-  const url = inviteUrl(address);
+function InviteCard({ refCode }: { refCode: string }) {
+  const url = inviteUrl(refCode);
   const [copied, setCopied] = useState(false);
+
+  const copy = async () => {
+    try {
+      await navigator.clipboard.writeText(url);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1600);
+    } catch {
+      /* clipboard blocked */
+    }
+  };
+
   return (
     <div className="rounded-2xl border border-line bg-void-700 p-5 shadow-card">
       <div className="flex items-center gap-2">
-        <p className="text-sm font-semibold text-ink">Invite friends</p>
-        <span className="rounded-full bg-amber/15 px-2 py-0.5 text-[10px] font-semibold text-amber">BONUSES SOON</span>
+        <p className="text-sm font-semibold text-ink">Invite friends, earn USDm</p>
+        <span className="rounded-full bg-teal/15 px-2 py-0.5 text-[10px] font-semibold text-teal">LIVE</span>
       </div>
       <p className="mt-0.5 text-[12px] text-ink-dim">
-        Share your link and challenge friends to a staked 1v1. Soon: you earn USDm for every friend who plays their
-        first staked match, paid from an on chain rewards vault.
+        You earn a USDm bonus for every friend who joins with your link and plays their first staked match, paid from
+        an on chain rewards vault. Tap the link to copy it.
       </p>
       <div className="mt-3 flex items-center gap-2">
-        <div className="flex-1 truncate rounded-xl border border-line bg-void-800 px-3 py-2.5 text-[12px] text-ink-dim">
-          {url.replace(/^https?:\/\//, "")}
-        </div>
+        <button
+          onClick={copy}
+          title="Copy your invite link"
+          className="flex min-w-0 flex-1 items-center gap-1.5 rounded-xl border border-line bg-void-800 px-3 py-2.5 text-left text-[12px] text-ink-dim transition-colors hover:border-line-strong hover:text-ink"
+        >
+          <span className="truncate">{url.replace(/^https?:\/\//, "")}</span>
+          {copied ? <Check className="h-3.5 w-3.5 shrink-0 text-teal" /> : <Copy className="h-3.5 w-3.5 shrink-0 opacity-60" />}
+        </button>
         <button
           onClick={async () => {
-            const r = await shareOrCopy({ title: "Gambit", text: "Play classic games and stake USDm on Gambit", url });
-            if (r === "copied") {
-              setCopied(true);
-              setTimeout(() => setCopied(false), 1600);
-            }
+            await copy(); // always copy, so the link is in hand even if the share sheet is dismissed
+            await shareOrCopy({ title: "Gambit", text: "Come play me on Gambit. Real games, real money.", url });
           }}
           className="btn-primary flex shrink-0 items-center gap-1.5 rounded-xl px-3.5 py-2.5 text-sm shadow-glow"
         >
