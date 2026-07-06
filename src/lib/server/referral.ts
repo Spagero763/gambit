@@ -79,11 +79,13 @@ export async function creditReferrals(players: (string | null | undefined)[]): P
         const wallet = createWalletClient({ account, chain: celo, transport: http(RPC) });
         const gasPrice = await pub.getGasPrice();
         const wei = parseUnits(amt.toString(), 18); // USDm is 18 decimals
+        // the bonus goes to the INVITER only — the invited player's reward is
+        // the game itself (owner decision, 2026-07-06)
         const hash = await wallet.writeContract({
           address: addr,
           abi: vaultAbi,
           functionName: "payReward",
-          args: [key, "referral", [getAddress(inviter), getAddress(p)], [wei, wei]],
+          args: [key, "referral", [getAddress(inviter)], [wei]],
           type: "legacy",
           gas: BigInt(300000),
           gasPrice,
@@ -94,11 +96,6 @@ export async function creditReferrals(players: (string | null | undefined)[]): P
         void notify([inviter], {
           title: "Referral bonus paid 💸",
           body: `Your friend played their first staked match. ${amt} USDm just hit your wallet.`,
-          url: "/profile",
-        });
-        void notify([p], {
-          title: "Welcome bonus paid 💸",
-          body: `First staked match done. ${amt} USDm just hit your wallet.`,
           url: "/profile",
         });
       } catch {
