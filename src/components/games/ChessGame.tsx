@@ -173,22 +173,22 @@ export function ChessGame({ difficulty = "normal" }: { difficulty?: Difficulty }
 
   useEffect(() => {
     if (turn !== "b" || result || promo) return;
+    // a human-feeling think: 0.8 to 2.4 seconds of REAL time, during which the
+    // normal per-second tick runs the bot's clock down. No artificial jumps —
+    // both clocks now burn actual elapsed time, like a real game.
+    const think = 800 + Math.random() * 1600;
     const t = setTimeout(() => {
       const mv = chooseMoveByLevel(game.fen(), difficulty);
       if (mv) {
         const m = game.move(mv);
         setLast({ from: mv.from as Square, to: mv.to as Square });
         setFen(game.fen());
-        // the bot moves in well under a second, so the per-second tick would
-        // never touch its clock — deduct a realistic "think" time per move so
-        // the bot's clock actually runs and the game is fair.
-        setBTime((t) => Math.max(0, t - (2 + Math.floor(Math.random() * 4))));
         if (m?.captured) play("capture");
         else play("place");
         if (game.inCheck() && !game.isGameOver()) play("check");
         settle();
       }
-    }, 480);
+    }, think);
     return () => clearTimeout(t);
   }, [turn, fen, result, promo, settle, game, difficulty]);
 
