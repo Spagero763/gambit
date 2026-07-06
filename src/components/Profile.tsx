@@ -266,7 +266,7 @@ export function Profile() {
       </div>
 
       <div className="mt-4">
-        <InviteCard refCode={(myProfile as any)?.ref_code ?? address} />
+        <InviteCard refCode={(myProfile as any)?.ref_code ?? address} address={address.toLowerCase()} />
         <ReferralBoard address={address.toLowerCase()} />
       </div>
 
@@ -329,9 +329,18 @@ export function Profile() {
   );
 }
 
-function InviteCard({ refCode }: { refCode: string }) {
+function InviteCard({ refCode, address }: { refCode: string; address: string }) {
   const url = inviteUrl(refCode);
   const [copied, setCopied] = useState(false);
+  const [per, setPer] = useState(0);
+
+  // live bonus amount from the server, so the card always tells the truth
+  useEffect(() => {
+    fetch(`/api/referrals?address=${address}`)
+      .then((r) => r.json())
+      .then((d) => setPer(Number(d?.perFriend) || 0))
+      .catch(() => {});
+  }, [address]);
 
   const copy = async () => {
     try {
@@ -343,6 +352,8 @@ function InviteCard({ refCode }: { refCode: string }) {
     }
   };
 
+  const fmt = (n: number) => Number(n.toFixed(2)).toString();
+
   return (
     <div className="rounded-2xl border border-line bg-void-700 p-5 shadow-card">
       <div className="flex items-center gap-2">
@@ -350,9 +361,20 @@ function InviteCard({ refCode }: { refCode: string }) {
         <span className="rounded-full bg-teal/15 px-2 py-0.5 text-[10px] font-semibold text-teal">LIVE</span>
       </div>
       <p className="mt-0.5 text-[12px] text-ink-dim">
-        You earn a USDm bonus for every friend who joins with your link and plays their first staked match, paid from
-        an on chain rewards vault. Tap the link to copy it.
+        {per > 0
+          ? `You earn ${fmt(per)} USDm for every friend who joins with your link and starts playing. They count once they verify as a real human and play, or stake their first match. Paid straight to your wallet.`
+          : `You earn a USDm bonus for every friend who joins with your link and starts playing, paid straight to your wallet from an on chain vault.`}{" "}
+        Tap the link to copy it.
       </p>
+      {per > 0 && (
+        <div className="mt-2.5 flex flex-wrap gap-1.5">
+          {[5, 10, 25].map((n) => (
+            <span key={n} className="rounded-full border border-teal/25 bg-teal/[0.07] px-2.5 py-1 text-[11px] font-semibold text-teal">
+              {n} friends = {fmt(per * n)} USDm
+            </span>
+          ))}
+        </div>
+      )}
       <div className="mt-3 flex items-center gap-2">
         <button
           onClick={copy}
