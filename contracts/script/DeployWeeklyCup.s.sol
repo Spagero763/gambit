@@ -17,7 +17,7 @@ import {WeeklyCup} from "../src/WeeklyCup.sol";
 contract DeployWeeklyCup is Script {
     function run() external {
         address token = vm.envOr("CUP_TOKEN", address(0x765DE816845861e75A25fCA122bb6898B8B1282a));
-        address relayer = vm.envOr("CUP_RELAYER", address(0x2b0755026F8312D0c600229774999F7EBC1f70f9));
+        address relayer = vm.envOr("CUP_RELAYER", address(0xa4fB1ED5abbaFC0820e5399aE9E61C9a3B16ACbe));
 
         vm.startBroadcast();
         WeeklyCup cup = new WeeklyCup(token, relayer);
