@@ -210,9 +210,16 @@ export function WeeklyCup() {
             <Play className="h-4 w-4" />
             {cup.me && cup.me.score > 0 ? `Play again — your best: ${cup.me.score.toLocaleString()}` : "Play the weekly board"}
           </button>
-        ) : ready && verified === false ? (
+        ) : verified === false ? (
           <button
-            onClick={() => verify()}
+            onClick={async () => {
+              setErr(null);
+              try {
+                await verify();
+              } catch (e: any) {
+                setErr(e?.message ?? "Could not start verification. Try again.");
+              }
+            }}
             className="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-line bg-void-700 py-3 text-sm text-ink transition-colors hover:border-teal/40"
           >
             <ShieldCheck className="h-4 w-4 text-teal" />

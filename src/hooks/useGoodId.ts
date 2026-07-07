@@ -7,10 +7,10 @@ import { IdentitySDK, SupportedChains } from "@goodsdks/citizen-sdk";
 /**
  * GoodDollar identity (GoodID) — Sybil resistance via face verification.
  *
- * `verified` is whether the connected wallet is a whitelisted unique human on
- * GoodDollar's Identity contract (Celo). `verify()` opens GoodDollar's Face
- * Verification flow; on return the wallet is whitelisted. We use this to gate
- * free prize tournaments to one real human per entry — no IP guessing.
+ * Status (`verified`) comes from OUR server, which reads GoodDollar's Identity
+ * contract directly with RPC failover — so it works for every signed-in user,
+ * even when the client SDK can't initialise. The SDK is only needed for the
+ * verify() flow itself (it signs the face-verification link).
  */
 export function useGoodId() {
   const { address } = useAccount();
@@ -20,7 +20,29 @@ export function useGoodId() {
   const [verified, setVerified] = useState<boolean | null>(null);
   const [checking, setChecking] = useState(false);
 
-  // spin up the SDK once viem clients are available
+  // status: server-side read, reliable for everyone
+  const refresh = useCallback(async () => {
+    if (!address) {
+      setVerified(null);
+      return;
+    }
+    setChecking(true);
+    try {
+      const r = await fetch(`/api/goodid?address=${address.toLowerCase()}`);
+      const d = await r.json();
+      setVerified(typeof d.verified === "boolean" ? d.verified : null);
+    } catch {
+      setVerified(null);
+    } finally {
+      setChecking(false);
+    }
+  }, [address]);
+
+  useEffect(() => {
+    void refresh();
+  }, [refresh]);
+
+  // the SDK is only for verify(); init lazily and don't let failures hide UI
   useEffect(() => {
     let active = true;
     if (!publicClient || !walletClient) return;
@@ -35,36 +57,19 @@ export function useGoodId() {
         if (active) setSdk(s);
       })
       .catch(() => {
-        /* SDK init failed (e.g. unsupported chain) — leave unverified */
+        /* SDK init failed — status still works via the server */
       });
     return () => {
       active = false;
     };
   }, [publicClient, walletClient]);
 
-  const refresh = useCallback(async () => {
-    if (!sdk || !address) {
-      setVerified(null);
-      return;
-    }
-    setChecking(true);
-    try {
-      const { isWhitelisted } = await sdk.getWhitelistedRoot(address as `0x${string}`);
-      setVerified(isWhitelisted);
-    } catch {
-      setVerified(null);
-    } finally {
-      setChecking(false);
-    }
-  }, [sdk, address]);
-
-  useEffect(() => {
-    void refresh();
-  }, [refresh]);
-
-  /** Open GoodDollar Face Verification; returns here when done. */
+  /** Open GoodDollar Face Verification; returns here when done.
+   *  Throws a readable message when the wallet layer isn't ready yet. */
   const verify = useCallback(async () => {
-    if (!sdk) return;
+    if (!sdk) {
+      throw new Error("Your wallet is still waking up. Wait a second and tap again.");
+    }
     const callback = typeof window !== "undefined" ? window.location.href : undefined;
     const link = await sdk.generateFVLink(false, callback, SupportedChains.CELO);
     if (typeof window !== "undefined") window.location.href = link;
