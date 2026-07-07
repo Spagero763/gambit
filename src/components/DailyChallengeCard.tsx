@@ -3,19 +3,24 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { CalendarDays, Flame, ChevronRight, Check } from "lucide-react";
-import { dayNumber, dailyResult, dailyStreak } from "@/lib/daily";
+import { dayNumber, dailyResult, dailyStreak, dailyGameFor, WIN_SCORE } from "@/lib/daily";
+import { GAMES } from "@/lib/games";
+
+const NAME: Record<string, string> = Object.fromEntries(GAMES.map((g) => [g.slug, g.name]));
 
 /** Home entry for the Daily Challenge: today's number, your streak, one tap in. */
 export function DailyChallengeCard() {
-  const [state, setState] = useState<{ n: number; done: boolean; score: number; streak: number } | null>(null);
+  const [state, setState] = useState<{ n: number; game: string; done: boolean; score: number; streak: number } | null>(null);
 
   useEffect(() => {
     const n = dayNumber();
     const r = dailyResult(n);
-    setState({ n, done: !!r, score: r?.score ?? 0, streak: dailyStreak() });
+    setState({ n, game: dailyGameFor(n), done: !!r, score: r?.score ?? 0, streak: dailyStreak() });
   }, []);
 
   if (!state) return null;
+  const isBlocks = state.game === "blocks";
+  const gameName = NAME[state.game] ?? state.game;
 
   return (
     <Link
@@ -27,11 +32,15 @@ export function DailyChallengeCard() {
         {state.done ? <Check className="h-5 w-5" /> : <CalendarDays className="h-5 w-5" />}
       </span>
       <div className="min-w-0 flex-1">
-        <p className="text-sm font-semibold text-ink">Daily Challenge #{state.n}</p>
+        <p className="text-sm font-semibold text-ink">Daily Challenge #{state.n} · {gameName}</p>
         <p className="text-[12px] text-ink-dim">
           {state.done
-            ? `Done today: ${state.score.toLocaleString()} points. Dare a friend.`
-            : "Same board for everyone. One shot at your score."}
+            ? isBlocks || state.score !== WIN_SCORE
+              ? `Done today: ${state.score.toLocaleString()} points. Dare a friend.`
+              : `Done today: you beat the bot at ${gameName}. Dare a friend.`
+            : isBlocks
+              ? "Same board for everyone. One shot at your score."
+              : `Beat the bot at ${gameName} today to clear it.`}
         </p>
       </div>
       {state.streak > 1 && (

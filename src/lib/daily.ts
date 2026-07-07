@@ -18,6 +18,27 @@ export function daySeed(n: number): number {
   return s > 0 ? s : 1;
 }
 
+// A different game each day. Block Blitz days are a score battle on the same
+// seeded board; the others are "beat the bot" days — win any free game of it
+// and the challenge is cleared.
+export const DAILY_GAMES = ["blocks", "chess", "snakes", "tic-tac-toe", "whot"] as const;
+export type DailyGame = (typeof DAILY_GAMES)[number];
+
+export function dailyGameFor(n: number): DailyGame {
+  return DAILY_GAMES[((n % DAILY_GAMES.length) + DAILY_GAMES.length) % DAILY_GAMES.length];
+}
+
+/** Sentinel score for cleared "beat the bot" days (blocks days use real points). */
+export const WIN_SCORE = 100;
+
+/** Called from recordResult: if today's challenge is this game and you won,
+ *  the day is cleared. First clear only; further wins are just wins. */
+export function completeDailyWin(game: string): void {
+  const n = dayNumber();
+  if (dailyGameFor(n) !== game || dailyGameFor(n) === "blocks") return;
+  recordDaily(n, WIN_SCORE);
+}
+
 /** ms until the next board (midnight UTC). */
 export function msToNextBoard(now = Date.now()): number {
   return DAY_MS - ((now - EPOCH) % DAY_MS);
@@ -75,7 +96,10 @@ export function recordDaily(n: number, score: number): { result: DailyResult; st
 }
 
 /** The spoiler-free share text (no board detail, just the flex). */
-export function shareText(n: number, score: number, streak: number): string {
+export function shareText(n: number, score: number, streak: number, gameName?: string): string {
   const fire = streak > 1 ? `\n🔥 ${streak} day streak` : "";
+  if (gameName && score === WIN_SCORE) {
+    return `🎮 Gambit Daily #${n}\n✅ Beat the bot at ${gameName}${fire}\nYour turn. Think you can?`;
+  }
   return `🎮 Gambit Daily #${n}\n🧩 ${score.toLocaleString()} points${fire}\nSame board for everyone. Think you'd beat it?`;
 }

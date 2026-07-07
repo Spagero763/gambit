@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { completeDailyWin } from "./daily";
 
 /**
  * Local progression: XP + levels, a daily streak, and rotating daily quests.
@@ -176,6 +177,15 @@ export function recordResult(game: string, result: GameResult): Progress {
   const won = result === "win";
   if (won) p.wins += 1;
   p.xp += 10 + (won ? 25 : 0);
+
+  // a win in today's featured game clears the Daily Challenge (beat-the-bot days)
+  if (won) {
+    try {
+      completeDailyWin(game);
+    } catch {
+      /* daily is a bonus, never break game recording */
+    }
+  }
 
   // quest progress
   for (const q of p.quests) {

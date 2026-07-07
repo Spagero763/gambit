@@ -3,12 +3,26 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { ArrowLeft, Flame, Play, Share2, Check, CalendarDays } from "lucide-react";
+import { ArrowLeft, Flame, Play, Share2, Check, CalendarDays, Swords } from "lucide-react";
 import { useAccount } from "wagmi";
 import { BlockBlitz } from "@/components/games/blocks/BlockBlitz";
 import { BottomNav } from "@/components/BottomNav";
-import { dayNumber, daySeed, msToNextBoard, dailyResult, dailyStreak, recordDaily, shareText, DailyResult } from "@/lib/daily";
+import {
+  dayNumber,
+  daySeed,
+  msToNextBoard,
+  dailyResult,
+  dailyStreak,
+  recordDaily,
+  shareText,
+  dailyGameFor,
+  WIN_SCORE,
+  DailyResult,
+} from "@/lib/daily";
+import { GAMES } from "@/lib/games";
 import { shareOrCopy } from "@/lib/share";
+
+const NAME: Record<string, string> = Object.fromEntries(GAMES.map((g) => [g.slug, g.name]));
 
 function countdown(ms: number) {
   const h = Math.floor(ms / 3600000);
@@ -17,12 +31,16 @@ function countdown(ms: number) {
 }
 
 /**
- * The Daily Challenge: one Block Blitz board per day, identical for everyone,
- * your first finished run is your result. The share card is the growth loop —
- * a spoiler-free score flex that lands in WhatsApp or X with the link.
+ * The Daily Challenge rotates through the games. Block Blitz days are a score
+ * battle on the same seeded board for everyone; the other days are beat-the-bot
+ * days — win any free game of the featured game and the day is cleared. Either
+ * way the share card is the growth loop.
  */
 export function DailyChallenge() {
   const n = dayNumber();
+  const game = dailyGameFor(n);
+  const gameName = NAME[game] ?? game;
+  const isBlocks = game === "blocks";
   const { address } = useAccount();
   const [phase, setPhase] = useState<"intro" | "play" | "result">("intro");
   const [result, setResult] = useState<DailyResult | null>(null);
@@ -56,24 +74,26 @@ export function DailyChallenge() {
     if (!result) return;
     const r = await shareOrCopy({
       title: "Gambit Daily",
-      text: shareText(n, result.score, streak),
+      text: shareText(n, result.score, streak, isBlocks ? undefined : gameName),
       url: "https://www.bestgambit.live/daily",
     });
     if (r !== "failed") setShared(r);
     setTimeout(() => setShared("idle"), 2000);
   };
 
-  // playing: the game owns the whole screen, exactly like free play — no
-  // bottom nav overlapping the piece tray (it was blocking view AND drags)
-  if (phase === "play") {
+  // blocks day, playing: the game owns the whole screen, exactly like free play
+  if (isBlocks && phase === "play") {
     return (
       <BlockBlitz
         seed={daySeed(n)}
+        initialBest={result?.score ?? 0}
         onSubmit={finishRun}
         onExit={() => setPhase(result ? "result" : "intro")}
       />
     );
   }
+
+  const done = phase === "result" && result;
 
   return (
     <section className="mx-auto w-full max-w-2xl px-5 pb-28 pt-4">
@@ -87,11 +107,13 @@ export function DailyChallenge() {
         className="mt-6 overflow-hidden rounded-3xl border border-amber/25 bg-gradient-to-br from-amber/[0.08] to-transparent p-6 text-center shadow-card"
       >
         <span className="mx-auto grid h-12 w-12 place-items-center rounded-2xl bg-amber/15 text-amber">
-          <CalendarDays className="h-6 w-6" />
+          {isBlocks ? <CalendarDays className="h-6 w-6" /> : <Swords className="h-6 w-6" />}
         </span>
         <h1 className="mt-3 font-display text-2xl font-bold">Daily Challenge #{n}</h1>
         <p className="mx-auto mt-1 max-w-sm text-sm text-ink-dim">
-          One board. Everyone on earth plays the same one. Your first run is your result, so make it count.
+          {isBlocks
+            ? "Block Blitz day. Everyone on earth plays the same board, and your first run is your result, so make it count."
+            : `${gameName} day. Beat the bot in a free game today, any difficulty, and the challenge is cleared.`}
         </p>
 
         {streak > 1 && (
@@ -100,11 +122,17 @@ export function DailyChallenge() {
           </p>
         )}
 
-        {phase === "result" && result ? (
+        {done ? (
           <>
             <div className="mx-auto mt-5 max-w-[16rem] rounded-2xl border border-line bg-void-800 p-4">
               <p className="text-[11px] uppercase tracking-wide text-ink-faint">Your result today</p>
-              <p className="nums mt-1 text-3xl font-bold text-ink">{result.score.toLocaleString()}</p>
+              {isBlocks || result.score !== WIN_SCORE ? (
+                <p className="nums mt-1 text-3xl font-bold text-ink">{result.score.toLocaleString()}</p>
+              ) : (
+                <p className="mt-1 flex items-center justify-center gap-2 text-xl font-bold text-teal">
+                  <Check className="h-6 w-6" /> Bot beaten
+                </p>
+              )}
             </div>
             <div className="mt-5 flex flex-col items-center gap-2.5">
               <button
@@ -114,29 +142,48 @@ export function DailyChallenge() {
                 {shared === "idle" ? <Share2 className="h-4 w-4" /> : <Check className="h-4 w-4" />}
                 {shared === "copied" ? "Copied!" : shared === "shared" ? "Shared!" : "Challenge your friends"}
               </button>
-              <button
-                onClick={() => {
-                  setPractice(true);
-                  setPhase("play");
-                }}
-                className="inline-flex w-full max-w-[16rem] items-center justify-center gap-2 rounded-xl border border-line bg-void-800 py-3 text-sm text-ink-dim transition-colors hover:text-ink"
-              >
-                <Play className="h-4 w-4" /> Play again for practice
-              </button>
+              {isBlocks ? (
+                <button
+                  onClick={() => {
+                    setPractice(true);
+                    setPhase("play");
+                  }}
+                  className="inline-flex w-full max-w-[16rem] items-center justify-center gap-2 rounded-xl border border-line bg-void-800 py-3 text-sm text-ink-dim transition-colors hover:text-ink"
+                >
+                  <Play className="h-4 w-4" /> Play again for practice
+                </button>
+              ) : (
+                <Link
+                  href={`/play/${game}`}
+                  className="inline-flex w-full max-w-[16rem] items-center justify-center gap-2 rounded-xl border border-line bg-void-800 py-3 text-sm text-ink-dim transition-colors hover:text-ink"
+                >
+                  <Play className="h-4 w-4" /> Play more {gameName}
+                </Link>
+              )}
               <p className="text-[11px] text-ink-faint">
-                New board in {countdown(msToNextBoard())}{practice ? " · practice runs don't change your result" : ""}
+                New challenge in {countdown(msToNextBoard())}
+                {isBlocks && practice ? " · practice runs don't change your result" : ""}
               </p>
             </div>
           </>
         ) : (
           <div className="mt-6 flex flex-col items-center gap-2.5">
-            <button
-              onClick={() => setPhase("play")}
-              className="btn-primary inline-flex w-full max-w-[16rem] items-center justify-center gap-2 rounded-xl py-3 text-sm shadow-glow"
-            >
-              <Play className="h-4 w-4" /> Play today's board
-            </button>
-            <p className="text-[11px] text-ink-faint">New board in {countdown(msToNextBoard())}</p>
+            {isBlocks ? (
+              <button
+                onClick={() => setPhase("play")}
+                className="btn-primary inline-flex w-full max-w-[16rem] items-center justify-center gap-2 rounded-xl py-3 text-sm shadow-glow"
+              >
+                <Play className="h-4 w-4" /> Play today's board
+              </button>
+            ) : (
+              <Link
+                href={`/play/${game}`}
+                className="btn-primary inline-flex w-full max-w-[16rem] items-center justify-center gap-2 rounded-xl py-3 text-sm shadow-glow"
+              >
+                <Swords className="h-4 w-4" /> Go beat the bot at {gameName}
+              </Link>
+            )}
+            <p className="text-[11px] text-ink-faint">New challenge in {countdown(msToNextBoard())}</p>
           </div>
         )}
       </motion.div>
