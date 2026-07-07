@@ -93,6 +93,11 @@ export async function POST(req: NextRequest) {
       if (!addr || verifyToken(String(body.auth)) !== addr) {
         return NextResponse.json({ error: "Sign in to enter the cup" }, { status: 401 });
       }
+      // blocked wallets don't get into prize events
+      const { data: bp } = await db.from("profiles").select("banned").eq("address", addr).maybeSingle();
+      if (bp?.banned) {
+        return NextResponse.json({ error: "This account is blocked from prize events" }, { status: 403 });
+      }
       // humans only — read GoodDollar's Identity contract server-side
       let root: string | null = null;
       try {
@@ -184,7 +189,8 @@ export async function POST(req: NextRequest) {
 
       if (!winners) {
         // rank: best score first, ties broken deterministically by address.
-        // Only players who actually played (score > 0) can win.
+        // Only players who actually played (score > 0) can win — and banned
+        // wallets are skipped even if their entry row still exists.
         const { data: entries } = await db
           .from("cup_entries")
           .select("address,score")
@@ -192,8 +198,17 @@ export async function POST(req: NextRequest) {
           .gt("score", 0)
           .order("score", { ascending: false })
           .order("address", { ascending: true })
-          .limit(3);
-        winners = (entries ?? []).map((e, idx) => ({
+          .limit(10);
+        let pool = entries ?? [];
+        if (pool.length) {
+          const { data: flags } = await db
+            .from("profiles")
+            .select("address,banned")
+            .in("address", pool.map((e) => e.address));
+          const bannedSet = new Set((flags ?? []).filter((f) => f.banned).map((f) => f.address));
+          pool = pool.filter((e) => !bannedSet.has(e.address));
+        }
+        winners = pool.slice(0, 3).map((e, idx) => ({
           address: e.address,
           amount: Number((PRIZE_USDM * CUP_SPLIT[idx]).toFixed(4)),
           tx: null,

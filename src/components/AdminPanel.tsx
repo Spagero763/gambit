@@ -19,6 +19,8 @@ interface Vault {
 interface Status {
   relayer: { address: string; balanceCELO: number; lowGas: boolean } | null;
   vaults: { cup: Vault | null; claims: Vault | null; referral: Vault | null } | null;
+  cup?: { address: string; score: number; name: string | null; banned: boolean }[];
+  week?: string;
   matches: any[];
   tournaments: any[];
 }
@@ -146,6 +148,29 @@ export function AdminPanel() {
       </button>
 
       {msg && <p className="mt-3 rounded-xl border border-line bg-void-800 px-3 py-2 text-center text-[12px] text-ink-dim">{msg}</p>}
+
+      {/* cup moderation: kick suspicious entries, ban repeat offenders */}
+      <Section title={`This week's cup entries (${data?.cup?.length ?? 0})`}>
+        {(data?.cup ?? []).map((e) => (
+          <Row
+            key={e.address}
+            title={`${e.name || e.address.slice(0, 8) + "…" + e.address.slice(-4)} · ${e.score.toLocaleString()} pts`}
+            sub={`${e.address}${e.banned ? " · BANNED" : ""}`}
+          >
+            <Btn busy={busyId === `removeCupEntry-${e.address}`} onClick={() => act("removeCupEntry", e.address)} tone="rose">
+              Remove entry
+            </Btn>
+            {e.banned ? (
+              <Btn busy={busyId === `unbanWallet-${e.address}`} onClick={() => act("unbanWallet", e.address)}>Unban</Btn>
+            ) : (
+              <Btn busy={busyId === `banWallet-${e.address}`} onClick={() => act("banWallet", e.address)} tone="rose">
+                Ban wallet
+              </Btn>
+            )}
+          </Row>
+        ))}
+        {(data?.cup?.length ?? 0) === 0 && <Empty />}
+      </Section>
 
       {/* manual recovery */}
       <div className="mt-5 rounded-2xl border border-line bg-void-800 p-4">

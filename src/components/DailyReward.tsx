@@ -173,6 +173,8 @@ function gReasonText(reason?: string) {
       return "couldn't send right now, try again";
     case "treasury-empty":
       return "today's pool is empty";
+    case "blocked":
+      return "this account is blocked from rewards";
     case "no-treasury":
     case "treasury-error":
       return "temporarily unavailable";

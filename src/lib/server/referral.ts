@@ -74,9 +74,13 @@ async function payInviterFor(invitee: string): Promise<boolean> {
   const db = supabaseAdmin();
   const pub = createPublicClient({ chain: celo, transport: http(RPC) });
 
-  const { data: prof } = await db.from("profiles").select("referred_by").eq("address", invitee).maybeSingle();
+  const { data: prof } = await db.from("profiles").select("referred_by,banned").eq("address", invitee).maybeSingle();
+  if ((prof as any)?.banned) return false;
   const inviter = (prof?.referred_by as string | null)?.toLowerCase();
   if (!inviter || inviter === invitee) return false;
+
+  const { data: inv } = await db.from("profiles").select("banned").eq("address", inviter).maybeSingle();
+  if ((inv as any)?.banned) return false;
 
   const key = refKey(invitee);
   if (await pub.readContract({ address: addr, abi: vaultAbi, functionName: "paid", args: [key] })) return false;

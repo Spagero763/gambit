@@ -4,6 +4,7 @@ import { supabaseAdmin } from "@/lib/supabase";
 import { isOwner } from "@/lib/server/admin";
 import { relayerConfigured, relayerDiagnostics } from "@/lib/server/settle";
 import { celoReadTransport } from "@/lib/server/rpc";
+import { weekIndex, weekKey } from "@/lib/cup";
 import { celo } from "viem/chains";
 
 export const runtime = "nodejs";
@@ -76,7 +77,25 @@ export async function GET(req: NextRequest) {
       /* vault reads are best-effort — the panel still works without them */
     }
 
-    return NextResponse.json({ relayer, vaults, matches: matches ?? [], tournaments: tournaments ?? [] });
+    // this week's cup entries with names + ban flags, for moderation
+    const wk = weekKey(weekIndex());
+    const { data: entries } = await db
+      .from("cup_entries")
+      .select("address,score")
+      .eq("week", wk)
+      .order("score", { ascending: false })
+      .limit(50);
+    let cup: any[] = entries ?? [];
+    if (cup.length) {
+      const { data: profs } = await db
+        .from("profiles")
+        .select("address,name,banned")
+        .in("address", cup.map((e) => e.address));
+      const byAddr = Object.fromEntries((profs ?? []).map((p) => [p.address, p]));
+      cup = cup.map((e) => ({ ...e, name: byAddr[e.address]?.name || null, banned: !!byAddr[e.address]?.banned }));
+    }
+
+    return NextResponse.json({ relayer, vaults, cup, week: wk, matches: matches ?? [], tournaments: tournaments ?? [] });
   } catch (e: any) {
     return NextResponse.json({ error: e?.message ?? "Failed" }, { status: 500 });
   }

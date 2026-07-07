@@ -3,6 +3,7 @@ import { supabaseAdmin } from "@/lib/supabase";
 import { isOwner } from "@/lib/server/admin";
 import { settleOnChain, settleRanking, readMatchOnChain, relayerConfigured } from "@/lib/server/settle";
 import { rankTop3, TPlayer } from "@/lib/server/tournament";
+import { weekIndex, weekKey } from "@/lib/cup";
 
 export const runtime = "nodejs";
 
@@ -11,6 +12,9 @@ export const runtime = "nodejs";
  *   settleMatch      pay the recorded winner (chainId optional override)
  *   refundMatch      refund both players (winner = none)
  *   settleTournament rank + pay top three
+ *   removeCupEntry   kick a wallet out of this week's cup (id = address)
+ *   banWallet        block a wallet from prizes, claims and referrals (id = address)
+ *   unbanWallet      lift the block (id = address)
  */
 export async function POST(req: NextRequest) {
   try {
@@ -18,8 +22,32 @@ export async function POST(req: NextRequest) {
     const { token, action, id, chainId } = body;
     if (!isOwner(token)) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     if (!action || id === undefined) return NextResponse.json({ error: "Bad request" }, { status: 400 });
-    if (!relayerConfigured()) return NextResponse.json({ error: "Relayer not configured" }, { status: 500 });
     const db = supabaseAdmin();
+
+    // moderation actions (no relayer needed)
+    if (action === "removeCupEntry" || action === "banWallet" || action === "unbanWallet") {
+      const addr = String(id).toLowerCase();
+      if (!/^0x[0-9a-f]{40}$/.test(addr)) {
+        return NextResponse.json({ error: "id must be a wallet address" }, { status: 400 });
+      }
+      if (action === "removeCupEntry") {
+        await db.from("cup_entries").delete().eq("week", weekKey(weekIndex())).eq("address", addr);
+        return NextResponse.json({ ok: true, removed: addr });
+      }
+      const banned = action === "banWallet";
+      const { data: updated } = await db.from("profiles").update({ banned }).eq("address", addr).select("address");
+      if (!updated?.length) {
+        // no profile yet — create a minimal row so the ban sticks
+        await db.from("profiles").insert({ address: addr, name: "", avatar: "teal", banned });
+      }
+      if (banned) {
+        // a banned wallet also loses its seat in the current cup
+        await db.from("cup_entries").delete().eq("week", weekKey(weekIndex())).eq("address", addr);
+      }
+      return NextResponse.json({ ok: true, banned, address: addr });
+    }
+
+    if (!relayerConfigured()) return NextResponse.json({ error: "Relayer not configured" }, { status: 500 });
 
     if (action === "settleMatch" || action === "refundMatch") {
       const { data: m } = await db.from("matches").select("*").eq("id", Number(id)).maybeSingle();

@@ -57,9 +57,10 @@ export async function POST(req: NextRequest) {
     const db = supabaseAdmin();
     let { data: prof } = await db
       .from("profiles")
-      .select("address,last_g_claim")
+      .select("address,last_g_claim,banned")
       .eq("address", addr)
       .maybeSingle();
+    if ((prof as any)?.banned) return NextResponse.json({ gAmount: 0, reason: "blocked" });
 
     // first-time claimer with no saved profile yet — create a minimal row so we
     // can track the daily claim (the token already proved wallet ownership).
