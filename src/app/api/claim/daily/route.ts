@@ -66,7 +66,7 @@ export async function POST(req: NextRequest) {
     // can track the daily claim (the token already proved wallet ownership).
     if (!prof) {
       await db.from("profiles").upsert({ address: addr, name: "", avatar: "teal" }, { onConflict: "address", ignoreDuplicates: true });
-      prof = { address: addr, last_g_claim: null };
+      prof = { address: addr, last_g_claim: null, banned: false };
     }
     if (prof.last_g_claim === today()) return NextResponse.json({ gAmount: 0, reason: "already" });
 
