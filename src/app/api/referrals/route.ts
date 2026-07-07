@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase";
 import { referralPaid } from "@/lib/server/referral";
+import { limited } from "@/lib/server/rateLimit";
 
 export const runtime = "nodejs";
 
@@ -11,6 +12,8 @@ export const runtime = "nodejs";
  * echoed back as display data the inviter already owns.
  */
 export async function GET(req: NextRequest) {
+  const rl = limited(req, "referrals", 20, 60_000);
+  if (rl) return rl;
   const address = req.nextUrl.searchParams.get("address")?.toLowerCase();
   if (!address || !/^0x[0-9a-f]{40}$/.test(address)) {
     return NextResponse.json({ error: "address required" }, { status: 400 });

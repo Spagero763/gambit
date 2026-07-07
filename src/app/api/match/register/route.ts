@@ -4,6 +4,7 @@ import { supabaseAdmin } from "@/lib/supabase";
 import { broadcast } from "@/lib/server/push";
 import { symbolForToken } from "@/lib/tokens";
 import { GAMES } from "@/lib/games";
+import { limited } from "@/lib/server/rateLimit";
 
 export const runtime = "nodejs";
 
@@ -17,6 +18,9 @@ const GAME_NAME: Record<string, string> = Object.fromEntries(GAMES.map((g) => [g
  */
 export async function POST(req: NextRequest) {
   try {
+    // registering also broadcasts a push to every subscriber — keep it tight
+    const rl = limited(req, "register", 10, 60_000);
+    if (rl) return rl;
     const { id, game, chainId, stake, creator, token, decimals } = await req.json();
     if (id === undefined || !game || !creator) {
       return NextResponse.json({ error: "Bad request" }, { status: 400 });

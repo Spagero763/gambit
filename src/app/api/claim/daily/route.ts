@@ -4,6 +4,7 @@ import { supabaseAdmin } from "@/lib/supabase";
 import { verifyToken } from "@/lib/server/profileToken";
 import { treasuryConfigured, treasuryAddress, treasuryGBalance, treasuryDryRun, payDailyG, gWei } from "@/lib/server/treasury";
 import { claimContract, claimVaultBalance, claimedOnChain, payClaimOnChain } from "@/lib/server/claimChain";
+import { limited } from "@/lib/server/rateLimit";
 
 export const runtime = "nodejs";
 
@@ -46,6 +47,9 @@ export async function GET() {
  */
 export async function POST(req: NextRequest) {
   try {
+    // this endpoint can trigger an on-chain send — keep it tightly limited
+    const rl = limited(req, "claim", 6, 60_000);
+    if (rl) return rl;
     const { token } = await req.json();
     const addr = verifyToken(String(token ?? ""));
     if (!addr) return NextResponse.json({ gAmount: 0, reason: "signin" });

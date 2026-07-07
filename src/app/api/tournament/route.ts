@@ -6,6 +6,7 @@ import { newSeed } from "@/lib/server/tournament";
 import { seedBracket, advanceBracket, forceResolveStale, seedTable, tableMatchId, BRACKET_GAMES } from "@/lib/server/bracket";
 import { mergeWhot, splitWhot, applyWhotDraw, WhotPublic, WhotPrivate } from "@/lib/server/whot";
 import { notify } from "@/lib/server/push";
+import { limited } from "@/lib/server/rateLimit";
 import { formatUnits } from "viem";
 
 const stageOf = (alive: number) => (alive <= 3 ? "Final" : alive <= 5 ? "Semi-final" : "Quarter-final");
@@ -163,6 +164,8 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   try {
+    const rl = limited(req, "tournament", 30, 60_000);
+    if (rl) return rl;
     const body = await req.json();
     const { action, id, auth } = body;
     if (!action || id === undefined) return NextResponse.json({ error: "Bad request" }, { status: 400 });

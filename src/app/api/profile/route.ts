@@ -3,6 +3,7 @@ import { recoverMessageAddress } from "viem";
 import { supabaseAdmin } from "@/lib/supabase";
 import { createToken } from "@/lib/server/profileToken";
 import { creditVerifiedReferral } from "@/lib/server/referral";
+import { limited } from "@/lib/server/rateLimit";
 
 export const runtime = "nodejs";
 
@@ -66,6 +67,8 @@ export async function GET(req: NextRequest) {
 /** POST /api/profile  { address, message, signature, profile } -> { profile, token } */
 export async function POST(req: NextRequest) {
   try {
+    const rl = limited(req, "profile", 10, 60_000);
+    if (rl) return rl;
     const { address, message, signature, profile, referredBy } = await req.json();
     if (!address || !message || !signature) {
       return NextResponse.json({ error: "Bad request" }, { status: 400 });

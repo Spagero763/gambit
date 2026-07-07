@@ -6,6 +6,7 @@ import { treasuryConfigured, treasuryUsdmBalance, payUsdm } from "@/lib/server/t
 import { cupContract, cupWeekSettledOnChain, cupVaultBalance, settleCupOnChain } from "@/lib/server/cupChain";
 import { weekIndex, weekKey, weekSeed, weekStart, weekEnd, CUP_SPLIT } from "@/lib/cup";
 import { notify } from "@/lib/server/push";
+import { limited } from "@/lib/server/rateLimit";
 import { parseUnits } from "viem";
 
 export const runtime = "nodejs";
@@ -78,6 +79,8 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   try {
+    const rl = limited(req, "cup", 20, 60_000);
+    if (rl) return rl;
     const body = await req.json();
     const action = String(body.action ?? "");
     const db = supabaseAdmin();
