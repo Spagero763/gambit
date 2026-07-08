@@ -1,8 +1,7 @@
 "use client";
 
-import { useState } from "react";
 import { motion } from "framer-motion";
-import { Share2, Check } from "lucide-react";
+import { Share2 } from "lucide-react";
 import { useAccount } from "wagmi";
 import { useProgress, levelInfo } from "@/lib/progress";
 import { useSettings, AVATAR_HEX } from "@/lib/settings";
@@ -10,8 +9,9 @@ import { rankForXp } from "@/lib/rank";
 import { seasonName, seasonXp, seasonDaysLeft } from "@/lib/season";
 import { Avatar } from "@/components/Avatar";
 import { RankBadge } from "@/components/RankBadge";
+import { ShareButton } from "@/components/ShareButton";
 import { AnimatedNumber } from "@/components/motion/AnimatedNumber";
-import { inviteUrl, shareOrCopy } from "@/lib/share";
+import { inviteUrl } from "@/lib/share";
 
 const short = (a?: string) => (a ? `${a.slice(0, 6)}…${a.slice(-4)}` : "Player");
 
@@ -25,22 +25,12 @@ export function PlayerCard() {
   const { address } = useAccount();
   const p = useProgress();
   const [settings] = useSettings();
-  const [shared, setShared] = useState<"idle" | "shared" | "copied">("idle");
 
   const { level } = levelInfo(p.xp);
   const rank = rankForXp(p.xp);
   const winRate = p.played > 0 ? Math.round((p.wins / p.played) * 100) : 0;
   const name = settings.name || short(address);
-
-  const share = async () => {
-    const r = await shareOrCopy({
-      title: "Gambit",
-      text: `I'm ${rank.name} on Gambit — Level ${level}, ${winRate}% win rate. Think you can beat me?`,
-      url: inviteUrl(address),
-    });
-    if (r !== "failed") setShared(r);
-    setTimeout(() => setShared("idle"), 2000);
-  };
+  const flex = `${rank.name} rank on Gambit, level ${level}, winning ${winRate} percent of my games. Come lose to me.`;
 
   return (
     <motion.div
@@ -79,13 +69,13 @@ export function PlayerCard() {
           </p>
         </div>
 
-        <button
-          onClick={share}
+        <ShareButton
+          text={flex}
+          url={inviteUrl(address)}
           className="pressable inline-flex shrink-0 items-center gap-1.5 rounded-xl border border-line bg-void-800 px-3 py-2 text-[12px] font-medium text-ink-dim transition-colors hover:text-ink"
         >
-          {shared === "idle" ? <Share2 className="h-3.5 w-3.5" /> : <Check className="h-3.5 w-3.5 text-teal" />}
-          {shared === "copied" ? "Copied" : shared === "shared" ? "Shared" : "Share"}
-        </button>
+          <Share2 className="h-3.5 w-3.5" /> Share
+        </ShareButton>
       </div>
 
       {/* progress to next rank */}

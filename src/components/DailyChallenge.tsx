@@ -20,7 +20,7 @@ import {
   DailyResult,
 } from "@/lib/daily";
 import { GAMES } from "@/lib/games";
-import { shareOrCopy } from "@/lib/share";
+import { ShareButton } from "@/components/ShareButton";
 
 const NAME: Record<string, string> = Object.fromEntries(GAMES.map((g) => [g.slug, g.name]));
 
@@ -46,7 +46,6 @@ export function DailyChallenge() {
   const [result, setResult] = useState<DailyResult | null>(null);
   const [streak, setStreak] = useState(0);
   const [practice, setPractice] = useState(false);
-  const [shared, setShared] = useState<"idle" | "shared" | "copied">("idle");
 
   useEffect(() => {
     const r = dailyResult(n);
@@ -70,16 +69,7 @@ export function DailyChallenge() {
     }
   };
 
-  const share = async () => {
-    if (!result) return;
-    const r = await shareOrCopy({
-      title: "Gambit Daily",
-      text: shareText(n, result.score, streak, isBlocks ? undefined : gameName),
-      url: "https://www.bestgambit.live/daily",
-    });
-    if (r !== "failed") setShared(r);
-    setTimeout(() => setShared("idle"), 2000);
-  };
+  const shareMsg = result ? shareText(n, result.score, streak, isBlocks ? undefined : gameName) : "";
 
   // blocks day, playing: the game owns the whole screen, exactly like free play
   if (isBlocks && phase === "play") {
@@ -135,13 +125,13 @@ export function DailyChallenge() {
               )}
             </div>
             <div className="mt-5 flex flex-col items-center gap-2.5">
-              <button
-                onClick={share}
+              <ShareButton
+                text={shareMsg}
+                url="https://www.bestgambit.live/daily"
                 className="btn-primary inline-flex w-full max-w-[16rem] items-center justify-center gap-2 rounded-xl py-3 text-sm shadow-glow"
               >
-                {shared === "idle" ? <Share2 className="h-4 w-4" /> : <Check className="h-4 w-4" />}
-                {shared === "copied" ? "Copied!" : shared === "shared" ? "Shared!" : "Challenge your friends"}
-              </button>
+                <Share2 className="h-4 w-4" /> Challenge your friends
+              </ShareButton>
               {isBlocks ? (
                 <button
                   onClick={() => {

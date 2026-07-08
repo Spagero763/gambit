@@ -8,7 +8,8 @@ import { useRankUp } from "@/lib/useRankUp";
 import { RankBadge } from "@/components/RankBadge";
 import { Confetti } from "@/components/motion/Confetti";
 import { Portal } from "@/components/Portal";
-import { inviteUrl, shareOrCopy } from "@/lib/share";
+import { ShareButton } from "@/components/ShareButton";
+import { inviteUrl } from "@/lib/share";
 
 /**
  * Full-screen moment when a player crosses into a new rank tier: confetti, the
@@ -23,13 +24,7 @@ export function RankUpCelebration() {
 
   if (!rankedUp) return null;
   const level = levelInfo(p.xp).level;
-
-  const share = () =>
-    shareOrCopy({
-      title: "Gambit",
-      text: `Just ranked up to ${rankedUp.name} on Gambit! Level ${level}. Come play me.`,
-      url: inviteUrl(address),
-    });
+  const flex = `Just hit ${rankedUp.name} rank on Gambit. The grind is paying off. Come play me.`;
 
   return (
     <Portal>
@@ -66,12 +61,13 @@ export function RankUpCelebration() {
           </p>
 
           <div className="mt-5 flex flex-col gap-2">
-            <button
-              onClick={share}
+            <ShareButton
+              text={flex}
+              url={inviteUrl(address)}
               className="btn-primary inline-flex w-full items-center justify-center gap-2 rounded-xl py-3 text-sm shadow-glow"
             >
               <Share2 className="h-4 w-4" /> Show it off
-            </button>
+            </ShareButton>
             <button onClick={dismiss} className="rounded-xl border border-line bg-void-800 py-3 text-sm text-ink-dim transition-colors hover:text-ink">
               Keep playing
             </button>

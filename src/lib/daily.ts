@@ -97,9 +97,9 @@ export function recordDaily(n: number, score: number): { result: DailyResult; st
 
 /** The spoiler-free share text (no board detail, just the flex). */
 export function shareText(n: number, score: number, streak: number, gameName?: string): string {
-  const fire = streak > 1 ? `\n🔥 ${streak} day streak` : "";
+  const fire = streak > 1 ? ` Day ${streak} of my streak.` : "";
   if (gameName && score === WIN_SCORE) {
-    return `🎮 Gambit Daily #${n}\n✅ Beat the bot at ${gameName}${fire}\nYour turn. Think you can?`;
+    return `Beat the bot at ${gameName} on today's Gambit challenge.${fire} Your turn, let's see you do it.`;
   }
-  return `🎮 Gambit Daily #${n}\n🧩 ${score.toLocaleString()} points${fire}\nSame board for everyone. Think you'd beat it?`;
+  return `Scored ${score.toLocaleString()} on today's Gambit board.${fire} Everybody plays the same board, one attempt. Come beat my score if you can.`;
 }

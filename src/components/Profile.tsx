@@ -3,7 +3,8 @@
 import { useEffect, useMemo, useState } from "react";
 import { motion } from "framer-motion";
 import { Wallet, ShieldCheck, Check, Loader2, Share2, Copy, Send } from "lucide-react";
-import { inviteUrl, shareOrCopy } from "@/lib/share";
+import { inviteUrl } from "@/lib/share";
+import { ShareButton } from "@/components/ShareButton";
 import { formatUnits } from "viem";
 import { useAccount, useBalance, useSignMessage } from "wagmi";
 import { usePrivy } from "@privy-io/react-auth";
@@ -384,16 +385,13 @@ function InviteCard({ refCode, address }: { refCode: string; address: string }) 
           <span className="truncate">{url.replace(/^https?:\/\//, "")}</span>
           {copied ? <Check className="h-3.5 w-3.5 shrink-0 text-teal" /> : <Copy className="h-3.5 w-3.5 shrink-0 opacity-60" />}
         </button>
-        <button
-          onClick={async () => {
-            await copy(); // always copy, so the link is in hand even if the share sheet is dismissed
-            await shareOrCopy({ title: "Gambit", text: "Come play me on Gambit. Real games, real money.", url });
-          }}
+        <ShareButton
+          text="Come play me on Gambit. Real games, real money, and you can start free. Use my link."
+          url={url}
           className="btn-primary flex shrink-0 items-center gap-1.5 rounded-xl px-3.5 py-2.5 text-sm shadow-glow"
         >
-          {copied ? <Check className="h-4 w-4" /> : <Share2 className="h-4 w-4" />}
-          {copied ? "Copied" : "Share"}
-        </button>
+          <Share2 className="h-4 w-4" /> Share
+        </ShareButton>
       </div>
     </div>
   );

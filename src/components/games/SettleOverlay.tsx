@@ -10,7 +10,8 @@ import { Confetti } from "@/components/motion/Confetti";
 import { AnimatedNumber } from "@/components/motion/AnimatedNumber";
 import { friendlyError } from "@/lib/errors";
 import { symbolForToken } from "@/lib/tokens";
-import { inviteUrl, shareOrCopy } from "@/lib/share";
+import { inviteUrl } from "@/lib/share";
+import { ShareButton } from "@/components/ShareButton";
 import { ExternalA } from "@/components/ExternalA";
 import { cn } from "@/lib/cn";
 
@@ -143,18 +144,13 @@ export function SettleOverlay({
           )}
           <div className="mt-4 flex items-center justify-center gap-2">
             {result === "win" && (
-              <button
-                onClick={() =>
-                  shareOrCopy({
-                    title: "Gambit",
-                    text: "I just won a staked match on Gambit ♟. Come play me.",
-                    url: inviteUrl(shareAddress),
-                  })
-                }
+              <ShareButton
+                text="Just won a staked match on Gambit and got paid on the spot. Who is next?"
+                url={inviteUrl(shareAddress)}
                 className="inline-flex items-center gap-1.5 rounded-xl border border-line bg-void-600 px-4 py-2.5 text-sm font-semibold text-ink transition-colors hover:border-line-strong"
               >
                 <Share2 className="h-4 w-4" /> Share
-              </button>
+              </ShareButton>
             )}
             <Link href="/" className="btn-primary inline-block rounded-xl px-5 py-2.5 text-sm shadow-glow">
               Back to lobby
