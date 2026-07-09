@@ -33,10 +33,12 @@ async function vaultStatus() {
   const cupPrize = Number(process.env.CUP_PRIZE_USDM ?? "10");
   const dailyG = Number(process.env.DAILY_G_AMOUNT ?? "1");
   const refPer = Number(process.env.REFERRAL_USDM ?? "0");
+  // `token` is the ERC20 each vault pays out in — the admin UI needs it to
+  // sweep (withdraw) or fund the vault from the owner's own wallet.
   return {
-    cup: cup === null ? null : { address: cupAddr, balance: cup, low: cup < cupPrize },
-    claims: claims === null ? null : { address: claimAddr, balance: claims, low: claims < dailyG * 5 },
-    referral: referral === null ? null : { address: refAddr, balance: referral, low: refPer > 0 && referral < refPer * 5 },
+    cup: cup === null ? null : { address: cupAddr, token: USDM, balance: cup, low: cup < cupPrize },
+    claims: claims === null ? null : { address: claimAddr, token: GDOLLAR, balance: claims, low: claims < dailyG * 5 },
+    referral: referral === null ? null : { address: refAddr, token: USDM, balance: referral, low: refPer > 0 && referral < refPer * 5 },
   };
 }
 

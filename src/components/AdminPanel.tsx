@@ -6,6 +6,7 @@ import { useAccount, useSignMessage } from "wagmi";
 import { usePrivy } from "@privy-io/react-auth";
 import { hasToken, signIn, getToken } from "@/lib/profile";
 import { ExternalA } from "@/components/ExternalA";
+import { AdminVaultActions } from "@/components/AdminVaultActions";
 import { cn } from "@/lib/cn";
 
 const OWNER = "0x32a3596c25a98950e850e3531a0aa87f1506e5d7";
@@ -13,6 +14,7 @@ const EXPLORER: Record<number, string> = { 42220: "https://celoscan.io/tx/", 111
 
 interface Vault {
   address: string | null;
+  token?: string;
   balance: number;
   low: boolean;
 }
@@ -116,11 +118,16 @@ export function AdminPanel() {
 
       {/* prize vaults: balances + low warnings + one-tap cup settle */}
       {data?.vaults && (
-        <div className="mt-3 grid grid-cols-3 gap-2">
-          <VaultCard label="Cup" unit="USDm" v={data.vaults.cup} />
-          <VaultCard label="Claims" unit="G$" v={data.vaults.claims} />
-          <VaultCard label="Referral" unit="USDm" v={data.vaults.referral} />
-        </div>
+        <>
+          <div className="mt-3 grid grid-cols-3 gap-2">
+            <VaultCard label="Cup" unit="USDm" v={data.vaults.cup} />
+            <VaultCard label="Claims" unit="G$" v={data.vaults.claims} />
+            <VaultCard label="Referral" unit="USDm" v={data.vaults.referral} />
+          </div>
+          <div className="mt-2">
+            <AdminVaultActions vaults={data.vaults} owner={OWNER} onDone={load} />
+          </div>
+        </>
       )}
       <button
         onClick={async () => {
