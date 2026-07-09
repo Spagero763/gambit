@@ -2,8 +2,9 @@
 
 import { useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { Gift, Flame, X, Sparkles } from "lucide-react";
+import { Gift, Flame, X, Sparkles, Loader2 } from "lucide-react";
 import { useAccount, useSignMessage } from "wagmi";
+import { usePrivy } from "@privy-io/react-auth";
 import { useProgress, claimDailyReward, rewardClaimable, levelInfo } from "@/lib/progress";
 import { getToken, signIn } from "@/lib/profile";
 import { Confetti } from "@/components/motion/Confetti";
@@ -20,64 +21,104 @@ export function DailyReward() {
   const p = useProgress();
   const { address } = useAccount();
   const { signMessageAsync } = useSignMessage();
+  const { ready, authenticated, login } = usePrivy();
   const claimable = rewardClaimable(p);
   const [reveal, setReveal] = useState<{ reward: number; day: number; g?: number; gReason?: string } | null>(null);
+  const [claiming, setClaiming] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const lvl = levelInfo(p.xp);
 
   const claim = async () => {
-    const res = claimDailyReward();
-    if (!res) return;
-    play("win");
-    setReveal({ reward: res.reward, day: res.day });
-    // claim a little real G$ on top — server-gated (once/day, funded treasury).
-    if (!address) return;
+    if (!ready || claiming) return;
+    setError(null);
+
+    // wallet must be connected first — the reward is real G$, it needs a wallet
+    // to land in. No wallet, no claim: open the sign-in instead of granting XP.
+    if (!authenticated || !address) {
+      login();
+      return;
+    }
+
+    setClaiming(true);
     try {
-      // mint a session token if we don't have one yet (fresh sign-ins won't).
-      // signing is free/gasless; the embedded wallet handles it quietly.
+      // free, gasless signature to prove the wallet if we don't have a session yet
       let token = getToken(address);
       if (!token) token = await signIn(address, (a) => signMessageAsync({ message: a.message }));
+
+      // the server holds this request open until the G$ is actually mined into
+      // the wallet, so by the time it returns the reward has truly landed.
       const r = await fetch("/api/claim/daily", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ token }),
       });
       const d = await r.json();
-      setReveal((cur) => (cur ? { ...cur, g: Number(d?.gAmount) || 0, gReason: d?.reason } : cur));
+      const g = Number(d?.gAmount) || 0;
+      const reason: string | undefined = d?.reason;
+
+      if (g > 0 || reason === "already") {
+        // reward confirmed in the wallet — only now grant the XP + streak and reveal
+        const res = claimDailyReward();
+        if (res) {
+          play("win");
+          setReveal({ reward: res.reward, day: res.day, g, gReason: reason });
+        }
+      } else if (reason === "blocked") {
+        setError("This account is blocked from rewards.");
+      } else {
+        // treasury empty / send failed / signature issue: don't burn the day, let them retry
+        setError(`${gReasonText(reason)}. Tap to try again.`);
+      }
     } catch {
-      // signature rejected or network error — XP is already granted client-side
-      setReveal((cur) => (cur ? { ...cur, gReason: "sign" } : cur));
+      setError("Could not reach the reward. Check your connection and try again.");
+    } finally {
+      setClaiming(false);
     }
   };
 
   return (
     <>
       {claimable ? (
+        <div className="mx-auto mt-4 w-full max-w-2xl">
         <motion.button
           onClick={claim}
+          disabled={claiming}
           data-tour="daily"
           initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
-          whileTap={{ scale: 0.98 }}
-          className="group relative mx-auto mt-4 flex w-full max-w-2xl items-center gap-3 overflow-hidden rounded-2xl border border-amber/40 px-4 py-3.5 text-left shadow-glow"
+          whileTap={{ scale: claiming ? 1 : 0.98 }}
+          className="group relative flex w-full items-center gap-3 overflow-hidden rounded-2xl border border-amber/40 px-4 py-3.5 text-left shadow-glow disabled:cursor-default"
           style={{ background: "linear-gradient(110deg, rgba(227,179,65,0.16), rgba(62,207,142,0.10) 60%, rgba(227,179,65,0.16))" }}
         >
           {/* shine sweep */}
           <span className="pointer-events-none absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/15 to-transparent transition-transform duration-1000 group-hover:translate-x-full" />
           <motion.span
-            animate={{ rotate: [0, -10, 10, -6, 0], scale: [1, 1.08, 1] }}
-            transition={{ duration: 1.4, repeat: Infinity, repeatDelay: 1.2 }}
+            animate={claiming ? { scale: 1, rotate: 0 } : { rotate: [0, -10, 10, -6, 0], scale: [1, 1.08, 1] }}
+            transition={claiming ? { duration: 0.2 } : { duration: 1.4, repeat: Infinity, repeatDelay: 1.2 }}
             className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-amber/20 text-amber"
           >
-            <Gift className="h-5 w-5" />
+            {claiming ? <Loader2 className="h-5 w-5 animate-spin" /> : <Gift className="h-5 w-5" />}
           </motion.span>
           <span className="min-w-0 flex-1">
-            <span className="block text-sm font-bold text-ink">Daily reward ready 🎁</span>
+            <span className="block text-sm font-bold text-ink">
+              {claiming ? "Sending your reward" : "Daily reward ready 🎁"}
+            </span>
             <span className="block text-[12px] text-ink-dim">
-              {p.streak > 0 ? `Day ${p.streak + (p.lastPlayed === today() ? 0 : 1)}. Tap to claim your XP` : "Tap to claim free XP and start a streak"}
+              {claiming
+                ? "Waiting for your G$ to land in your wallet…"
+                : !authenticated
+                  ? "Connect your wallet to claim XP and G$"
+                  : p.streak > 0
+                    ? `Day ${p.streak + (p.lastPlayed === today() ? 0 : 1)}. Tap to claim your XP and G$`
+                    : "Tap to claim free XP and G$, and start a streak"}
             </span>
           </span>
-          <span className="rounded-full bg-amber px-3 py-1.5 text-[12px] font-bold text-void">Claim</span>
+          <span className="rounded-full bg-amber px-3 py-1.5 text-[12px] font-bold text-void">
+            {claiming ? "…" : !authenticated ? "Connect" : "Claim"}
+          </span>
         </motion.button>
+        {error && <p className="mt-2 px-1 text-center text-[12px] font-medium text-rose">{error}</p>}
+        </div>
       ) : (
         <div data-tour="daily" className="mx-auto mt-4 flex w-full max-w-2xl items-center gap-3 rounded-2xl border border-line bg-void-800 px-4 py-3">
           <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-void-600 text-ink-faint">

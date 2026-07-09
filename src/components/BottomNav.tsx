@@ -18,7 +18,14 @@ export function BottomNav() {
   const pathname = usePathname();
 
   return (
-    <nav className="fixed inset-x-0 bottom-0 z-50 mx-auto mb-4 w-[min(92%,26rem)]">
+    <>
+      {/* in-flow spacer: the bar is fixed and content scrolls behind it (like X),
+          so the last row of the page needs room to clear above the bar */}
+      <div aria-hidden className="h-24" />
+      <nav
+        className="fixed inset-x-0 bottom-0 z-50 mx-auto w-[min(92%,26rem)]"
+        style={{ marginBottom: "calc(0.75rem + env(safe-area-inset-bottom))" }}
+      >
       <div className="flex items-center justify-between rounded-2xl border border-line bg-void-700/95 px-1.5 py-1.5 shadow-pop backdrop-blur">
         {TABS.map((t) => {
           const Icon = t.icon;
@@ -66,6 +73,7 @@ export function BottomNav() {
           );
         })}
       </div>
-    </nav>
+      </nav>
+    </>
   );
 }
