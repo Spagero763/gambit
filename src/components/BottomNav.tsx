@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import { Gamepad2, Trophy, Swords, User, Crown } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { Portal } from "@/components/Portal";
 import { cn } from "@/lib/cn";
 
 const TABS = [
@@ -22,6 +23,11 @@ export function BottomNav() {
       {/* in-flow spacer: the bar is fixed and content scrolls behind it (like X),
           so the last row of the page needs room to clear above the bar */}
       <div aria-hidden className="h-24" />
+      {/* Portaled to <body> so `fixed` locks to the real viewport. Rendered inside
+          the page it would sit under framer-motion's transformed page wrapper,
+          which traps fixed children and strands the bar at the bottom of the
+          scroll instead of the screen (see Portal). */}
+      <Portal>
       <nav
         className="fixed inset-x-0 bottom-0 z-50 mx-auto w-[min(92%,26rem)]"
         style={{ marginBottom: "calc(0.75rem + env(safe-area-inset-bottom))" }}
@@ -74,6 +80,7 @@ export function BottomNav() {
         })}
       </div>
       </nav>
+      </Portal>
     </>
   );
 }
