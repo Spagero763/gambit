@@ -32,6 +32,37 @@ const clampScore = (v: unknown) => {
 /** Survivors per cut: half the field, never below the final three. */
 const keepCount = (alive: number) => Math.max(3, Math.ceil(alive / 2));
 
+/**
+ * When may this round be force-advanced? A round gets a full window from the
+ * moment it actually starts. Prefer `round_started_at` (set on activation and
+ * on each cut); if it's absent (older rows, or the column not yet added) fall
+ * back to the original creation-anchored estimate — which stays identical to
+ * the old behaviour, so nothing regresses. `round` is guarded to >= 1 so a
+ * null/0 round can never yield an already-past deadline (the real bug: that let
+ * a fresh round be force-settled the instant it activated).
+ */
+function roundDeadline(t: { created_at: string; round: number | null; round_started_at?: string | null }): number {
+  const round = Number(t.round) || 1;
+  const start = t.round_started_at
+    ? new Date(t.round_started_at).getTime()
+    : new Date(t.created_at).getTime() + (round - 1) * ROUND_WINDOW_MS;
+  return start + ROUND_WINDOW_MS;
+}
+
+/**
+ * Stamp "this round started now". Best-effort and isolated: if the
+ * `round_started_at` column hasn't been added yet, this update simply no-ops
+ * (Supabase returns an error we ignore) without touching any other field, so
+ * round advancement and activation are never broken by its absence.
+ */
+async function markRoundStart(db: ReturnType<typeof supabaseAdmin>, id: number) {
+  try {
+    await db.from("tournaments").update({ round_started_at: new Date().toISOString() }).eq("id", id);
+  } catch {
+    /* column not present yet — the creation-anchored fallback still applies */
+  }
+}
+
 interface PlayerRow {
   address: string;
   score: number | null;
@@ -110,6 +141,7 @@ async function advanceOrSettle(db: ReturnType<typeof supabaseAdmin>, t: any, for
     .eq("tournament_id", t.id)
     .is("eliminated_round", null);
   await db.from("tournaments").update({ round: t.round + 1 }).eq("id", t.id);
+  await markRoundStart(db, t.id); // the survivors' new round starts now
   // round results: survivors get the next stage, the cut get the bad news
   const survivors = ranked.slice(0, keep).map((p) => p.address);
   void notify(survivors, {
@@ -249,6 +281,7 @@ export async function POST(req: NextRequest) {
         } else if (t.format === "table") {
           await seedTable(db, { ...t, status: "active" });
         } else {
+          await markRoundStart(db, Number(id)); // score cup: round 1 starts now
           const allPlayers = await loadPlayers(db, Number(id));
           void notify(
             allPlayers.map((p) => p.address),
@@ -347,8 +380,9 @@ export async function POST(req: NextRequest) {
       const players = await loadPlayers(db, Number(id));
       const alive = aliveOf(players);
       const allScored = alive.length > 0 && alive.every((p) => p.round_score !== null);
-      // each round gets its own window before anyone may force it forward
-      const deadline = new Date(t.created_at).getTime() + t.round * ROUND_WINDOW_MS;
+      // each round gets its own window (from when it actually started) before
+      // anyone may force it forward
+      const deadline = roundDeadline(t);
       if (!allScored && Date.now() < deadline) {
         return NextResponse.json(
           { error: "This round isn't finished yet", retryInMs: deadline - Date.now() },
@@ -384,6 +418,7 @@ export async function POST(req: NextRequest) {
         } else if (t.format === "table") {
           await seedTable(db, { ...t, status: "active" });
         } else {
+          await markRoundStart(db, Number(id)); // score cup: round 1 starts now
           void notify(seated, {
             title: "Your cup is live! 🏁",
             body: `Cup #${id} is full — the ${stageOf(seated.length)} has started. Play your run.`,
