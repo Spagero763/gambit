@@ -31,18 +31,35 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ error: "id must be a wallet address" }, { status: 400 });
       }
       if (action === "removeCupEntry") {
-        await db.from("cup_entries").delete().eq("week", weekKey(weekIndex())).eq("address", addr);
+        const { error } = await db.from("cup_entries").delete().eq("week", weekKey(weekIndex())).eq("address", addr);
+        if (error) return NextResponse.json({ error: error.message }, { status: 500 });
         return NextResponse.json({ ok: true, removed: addr });
       }
       const banned = action === "banWallet";
-      const { data: updated } = await db.from("profiles").update({ banned }).eq("address", addr).select("address");
+      // Never swallow these errors. A ban that reports success without writing
+      // is worse than no ban: settle reads `profiles.banned` per entrant, so a
+      // cheater with no profile row would sail through and get paid.
+      const { data: updated, error: upErr } = await db
+        .from("profiles")
+        .update({ banned })
+        .eq("address", addr)
+        .select("address");
+      if (upErr) return NextResponse.json({ error: `ban failed: ${upErr.message}` }, { status: 500 });
       if (!updated?.length) {
-        // no profile yet — create a minimal row so the ban sticks
-        await db.from("profiles").insert({ address: addr, name: "", avatar: "teal", banned });
+        // no profile yet (played the cup without ever saving one) — create the
+        // row so the flag has somewhere to live
+        const { error: insErr } = await db.from("profiles").insert({ address: addr, name: "", avatar: "teal", banned });
+        if (insErr) return NextResponse.json({ error: `ban failed: ${insErr.message}` }, { status: 500 });
       }
       if (banned) {
         // a banned wallet also loses its seat in the current cup
-        await db.from("cup_entries").delete().eq("week", weekKey(weekIndex())).eq("address", addr);
+        const { error: delErr } = await db.from("cup_entries").delete().eq("week", weekKey(weekIndex())).eq("address", addr);
+        if (delErr) return NextResponse.json({ error: `banned, but entry removal failed: ${delErr.message}` }, { status: 500 });
+      }
+      // read back the truth rather than trusting the write
+      const { data: check } = await db.from("profiles").select("banned").eq("address", addr).maybeSingle();
+      if (!!check?.banned !== banned) {
+        return NextResponse.json({ error: "ban did not persist — check the profiles table" }, { status: 500 });
       }
       return NextResponse.json({ ok: true, banned, address: addr });
     }
