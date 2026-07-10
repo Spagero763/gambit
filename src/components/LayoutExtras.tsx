@@ -12,6 +12,7 @@ const Tour = dynamic(() => import("@/components/Tour").then((m) => m.Tour), { ss
 const AchievementToast = dynamic(() => import("@/components/Achievements").then((m) => m.AchievementToast), { ssr: false });
 const RankUpCelebration = dynamic(() => import("@/components/RankUpCelebration").then((m) => m.RankUpCelebration), { ssr: false });
 const ProfileSync = dynamic(() => import("@/components/ProfileSync").then((m) => m.ProfileSync), { ssr: false });
+const ChatBubble = dynamic(() => import("@/components/ChatBubble").then((m) => m.ChatBubble), { ssr: false });
 
 export function LayoutExtras() {
   // mount after the browser has a quiet moment (or 1.2s, whichever first)
@@ -30,6 +31,7 @@ export function LayoutExtras() {
       <RankUpCelebration />
       <MusicPlayer />
       <Tour />
+      <ChatBubble />
     </>
   );
 }
