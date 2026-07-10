@@ -2,9 +2,10 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { MessageCircle, X, Send, Sparkles } from "lucide-react";
+import { X, Send } from "lucide-react";
 import { usePathname } from "next/navigation";
 import { Portal } from "@/components/Portal";
+import { GambitMark } from "@/components/Logo";
 import { askBot, SUGGESTIONS, type CupInfo } from "@/lib/chatbot";
 import { cn } from "@/lib/cn";
 
@@ -25,7 +26,7 @@ interface Msg {
 }
 
 const GREETING =
-  "Hey, I'm the Gambit helper. Ask me anything about playing, earning, or getting around. Tap a question to start.";
+  "Hi, I'm your Gambit guide. New here, or stuck on something? Ask me anything about the games, winning, or getting paid.";
 
 export function ChatBubble() {
   const pathname = usePathname();
@@ -133,9 +134,10 @@ export function ChatBubble() {
 
   return (
     <Portal>
-      {/* the bubble */}
+      {/* the bubble — the Gambit mark itself, so it reads as "Gambit is here",
+          not a generic AI widget */}
       <motion.button
-        aria-label="Open Gambit help"
+        aria-label="Ask Gambit"
         onPointerDown={onDown}
         onPointerMove={onMove}
         onPointerUp={onUp}
@@ -143,30 +145,31 @@ export function ChatBubble() {
         animate={{ scale: 1, opacity: 1 }}
         transition={{ type: "spring", stiffness: 300, damping: 20 }}
         whileTap={{ scale: dragging ? 1 : 0.9 }}
-        className="fixed z-[140] grid touch-none place-items-center rounded-full text-white shadow-pop"
+        className="fixed z-[140] grid touch-none place-items-center rounded-2xl border border-teal/30 bg-void-800"
         style={{
           left: pos.x,
           top: pos.y,
           width: BUBBLE,
           height: BUBBLE,
-          background: "linear-gradient(145deg, #7c5cff, #3ecf8e)",
+          boxShadow: "0 10px 30px -8px rgba(0,0,0,0.7), 0 0 0 1px rgba(62,207,142,0.15), 0 0 22px -6px rgba(62,207,142,0.5)",
           transition: dragging ? "none" : "left 0.32s cubic-bezier(0.22,1,0.36,1), top 0.32s cubic-bezier(0.22,1,0.36,1)",
         }}
       >
         <AnimatePresence mode="wait" initial={false}>
           {open ? (
-            <motion.span key="x" initial={{ rotate: -90, opacity: 0 }} animate={{ rotate: 0, opacity: 1 }} exit={{ rotate: 90, opacity: 0 }}>
+            <motion.span key="x" initial={{ rotate: -90, opacity: 0 }} animate={{ rotate: 0, opacity: 1 }} exit={{ rotate: 90, opacity: 0 }} className="text-ink">
               <X className="h-6 w-6" />
             </motion.span>
           ) : (
-            <motion.span key="c" initial={{ rotate: 90, opacity: 0 }} animate={{ rotate: 0, opacity: 1 }} exit={{ rotate: -90, opacity: 0 }}>
-              <MessageCircle className="h-6 w-6" />
+            <motion.span key="g" initial={{ scale: 0.6, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.6, opacity: 0 }}>
+              <GambitMark size={34} />
             </motion.span>
           )}
         </AnimatePresence>
+        {/* a real "online" dot, not an AI sparkle */}
         {!open && (
-          <span className="absolute -right-0.5 -top-0.5 grid h-4 w-4 place-items-center rounded-full bg-amber text-void">
-            <Sparkles className="h-2.5 w-2.5" />
+          <span className="absolute -right-1 -top-1 h-3.5 w-3.5 rounded-full border-2 border-void-800 bg-teal">
+            <span className="absolute inset-0 animate-ping rounded-full bg-teal/70" />
           </span>
         )}
       </motion.button>
@@ -191,12 +194,16 @@ export function ChatBubble() {
           >
             {/* header */}
             <div className="flex items-center gap-2.5 border-b border-line bg-void-700 px-4 py-3">
-              <span className="grid h-8 w-8 place-items-center rounded-full text-white" style={{ background: "linear-gradient(145deg, #7c5cff, #3ecf8e)" }}>
-                <MessageCircle className="h-4 w-4" />
-              </span>
+              <GambitMark size={34} />
               <div className="min-w-0 flex-1">
-                <p className="text-sm font-bold text-ink">Gambit helper</p>
-                <p className="text-[11px] text-teal">Here to help you play and earn</p>
+                <p className="text-sm font-bold text-ink">Ask Gambit</p>
+                <p className="flex items-center gap-1.5 text-[11px] text-ink-faint">
+                  <span className="relative flex h-2 w-2">
+                    <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-teal/70" />
+                    <span className="relative inline-flex h-2 w-2 rounded-full bg-teal" />
+                  </span>
+                  Online, replies instantly
+                </p>
               </div>
               <button onClick={() => setOpen(false)} aria-label="Close" className="text-ink-faint hover:text-ink">
                 <X className="h-4 w-4" />
@@ -207,14 +214,21 @@ export function ChatBubble() {
             <div ref={scrollRef} className="flex-1 space-y-2.5 overflow-y-auto px-3.5 py-3.5">
               {msgs.map((m, i) => (
                 <div key={i} className={cn("flex flex-col", m.from === "me" ? "items-end" : "items-start")}>
-                  <p
-                    className={cn(
-                      "max-w-[85%] rounded-2xl px-3.5 py-2.5 text-[13px] leading-snug",
-                      m.from === "me" ? "rounded-br-md bg-violet-bright text-white" : "rounded-bl-md bg-void-600 text-ink"
+                  <div className={cn("flex max-w-[88%] items-end gap-1.5", m.from === "me" && "flex-row-reverse")}>
+                    {m.from === "bot" && (
+                      <span className="mb-0.5 shrink-0 opacity-90">
+                        <GambitMark size={20} />
+                      </span>
                     )}
-                  >
-                    {m.text}
-                  </p>
+                    <p
+                      className={cn(
+                        "rounded-2xl px-3.5 py-2.5 text-[13px] leading-snug",
+                        m.from === "me" ? "rounded-br-md bg-violet-bright text-white" : "rounded-bl-md bg-void-600 text-ink"
+                      )}
+                    >
+                      {m.text}
+                    </p>
+                  </div>
                   {/* "did you mean" chips — tapping sends the exact question */}
                   {m.from === "bot" && m.suggestions && m.suggestions.length > 0 && (
                     <div className="mt-1.5 flex flex-wrap gap-1.5">
