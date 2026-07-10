@@ -4,6 +4,7 @@ import { verifyToken } from "@/lib/server/profileToken";
 import { goodIdRoot } from "@/lib/server/goodid";
 import { treasuryConfigured, treasuryUsdmBalance, payUsdm } from "@/lib/server/treasury";
 import { cupContract, cupWeekSettledOnChain, cupVaultBalance, settleCupOnChain } from "@/lib/server/cupChain";
+import { cupShareAmount, cupSharePaid, payCupShare } from "@/lib/server/cupShare";
 import { weekIndex, weekKey, weekSeed, weekStart, weekEnd, CUP_SPLIT } from "@/lib/cup";
 import { notify } from "@/lib/server/push";
 import { limited } from "@/lib/server/rateLimit";
@@ -58,6 +59,14 @@ export async function GET(req: NextRequest) {
       .eq("week", weekKey(i - 1))
       .maybeSingle();
 
+    // resolve winner display names so the podium shows people, not raw 0x…
+    if (last?.winners?.length) {
+      const addrs = (last.winners as Winner[]).map((w) => w.address);
+      const { data: profs } = await db.from("profiles").select("address,name").in("address", addrs);
+      const nameOf = Object.fromEntries((profs ?? []).map((p) => [p.address, p.name]));
+      last.winners = (last.winners as Winner[]).map((w) => ({ ...w, name: nameOf[w.address] || null }));
+    }
+
     return NextResponse.json({
       week: wk,
       open: CUP_OPEN,
@@ -71,6 +80,7 @@ export async function GET(req: NextRequest) {
       me: mine,
       joined: !!mine,
       last: last ?? null,
+      shareBonus: cupShareAmount(), // 0 = the share-your-win bonus is off
     });
   } catch (e: any) {
     return NextResponse.json({ error: e?.message ?? "Failed" }, { status: 500 });
@@ -294,6 +304,56 @@ export async function POST(req: NextRequest) {
         .update({ status: "settled", settled_at: new Date().toISOString(), settle_error: null, winners })
         .eq("week", wk);
       return NextResponse.json({ ok: true, settled: true, winners });
+    }
+
+    if (action === "share") {
+      // A top-3 winner who posted their result on X claims a bonus. The prize
+      // was already paid at settle; this is a carrot on top, never a gate.
+      const rl2 = limited(req, "cupshare", 5, 60_000);
+      if (rl2) return rl2;
+      const addr = verifyToken(String(body.token ?? ""));
+      if (!addr) return NextResponse.json({ error: "Sign in to claim" }, { status: 401 });
+
+      const amt = cupShareAmount();
+      if (!amt) return NextResponse.json({ error: "The share bonus isn't active right now" }, { status: 409 });
+
+      const url = String(body.tweetUrl ?? "").trim();
+      if (!/^https?:\/\/(x\.com|twitter\.com|mobile\.x\.com)\/[^/]+\/status\/\d+/i.test(url)) {
+        return NextResponse.json({ error: "Paste the link to your X post" }, { status: 400 });
+      }
+
+      // must be a top-3 winner of the most recent SETTLED week
+      const lastWk = weekKey(weekIndex() - 1);
+      const { data: row } = await db.from("cup_weeks").select("week,status,winners").eq("week", lastWk).maybeSingle();
+      if (!row || row.status !== "settled") {
+        return NextResponse.json({ error: "No settled cup to claim for yet" }, { status: 409 });
+      }
+      const winners = (row.winners as (Winner & { shareTx?: string; tweet?: string })[]) ?? [];
+      const meWinner = winners.find((w) => w.address.toLowerCase() === addr);
+      if (!meWinner) return NextResponse.json({ error: "Only this week's top 3 can claim the share bonus" }, { status: 403 });
+      if (meWinner.shareTx) return NextResponse.json({ ok: true, already: true, tx: meWinner.shareTx, amount: amt });
+
+      // chain is the source of truth for once-per-week
+      if (await cupSharePaid(lastWk, addr)) {
+        meWinner.shareTx = "onchain";
+        meWinner.tweet = url;
+        await db.from("cup_weeks").update({ winners }).eq("week", lastWk);
+        return NextResponse.json({ ok: true, already: true, amount: amt });
+      }
+      try {
+        const tx = await payCupShare(lastWk, addr);
+        meWinner.shareTx = tx;
+        meWinner.tweet = url;
+        await db.from("cup_weeks").update({ winners }).eq("week", lastWk);
+        void notify([addr], {
+          title: "Share bonus paid 🎉",
+          body: `${amt} USDm for sharing your Weekly Cup win just landed in your wallet.`,
+          url: "/tournaments",
+        });
+        return NextResponse.json({ ok: true, amount: amt, tx });
+      } catch {
+        return NextResponse.json({ error: "Couldn't send the bonus right now. Try again." }, { status: 500 });
+      }
     }
 
     return NextResponse.json({ error: "Unknown action" }, { status: 400 });

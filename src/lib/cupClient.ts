@@ -13,6 +13,9 @@ export interface CupWinner {
   address: string;
   amount: number;
   tx: string | null;
+  name?: string | null;
+  shareTx?: string; // set once the winner claimed the share bonus
+  tweet?: string;
 }
 
 export interface CupView {
@@ -28,6 +31,7 @@ export interface CupView {
   me: CupEntry | null;
   joined: boolean;
   last: { week: string; status: string; winners: CupWinner[] | null } | null;
+  shareBonus: number; // USDm bonus for a winner who posts their win (0 = off)
 }
 
 async function post(body: Record<string, unknown>) {
@@ -55,6 +59,14 @@ export async function joinCup(address: string): Promise<{ ok: boolean }> {
 
 export async function submitCupScore(address: string, score: number): Promise<{ ok: boolean; best: number }> {
   return post({ action: "score", address, score, auth: getToken(address) });
+}
+
+/** A winner claims their share-your-win bonus by pasting their X post link. */
+export async function shareCup(
+  address: string,
+  tweetUrl: string
+): Promise<{ ok: boolean; amount?: number; already?: boolean; tx?: string }> {
+  return post({ action: "share", token: getToken(address), tweetUrl });
 }
 
 /** Fire-and-forget: pay out LAST week if it hasn't been settled yet. */

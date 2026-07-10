@@ -10,6 +10,7 @@ import { hasToken, signIn } from "@/lib/profile";
 import { supabase } from "@/lib/supabase";
 import { fetchCup, joinCup, submitCupScore, settleLastCup, CupView } from "@/lib/cupClient";
 import { BlockBlitz } from "@/components/games/blocks/BlockBlitz";
+import { CupPodium } from "@/components/CupPodium";
 import { cn } from "@/lib/cn";
 
 const short = (a: string) => `${a.slice(0, 6)}…${a.slice(-4)}`;
@@ -238,20 +239,8 @@ export function WeeklyCup() {
         {err && <p className="mt-2 text-center text-[12px] text-rose">{err}</p>}
       </div>
 
-      {/* last week's podium */}
-      {podium.length > 0 && (
-        <div className="mt-4 border-t border-line pt-3">
-          <p className="text-[11px] font-semibold uppercase tracking-wide text-ink-faint">Last week&apos;s podium</p>
-          <div className="mt-1.5 flex flex-wrap gap-x-4 gap-y-1">
-            {podium.map((w, i) => (
-              <span key={w.address} className="text-[12px] text-ink-dim">
-                {MEDAL[i]} <span className="font-mono">{short(w.address)}</span>{" "}
-                <span className="text-teal">+{w.amount} USDm</span>
-              </span>
-            ))}
-          </div>
-        </div>
-      )}
+      {/* last week's podium + winner's share-to-claim bonus */}
+      {podium.length > 0 && <CupPodium winners={podium} shareBonus={cup.shareBonus ?? 0} onClaimed={refresh} />}
     </motion.div>
   );
 }
