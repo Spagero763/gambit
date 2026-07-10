@@ -164,7 +164,46 @@ export const SUGGESTIONS = [
 ];
 
 const FALLBACK =
-  "I am not sure about that one yet. Try one of these, or reach us on X at gambitcelo.";
+  "Good question. Here are the things I can help with, tap one or ask me another way. For anything else, reach us on X at gambitcelo.";
+
+// Conversation, not questions. New users open with "hi" far more than a real
+// question, so we greet warmly and point them at what to ask, instead of the
+// cold "I'm not sure". Checked BEFORE the knowledge matcher.
+// greet / thanks / bye are anchored to the WHOLE message (with optional filler),
+// so "hey how do i earn" still reaches the matcher and only a bare "hey" greets.
+const RE = {
+  greet: /^(hi+|hey+|hello+|yo+|sup|hiya|howdy|hola|gm|good ?(morning|afternoon|evening|day)|how ?far|howfar|wetin dey|wa?ssup|what'?s ?up)( there| gambit| bot| guys)?[\s!.,'"]*$/i,
+  thanks: /^(thanks?|thank ?you|thankyou|thanx|thx|tanks|much love|nice one|appreciate( it)?)[\s!.,'"]*$/i,
+  bye: /^(bye+|goodbye|see ?you|see ?ya|later|cya|good ?night)[\s!.,'"]*$/i,
+  help: /\b(what can you (do|help)|how can you help|what do you do|what can i ask|show me the menu|list of topics?)\b/i,
+  who: /\b(who are you|what are you|are you (a )?(bot|robot|human|real))\b/i,
+};
+
+function smallTalk(query: string): BotReply | null {
+  const q = query.trim();
+  if (RE.thanks.test(q))
+    return { text: "Anytime. Ask me anything else, or jump in and play. Good luck out there.", matched: true };
+  if (RE.help.test(q))
+    return {
+      text: "I can explain how to start, whether it is free, how to earn, the Weekly Cup, staked matches, cashing out, fees, and whether your money is safe. Tap one below or just ask.",
+      matched: true,
+      suggestions: SUGGESTIONS,
+    };
+  if (RE.who.test(q))
+    return {
+      text: "I am the Gambit helper. I answer questions about playing and earning so you never feel lost. What do you want to know?",
+      matched: true,
+      suggestions: SUGGESTIONS.slice(0, 4),
+    };
+  if (RE.bye.test(q)) return { text: "See you on the board. Good luck out there.", matched: true };
+  if (RE.greet.test(q))
+    return {
+      text: "Hey, welcome to Gambit. I can explain how to play, how to earn, and how to get around. What do you want to know?",
+      matched: true,
+      suggestions: SUGGESTIONS.slice(0, 4),
+    };
+  return null;
+}
 
 // Map the many ways people say a thing to one canonical word, so real questions
 // match even when the wording is not the same. Applied to BOTH the question and
@@ -218,7 +257,12 @@ export interface BotReply {
  * wrong thing about someone's money.
  */
 export function askBot(query: string, cup: CupInfo | null): BotReply {
-  if (!normalize(query)) return { text: FALLBACK, matched: false, suggestions: SUGGESTIONS.slice(0, 4) };
+  if (!query.trim()) return { text: FALLBACK, matched: false, suggestions: SUGGESTIONS.slice(0, 4) };
+
+  // greetings, thanks, "what can you do" — handle these before the matcher so a
+  // simple "hi" is met with a welcome, not a fallback
+  const chat = smallTalk(query);
+  if (chat) return chat;
 
   const ranked = ENTRIES.map((e) => ({ e, s: score(query, e) }))
     .sort((a, b) => b.s - a.s);
