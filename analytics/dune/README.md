@@ -1,10 +1,33 @@
 # Gambit on Dune
 
-Public on-chain analytics for **ArcadeEscrow** on Celo mainnet:
-`0xB34548Ad3A45C2a571f99341e5fb32abB4FACd05`
+Public on-chain analytics for Gambit's four Celo **mainnet** contracts. Every
+match, stake, payout and fee is a public event. These queries turn them into the
+dashboard we link from the MiniPay submission and the site.
 
-Every match, stake, payout and fee is a public event. These queries turn them
-into the dashboard we link from the MiniPay submission and the site.
+## The contracts (all verified on-chain 2026-07-09)
+
+| Contract | Address | Token | Emits |
+|---|---|---|---|
+| ArcadeEscrow | `0xB34548Ad3A45C2a571f99341e5fb32abB4FACd05` | any allowed | `MatchCreated/Joined/Activated/Settled/Cancelled` |
+| WeeklyCup | `0x6043bec74cfE8bF00D395DdddD2C2f85a9915A15` | USDm | `WeekSettled`, `Swept` |
+| RewardsVault (Referral) | `0xED328Ce807ad1F97472b119755fB1d43E1fD0A75` | USDm | `RewardPaid`, `Swept` |
+| RewardsVault (Claims) | `0x47302b7e3C7674bb307fd7768eA6d2462C12Ebd5` | G$ | `RewardPaid`, `Swept` |
+
+Owner of all four: `0x32a3596C25A98950E850E3531a0aA87f1506e5d7`.
+Relayer of all four: `0xa4fB1ED5abbaFC0820e5399aE9E61C9a3B16ACbe`.
+
+**Do NOT add `0x28825CB6a2D9f13947e4023317904A38Bd35dB9e`** — that is the escrow
+on **Sepolia testnet**. It is play money and would inflate the dashboard with
+fake volume. There has only ever been ONE mainnet escrow, so no history is
+missing: on-chain counts reconcile exactly with the app database
+(22 created = 16 settled + 6 cancelled; 16 settled = 11 duels + 5 tournaments).
+
+Tournaments and 1v1 duels share the **same** escrow, so `MatchSettled` counts
+both. That is why on-chain settles exceed the `matches` table alone.
+
+Both RewardsVaults share one ABI, so Dune decodes them into the same table.
+Separate them with `contract_address`, or by the `tag` field on `RewardPaid`
+(`daily` vs `referral`).
 
 ## Setup, in order
 

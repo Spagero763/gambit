@@ -130,15 +130,64 @@ ORDER BY 1;
 
 
 -- ============================================================
--- 7. Daily G$ rewards paid  (Claims vault, RewardsVault)
--- Vault: 0x47302b7e3C7674bb307fd7768eA6d2462C12Ebd5
--- RewardPaid topic0: 0xf79f6e9a...
+-- 7. Daily G$ rewards paid  (Claims vault)
+-- Vault: 0x47302b7e3C7674bb307fd7768eA6d2462C12Ebd5  (token: G$)
 -- ============================================================
 SELECT
     date_trunc('day', block_time) AS day,
-    count(*) AS rewards_paid
+    count(*) AS g_rewards_paid
 FROM celo.logs
 WHERE contract_address = 0x47302b7e3c7674bb307fd7768ea6d2462c12ebd5
-  AND topic0 = 0xf79f6e9aeaf88b46a1aaa7896898daa4182a97f19e130f520bad6030e2849c79
+  AND topic0 = 0xf79f6e9aeaf88b46a1aaa7896898daa4182a97f19e130f520bad6030e2849c79  -- RewardPaid
 GROUP BY 1
+ORDER BY 1;
+
+
+-- ============================================================
+-- 8. Referral rewards paid  (Referral vault)
+-- Vault: 0xED328Ce807ad1F97472b119755fB1d43E1fD0A75  (token: USDm)
+-- ============================================================
+SELECT
+    date_trunc('day', block_time) AS day,
+    count(*) AS referral_rewards_paid
+FROM celo.logs
+WHERE contract_address = 0xed328ce807ad1f97472b119755fb1d43e1fd0a75
+  AND topic0 = 0xf79f6e9aeaf88b46a1aaa7896898daa4182a97f19e130f520bad6030e2849c79  -- RewardPaid
+GROUP BY 1
+ORDER BY 1;
+
+
+-- ============================================================
+-- 9. Weekly Cup: weeks settled  (WeeklyCup)
+-- Vault: 0x6043bec74cfE8bF00D395DdddD2C2f85a9915A15  (token: USDm)
+-- WeekSettled: topic1 = week index (indexed uint256)
+-- ============================================================
+SELECT
+    block_time,
+    bytearray_to_uint256(topic1) AS week_index,
+    tx_hash
+FROM celo.logs
+WHERE contract_address = 0x6043bec74cfe8bf00d395dddd2c2f85a9915a15
+  AND topic0 = 0x41ea3f5df84b8e7e0955daec724844c6364095296fd020a6c49004c3377eb6c9  -- WeekSettled
+ORDER BY block_time DESC;
+
+
+-- ============================================================
+-- 10. All rewards paid across BOTH vaults, split by vault
+-- Both RewardsVaults share an ABI; tell them apart by address.
+-- ============================================================
+SELECT
+    date_trunc('day', block_time) AS day,
+    CASE contract_address
+        WHEN 0x47302b7e3c7674bb307fd7768ea6d2462c12ebd5 THEN 'Daily G$ claims'
+        WHEN 0xed328ce807ad1f97472b119755fb1d43e1fd0a75 THEN 'Referral rewards'
+    END AS reward_type,
+    count(*) AS payouts
+FROM celo.logs
+WHERE contract_address IN (
+        0x47302b7e3c7674bb307fd7768ea6d2462c12ebd5,
+        0xed328ce807ad1f97472b119755fb1d43e1fd0a75
+      )
+  AND topic0 = 0xf79f6e9aeaf88b46a1aaa7896898daa4182a97f19e130f520bad6030e2849c79
+GROUP BY 1, 2
 ORDER BY 1;
