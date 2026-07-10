@@ -32,6 +32,28 @@ interface ProfileRow {
   xp: number;
   streak: number;
 }
+/** Tournaments stake at the cup level, not on their bracket sub-matches. */
+interface TournamentRow {
+  id: number;
+  stake: string;
+  capacity: number;
+  status: string;
+  token: string | null;
+  decimals: number | null;
+}
+interface TournamentPlayerRow {
+  tournament_id: number;
+  address: string;
+}
+
+/** A row only counts as staked if real money was put on it. */
+const isStaked = (stake: string | null) => {
+  try {
+    return BigInt(stake || "0") > BigInt(0);
+  } catch {
+    return false;
+  }
+};
 
 function short(a: string) {
   return `${a.slice(0, 6)}…${a.slice(-4)}`;
@@ -48,16 +70,20 @@ const money = (n: number) => (n >= 1000 ? `${(n / 1000).toFixed(1)}k` : n.toFixe
 export function Stats() {
   const [matches, setMatches] = useState<MatchRow[] | null>(null);
   const [profiles, setProfiles] = useState<ProfileRow[] | null>(null);
+  const [tournaments, setTournaments] = useState<TournamentRow[] | null>(null);
+  const [cupPlayers, setCupPlayers] = useState<TournamentPlayerRow[] | null>(null);
 
   useEffect(() => {
     if (!supabase) {
       setMatches([]);
       setProfiles([]);
+      setTournaments([]);
+      setCupPlayers([]);
       return;
     }
     let active = true;
     (async () => {
-      const [m, p] = await Promise.all([
+      const [m, p, t, tp] = await Promise.all([
         supabase!
           .from("matches")
           .select("game,stake,creator,opponent,winner,status,token,decimals,created_at")
@@ -65,10 +91,22 @@ export function Stats() {
           .order("created_at", { ascending: false })
           .limit(2000),
         supabase!.from("profiles").select("address,last_played,xp,streak").limit(5000),
+        // tournaments hold their stake on the cup row; their bracket sub-matches
+        // are zero-stake, so cup money is invisible without this
+        supabase!
+          .from("tournaments")
+          .select("id,stake,capacity,status,token,decimals")
+          .in("status", ["active", "settling", "settled"])
+          .limit(2000),
+        // a player who only ever entered a cup still staked — their money is on
+        // the cup, not on any match row
+        supabase!.from("tournament_players").select("tournament_id,address").limit(5000),
       ]);
       if (!active) return;
       setMatches((m.data as MatchRow[]) ?? []);
       setProfiles((p.data as ProfileRow[]) ?? []);
+      setTournaments((t.data as TournamentRow[]) ?? []);
+      setCupPlayers((tp.data as TournamentPlayerRow[]) ?? []);
     })();
     return () => {
       active = false;
@@ -79,13 +117,20 @@ export function Stats() {
     const today = new Date().toISOString().slice(0, 10);
     const ms = matches ?? [];
     const ps = profiles ?? [];
+    const ts = tournaments ?? [];
+    const cps = cupPlayers ?? [];
+
+    // Only rows with real money on them are "staked". Tournament bracket
+    // sub-matches are zero-stake rows and must never be counted as staked
+    // matches, or as stakers — the cup itself holds the stake.
+    const stakedMatches = ms.filter((m) => isStaked(m.stake));
 
     const volume: Record<string, number> = {};
     const paid: Record<string, number> = {};
     const players = new Set<string>();
     let settled = 0;
 
-    for (const m of ms) {
+    for (const m of stakedMatches) {
       const dec = m.decimals ?? decimalsForToken(m.token);
       const sym = symbolForToken(m.token);
       const stake = Number(formatUnits(BigInt(m.stake || "0"), dec));
@@ -94,26 +139,48 @@ export function Stats() {
       if (m.opponent) players.add(m.opponent.toLowerCase());
       if (m.status === "settled") {
         settled += 1;
+        // a draw refunds both stakes rather than paying a winner, so it adds
+        // to volume but never to "paid to winners"
         if (m.winner) paid[sym] = (paid[sym] ?? 0) + stake * 2 * (1 - FEE);
       }
     }
 
+    // Cups: the pot is stake × capacity, and the top three share 95% of it.
+    const stakedCups = ts.filter((t) => isStaked(t.stake));
+    const stakedCupIds = new Set(stakedCups.map((t) => t.id));
+    for (const t of stakedCups) {
+      const dec = t.decimals ?? decimalsForToken(t.token);
+      const sym = symbolForToken(t.token);
+      const pot = Number(formatUnits(BigInt(t.stake || "0"), dec)) * (t.capacity || 0);
+      volume[sym] = (volume[sym] ?? 0) + pot;
+      if (t.status === "settled") {
+        settled += 1;
+        paid[sym] = (paid[sym] ?? 0) + pot * (1 - FEE);
+      }
+    }
+
+    // Someone who only ever entered a cup is still a staker. Their bracket
+    // sub-matches are zero-stake rows, so they'd be invisible without this.
+    for (const cp of cps) {
+      if (stakedCupIds.has(cp.tournament_id) && cp.address) players.add(cp.address.toLowerCase());
+    }
+
     const dau = ps.filter((p) => p.last_played === today).length;
     const topStreak = ps.reduce((mx, p) => Math.max(mx, p.streak || 0), 0);
-    const recent = ms.filter((m) => m.status === "settled").slice(0, 8);
+    const recent = stakedMatches.filter((m) => m.status === "settled").slice(0, 8);
 
     return {
       totalPlayers: ps.length || players.size,
       stakedPlayers: players.size,
       dau,
-      matches: ms.length,
+      matches: stakedMatches.length + stakedCups.length,
       settled,
       topStreak,
       volume,
       paid,
       recent,
     };
-  }, [matches, profiles]);
+  }, [matches, profiles, tournaments, cupPlayers]);
 
   const loading = matches === null || profiles === null;
   const volEntries = Object.entries(s.volume);
