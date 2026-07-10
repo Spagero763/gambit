@@ -20,6 +20,7 @@ import { useAccount } from "wagmi";
 import { play } from "@/lib/sfx";
 import { recordResult } from "@/lib/progress";
 import { submitScore } from "@/lib/scores";
+import { Portal } from "@/components/Portal";
 import { cn } from "@/lib/cn";
 
 const FILL: Record<Accent, string> = {
@@ -82,6 +83,22 @@ export function BlockBlitz({
   const reduce = useReducedMotion();
   const [over, setOver] = useState(false);
   const { address } = useAccount();
+  // the piece "held" under the finger while dragging, so it is always visible
+  const [ghost, setGhost] = useState<{ p: Piece; x: number; y: number } | null>(null);
+
+  // Free play deals a fresh board on every visit. The seed starts deterministic
+  // so the first server/client paint matches (no hydration mismatch), then we
+  // reseed on the client — otherwise the constant seed dealt the identical
+  // opening pieces every single game. Tournaments keep their fixed seed.
+  const dealt = useRef(false);
+  useEffect(() => {
+    if (tournament || dealt.current) return;
+    dealt.current = true;
+    seed.current = ((Date.now() ^ Math.floor(Math.random() * 0x7fffffff)) & 0x7fffffff) || 1;
+    const t = makePieces(rng);
+    setTray(t);
+    setSelected(t[0]?.id ?? null);
+  }, [tournament, rng]);
 
   const piece = useMemo(() => tray.find((p) => p.id === selected) ?? null, [tray, selected]);
 
@@ -170,23 +187,26 @@ export function BlockBlitz({
     c: hit.c - Math.floor(p.w / 2),
   });
 
-  const startDrag = (p: Piece) => {
+  const startDrag = (p: Piece, e: React.PointerEvent) => {
     if (over) return;
     setSelected(p.id);
-    const move = (e: PointerEvent) => {
-      const hit = cellFromPoint(e.clientX, e.clientY);
+    setGhost({ p, x: e.clientX, y: e.clientY });
+    const move = (ev: PointerEvent) => {
+      const hit = cellFromPoint(ev.clientX, ev.clientY);
       setHover(hit ? anchorFor(p, hit) : null);
+      setGhost({ p, x: ev.clientX, y: ev.clientY });
     };
-    const end = (e: PointerEvent) => {
+    const end = (ev: PointerEvent) => {
       window.removeEventListener("pointermove", move);
       window.removeEventListener("pointerup", end);
       window.removeEventListener("pointercancel", end);
-      const hit = cellFromPoint(e.clientX, e.clientY);
+      const hit = cellFromPoint(ev.clientX, ev.clientY);
       if (hit) {
         const a = anchorFor(p, hit);
         drop(a.r, a.c, p);
       }
       setHover(null);
+      setGhost(null);
     };
     window.addEventListener("pointermove", move);
     window.addEventListener("pointerup", end);
@@ -314,7 +334,7 @@ export function BlockBlitz({
             return (
               <button
                 key={p.id}
-                onPointerDown={() => startDrag(p)}
+                onPointerDown={(e) => startDrag(p, e)}
                 className={cn(
                   "flex touch-none items-center justify-center rounded-2xl border py-4 transition-all",
                   active ? "border-line-strong bg-void-700" : "border-line bg-void-800"
@@ -345,6 +365,27 @@ export function BlockBlitz({
         <p className="mt-3 text-center text-[11px] text-ink-faint">
           Drag a shape onto the board — or tap a shape, then tap a cell to drop it.
         </p>
+
+        {/* the piece held under the finger while dragging. Portaled to <body> so
+            the board's shake transform can't trap this fixed element, and lifted
+            above the finger so it is never hidden by the thumb. */}
+        {ghost && (
+          <Portal>
+            <div
+              className="pointer-events-none fixed z-[200] drop-shadow-[0_8px_16px_rgba(0,0,0,0.55)]"
+              style={{ left: ghost.x, top: ghost.y, transform: "translate(-50%, calc(-100% - 18px))" }}
+            >
+              <div className="grid gap-[3px]" style={{ gridTemplateColumns: `repeat(${ghost.p.w}, 34px)` }}>
+                {Array.from({ length: ghost.p.w * ghost.p.h }).map((_, i) => {
+                  const gr = Math.floor(i / ghost.p.w);
+                  const gc = i % ghost.p.w;
+                  const on = ghost.p.cells.some(([cr, cc]) => cr === gr && cc === gc);
+                  return <span key={i} className="relative h-[34px] w-[34px]">{on && <Block accent={ghost.p.color} />}</span>;
+                })}
+              </div>
+            </div>
+          </Portal>
+        )}
 
         <AnimatePresence>
           {over && (
