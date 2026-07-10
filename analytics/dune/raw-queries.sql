@@ -167,7 +167,7 @@ SELECT
     bytearray_to_uint256(topic1) AS week_index,
     tx_hash
 FROM celo.logs
-WHERE contract_address = 0x6043bec74cfe8bf00d395dddd2c2f85a9915a15
+WHERE contract_address = 0x6043bec74cfe8bf00d395ddddd2c2f85a9915a15
   AND topic0 = 0x41ea3f5df84b8e7e0955daec724844c6364095296fd020a6c49004c3377eb6c9  -- WeekSettled
 ORDER BY block_time DESC;
 
