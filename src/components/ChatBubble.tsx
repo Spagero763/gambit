@@ -21,6 +21,7 @@ const MOVE_THRESHOLD = 5; // px before a press counts as a drag, not a tap
 interface Msg {
   from: "bot" | "me";
   text: string;
+  suggestions?: string[];
 }
 
 const GREETING =
@@ -121,7 +122,7 @@ export function ChatBubble() {
     // a short, human-feeling think
     window.setTimeout(() => {
       setTyping(false);
-      setMsgs((m) => [...m, { from: "bot", text: reply.text }]);
+      setMsgs((m) => [...m, { from: "bot", text: reply.text, suggestions: reply.suggestions }]);
     }, 450 + Math.random() * 350);
   };
 
@@ -205,7 +206,7 @@ export function ChatBubble() {
             {/* messages */}
             <div ref={scrollRef} className="flex-1 space-y-2.5 overflow-y-auto px-3.5 py-3.5">
               {msgs.map((m, i) => (
-                <div key={i} className={cn("flex", m.from === "me" ? "justify-end" : "justify-start")}>
+                <div key={i} className={cn("flex flex-col", m.from === "me" ? "items-end" : "items-start")}>
                   <p
                     className={cn(
                       "max-w-[85%] rounded-2xl px-3.5 py-2.5 text-[13px] leading-snug",
@@ -214,6 +215,20 @@ export function ChatBubble() {
                   >
                     {m.text}
                   </p>
+                  {/* "did you mean" chips — tapping sends the exact question */}
+                  {m.from === "bot" && m.suggestions && m.suggestions.length > 0 && (
+                    <div className="mt-1.5 flex flex-wrap gap-1.5">
+                      {m.suggestions.map((s) => (
+                        <button
+                          key={s}
+                          onClick={() => send(s)}
+                          className="rounded-full border border-line bg-void-700 px-3 py-1.5 text-[11px] font-medium text-ink-dim transition-colors hover:border-teal/50 hover:text-ink"
+                        >
+                          {s}
+                        </button>
+                      ))}
+                    </div>
+                  )}
                 </div>
               ))}
               {typing && (

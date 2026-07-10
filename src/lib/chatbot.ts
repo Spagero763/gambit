@@ -33,7 +33,7 @@ const ENTRIES: Entry[] = [
   {
     id: "what",
     q: "What is Gambit?",
-    keywords: ["what is", "what's gambit", "about", "explain", "what does", "what can"],
+    keywords: ["what is gambit", "whats gambit", "about gambit", "explain gambit", "tell me about", "what can i do", "how does gambit"],
     a: () =>
       "Gambit is where you play classic board games like chess, Naija Whot, tic tac toe, snakes and Block Blitz. Play free against the bot to warm up, or stake a little and play a real person for real money. Win and it lands in your wallet the moment the game ends.",
   },
@@ -164,14 +164,29 @@ export const SUGGESTIONS = [
 ];
 
 const FALLBACK =
-  "I am not sure about that one yet. Try asking how to start, how to earn, or how the Weekly Cup works. For anything else, reach us on X at gambitcelo.";
+  "I am not sure about that one yet. Try one of these, or reach us on X at gambitcelo.";
 
-const normalize = (s: string) =>
-  s
-    .toLowerCase()
-    .replace(/[^a-z0-9$ ]/g, " ")
-    .replace(/\s+/g, " ")
-    .trim();
+// Map the many ways people say a thing to one canonical word, so real questions
+// match even when the wording is not the same. Applied to BOTH the question and
+// the keywords, so it stays consistent. Longer phrases first.
+const SYNONYMS: [RegExp, string][] = [
+  [/\bcash ?out\b|\btake out\b|\bpay ?out\b|\bredeem\b|\bwithdrawal\b|\bwithdrawing\b/g, "withdraw"],
+  [/\bmy money\b|\bfunds\b|\bearnings\b|\bwinnings\b|\bprofit\b/g, "money"],
+  [/\bsign ?up\b|\bregister\b|\bcreate (an )?account\b|\bget started\b|\bgetting started\b/g, "start"],
+  [/\bmake money\b|\bget paid\b|\bwin money\b/g, "earn"],
+  [/\blegit\b|\bscam\b|\brug\b|\btrustworthy\b|\breliable\b|\bsecure\b/g, "safe"],
+  [/\bnaira\b|\bpound\b|\bdollars?\b/g, "money"],
+  [/\bopponent\b|\bother player\b|\bsomeone else\b|\breal person\b|\bvs\b|\bversus\b/g, "opponent"],
+  [/\bgooddollar\b|\bgood dollar\b|\bgoodid\b|\bgood id\b/g, "verify"],
+  [/\brules\b|\bhow to win\b/g, "play"],
+  [/\bwhot\b|\bchess\b|\bsnakes?\b|\bladders?\b|\bblitz\b|\btic ?tac ?toe\b/g, "games"],
+];
+
+const normalize = (raw: string) => {
+  let s = ` ${raw.toLowerCase().replace(/[^a-z0-9$ ]/g, " ").replace(/\s+/g, " ").trim()} `;
+  for (const [re, to] of SYNONYMS) s = s.replace(re, to);
+  return s.replace(/\s+/g, " ").trim();
+};
 
 /** Score how well a question matches an entry. Phrase hits weigh more. */
 function score(query: string, e: Entry): number {
@@ -183,7 +198,7 @@ function score(query: string, e: Entry): number {
     if (n.includes(` ${k} `)) s += k.includes(" ") ? 3 : 2; // whole word / phrase
     else if (n.includes(k)) s += k.includes(" ") ? 2 : 1; // substring
   }
-  // a couple of shared words with the canonical question is a weak signal
+  // shared meaningful words with the canonical question are a weak signal
   const qWords = new Set(normalize(e.q).split(" ").filter((w) => w.length > 3));
   for (const w of normalize(query).split(" ")) if (w.length > 3 && qWords.has(w)) s += 0.5;
   return s;
@@ -192,21 +207,40 @@ function score(query: string, e: Entry): number {
 export interface BotReply {
   text: string;
   matched: boolean;
+  /** "did you mean" candidate questions, shown as tappable chips */
+  suggestions?: string[];
 }
 
-/** The whole bot: route a free-text question to the best curated answer. */
+/**
+ * Route a free-text question to the best curated answer — but only answer when
+ * confident. When the top match is weak or two answers are close, we OFFER the
+ * candidate questions instead of guessing, so the bot never confidently says the
+ * wrong thing about someone's money.
+ */
 export function askBot(query: string, cup: CupInfo | null): BotReply {
-  const q = normalize(query);
-  if (!q) return { text: FALLBACK, matched: false };
-  let best: Entry | null = null;
-  let bestScore = 0;
-  for (const e of ENTRIES) {
-    const s = score(query, e);
-    if (s > bestScore) {
-      bestScore = s;
-      best = e;
-    }
+  if (!normalize(query)) return { text: FALLBACK, matched: false, suggestions: SUGGESTIONS.slice(0, 4) };
+
+  const ranked = ENTRIES.map((e) => ({ e, s: score(query, e) }))
+    .sort((a, b) => b.s - a.s);
+  const top = ranked[0];
+  const second = ranked[1];
+
+  // Confident: a clear hit that is clearly ahead of the runner-up (this covers a
+  // single strong keyword like "withdraw" or "fees").
+  if (top.s >= 2 && top.s - second.s >= 1.5) return { text: top.e.a(cup), matched: true };
+  // Very strong hit, answer even if a second topic is somewhat close.
+  if (top.s >= 4) return { text: top.e.a(cup), matched: true };
+
+  // Some signal but two topics are close — ask rather than guess wrong.
+  if (top.s >= 1) {
+    const picks = ranked.filter((r) => r.s >= 1).slice(0, 3).map((r) => r.e.q);
+    return {
+      text: "I want to get this right. Did you mean one of these?",
+      matched: false,
+      suggestions: picks.length ? picks : SUGGESTIONS.slice(0, 4),
+    };
   }
-  if (best && bestScore >= 2) return { text: best.a(cup), matched: true };
-  return { text: FALLBACK, matched: false };
+
+  // No real signal.
+  return { text: FALLBACK, matched: false, suggestions: SUGGESTIONS.slice(0, 4) };
 }
