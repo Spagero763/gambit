@@ -12,6 +12,8 @@ const Tour = dynamic(() => import("@/components/Tour").then((m) => m.Tour), { ss
 const AchievementToast = dynamic(() => import("@/components/Achievements").then((m) => m.AchievementToast), { ssr: false });
 const RankUpCelebration = dynamic(() => import("@/components/RankUpCelebration").then((m) => m.RankUpCelebration), { ssr: false });
 const ProfileSync = dynamic(() => import("@/components/ProfileSync").then((m) => m.ProfileSync), { ssr: false });
+// the daily GoodDollar UBI popup — free money AND gas, so a new wallet can play
+const GoodDollarPopup = dynamic(() => import("@/components/GoodDollarPopup").then((m) => m.GoodDollarPopup), { ssr: false });
 const ChatBubble = dynamic(() => import("@/components/ChatBubble").then((m) => m.ChatBubble), { ssr: false });
 
 export function LayoutExtras() {
@@ -29,6 +31,7 @@ export function LayoutExtras() {
       <ProfileSync />
       <AchievementToast />
       <RankUpCelebration />
+      <GoodDollarPopup />
       <MusicPlayer />
       <Tour />
       <ChatBubble />
