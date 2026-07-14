@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Volume2, Music, User as UserIcon, Check, Camera, Trash2, ShieldCheck, Loader2, Wallet, Bell, LifeBuoy } from "lucide-react";
+import { Volume2, Music, User as UserIcon, Check, Camera, Trash2, ShieldCheck, Loader2, Wallet, Bell, LifeBuoy, KeyRound } from "lucide-react";
 import { PushToggle } from "@/components/PushToggle";
 import { useAccount, useSignMessage } from "wagmi";
 import { usePrivy } from "@privy-io/react-auth";
@@ -239,6 +239,9 @@ export function Settings() {
         </span>
       </a>
 
+      {/* your wallet is YOURS — key export (embedded wallets only) */}
+      <ExportWallet />
+
       {/* legal — required to be reachable in-app (MiniPay listing rule) */}
       <div className="mt-4 flex items-center justify-center gap-4 text-[11px] text-ink-faint">
         <Link href="/terms" className="transition-colors hover:text-ink">Terms of Service</Link>
@@ -246,6 +249,87 @@ export function Settings() {
         <Link href="/privacy" className="transition-colors hover:text-ink">Privacy Policy</Link>
       </div>
     </section>
+  );
+}
+
+/**
+ * Export your wallet's private key.
+ *
+ * This is what makes Gambit genuinely yours: the escrow has no owner withdraw,
+ * and you can walk away with your wallet whenever you like. Privy opens its own
+ * secure modal to reveal the key — it never touches our servers or our code.
+ *
+ * Only shown for Privy EMBEDDED wallets. People who signed in with MiniPay or
+ * another wallet already hold their own keys, so there is nothing to export.
+ */
+function ExportWallet() {
+  const { exportWallet, user, authenticated } = usePrivy();
+  const [confirming, setConfirming] = useState(false);
+  const [busy, setBusy] = useState(false);
+
+  const embedded = user?.linkedAccounts?.find(
+    (a: any) => a.type === "wallet" && a.walletClientType === "privy"
+  ) as { address?: string } | undefined;
+
+  if (!authenticated || !embedded?.address) return null;
+
+  return (
+    <div className="mt-6 rounded-2xl border border-line bg-void-800 p-4">
+      <div className="flex items-center gap-3">
+        <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-amber/15 text-amber">
+          <KeyRound className="h-4 w-4" />
+        </span>
+        <div className="min-w-0">
+          <p className="text-sm font-medium text-ink">Export your wallet</p>
+          <p className="text-[11px] text-ink-faint">
+            This wallet is yours. Take the key and use it in any wallet app you like.
+          </p>
+        </div>
+      </div>
+
+      {!confirming ? (
+        <button
+          onClick={() => setConfirming(true)}
+          className="mt-3 w-full rounded-xl border border-line bg-void-700 py-2.5 text-[13px] font-semibold text-ink transition-colors hover:border-amber/40"
+        >
+          Show my private key
+        </button>
+      ) : (
+        <div className="mt-3 rounded-xl border border-rose/40 bg-rose/[0.07] p-3">
+          <p className="text-[12px] font-semibold text-rose">Read this first</p>
+          <p className="mt-1 text-[11px] leading-snug text-ink-dim">
+            Anyone who has this key can take everything in your wallet. Never share it, never paste it into any website,
+            and never send it to anyone, including us. If you lose it, nobody can recover it for you.
+          </p>
+          <div className="mt-3 flex gap-2">
+            <button
+              onClick={() => setConfirming(false)}
+              className="flex-1 rounded-xl border border-line bg-void-700 py-2.5 text-[12px] font-semibold text-ink-dim transition-colors hover:text-ink"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={async () => {
+                setBusy(true);
+                try {
+                  await exportWallet({ address: embedded.address as string });
+                } catch {
+                  /* user closed the modal */
+                } finally {
+                  setBusy(false);
+                  setConfirming(false);
+                }
+              }}
+              disabled={busy}
+              className="flex-1 inline-flex items-center justify-center gap-1.5 rounded-xl bg-rose py-2.5 text-[12px] font-bold text-white disabled:opacity-60"
+            >
+              {busy ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : null}
+              I understand, show it
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
   );
 }
 
