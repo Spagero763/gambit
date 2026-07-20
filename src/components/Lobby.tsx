@@ -9,6 +9,8 @@ import { useAccount } from "wagmi";
 import { supabase } from "@/lib/supabase";
 import { GAMES } from "@/lib/games";
 import { GameCover } from "@/components/art/GameCover";
+import { useProfiles, displayName } from "@/lib/profiles";
+import { SkeletonList } from "@/components/Skeleton";
 import { symbolForToken } from "@/lib/tokens";
 import { cn } from "@/lib/cn";
 
@@ -27,9 +29,6 @@ interface Room {
   decimals: number | null;
 }
 
-function short(a: string) {
-  return `${a.slice(0, 6)}…${a.slice(-4)}`;
-}
 
 function relTime(iso: string) {
   const d = (Date.now() - new Date(iso).getTime()) / 1000;
@@ -41,6 +40,7 @@ function relTime(iso: string) {
 
 export function Lobby() {
   const [rooms, setRooms] = useState<Room[] | null>(null);
+  const profiles = useProfiles((rooms ?? []).map((r) => r.creator));
   const [refreshing, setRefreshing] = useState(false);
   const { address } = useAccount();
   const me = address?.toLowerCase();
@@ -106,7 +106,7 @@ export function Lobby() {
       </Link>
 
       {rooms === null ? (
-        <p className="mt-4 rounded-2xl border border-line bg-void-700 px-4 py-8 text-center text-sm text-ink-faint">Loading rooms…</p>
+        <div className="mt-4"><SkeletonList rows={3} /></div>
       ) : rooms.length === 0 ? (
         <div className="mt-4 rounded-2xl border border-line bg-void-700 px-4 py-10 text-center">
           <span className="mx-auto grid h-12 w-12 place-items-center rounded-xl bg-void-600 text-teal">
@@ -139,7 +139,7 @@ export function Lobby() {
                   <div className="min-w-0 flex-1">
                     <p className="text-sm font-semibold text-ink">{g?.name ?? r.game}</p>
                     <p className="truncate text-[11px] text-ink-faint">
-                      {mine ? "Your room" : short(r.creator)} · #{r.id} · {relTime(r.created_at)}
+                      {mine ? "Your room" : displayName(r.creator, profiles[r.creator.toLowerCase()])} · #{r.id} · {relTime(r.created_at)}
                     </p>
                   </div>
                   <div className="text-right">

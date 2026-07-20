@@ -6,6 +6,8 @@ import { Trophy, Timer, Play, Swords } from "lucide-react";
 import { useAccount } from "wagmi";
 import { supabase } from "@/lib/supabase";
 import { weekStart, weekEnd } from "@/lib/scores";
+import { useProfiles, displayName } from "@/lib/profiles";
+import { SkeletonList } from "@/components/Skeleton";
 import { cn } from "@/lib/cn";
 
 interface ScoreRow {
@@ -14,9 +16,6 @@ interface ScoreRow {
   created_at: string;
 }
 
-function short(a: string) {
-  return `${a.slice(0, 6)}…${a.slice(-4)}`;
-}
 
 function useCountdown(target: Date) {
   const [now, setNow] = useState(() => Date.now());
@@ -69,6 +68,7 @@ export function Events() {
     return Array.from(best.entries()).map(([address, score]) => ({ address, score })).sort((a, b) => b.score - a.score);
   }, [rows]);
 
+  const profiles = useProfiles(standings.map((s) => s.address));
   const myRank = me ? standings.findIndex((s) => s.address === me) : -1;
   const myBest = myRank >= 0 ? standings[myRank].score : 0;
 
@@ -108,7 +108,7 @@ export function Events() {
 
       <h3 className="mb-3 mt-7 text-[15px] font-semibold tracking-tight">Standings</h3>
       {rows === null ? (
-        <p className="rounded-2xl border border-line bg-void-700 px-4 py-8 text-center text-sm text-ink-faint">Loading…</p>
+        <SkeletonList rows={5} />
       ) : standings.length === 0 ? (
         <div className="rounded-2xl border border-line bg-void-700 px-4 py-10 text-center">
           <span className="mx-auto grid h-12 w-12 place-items-center rounded-xl bg-void-600 text-rose">
@@ -136,8 +136,8 @@ export function Events() {
                 <span className="grid h-9 w-9 place-items-center rounded-lg bg-void-600 text-[11px] font-semibold text-ink-dim">
                   {s.address.slice(2, 4).toUpperCase()}
                 </span>
-                <p className="min-w-0 flex-1 truncate font-mono text-[13px] font-medium text-ink">
-                  {short(s.address)} {isMe && <span className="text-teal">· you</span>}
+                <p className="min-w-0 flex-1 truncate text-[13px] font-medium text-ink">
+                  {displayName(s.address, profiles[s.address.toLowerCase()])} {isMe && <span className="text-teal">· you</span>}
                 </p>
                 <p className="nums text-sm font-semibold text-ink">{s.score.toLocaleString()}</p>
               </li>

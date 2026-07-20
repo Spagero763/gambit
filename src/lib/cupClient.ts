@@ -7,6 +7,7 @@ import { getToken } from "@/lib/profile";
 export interface CupEntry {
   address: string;
   score: number;
+  name?: string | null;
 }
 
 export interface CupWinner {

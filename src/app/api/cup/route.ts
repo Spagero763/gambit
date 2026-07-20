@@ -50,7 +50,16 @@ export async function GET(req: NextRequest) {
       .order("score", { ascending: false })
       .order("address", { ascending: true })
       .limit(50);
-    const board = entries ?? [];
+    let board: { address: string; score: number; name?: string | null }[] = entries ?? [];
+    // people, not hex: attach display names so the board reads like a game
+    if (board.length) {
+      const { data: profs } = await db
+        .from("profiles")
+        .select("address,name")
+        .in("address", board.map((e) => e.address));
+      const nameOf = Object.fromEntries((profs ?? []).map((p) => [p.address, p.name]));
+      board = board.map((e) => ({ ...e, name: nameOf[e.address] || null }));
+    }
     const mine = me ? board.find((e) => e.address === me) ?? null : null;
 
     const { data: last } = await db

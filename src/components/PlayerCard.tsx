@@ -13,7 +13,7 @@ import { ShareButton } from "@/components/ShareButton";
 import { AnimatedNumber } from "@/components/motion/AnimatedNumber";
 import { inviteUrl } from "@/lib/share";
 
-const short = (a?: string) => (a ? `${a.slice(0, 6)}…${a.slice(-4)}` : "Player");
+import { handleFor } from "@/lib/handle";
 
 /**
  * The premium player identity card: avatar + rank emblem, named rank and
@@ -29,7 +29,7 @@ export function PlayerCard() {
   const { level } = levelInfo(p.xp);
   const rank = rankForXp(p.xp);
   const winRate = p.played > 0 ? Math.round((p.wins / p.played) * 100) : 0;
-  const name = settings.name || short(address);
+  const name = settings.name || handleFor(address);
   const flex = `${rank.name} rank on Gambit, level ${level}, winning ${winRate} percent of my games. Come lose to me.`;
 
   return (

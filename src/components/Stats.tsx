@@ -7,6 +7,8 @@ import { Users, Activity, Swords, Coins, Trophy, Flame, ShieldCheck } from "luci
 import { supabase } from "@/lib/supabase";
 import { symbolForToken, decimalsForToken } from "@/lib/tokens";
 import { GAMES } from "@/lib/games";
+import { useProfiles, displayName } from "@/lib/profiles";
+import { Skeleton } from "@/components/Skeleton";
 import { Counter } from "@/components/Counter";
 import { cn } from "@/lib/cn";
 
@@ -55,9 +57,6 @@ const isStaked = (stake: string | null) => {
   }
 };
 
-function short(a: string) {
-  return `${a.slice(0, 6)}…${a.slice(-4)}`;
-}
 function relTime(iso: string) {
   const d = (Date.now() - new Date(iso).getTime()) / 1000;
   if (d < 60) return "just now";
@@ -182,6 +181,9 @@ export function Stats() {
     };
   }, [matches, profiles, tournaments, cupPlayers]);
 
+  // names for the recent-results winners (people, never 0x)
+  const winnerProfiles = useProfiles(s.recent.filter((m) => m.winner).map((m) => m.winner!));
+
   const loading = matches === null || profiles === null;
   const volEntries = Object.entries(s.volume);
   const paidEntries = Object.entries(s.paid);
@@ -203,7 +205,15 @@ export function Stats() {
       </p>
 
       {loading ? (
-        <p className="mt-6 rounded-2xl border border-line bg-void-700 px-4 py-10 text-center text-sm text-ink-faint">Loading…</p>
+        <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-3" role="status" aria-label="Loading">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <div key={i} className="rounded-2xl border border-line bg-void-800 p-4" style={{ opacity: 1 - i * 0.1 }}>
+              <Skeleton className="h-8 w-8 rounded-xl" />
+              <Skeleton className="mt-3 h-5 w-14" />
+              <Skeleton className="mt-1.5 h-2.5 w-20" />
+            </div>
+          ))}
+        </div>
       ) : (
         <>
           <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-3">
@@ -237,7 +247,7 @@ export function Stats() {
                     <div>
                       <p className="text-sm font-medium text-ink">{NAME[m.game] ?? m.game}</p>
                       <p className="text-[11px] text-ink-faint">
-                        {draw ? "Draw · refunded" : `${short(m.winner!)} won`} · {relTime(m.created_at)} ago
+                        {draw ? "Draw · refunded" : `${displayName(m.winner!, winnerProfiles[m.winner!.toLowerCase()])} won`} · {relTime(m.created_at)} ago
                       </p>
                     </div>
                     <p className="nums text-sm font-semibold text-teal">

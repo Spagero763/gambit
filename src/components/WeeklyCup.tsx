@@ -11,9 +11,9 @@ import { supabase } from "@/lib/supabase";
 import { fetchCup, joinCup, submitCupScore, settleLastCup, CupView } from "@/lib/cupClient";
 import { BlockBlitz } from "@/components/games/blocks/BlockBlitz";
 import { CupPodium } from "@/components/CupPodium";
+import { displayName } from "@/lib/handle";
 import { cn } from "@/lib/cn";
 
-const short = (a: string) => `${a.slice(0, 6)}…${a.slice(-4)}`;
 const MEDAL = ["🥇", "🥈", "🥉"];
 
 function timeLeft(endsAt: number) {
@@ -186,7 +186,7 @@ export function WeeklyCup() {
               )}
             >
               <span className="w-6 text-center">{MEDAL[i] ?? `${i + 1}.`}</span>
-              <span className="font-mono text-xs">{short(e.address)}</span>
+              <span className="truncate text-[13px] font-medium">{displayName((e as { name?: string | null }).name, e.address)}</span>
               {e.address === address?.toLowerCase() && (
                 <span className="rounded-full bg-teal/15 px-1.5 text-[10px] font-semibold text-teal">you</span>
               )}

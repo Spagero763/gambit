@@ -6,12 +6,12 @@ import { Loader2, Check, Share2, PartyPopper } from "lucide-react";
 import { useAccount } from "wagmi";
 import { CupWinner, shareCup } from "@/lib/cupClient";
 import { ShareButton } from "@/components/ShareButton";
+import { displayName } from "@/lib/handle";
 import { inviteUrl } from "@/lib/share";
 import { cn } from "@/lib/cn";
 
 const MEDAL = ["🥇", "🥈", "🥉"];
-const short = (a: string) => `${a.slice(0, 6)}…${a.slice(-4)}`;
-const nameOf = (w: CupWinner) => (w.name && w.name.trim()) || short(w.address);
+const nameOf = (w: CupWinner) => displayName(w.name, w.address);
 // visual order: 2nd, 1st, 3rd, with the champion tallest in the middle
 const ORDER = [1, 0, 2];
 const HEIGHT = ["h-16", "h-24", "h-12"];
