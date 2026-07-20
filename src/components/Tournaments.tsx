@@ -15,6 +15,7 @@ import { tokensFor, StakeToken, symbolForToken, decimalsForToken } from "@/lib/t
 import { hasToken, signIn } from "@/lib/profile";
 import { registerTournament, listTournaments, TournamentRow } from "@/lib/tournamentClient";
 import { WeeklyCup } from "@/components/WeeklyCup";
+import { SkeletonList } from "@/components/Skeleton";
 import { cn } from "@/lib/cn";
 
 const FEE = 0.05;
@@ -285,7 +286,7 @@ export function Tournaments() {
       <div className="mt-7">
         <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-ink-faint">Join a tournament</p>
         {rows === null ? (
-          <p className="text-sm text-ink-faint">Loading…</p>
+          <SkeletonList rows={3} />
         ) : rows.length === 0 ? (
           <p className="rounded-2xl border border-line bg-void-800 px-4 py-6 text-center text-sm text-ink-faint">No open tournaments yet. Create the first one above.</p>
         ) : (

@@ -2,7 +2,8 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { motion } from "framer-motion";
-import { Wallet, ShieldCheck, Check, Loader2, Share2, Copy, Send } from "lucide-react";
+import { Wallet, ShieldCheck, Check, Loader2, Share2, Copy, Send, UserCog, Volume2, KeyRound, LifeBuoy, ChevronRight } from "lucide-react";
+import Link from "next/link";
 import { inviteUrl } from "@/lib/share";
 import { ShareButton } from "@/components/ShareButton";
 import { formatUnits } from "viem";
@@ -22,6 +23,7 @@ import { GoodIdCard } from "@/components/GoodIdCard";
 import { symbolForToken } from "@/lib/tokens";
 import { ProgressCard } from "@/components/Daily";
 import { Achievements } from "@/components/Achievements";
+import { SkeletonList } from "@/components/Skeleton";
 import { GAMES } from "@/lib/games";
 import { cn } from "@/lib/cn";
 
@@ -273,10 +275,14 @@ export function Profile() {
 
       <Achievements />
 
+      {/* account — the Settings essentials, reachable from You (office-hours
+          feedback: people expected this here, not only behind the gear) */}
+      <AccountLinks />
+
       <h2 className="mb-3 mt-7 text-[15px] font-semibold tracking-tight">Recent matches</h2>
 
       {rows === null && supabase ? (
-        <p className="rounded-2xl border border-line bg-void-700 px-4 py-6 text-center text-sm text-ink-faint">Loading…</p>
+        <SkeletonList rows={3} />
       ) : played.length === 0 ? (
         <div className="rounded-2xl border border-line bg-void-700 px-4 py-8 text-center">
           <p className="text-sm text-ink-dim">No staked matches yet.</p>
@@ -327,6 +333,54 @@ export function Profile() {
         </ul>
       )}
     </section>
+  );
+}
+
+/**
+ * The Settings essentials, surfaced on the You tab. Office-hours feedback:
+ * people open You expecting their account controls and only found them behind
+ * the header gear. Compact link rows — no duplication, everything still lives
+ * in /settings, this is the front door people actually look for.
+ */
+function AccountLinks() {
+  const rows = [
+    { href: "/settings", icon: UserCog, label: "Edit name & avatar", sub: "How you appear on leaderboards" },
+    { href: "/settings", icon: Volume2, label: "Sounds & notifications", sub: "Game sounds, music, match alerts" },
+    { href: "/settings", icon: KeyRound, label: "Export your wallet", sub: "Your key, take it anywhere" },
+  ];
+  return (
+    <div className="mt-7">
+      <h2 className="mb-3 text-[15px] font-semibold tracking-tight">Account</h2>
+      <div className="overflow-hidden rounded-2xl border border-line bg-void-800">
+        {rows.map((r) => (
+          <Link key={r.label} href={r.href} className="flex items-center gap-3 border-b border-line px-4 py-3.5 transition-colors last:border-b-0 hover:bg-void-700">
+            <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-void-600 text-ink-dim">
+              <r.icon className="h-4 w-4" />
+            </span>
+            <span className="min-w-0 flex-1">
+              <span className="block text-sm font-medium text-ink">{r.label}</span>
+              <span className="block truncate text-[11px] text-ink-faint">{r.sub}</span>
+            </span>
+            <ChevronRight className="h-4 w-4 shrink-0 text-ink-faint" />
+          </Link>
+        ))}
+        <a
+          href="https://wa.me/2348060158364?text=Hi%20Gambit%20support%2C%20I%20need%20help%20with"
+          target="_blank"
+          rel="noreferrer"
+          className="flex items-center gap-3 px-4 py-3.5 transition-colors hover:bg-void-700"
+        >
+          <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-teal/15 text-teal">
+            <LifeBuoy className="h-4 w-4" />
+          </span>
+          <span className="min-w-0 flex-1">
+            <span className="block text-sm font-medium text-ink">Help on WhatsApp</span>
+            <span className="block truncate text-[11px] text-ink-faint">A real person replies fast</span>
+          </span>
+          <ChevronRight className="h-4 w-4 shrink-0 text-ink-faint" />
+        </a>
+      </div>
+    </div>
   );
 }
 

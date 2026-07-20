@@ -101,14 +101,38 @@ function noise(o: NoiseOpts = {}) {
 
 type Sfx = "tap" | "place" | "win" | "lose" | "deal" | "roll" | "clear" | "capture" | "check";
 
+// Haptics paired with each sound — the fifth feedback pillar (flash, shake,
+// floating text, sound, particles… and touch). A tiny physical tick makes every
+// move feel tactile on phones. Patterns in ms; iOS ignores vibrate() (no-op).
+const HAPTIC: Record<Sfx, number | number[]> = {
+  tap: 8,
+  place: 12,
+  capture: 25,
+  check: 18,
+  deal: 10,
+  roll: [10, 30, 10],
+  clear: 30,
+  win: [30, 50, 30, 50, 80],
+  lose: 60,
+};
+
+function buzz(sound: Sfx) {
+  try {
+    if (typeof navigator !== "undefined" && "vibrate" in navigator) navigator.vibrate(HAPTIC[sound]);
+  } catch {
+    /* not supported — fine */
+  }
+}
+
 export function play(sound: Sfx) {
   const s = loadSettings();
   if (!s.soundOn) return;
+  const v = Math.min(1, Math.max(0, s.volume));
+  if (v <= 0) return; // muted mutes the haptics too — one switch rules all
+  buzz(sound);
   const ac = audio();
   if (!ac) return;
   if (ac.state === "suspended") ac.resume().catch(() => {});
-  const v = Math.min(1, Math.max(0, s.volume));
-  if (v <= 0) return;
   const V = (x: number) => x * v;
 
   switch (sound) {

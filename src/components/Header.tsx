@@ -1,10 +1,11 @@
 "use client";
 
-import { Settings as SettingsIcon, HelpCircle } from "lucide-react";
+import { Settings as SettingsIcon, HelpCircle, Volume2, VolumeX } from "lucide-react";
 import Link from "next/link";
 import { motion, useScroll, useTransform } from "framer-motion";
 import { Logo } from "./Logo";
 import { WalletPill } from "./WalletPill";
+import { useSettings } from "@/lib/settings";
 
 /** Sticky header that condenses as you scroll — the chrome feels alive. */
 export function Header() {
@@ -31,6 +32,7 @@ export function Header() {
           </motion.div>
         </Link>
         <div className="flex items-center gap-2">
+          <MuteButton />
           <button
             aria-label="How Gambit works"
             onClick={() => window.dispatchEvent(new Event("gambit:tour"))}
@@ -49,5 +51,25 @@ export function Header() {
         </div>
       </motion.div>
     </header>
+  );
+}
+
+/**
+ * One-tap mute, always visible. Sound effects ship ON (they make the games feel
+ * alive) and this is the promised escape hatch — no popup asking about sound,
+ * just an icon that is there when someone in a quiet place needs it. Muting
+ * zeroes the SFX volume and pauses music; unmuting restores a sensible volume.
+ */
+function MuteButton() {
+  const [settings, update] = useSettings();
+  const muted = settings.volume <= 0 && !settings.musicOn;
+  return (
+    <button
+      aria-label={muted ? "Unmute sounds" : "Mute all sounds"}
+      onClick={() => update(muted ? { volume: 0.5 } : { volume: 0, musicOn: false })}
+      className="grid h-10 w-10 place-items-center rounded-xl border border-line bg-void-700 text-ink-dim transition-colors hover:text-ink"
+    >
+      {muted ? <VolumeX className="h-[18px] w-[18px]" /> : <Volume2 className="h-[18px] w-[18px]" />}
+    </button>
   );
 }

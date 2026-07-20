@@ -17,7 +17,14 @@ interface Msg {
   created_at: string;
 }
 
-const QUICK = ["GG 🤝", "Nice move!", "🔥", "😅", "Your turn…", "Rematch?"];
+// one-tap taunts — the banter layer. These pop BIG over the board for both
+// players (see the floating overlay below), because playing your cousin at Whot
+// was never quiet.
+const QUICK = ["🔥", "😂", "😮‍💨", "Is that all? 😏", "Too easy 😎", "Hurry up ⏳", "Nice move 👌", "GG 🤝", "Rematch?"];
+const TAUNT_SET = new Set(QUICK);
+// any short message with no letters or digits is treated as an emoji reaction
+const emojiOnly = (body: string) => body.length <= 8 && !/[a-zA-Z0-9]/.test(body);
+const isTaunt = (body: string) => TAUNT_SET.has(body) || emojiOnly(body.trim());
 
 /**
  * In-match chat: floating bubble with unread badge, slide-up panel, quick
@@ -29,6 +36,9 @@ export function MatchChat({ matchId, me }: { matchId: bigint; me: string }) {
   const [msgs, setMsgs] = useState<Msg[]>([]);
   const [draft, setDraft] = useState("");
   const [unread, setUnread] = useState(0);
+  // a taunt currently popping over the board (replaced by the next one)
+  const [taunt, setTaunt] = useState<{ key: number; body: string; mine: boolean } | null>(null);
+  const tauntTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const listRef = useRef<HTMLDivElement>(null);
   const openRef = useRef(open);
   openRef.current = open;
@@ -41,6 +51,13 @@ export function MatchChat({ matchId, me }: { matchId: bigint; me: string }) {
     requestAnimationFrame(() => {
       listRef.current?.scrollTo({ top: listRef.current.scrollHeight, behavior: "smooth" });
     });
+  }, []);
+
+  /** Pop a taunt big over the board for ~2s; a newer one replaces it. */
+  const popTaunt = useCallback((body: string, mine: boolean) => {
+    if (tauntTimer.current) clearTimeout(tauntTimer.current);
+    setTaunt({ key: Date.now(), body, mine });
+    tauntTimer.current = setTimeout(() => setTaunt(null), 2200);
   }, []);
 
   const load = useCallback(async () => {
@@ -67,7 +84,8 @@ export function MatchChat({ matchId, me }: { matchId: bigint; me: string }) {
             setMsgs((prev) => (prev.some((x) => x.id === m.id) ? prev : [...prev, m]));
             if (m.sender !== meLower) {
               play("place");
-              if (!openRef.current) setUnread((u) => u + 1);
+              if (isTaunt(m.body)) popTaunt(m.body, false);
+              else if (!openRef.current) setUnread((u) => u + 1);
             }
           }
         )
@@ -78,7 +96,7 @@ export function MatchChat({ matchId, me }: { matchId: bigint; me: string }) {
     }
     const t = setInterval(load, 5000);
     return () => clearInterval(t);
-  }, [matchId, meLower, load]);
+  }, [matchId, meLower, load, popTaunt]);
 
   useEffect(() => {
     if (open) {
@@ -94,6 +112,7 @@ export function MatchChat({ matchId, me }: { matchId: bigint; me: string }) {
     // optimistic echo
     const tmp: Msg = { id: -Date.now(), sender: meLower, body, created_at: new Date().toISOString() };
     setMsgs((prev) => [...prev, tmp]);
+    if (isTaunt(body)) popTaunt(body, true);
     scrollDown();
     try {
       await fetch("/api/match/chat", {
@@ -108,6 +127,30 @@ export function MatchChat({ matchId, me }: { matchId: bigint; me: string }) {
 
   return (
     <>
+      {/* taunts pop big over the board — the banter both players see */}
+      <AnimatePresence>
+        {taunt && (
+          <motion.div
+            key={taunt.key}
+            initial={{ opacity: 0, scale: 0.4, y: 18 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.7, y: -24 }}
+            transition={{ type: "spring", stiffness: 320, damping: 18 }}
+            className="pointer-events-none fixed inset-x-0 top-[22%] z-50 flex justify-center px-6"
+          >
+            <span
+              className={cn(
+                "rounded-3xl border px-5 py-3 shadow-pop backdrop-blur",
+                emojiOnly(taunt.body) ? "text-5xl leading-none" : "text-lg font-bold",
+                taunt.mine ? "border-teal/40 bg-void-800/90 text-teal" : "border-amber/40 bg-void-800/90 text-amber"
+              )}
+            >
+              {taunt.body}
+            </span>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* floating bubble — pinned to the right edge at mid-height so it never
           sits over the hand of cards (bottom) or the opponent strip (top) */}
       <motion.button

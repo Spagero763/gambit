@@ -8,6 +8,7 @@ import { useAccount } from "wagmi";
 import { supabase } from "@/lib/supabase";
 import { aggregateStandings, Standing } from "@/lib/leaderboard";
 import { useProfiles, displayName, avatarHex, shortAddr, PublicProfile } from "@/lib/profiles";
+import { SkeletonList } from "@/components/Skeleton";
 import { useProfile } from "@/lib/profile";
 import { levelInfo } from "@/lib/progress";
 import { rankForXp } from "@/lib/rank";
@@ -228,7 +229,7 @@ export function Leaderboard() {
 }
 
 function Loading() {
-  return <p className="mt-4 rounded-2xl border border-line bg-void-700 px-4 py-8 text-center text-sm text-ink-faint">Loading…</p>;
+  return <div className="mt-4"><SkeletonList rows={6} /></div>;
 }
 function Empty({ title, sub }: { title: string; sub: string }) {
   return (

@@ -18,6 +18,7 @@ import { tokensFor, symbolForToken, decimalsForToken } from "@/lib/tokens";
 import { hasToken, signIn } from "@/lib/profile";
 import { supabase } from "@/lib/supabase";
 import { useProfiles, displayName, avatarHex } from "@/lib/profiles";
+import { SkeletonList } from "@/components/Skeleton";
 import { Avatar } from "@/components/Avatar";
 import { ExternalA } from "@/components/ExternalA";
 import {
@@ -193,7 +194,11 @@ export function TournamentRoom({ id }: { id: string }) {
     );
   }
   if (!view) {
-    return <div className="mx-auto w-full max-w-2xl px-5 py-10 text-center text-ink-faint">Loading…</div>;
+    return (
+      <div className="mx-auto w-full max-w-2xl px-5 py-6">
+        <SkeletonList rows={4} />
+      </div>
+    );
   }
 
   const { tournament: t, players } = view;
