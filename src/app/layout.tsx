@@ -29,7 +29,7 @@ const DESCRIPTION =
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://www.bestgambit.live"),
-  title: "Gambit | Think you'd win? Put money on it.",
+  title: "Gambit | Think you'd win? Prove it.",
   description: DESCRIPTION,
   applicationName: "Gambit",
   appleWebApp: {
@@ -38,7 +38,7 @@ export const metadata: Metadata = {
     statusBarStyle: "black-translucent",
   },
   openGraph: {
-    title: "Gambit | Think you'd win? Put money on it.",
+    title: "Gambit | Think you'd win? Prove it.",
     description: DESCRIPTION,
     url: "/",
     siteName: "Gambit",
@@ -46,7 +46,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "Gambit | Think you'd win? Put money on it.",
+    title: "Gambit | Think you'd win? Prove it.",
     description: DESCRIPTION,
   },
   other: {

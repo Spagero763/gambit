@@ -8,8 +8,8 @@ import { Modal } from "./Modal";
 const STEPS = [
   { icon: Wallet, title: "Sign in, get a wallet", body: "Just your email. A wallet is created for you, think of it as your game account. Add money from MiniPay or any Celo wallet whenever you want." },
   { icon: Gamepad2, title: "Warm up free", body: "Every game is free against the bot. No deposit, no catch, play all day." },
-  { icon: Coins, title: "Put money on it", body: "Ready? Stake USDm or G$ on a 1v1 against a real person. Both stakes sit locked in a contract nobody can touch, not even us." },
-  { icon: Trophy, title: "Winner takes 95%", body: "Win and the pot lands in your wallet in seconds. A draw refunds both players. If a game stalls, your money is always reclaimable." },
+  { icon: Coins, title: "Enter a real match", body: "Ready? Pay a small entry fee to face a real person. Both entries sit locked in a contract nobody can touch, not even us. Pure skill, no luck, no house playing against you." },
+  { icon: Trophy, title: "Winner takes 95%", body: "Win and the prize lands in your wallet in seconds. A draw refunds both players. If a game stalls, your money is always reclaimable." },
   { icon: Send, title: "Cash out anytime", body: "Your money is yours. Send winnings to any wallet from your profile whenever you like." },
 ];
 

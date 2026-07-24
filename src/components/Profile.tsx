@@ -1,8 +1,10 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { motion } from "framer-motion";
-import { Wallet, ShieldCheck, Check, Loader2, Share2, Copy, Send, UserCog, Volume2, KeyRound, LifeBuoy, ChevronRight } from "lucide-react";
+import { AnimatePresence, motion } from "framer-motion";
+import { Portal } from "@/components/Portal";
+import { handleFor } from "@/lib/handle";
+import { Wallet, ShieldCheck, Check, Loader2, Share2, Copy, Send, UserCog, Volume2, KeyRound, LifeBuoy, ChevronRight, X } from "lucide-react";
 import Link from "next/link";
 import { inviteUrl } from "@/lib/share";
 import { ShareButton } from "@/components/ShareButton";
@@ -170,7 +172,9 @@ export function Profile() {
     return { net: by[unit]?.net ?? 0, netUnit: unit };
   }, [played]);
   const avatarHex = AVATAR_HEX[settings.avatar] ?? AVATAR_HEX.teal;
-  const displayName = settings.name || short(address);
+  // never hex as a name — that is both unfriendly and a MiniPay listing rule.
+  // (the address still shows in CopyAddress, where it IS an address, not a name)
+  const displayName = settings.name || handleFor(address);
 
   if (!isConnected || !address) {
     return (
@@ -211,7 +215,7 @@ export function Profile() {
         <Avatar
           image={settings.avatarImage || undefined}
           color={avatarHex}
-          name={settings.name || address.slice(2, 4)}
+          name={displayName}
           size={56}
           rounded="rounded-2xl"
         />
@@ -343,43 +347,106 @@ export function Profile() {
  * in /settings, this is the front door people actually look for.
  */
 function AccountLinks() {
-  const rows = [
-    { href: "/settings", icon: UserCog, label: "Edit name & avatar", sub: "How you appear on leaderboards" },
-    { href: "/settings", icon: Volume2, label: "Sounds & notifications", sub: "Game sounds, music, match alerts" },
-    { href: "/settings", icon: KeyRound, label: "Export your wallet", sub: "Your key, take it anywhere" },
+  const [open, setOpen] = useState(false);
+  const tiles = [
+    { href: "/settings", icon: UserCog, label: "Profile", sub: "Name & avatar", tint: "text-violet-bright" },
+    { href: "/settings", icon: Volume2, label: "Sound", sub: "Music & alerts", tint: "text-teal" },
+    { href: "/settings", icon: KeyRound, label: "Wallet key", sub: "Export it", tint: "text-amber" },
+    { href: "/settings", icon: ShieldCheck, label: "Verify", sub: "For free G$", tint: "text-teal" },
   ];
+
   return (
     <div className="mt-7">
-      <h2 className="mb-3 text-[15px] font-semibold tracking-tight">Account</h2>
-      <div className="overflow-hidden rounded-2xl border border-line bg-void-800">
-        {rows.map((r) => (
-          <Link key={r.label} href={r.href} className="flex items-center gap-3 border-b border-line px-4 py-3.5 transition-colors last:border-b-0 hover:bg-void-700">
-            <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-void-600 text-ink-dim">
-              <r.icon className="h-4 w-4" />
-            </span>
-            <span className="min-w-0 flex-1">
-              <span className="block text-sm font-medium text-ink">{r.label}</span>
-              <span className="block truncate text-[11px] text-ink-faint">{r.sub}</span>
-            </span>
-            <ChevronRight className="h-4 w-4 shrink-0 text-ink-faint" />
-          </Link>
-        ))}
-        <a
-          href="https://wa.me/2348060158364?text=Hi%20Gambit%20support%2C%20I%20need%20help%20with"
-          target="_blank"
-          rel="noreferrer"
-          className="flex items-center gap-3 px-4 py-3.5 transition-colors hover:bg-void-700"
-        >
-          <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-teal/15 text-teal">
-            <LifeBuoy className="h-4 w-4" />
-          </span>
-          <span className="min-w-0 flex-1">
-            <span className="block text-sm font-medium text-ink">Help on WhatsApp</span>
-            <span className="block truncate text-[11px] text-ink-faint">A real person replies fast</span>
-          </span>
-          <ChevronRight className="h-4 w-4 shrink-0 text-ink-faint" />
-        </a>
-      </div>
+      <button
+        onClick={() => setOpen(true)}
+        className="pressable flex w-full items-center gap-3 rounded-2xl border border-line bg-void-800 px-4 py-3.5 text-left transition-colors hover:border-line-strong"
+      >
+        <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-void-600 text-ink-dim">
+          <UserCog className="h-4 w-4" />
+        </span>
+        <span className="min-w-0 flex-1">
+          <span className="block text-sm font-medium text-ink">Account</span>
+          <span className="block truncate text-[11px] text-ink-faint">Profile, sound, wallet key, help</span>
+        </span>
+        <ChevronRight className="h-4 w-4 shrink-0 text-ink-faint" />
+      </button>
+
+      {/* Grid popup — everything a tap away, no page jump, nothing to scroll past */}
+      <Portal>
+        <AnimatePresence>
+          {open && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setOpen(false)}
+              className="fixed inset-0 z-[120] grid place-items-end bg-void/80 backdrop-blur-md sm:place-items-center"
+            >
+              <motion.div
+                onClick={(e) => e.stopPropagation()}
+                initial={{ y: 40, opacity: 0, scale: 0.96 }}
+                animate={{ y: 0, opacity: 1, scale: 1 }}
+                exit={{ y: 40, opacity: 0, scale: 0.96 }}
+                transition={{ type: "spring", stiffness: 300, damping: 26 }}
+                className="w-full rounded-t-3xl border border-line bg-void-700 p-5 shadow-pop sm:w-[min(92%,26rem)] sm:rounded-3xl"
+              >
+                <div className="mx-auto mb-4 h-1 w-10 rounded-full bg-line sm:hidden" />
+                <div className="mb-4 flex items-center justify-between">
+                  <p className="text-[15px] font-semibold tracking-tight text-ink">Account</p>
+                  <button onClick={() => setOpen(false)} aria-label="Close" className="text-ink-faint hover:text-ink">
+                    <X className="h-4 w-4" />
+                  </button>
+                </div>
+
+                {/* tiles stagger in — the choreographed reveal, not a static list */}
+                <div className="grid grid-cols-2 gap-2.5">
+                  {tiles.map((t, i) => (
+                    <motion.div
+                      key={t.label}
+                      initial={{ opacity: 0, y: 14, scale: 0.94 }}
+                      animate={{ opacity: 1, y: 0, scale: 1 }}
+                      transition={{ delay: 0.04 + i * 0.05, type: "spring", stiffness: 340, damping: 24 }}
+                    >
+                      <Link
+                        href={t.href}
+                        onClick={() => setOpen(false)}
+                        className="pressable flex h-full flex-col gap-2 rounded-2xl border border-line bg-void-800 p-3.5 transition-colors hover:border-line-strong"
+                      >
+                        <span className={cn("grid h-9 w-9 place-items-center rounded-xl bg-void-600", t.tint)}>
+                          <t.icon className="h-4 w-4" />
+                        </span>
+                        <span>
+                          <span className="block text-[13px] font-semibold text-ink">{t.label}</span>
+                          <span className="block text-[11px] text-ink-faint">{t.sub}</span>
+                        </span>
+                      </Link>
+                    </motion.div>
+                  ))}
+                </div>
+
+                <motion.a
+                  initial={{ opacity: 0, y: 14 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.24, type: "spring", stiffness: 340, damping: 24 }}
+                  href="https://wa.me/2348060158364?text=Hi%20Gambit%20support%2C%20I%20need%20help%20with"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="pressable mt-2.5 flex items-center gap-3 rounded-2xl border border-teal/30 bg-teal/[0.07] px-4 py-3 transition-colors hover:border-teal/50"
+                >
+                  <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-teal/15 text-teal">
+                    <LifeBuoy className="h-4 w-4" />
+                  </span>
+                  <span className="min-w-0 flex-1">
+                    <span className="block text-[13px] font-semibold text-ink">Help on WhatsApp</span>
+                    <span className="block truncate text-[11px] text-ink-faint">A real person replies fast</span>
+                  </span>
+                  <ChevronRight className="h-4 w-4 shrink-0 text-ink-faint" />
+                </motion.a>
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </Portal>
     </div>
   );
 }

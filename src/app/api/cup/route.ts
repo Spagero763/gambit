@@ -117,7 +117,11 @@ export async function POST(req: NextRequest) {
       if (bp?.banned) {
         return NextResponse.json({ error: "This account is blocked from prize events" }, { status: 403 });
       }
-      // humans only — read GoodDollar's Identity contract server-side
+      // Humans only. This is the ONE prize pool Gambit funds itself, so a Sybil
+      // farming wallets steals real money from us (it has already happened once).
+      // The week+root unique index below means one human gets one entry even
+      // with five wallets. Player-funded challenges and cups need no face check —
+      // there the entrants fund the pot, so faking it costs more than it wins.
       let root: string | null = null;
       try {
         root = await goodIdRoot(addr);
