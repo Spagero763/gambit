@@ -129,12 +129,16 @@ export function BlockBlitz({
     const placed = place(grid, pc, r, c);
     const { grid: cleared, cleared: lines } = clearLines(placed);
 
+    // spatial: the sound comes from the column the piece landed in
+    const pan = (c / (GRID - 1)) * 1.6 - 0.8;
+
     let nextCombo = combo;
     if (lines > 0) {
       nextCombo = Math.min(8, combo + 1);
       setFlash(`+${lines * 10 * nextCombo}${lines > 1 ? `  ×${lines}` : ""}`);
       setTimeout(() => setFlash(null), 700);
-      play("clear");
+      // combos climb: each one pitches the sparkle up, so a streak SOUNDS like a streak
+      play("clear", { pan, pitch: 1 + (nextCombo - 1) * 0.08 });
       // screen kick that grows with the number of lines cleared
       if (!reduce) {
         const mag = Math.min(3 + lines * 2, 10);
@@ -145,7 +149,7 @@ export function BlockBlitz({
       }
     } else {
       nextCombo = 0;
-      play("place");
+      play("place", { pan });
     }
     setCombo(nextCombo);
     setScore((s) => s + pc.cells.length + lines * 10 * (lines > 0 ? nextCombo : 1));

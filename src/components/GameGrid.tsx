@@ -1,8 +1,10 @@
 "use client";
 
 import Link from "next/link";
+import { motion } from "framer-motion";
 import { Swords, BarChart3, Trophy } from "lucide-react";
 import { GAMES } from "@/lib/games";
+import { stagger } from "@/lib/motion";
 import { GameCard } from "./GameCard";
 
 export function GameGrid() {
@@ -29,12 +31,19 @@ export function GameGrid() {
         </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-3 lg:grid-cols-3 lg:gap-4">
+      {/* the grid assembles itself: the container leads, cards follow in order */}
+      <motion.div
+        variants={stagger()}
+        initial="hidden"
+        whileInView="show"
+        viewport={{ once: true, margin: "-60px" }}
+        className="grid grid-cols-2 gap-3 lg:grid-cols-3 lg:gap-4"
+      >
         <GameCard game={featured} index={0} featured />
         {rest.map((game, i) => (
           <GameCard key={game.slug} game={game} index={i + 1} />
         ))}
-      </div>
+      </motion.div>
     </section>
   );
 }

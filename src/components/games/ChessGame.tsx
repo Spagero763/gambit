@@ -97,9 +97,11 @@ export function ChessGame({ difficulty = "normal" }: { difficulty?: Difficulty }
       setLast({ from, to });
       setSelected(null);
       setFen(game.fen());
-      if (m?.captured) play("capture");
-      else play("place");
-      if (game.inCheck() && !game.isGameOver()) play("check");
+      // spatial: the sound comes from where the piece landed on the board
+      const pan = ((to.charCodeAt(0) - 97) / 7) * 1.6 - 0.8;
+      if (m?.captured) play("capture", { pan });
+      else play("place", { pan });
+      if (game.inCheck() && !game.isGameOver()) play("check", { pan });
       settle();
     },
     [game, settle]
@@ -183,9 +185,10 @@ export function ChessGame({ difficulty = "normal" }: { difficulty?: Difficulty }
         const m = game.move(mv);
         setLast({ from: mv.from as Square, to: mv.to as Square });
         setFen(game.fen());
-        if (m?.captured) play("capture");
-        else play("place");
-        if (game.inCheck() && !game.isGameOver()) play("check");
+        const pan = ((mv.to.charCodeAt(0) - 97) / 7) * 1.6 - 0.8;
+        if (m?.captured) play("capture", { pan });
+        else play("place", { pan });
+        if (game.inCheck() && !game.isGameOver()) play("check", { pan });
         settle();
       }
     }, think);

@@ -1,14 +1,14 @@
 "use client";
 
-import { motion } from "framer-motion";
+import { useState } from "react";
+import { AnimatePresence, motion } from "framer-motion";
 import { ArrowUpRight } from "lucide-react";
 import Link from "next/link";
 import { Game, accentMap } from "@/lib/games";
 import { GameCover } from "./art/GameCover";
 import { Tilt } from "./motion/Tilt";
+import { settle, ease } from "@/lib/motion";
 import { cn } from "@/lib/cn";
-
-const ease = [0.22, 1, 0.36, 1] as const;
 
 export function GameCard({
   game,
@@ -20,20 +20,21 @@ export function GameCard({
   featured?: boolean;
 }) {
   const a = accentMap[game.accent];
+  // press ripple radiating from the exact touch point — the tactile feedback
+  // phones deserve (all the hover polish is invisible on touch screens)
+  const [ripple, setRipple] = useState<{ key: number; x: number; y: number } | null>(null);
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 26, scale: 0.96 }}
-      whileInView={{ opacity: 1, y: 0, scale: 1 }}
-      viewport={{ once: true, margin: "-40px" }}
-      transition={{ duration: 0.5, ease, delay: Math.min(index * 0.06, 0.36) }}
-      className={featured ? "col-span-2" : ""}
-    >
+    <motion.div variants={settle} className={featured ? "col-span-2" : ""}>
       <Link href={`/play/${game.slug}`} className="group block">
         <Tilt max={featured ? 6 : 9}>
           <motion.div
             whileTap={{ scale: 0.98 }}
             transition={{ type: "spring", stiffness: 400, damping: 28 }}
+            onPointerDown={(e) => {
+              const r = e.currentTarget.getBoundingClientRect();
+              setRipple({ key: Date.now(), x: e.clientX - r.left, y: e.clientY - r.top });
+            }}
             className={cn(
               "relative overflow-hidden rounded-2xl border border-line bg-void-700 shadow-card transition-[border-color,box-shadow] duration-300 group-hover:border-line-strong group-hover:shadow-pop",
               featured ? "h-52" : "h-44"
@@ -41,6 +42,26 @@ export function GameCard({
             style={{ transformStyle: "preserve-3d" }}
           >
             <GameCover art={game.art} className="absolute inset-0 h-full w-full" />
+
+            {/* touch ripple from the press point */}
+            <AnimatePresence>
+              {ripple && (
+                <motion.span
+                  key={ripple.key}
+                  initial={{ scale: 0, opacity: 0.35 }}
+                  animate={{ scale: 3.2, opacity: 0 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.55, ease }}
+                  onAnimationComplete={() => setRipple(null)}
+                  className="pointer-events-none absolute h-32 w-32 rounded-full"
+                  style={{
+                    left: ripple.x - 64,
+                    top: ripple.y - 64,
+                    background: "radial-gradient(circle, rgba(255,255,255,0.5), transparent 65%)",
+                  }}
+                />
+              )}
+            </AnimatePresence>
             <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/35 to-transparent" />
 
             {/* top meta — floats above the surface in 3D */}
