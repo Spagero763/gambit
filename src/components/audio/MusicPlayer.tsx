@@ -27,18 +27,22 @@ export function MusicPlayer() {
   const [s] = useSettings();
   const pathname = usePathname();
 
+  // music has its own level, mixed under the sound effects — at equal volume it
+  // fought the game and that is what made it feel cheap
+  const level = s.musicVolume ?? 0.3;
+
   useEffect(() => {
     if (!s.musicOn) {
       stopMusic();
       return;
     }
-    playMusic(keyForPath(pathname || "/"), s.volume);
-  }, [s.musicOn, pathname]);
+    playMusic(keyForPath(pathname || "/"), level);
+  }, [s.musicOn, pathname, level]);
 
   // live volume
   useEffect(() => {
-    if (s.musicOn) setMusicVolume(s.volume);
-  }, [s.volume, s.musicOn]);
+    if (s.musicOn) setMusicVolume(level);
+  }, [level, s.musicOn]);
 
   return null;
 }

@@ -5,7 +5,8 @@ import { useEffect, useState } from "react";
 export interface GambitSettings {
   soundOn: boolean;
   musicOn: boolean;
-  volume: number; // 0..1
+  volume: number; // 0..1 — game sound effects
+  musicVolume: number; // 0..1 — background music, mixed well under the effects
   name: string;
   avatar: string; // avatar colour id (fallback when no photo)
   avatarImage: string; // uploaded photo as a data URL ("" = none)
@@ -15,6 +16,9 @@ export const DEFAULT_SETTINGS: GambitSettings = {
   soundOn: true,
   musicOn: false, // off by default; one tap in Settings turns it on
   volume: 0.5,
+  // Music sat at the SAME level as the sound effects, which is why it drowned
+  // the game and felt amateur. Real games mix the bed far below the hits.
+  musicVolume: 0.3,
   name: "",
   avatar: "teal",
   avatarImage: "",

@@ -34,6 +34,26 @@ let vol = 0.5;
 let wanted: MusicKey | null = null; // what we'd like to play once a gesture lands
 let gestureHooked = false;
 
+// One <audio> per track, kept for the session. Without this every navigation
+// (lobby → chess → lobby) built a NEW element and re-downloaded the whole file:
+// these tracks are 3-7MB each, so wandering the app burned tens of megabytes of
+// mobile data and stuttered while it buffered. Now a track is fetched once and
+// resumes instantly after that.
+const pool = new Map<MusicKey, HTMLAudioElement>();
+
+function elementFor(key: MusicKey): HTMLAudioElement {
+  const cached = pool.get(key);
+  if (cached) return cached;
+  const el = new Audio(SRC[key]);
+  el.loop = true;
+  // stream it instead of pulling the entire file up front — music starts sooner
+  // and a player who only stays a minute only pays for a minute of data
+  el.preload = "none";
+  el.volume = 0;
+  pool.set(key, el);
+  return el;
+}
+
 function clamp(v: number) {
   return Math.min(1, Math.max(0, v));
 }
@@ -74,13 +94,11 @@ export function playMusic(key: MusicKey, volume = vol) {
     return;
   }
 
-  // fade out and discard the old track
+  // fade the old track out and park it (kept in the pool, already buffered)
   const old = current;
   if (old) fade(old, 0, 400, () => old.pause());
 
-  const el = new Audio(SRC[key]);
-  el.loop = true;
-  el.preload = "auto";
+  const el = elementFor(key);
   el.volume = 0;
   el.play()
     .then(() => fade(el, vol, 600))

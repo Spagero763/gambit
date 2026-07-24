@@ -204,7 +204,7 @@ export function Settings() {
 
         <div className="mt-4">
           <p className="mb-1.5 flex items-center justify-between text-xs text-ink-faint">
-            <span>Volume</span>
+            <span>Game sounds</span>
             <span className="nums text-ink-dim">{Math.round(s.volume * 100)}%</span>
           </p>
           <input
@@ -217,8 +217,25 @@ export function Settings() {
           />
         </div>
 
+        {s.musicOn && (
+          <div className="mt-3">
+            <p className="mb-1.5 flex items-center justify-between text-xs text-ink-faint">
+              <span>Music</span>
+              <span className="nums text-ink-dim">{Math.round((s.musicVolume ?? 0.3) * 100)}%</span>
+            </p>
+            <input
+              type="range"
+              min={0}
+              max={100}
+              value={Math.round((s.musicVolume ?? 0.3) * 100)}
+              onChange={(e) => update({ musicVolume: Number(e.target.value) / 100 })}
+              className="w-full accent-violet-bright"
+            />
+          </div>
+        )}
+
         <p className="mt-4 flex items-center gap-1.5 text-[11px] text-ink-faint">
-          <Music className="h-3.5 w-3.5" /> The music changes to match the game you&apos;re playing.
+          <Music className="h-3.5 w-3.5" /> The music changes to match the game you&apos;re playing. It uses mobile data, so it streams only while it&apos;s on.
         </p>
         <p className="mt-1 text-[10px] text-ink-faint">Music by Kevin MacLeod (incompetech.com) · CC BY 4.0</p>
       </div>
