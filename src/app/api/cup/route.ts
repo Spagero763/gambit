@@ -117,25 +117,20 @@ export async function POST(req: NextRequest) {
       if (bp?.banned) {
         return NextResponse.json({ error: "This account is blocked from prize events" }, { status: 403 });
       }
-      // Humans only. This is the ONE prize pool Gambit funds itself, so a Sybil
-      // farming wallets steals real money from us (it has already happened once).
-      // The week+root unique index below means one human gets one entry even
-      // with five wallets. Player-funded challenges and cups need no face check —
-      // there the entrants fund the pot, so faking it costs more than it wins.
+      // Verification is optional (owner decision): most people bounced rather
+      // than scan their face. Verified players still get one-human-one-entry via
+      // the week+root unique index (root = their GoodDollar root, shared across
+      // their wallets). Unverified players get one entry per WALLET (root = their
+      // address), and the ban tools cover anyone who abuses it.
       let root: string | null = null;
       try {
         root = await goodIdRoot(addr);
       } catch {
-        return NextResponse.json({ error: "Identity check failed — try again" }, { status: 502 });
+        root = null; // an identity-service hiccup must never block entry
       }
-      if (!root) {
-        return NextResponse.json(
-          { error: "Verify you're a real human on your Profile first (GoodDollar face check)" },
-          { status: 403 }
-        );
-      }
+      const entryRoot = root ?? addr;
       const wk = weekKey(weekIndex());
-      const { error } = await db.from("cup_entries").insert({ week: wk, address: addr, root });
+      const { error } = await db.from("cup_entries").insert({ week: wk, address: addr, root: entryRoot });
       if (error) {
         // same wallet twice → fine (idempotent). Same HUMAN via another wallet → block.
         const dup = String(error.message ?? "");
