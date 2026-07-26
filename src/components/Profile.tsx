@@ -4,8 +4,9 @@ import { useEffect, useMemo, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { Portal } from "@/components/Portal";
 import { handleFor } from "@/lib/handle";
-import { Wallet, ShieldCheck, Check, Loader2, Share2, Copy, Send, UserCog, Volume2, KeyRound, LifeBuoy, ChevronRight, X } from "lucide-react";
+import { Wallet, ShieldCheck, Check, Loader2, Share2, Copy, Send, UserCog, Volume2, KeyRound, LifeBuoy, ChevronRight, X, ArrowLeft, Music } from "lucide-react";
 import Link from "next/link";
+import { useGoodId } from "@/hooks/useGoodId";
 import { inviteUrl } from "@/lib/share";
 import { ShareButton } from "@/components/ShareButton";
 import { formatUnits } from "viem";
@@ -13,7 +14,7 @@ import { useAccount, useBalance, useSignMessage } from "wagmi";
 import { usePrivy } from "@privy-io/react-auth";
 import { CUSD_ADDRESS } from "@/lib/wagmi";
 import { supabase } from "@/lib/supabase";
-import { useSettings, AVATAR_HEX } from "@/lib/settings";
+import { useSettings, AVATARS, AVATAR_HEX } from "@/lib/settings";
 import { useProgress } from "@/lib/progress";
 import { useProfile, createProfile, setProfile } from "@/lib/profile";
 import { Avatar } from "@/components/Avatar";
@@ -340,19 +341,37 @@ export function Profile() {
   );
 }
 
+type AccountView = "grid" | "profile" | "sound" | "wallet" | "verify";
+
 /**
- * The Settings essentials, surfaced on the You tab. Office-hours feedback:
- * people open You expecting their account controls and only found them behind
- * the header gear. Compact link rows — no duplication, everything still lives
- * in /settings, this is the front door people actually look for.
+ * Account, handled entirely in one popup. Every control (profile, sound, wallet
+ * export, verify) opens inline as a sub-view — no jump to another page. The user
+ * stays put and the popup swaps its body.
  */
 function AccountLinks() {
   const [open, setOpen] = useState(false);
-  const tiles = [
-    { href: "/settings", icon: UserCog, label: "Profile", sub: "Name & avatar", tint: "text-violet-bright" },
-    { href: "/settings", icon: Volume2, label: "Sound", sub: "Music & alerts", tint: "text-teal" },
-    { href: "/settings", icon: KeyRound, label: "Wallet key", sub: "Export it", tint: "text-amber" },
-    { href: "/settings", icon: ShieldCheck, label: "Verify", sub: "For free G$", tint: "text-teal" },
+  const [view, setView] = useState<AccountView>("grid");
+  const { address } = useAccount();
+  const { user, exportWallet, authenticated, login } = usePrivy();
+  const [settings, update] = useSettings();
+  const { verified, verify } = useGoodId();
+  const { signMessageAsync } = useSignMessage();
+  const prog = useProgress();
+
+  const embedded = user?.linkedAccounts?.find(
+    (a: any) => a.type === "wallet" && a.walletClientType === "privy"
+  ) as { address?: string } | undefined;
+
+  const close = () => {
+    setOpen(false);
+    setView("grid");
+  };
+
+  const tiles: { key: AccountView; icon: typeof UserCog; label: string; sub: string; tint: string }[] = [
+    { key: "profile", icon: UserCog, label: "Profile", sub: "Name & avatar", tint: "text-violet-bright" },
+    { key: "sound", icon: Volume2, label: "Sound", sub: "Music & effects", tint: "text-teal" },
+    { key: "wallet", icon: KeyRound, label: "Wallet key", sub: "Export it", tint: "text-amber" },
+    { key: "verify", icon: ShieldCheck, label: "Verify", sub: "For free G$", tint: "text-teal" },
   ];
 
   return (
@@ -371,7 +390,6 @@ function AccountLinks() {
         <ChevronRight className="h-4 w-4 shrink-0 text-ink-faint" />
       </button>
 
-      {/* Grid popup — everything a tap away, no page jump, nothing to scroll past */}
       <Portal>
         <AnimatePresence>
           {open && (
@@ -379,7 +397,7 @@ function AccountLinks() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              onClick={() => setOpen(false)}
+              onClick={close}
               className="fixed inset-0 z-[120] grid place-items-end bg-void/80 backdrop-blur-md sm:place-items-center"
             >
               <motion.div
@@ -388,65 +406,373 @@ function AccountLinks() {
                 animate={{ y: 0, opacity: 1, scale: 1 }}
                 exit={{ y: 40, opacity: 0, scale: 0.96 }}
                 transition={{ type: "spring", stiffness: 300, damping: 26 }}
-                className="w-full rounded-t-3xl border border-line bg-void-700 p-5 shadow-pop sm:w-[min(92%,26rem)] sm:rounded-3xl"
+                className="max-h-[86dvh] w-full overflow-y-auto rounded-t-3xl border border-line bg-void-700 p-5 shadow-pop sm:w-[min(92%,26rem)] sm:rounded-3xl"
               >
                 <div className="mx-auto mb-4 h-1 w-10 rounded-full bg-line sm:hidden" />
                 <div className="mb-4 flex items-center justify-between">
-                  <p className="text-[15px] font-semibold tracking-tight text-ink">Account</p>
-                  <button onClick={() => setOpen(false)} aria-label="Close" className="text-ink-faint hover:text-ink">
+                  <div className="flex items-center gap-2">
+                    {view !== "grid" && (
+                      <button onClick={() => setView("grid")} aria-label="Back" className="text-ink-faint hover:text-ink">
+                        <ArrowLeft className="h-4 w-4" />
+                      </button>
+                    )}
+                    <p className="text-[15px] font-semibold tracking-tight text-ink capitalize">
+                      {view === "grid" ? "Account" : view === "wallet" ? "Wallet key" : view}
+                    </p>
+                  </div>
+                  <button onClick={close} aria-label="Close" className="text-ink-faint hover:text-ink">
                     <X className="h-4 w-4" />
                   </button>
                 </div>
 
-                {/* tiles stagger in — the choreographed reveal, not a static list */}
-                <div className="grid grid-cols-2 gap-2.5">
-                  {tiles.map((t, i) => (
-                    <motion.div
-                      key={t.label}
-                      initial={{ opacity: 0, y: 14, scale: 0.94 }}
-                      animate={{ opacity: 1, y: 0, scale: 1 }}
-                      transition={{ delay: 0.04 + i * 0.05, type: "spring", stiffness: 340, damping: 24 }}
-                    >
-                      <Link
-                        href={t.href}
-                        onClick={() => setOpen(false)}
-                        className="pressable flex h-full flex-col gap-2 rounded-2xl border border-line bg-void-800 p-3.5 transition-colors hover:border-line-strong"
-                      >
-                        <span className={cn("grid h-9 w-9 place-items-center rounded-xl bg-void-600", t.tint)}>
-                          <t.icon className="h-4 w-4" />
-                        </span>
-                        <span>
-                          <span className="block text-[13px] font-semibold text-ink">{t.label}</span>
-                          <span className="block text-[11px] text-ink-faint">{t.sub}</span>
-                        </span>
-                      </Link>
-                    </motion.div>
-                  ))}
-                </div>
+                <AnimatePresence mode="wait">
+                  <motion.div
+                    key={view}
+                    initial={{ opacity: 0, x: view === "grid" ? -12 : 12 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: view === "grid" ? 12 : -12 }}
+                    transition={{ duration: 0.18, ease: [0.22, 1, 0.36, 1] }}
+                  >
+                    {view === "grid" && (
+                      <>
+                        <div className="grid grid-cols-2 gap-2.5">
+                          {tiles.map((t, i) => (
+                            <motion.button
+                              key={t.key}
+                              onClick={() => setView(t.key)}
+                              initial={{ opacity: 0, y: 14, scale: 0.94 }}
+                              animate={{ opacity: 1, y: 0, scale: 1 }}
+                              transition={{ delay: 0.04 + i * 0.05, type: "spring", stiffness: 340, damping: 24 }}
+                              className="pressable flex h-full flex-col gap-2 rounded-2xl border border-line bg-void-800 p-3.5 text-left transition-colors hover:border-line-strong"
+                            >
+                              <span className={cn("grid h-9 w-9 place-items-center rounded-xl bg-void-600", t.tint)}>
+                                <t.icon className="h-4 w-4" />
+                              </span>
+                              <span>
+                                <span className="block text-[13px] font-semibold text-ink">{t.label}</span>
+                                <span className="block text-[11px] text-ink-faint">
+                                  {t.key === "verify" && verified ? "Verified ✓" : t.sub}
+                                </span>
+                              </span>
+                            </motion.button>
+                          ))}
+                        </div>
+                        <a
+                          href="https://wa.me/2348060158364?text=Hi%20Gambit%20support%2C%20I%20need%20help%20with"
+                          target="_blank"
+                          rel="noreferrer"
+                          className="pressable mt-2.5 flex items-center gap-3 rounded-2xl border border-teal/30 bg-teal/[0.07] px-4 py-3 transition-colors hover:border-teal/50"
+                        >
+                          <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-teal/15 text-teal">
+                            <LifeBuoy className="h-4 w-4" />
+                          </span>
+                          <span className="min-w-0 flex-1">
+                            <span className="block text-[13px] font-semibold text-ink">Help on WhatsApp</span>
+                            <span className="block truncate text-[11px] text-ink-faint">A real person replies fast</span>
+                          </span>
+                          <ChevronRight className="h-4 w-4 shrink-0 text-ink-faint" />
+                        </a>
+                      </>
+                    )}
 
-                <motion.a
-                  initial={{ opacity: 0, y: 14 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.24, type: "spring", stiffness: 340, damping: 24 }}
-                  href="https://wa.me/2348060158364?text=Hi%20Gambit%20support%2C%20I%20need%20help%20with"
-                  target="_blank"
-                  rel="noreferrer"
-                  className="pressable mt-2.5 flex items-center gap-3 rounded-2xl border border-teal/30 bg-teal/[0.07] px-4 py-3 transition-colors hover:border-teal/50"
-                >
-                  <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-teal/15 text-teal">
-                    <LifeBuoy className="h-4 w-4" />
-                  </span>
-                  <span className="min-w-0 flex-1">
-                    <span className="block text-[13px] font-semibold text-ink">Help on WhatsApp</span>
-                    <span className="block truncate text-[11px] text-ink-faint">A real person replies fast</span>
-                  </span>
-                  <ChevronRight className="h-4 w-4 shrink-0 text-ink-faint" />
-                </motion.a>
+                    {view === "profile" && (
+                      <ProfilePanel
+                        settings={settings}
+                        update={update}
+                        onSave={
+                          address
+                            ? () =>
+                                createProfile(address, (a) => signMessageAsync({ message: a.message }), {
+                                  name: settings.name,
+                                  avatar: settings.avatar,
+                                  avatarImage: settings.avatarImage,
+                                  xp: prog.xp,
+                                  streak: prog.streak,
+                                  lastPlayed: prog.lastPlayed,
+                                  played: prog.played,
+                                  wins: prog.wins,
+                                }).then((res) => setProfile(address, res.profile))
+                            : null
+                        }
+                      />
+                    )}
+
+                    {view === "sound" && <SoundPanel settings={settings} update={update} />}
+
+                    {view === "wallet" &&
+                      (embedded?.address ? (
+                        <WalletPanel onExport={() => exportWallet({ address: embedded.address as string })} />
+                      ) : (
+                        <p className="py-6 text-center text-[13px] text-ink-dim">
+                          {authenticated
+                            ? "You are using an external wallet, so you already hold your own key."
+                            : "Sign in first to manage your wallet."}
+                        </p>
+                      ))}
+
+                    {view === "verify" && (
+                      <VerifyPanel
+                        verified={verified}
+                        onVerify={verify}
+                        onLogin={login}
+                        signedIn={authenticated && !!address}
+                      />
+                    )}
+                  </motion.div>
+                </AnimatePresence>
               </motion.div>
             </motion.div>
           )}
         </AnimatePresence>
       </Portal>
+    </div>
+  );
+}
+
+/** Inline name + avatar editor. Saving syncs the name to leaderboards. */
+function ProfilePanel({
+  settings,
+  update,
+  onSave,
+}: {
+  settings: ReturnType<typeof useSettings>[0];
+  update: ReturnType<typeof useSettings>[1];
+  onSave: (() => Promise<unknown>) | null;
+}) {
+  const [busy, setBusy] = useState(false);
+  const [saved, setSaved] = useState(false);
+  const [err, setErr] = useState<string | null>(null);
+  return (
+    <div>
+      <label className="text-[11px] font-semibold uppercase tracking-wide text-ink-faint">Display name</label>
+      <input
+        value={settings.name}
+        onChange={(e) => update({ name: e.target.value.slice(0, 24) })}
+        placeholder="What people call you"
+        className="mt-1.5 w-full rounded-xl border border-line bg-void-800 px-3 py-2.5 text-sm text-ink outline-none placeholder:text-ink-faint focus:border-teal/50"
+      />
+
+      <p className="mt-4 text-[11px] font-semibold uppercase tracking-wide text-ink-faint">Avatar colour</p>
+      <div className="mt-1.5 flex flex-wrap gap-2">
+        {AVATARS.map((a) => (
+          <button
+            key={a}
+            onClick={() => update({ avatar: a })}
+            className={cn(
+              "h-9 w-9 rounded-full ring-2 ring-offset-2 ring-offset-void-700 transition-all",
+              settings.avatar === a ? "ring-ink" : "ring-transparent"
+            )}
+            style={{ background: AVATAR_HEX[a] }}
+            aria-label={a}
+          />
+        ))}
+      </div>
+
+      {onSave && (
+        <button
+          disabled={busy}
+          onClick={async () => {
+            setBusy(true);
+            setErr(null);
+            setSaved(false);
+            try {
+              await onSave();
+              setSaved(true);
+              setTimeout(() => setSaved(false), 2000);
+            } catch (e: any) {
+              setErr(e?.shortMessage ?? e?.message ?? "Could not save");
+            } finally {
+              setBusy(false);
+            }
+          }}
+          className="btn-primary mt-5 inline-flex w-full items-center justify-center gap-2 rounded-xl py-2.5 text-sm shadow-glow disabled:opacity-60"
+        >
+          {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : saved ? <Check className="h-4 w-4" /> : null}
+          {busy ? "Check your wallet…" : saved ? "Saved to leaderboards" : "Save"}
+        </button>
+      )}
+      {err && <p className="mt-2 text-[11px] text-rose">{err}</p>}
+      <p className="mt-2 text-[11px] text-ink-faint">Your name shows on every leaderboard and match.</p>
+    </div>
+  );
+}
+
+/** Inline sound controls: music toggle + separate effect and music volumes. */
+function SoundPanel({
+  settings,
+  update,
+}: {
+  settings: ReturnType<typeof useSettings>[0];
+  update: ReturnType<typeof useSettings>[1];
+}) {
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center justify-between rounded-2xl border border-line bg-void-800 px-4 py-3">
+        <div className="flex items-center gap-2.5">
+          <Music className="h-4 w-4 text-teal" />
+          <span className="text-sm font-medium text-ink">Background music</span>
+        </div>
+        <button
+          onClick={() => update({ musicOn: !settings.musicOn })}
+          className={cn(
+            "relative h-6 w-11 rounded-full transition-colors",
+            settings.musicOn ? "bg-teal" : "bg-void-600"
+          )}
+          aria-label="Toggle music"
+        >
+          <span
+            className={cn(
+              "absolute top-0.5 h-5 w-5 rounded-full bg-white transition-transform",
+              settings.musicOn ? "translate-x-[22px]" : "translate-x-0.5"
+            )}
+          />
+        </button>
+      </div>
+
+      <div>
+        <p className="mb-1.5 flex items-center justify-between text-xs text-ink-faint">
+          <span>Game sounds</span>
+          <span className="nums text-ink-dim">{Math.round(settings.volume * 100)}%</span>
+        </p>
+        <input
+          type="range"
+          min={0}
+          max={100}
+          value={Math.round(settings.volume * 100)}
+          onChange={(e) => update({ volume: Number(e.target.value) / 100 })}
+          className="w-full accent-teal"
+        />
+      </div>
+
+      {settings.musicOn && (
+        <div>
+          <p className="mb-1.5 flex items-center justify-between text-xs text-ink-faint">
+            <span>Music</span>
+            <span className="nums text-ink-dim">{Math.round((settings.musicVolume ?? 0.3) * 100)}%</span>
+          </p>
+          <input
+            type="range"
+            min={0}
+            max={100}
+            value={Math.round((settings.musicVolume ?? 0.3) * 100)}
+            onChange={(e) => update({ musicVolume: Number(e.target.value) / 100 })}
+            className="w-full accent-violet-bright"
+          />
+        </div>
+      )}
+      <p className="text-[11px] text-ink-faint">Music streams only while it&apos;s on, and stays mixed under the game.</p>
+    </div>
+  );
+}
+
+/** Inline wallet key export — Privy opens its own secure reveal, no page jump. */
+function WalletPanel({ onExport }: { onExport: () => Promise<void> }) {
+  const [confirming, setConfirming] = useState(false);
+  const [busy, setBusy] = useState(false);
+  return (
+    <div>
+      <p className="text-[13px] leading-snug text-ink-dim">
+        This wallet is yours. You can export the key and use it in any wallet app. We never see it or store it.
+      </p>
+      {!confirming ? (
+        <button
+          onClick={() => setConfirming(true)}
+          className="mt-4 w-full rounded-xl border border-line bg-void-800 py-2.5 text-[13px] font-semibold text-ink transition-colors hover:border-amber/40"
+        >
+          Show my private key
+        </button>
+      ) : (
+        <div className="mt-4 rounded-xl border border-rose/40 bg-rose/[0.07] p-3">
+          <p className="text-[12px] font-semibold text-rose">Read this first</p>
+          <p className="mt-1 text-[11px] leading-snug text-ink-dim">
+            Anyone with this key can take everything in your wallet. Never share it, and never send it to anyone,
+            including us. If you lose it, nobody can recover it for you.
+          </p>
+          <div className="mt-3 flex gap-2">
+            <button
+              onClick={() => setConfirming(false)}
+              className="flex-1 rounded-xl border border-line bg-void-700 py-2.5 text-[12px] font-semibold text-ink-dim transition-colors hover:text-ink"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={async () => {
+                setBusy(true);
+                try {
+                  await onExport();
+                } catch {
+                  /* user closed the modal */
+                } finally {
+                  setBusy(false);
+                }
+              }}
+              disabled={busy}
+              className="flex-1 inline-flex items-center justify-center gap-1.5 rounded-xl bg-rose py-2.5 text-[12px] font-bold text-white disabled:opacity-60"
+            >
+              {busy ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : null}
+              I understand
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+/** Inline verify — GoodDollar's own flow opens on tap. */
+function VerifyPanel({
+  verified,
+  onVerify,
+  onLogin,
+  signedIn,
+}: {
+  verified: boolean | null;
+  onVerify: () => Promise<void>;
+  onLogin: () => void;
+  signedIn: boolean;
+}) {
+  const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState<string | null>(null);
+  if (verified) {
+    return (
+      <div className="py-4 text-center">
+        <span className="mx-auto grid h-12 w-12 place-items-center rounded-2xl bg-teal/15 text-teal">
+          <ShieldCheck className="h-6 w-6" />
+        </span>
+        <p className="mt-3 text-sm font-semibold text-teal">You are verified</p>
+        <p className="mt-1 text-[12px] text-ink-dim">You can claim the daily GoodDollar and enter humans-only events.</p>
+      </div>
+    );
+  }
+  return (
+    <div>
+      <p className="text-[13px] leading-snug text-ink-dim">
+        Verifying proves you are a real person, not a bot. It is free, takes about a minute, and unlocks the daily
+        GoodDollar money.
+      </p>
+      <button
+        onClick={async () => {
+          setErr(null);
+          if (!signedIn) {
+            onLogin();
+            return;
+          }
+          setBusy(true);
+          try {
+            await onVerify();
+          } catch (e: any) {
+            setErr(e?.message ?? "Could not start verification. Try again.");
+          } finally {
+            setBusy(false);
+          }
+        }}
+        className="btn-primary mt-4 inline-flex w-full items-center justify-center gap-2 rounded-xl py-2.5 text-sm shadow-glow disabled:opacity-60"
+        disabled={busy}
+      >
+        {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <ShieldCheck className="h-4 w-4" />}
+        {signedIn ? "Verify I'm human" : "Sign in to verify"}
+      </button>
+      {err && <p className="mt-2 text-[11px] text-rose">{err}</p>}
     </div>
   );
 }
