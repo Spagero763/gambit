@@ -2,10 +2,9 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { Trophy, Loader2, ShieldCheck, Play, BadgeCheck } from "lucide-react";
+import { Trophy, Loader2, Play, BadgeCheck, AlertTriangle } from "lucide-react";
 import { useAccount, useSignMessage } from "wagmi";
 import { usePrivy } from "@privy-io/react-auth";
-import { useGoodId } from "@/hooks/useGoodId";
 import { hasToken, signIn } from "@/lib/profile";
 import { supabase } from "@/lib/supabase";
 import { fetchCup, joinCup, submitCupScore, settleLastCup, CupView } from "@/lib/cupClient";
@@ -34,7 +33,6 @@ export function WeeklyCup() {
   const { address, isConnected } = useAccount();
   const { login } = usePrivy();
   const { signMessageAsync } = useSignMessage();
-  const { verified, verify, ready } = useGoodId();
 
   const [cup, setCup] = useState<CupView | null>(null);
   const [playing, setPlaying] = useState(false);
@@ -136,13 +134,13 @@ export function WeeklyCup() {
               </span>
             </div>
             <p className="text-[12px] text-ink-dim">
-              Free entry, verified humans only. Everyone plays the same board all week and the top 3 split{" "}
+              Free to enter. Everyone plays the same board all week and the top 3 split{" "}
               <span className="font-semibold text-ink">{cup.prize} USDm</span>, paid from an on chain prize vault.
             </p>
           </div>
         </div>
         <p className="mt-3 rounded-xl bg-void-800 px-3 py-2 text-center text-[12px] text-ink-faint">
-          Entries open very soon. Get verified on your Profile now so you can enter the second it does.
+          Entries open very soon. No sign up hoops, just show up and play.
         </p>
       </motion.div>
     );
@@ -164,7 +162,7 @@ export function WeeklyCup() {
           <div className="flex items-center gap-2">
             <h2 className="font-display text-lg font-bold">Weekly Cup</h2>
             <span className="rounded-full bg-teal/15 px-2 py-0.5 text-[10px] font-semibold text-teal">
-              FREE · humans only
+              FREE to enter
             </span>
           </div>
           <p className="text-[12px] text-ink-dim">
@@ -172,6 +170,16 @@ export function WeeklyCup() {
             ends in {timeLeft(cup.endsAt)}
           </p>
         </div>
+      </div>
+
+      {/* update notice — payouts may shift while we ship improvements, so nobody
+          is caught off guard if a prize lands late */}
+      <div className="mt-3 flex items-start gap-2 rounded-xl border border-amber/30 bg-amber/[0.07] px-3 py-2.5">
+        <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0 text-amber" />
+        <p className="text-[11px] leading-snug text-amber/90">
+          The cup is being improved right now. Rules and prizes may change, and a payout could land a little late while
+          we ship updates. Play for fun, and thanks for your patience.
+        </p>
       </div>
 
       {/* leaderboard */}
@@ -210,21 +218,6 @@ export function WeeklyCup() {
           >
             <Play className="h-4 w-4" />
             {cup.me && cup.me.score > 0 ? `Play again — your best: ${cup.me.score.toLocaleString()}` : "Play the weekly board"}
-          </button>
-        ) : verified === false ? (
-          <button
-            onClick={async () => {
-              setErr(null);
-              try {
-                await verify();
-              } catch (e: any) {
-                setErr(e?.message ?? "Could not start verification. Try again.");
-              }
-            }}
-            className="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-line bg-void-700 py-3 text-sm text-ink transition-colors hover:border-teal/40"
-          >
-            <ShieldCheck className="h-4 w-4 text-teal" />
-            Verify you&apos;re human to enter (free, ~1 min)
           </button>
         ) : (
           <button
