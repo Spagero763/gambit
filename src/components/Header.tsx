@@ -62,11 +62,15 @@ export function Header() {
  */
 function MuteButton() {
   const [settings, update] = useSettings();
-  const muted = settings.volume <= 0 && !settings.musicOn;
+  // the master switch: volume drives the sound effects, so treat it as "on/off"
+  const muted = settings.volume <= 0;
   return (
     <button
-      aria-label={muted ? "Unmute sounds" : "Mute all sounds"}
-      onClick={() => update(muted ? { volume: 0.5 } : { volume: 0, musicOn: false })}
+      aria-label={muted ? "Turn sound on" : "Mute all sound"}
+      // the tap itself is the user gesture browsers require before audio can
+      // start, so turning it on here also starts the music (that is why it stayed
+      // silent before — nothing switched music on)
+      onClick={() => update(muted ? { volume: 0.5, musicOn: true } : { volume: 0, musicOn: false })}
       className="grid h-10 w-10 place-items-center rounded-xl border border-line bg-void-700 text-ink-dim transition-colors hover:text-ink"
     >
       {muted ? <VolumeX className="h-[18px] w-[18px]" /> : <Volume2 className="h-[18px] w-[18px]" />}
