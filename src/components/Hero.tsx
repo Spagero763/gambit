@@ -1,9 +1,15 @@
 "use client";
 
 import { motion, useReducedMotion } from "framer-motion";
-import { ShieldCheck, Coins, Cpu } from "lucide-react";
+import { ShieldCheck, Coins, Cpu, Play } from "lucide-react";
 import { HowItWorks } from "./HowItWorks";
 import { Magnetic } from "./motion/Magnetic";
+
+/** Smooth-scroll to the games grid — the one thing a first-timer should do. */
+function toGames(e: React.MouseEvent) {
+  e.preventDefault();
+  document.getElementById("games")?.scrollIntoView({ behavior: "smooth", block: "start" });
+}
 
 const ease = [0.22, 1, 0.36, 1] as const;
 
@@ -97,6 +103,24 @@ export function Hero() {
           );
         })}
         <HowItWorks />
+      </motion.div>
+
+      {/* One clear primary action for a first-timer: play, free, no wallet, no
+          sign-in. Everything else on the page can wait until they want it. */}
+      <motion.div
+        initial={{ opacity: 0, y: 12 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.45, ease, delay: 0.62 }}
+        className="mt-5"
+      >
+        <a
+          href="#games"
+          onClick={toGames}
+          className="btn-primary inline-flex items-center gap-2 rounded-2xl px-6 py-3.5 text-[15px] shadow-glow"
+        >
+          <Play className="h-4 w-4 fill-void" /> Play a free game
+        </a>
+        <p className="mt-2 text-[12px] text-ink-faint">Free against the bot. No wallet, no sign in.</p>
       </motion.div>
     </section>
   );
