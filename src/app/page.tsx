@@ -5,6 +5,7 @@ import { DailyReward } from "@/components/DailyReward";
 import { GoodDollarCard } from "@/components/GoodDollarCard";
 import { DailyChallengeCard } from "@/components/DailyChallengeCard";
 import { GameGrid } from "@/components/GameGrid";
+import { TrustStrip } from "@/components/TrustStrip";
 import { BottomNav } from "@/components/BottomNav";
 import {
   LazyActiveGames,
@@ -32,6 +33,7 @@ export default function Home() {
       </div>
       <LazyGameShowcase />
       <GameGrid />
+      <TrustStrip />
       <BottomNav />
     </main>
   );
