@@ -59,7 +59,8 @@ export const viewport: Viewport = {
   themeColor: "#08080f",
   width: "device-width",
   initialScale: 1,
-  maximumScale: 1,
+  // zoom stays enabled — locking it (maximumScale: 1) is hostile to low-vision
+  // users and a MiniPay accessibility flag
 };
 
 export default function RootLayout({
@@ -69,6 +70,17 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" className={`${sans.variable} ${display.variable} ${mono.variable}`}>
+      <head>
+        {/* Warm up the TLS handshake to the origins the app hard-depends on, so
+            wallet auth, on-chain reads and data don't each pay full connection
+            latency on first use — a real first-paint win on mobile data. */}
+        <link rel="preconnect" href="https://auth.privy.io" crossOrigin="anonymous" />
+        <link rel="preconnect" href="https://explorer-api.walletconnect.com" crossOrigin="anonymous" />
+        <link rel="preconnect" href="https://forno.celo.org" crossOrigin="anonymous" />
+        <link rel="preconnect" href="https://dyupcxcfsbmlvaalofad.supabase.co" crossOrigin="anonymous" />
+        <link rel="dns-prefetch" href="https://auth.privy.io" />
+        <link rel="dns-prefetch" href="https://forno.celo.org" />
+      </head>
       <body className="min-h-screen font-sans antialiased">
         <Providers>
           {children}
