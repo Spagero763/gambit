@@ -162,6 +162,12 @@ export function DailyStrip() {
   const claimed = p.quests.filter((q) => q.claimed).length;
   const claimable = p.quests.some((q) => q.progress >= q.goal && !q.claimed);
 
+  // A brand-new visitor has streak 0, Lv 1, Quests 0/3 — a scoreboard of zeros
+  // reads as "nobody's here." Hide it until they've actually done something, so
+  // the progression surface is a reward they unlock, not dead weight on arrival.
+  const fresh = p.played === 0 && p.xp === 0 && p.streak === 0 && claimed === 0;
+  if (fresh) return null;
+
   return (
     <Link
       href="/profile"
