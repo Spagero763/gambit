@@ -1,28 +1,12 @@
-"use client";
-
-import { motion, useReducedMotion } from "framer-motion";
-import { ease } from "@/lib/motion";
-
 /**
  * App Router re-mounts this template on every navigation, so it doubles as a
- * page-enter transition: rise out of a soft blur with a scale settle (the feel
- * the app has always had). Skipped entirely for reduced-motion.
- *
- * Note: this wrapper keeps a transform/filter, which makes it the containing
- * block for `position: fixed` children — so anything that must lock to the real
- * viewport (the bottom nav, overlays) is rendered through <Portal> to <body>.
+ * page-enter transition. It is a PURE CSS animation (`page-in`), not
+ * framer-motion, on purpose: the old motion wrapper rendered the whole page at
+ * opacity:0 in the server HTML and only revealed it after ~1MB of wallet SDK
+ * hydrated — a 15s LCP on slow mobile. CSS runs the instant styles arrive, so
+ * content paints immediately with no JS on the critical path. No "use client",
+ * so this stays a server component and adds nothing to the bundle.
  */
 export default function Template({ children }: { children: React.ReactNode }) {
-  const reduce = useReducedMotion();
-  if (reduce) return <>{children}</>;
-
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 16, scale: 0.992, filter: "blur(8px)" }}
-      animate={{ opacity: 1, y: 0, scale: 1, filter: "blur(0px)" }}
-      transition={{ duration: 0.45, ease }}
-    >
-      {children}
-    </motion.div>
-  );
+  return <div className="page-in">{children}</div>;
 }

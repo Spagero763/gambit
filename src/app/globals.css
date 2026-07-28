@@ -133,6 +133,57 @@ body {
   }
 }
 
+/* Hero entrance in PURE CSS, not framer-motion. Critical: the old hero animated
+   from opacity:0 via JS, so the largest-contentful text stayed invisible until
+   ~1MB of wallet SDK downloaded and hydration ran — a 15s LCP on slow mobile.
+   CSS runs the moment styles arrive, with no JS, so the headline paints in
+   ~0.5s regardless of the bundle. Reduced-motion users get it instantly. */
+@keyframes heroIn {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.hero-in {
+  animation: heroIn 0.55s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+@media (prefers-reduced-motion: reduce) {
+  .hero-in {
+    animation: none;
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* Page-enter transition, also pure CSS (was framer-motion). App Router remounts
+   the template on every navigation, so this animation replays each time — the
+   same page-transition feel, but the content is never held invisible waiting for
+   JS. Ends at transform:none so it never traps position:fixed children. */
+@keyframes pageIn {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.page-in {
+  animation: pageIn 0.42s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+@media (prefers-reduced-motion: reduce) {
+  .page-in {
+    animation: none;
+    opacity: 1;
+    transform: none;
+  }
+}
+
 /* Backdrop motion — pure CSS transforms (GPU, off the main thread) so the
    ambient background costs ~nothing even on low-end phones. */
 @keyframes orb-a {
