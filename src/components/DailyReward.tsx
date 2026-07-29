@@ -29,48 +29,41 @@ export function DailyReward() {
   const lvl = levelInfo(p.xp);
 
   const claim = async () => {
-    if (!ready || claiming) return;
+    if (claiming) return;
     setError(null);
 
-    // wallet must be connected first — the reward is real G$, it needs a wallet
-    // to land in. No wallet, no claim: open the sign-in instead of granting XP.
+    // The XP + streak is client-side and costs nothing, so it ALWAYS works —
+    // grant it first, immediately. It must never be blocked by wallet signing,
+    // which is finicky in some wallets (MiniPay) and was making the whole daily
+    // reward error out. Not signed in? Still grant the XP, then nudge sign-in.
+    const res = claimDailyReward();
+    if (!res) return; // already claimed today
+    play("win");
+    setReveal({ reward: res.reward, day: res.day });
+
     if (!authenticated || !address) {
+      // no wallet yet: XP is theirs, but the little G$ needs a wallet to land in
+      setReveal((cur) => (cur ? { ...cur, gReason: "signin" } : cur));
       login();
       return;
     }
 
+    // then the little G$ faucet on top — best-effort. A signing hiccup or empty
+    // treasury just means no bonus G$ this time; the reward is already claimed.
     setClaiming(true);
     try {
-      // free, gasless signature to prove the wallet if we don't have a session yet
       let token = getToken(address);
       if (!token) token = await signIn(address, (a) => signMessageAsync({ message: a.message }));
-
-      // the server holds this request open until the G$ is actually mined into
-      // the wallet, so by the time it returns the reward has truly landed.
       const r = await fetch("/api/claim/daily", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ token }),
       });
       const d = await r.json();
-      const g = Number(d?.gAmount) || 0;
-      const reason: string | undefined = d?.reason;
-
-      if (g > 0 || reason === "already") {
-        // reward confirmed in the wallet — only now grant the XP + streak and reveal
-        const res = claimDailyReward();
-        if (res) {
-          play("win");
-          setReveal({ reward: res.reward, day: res.day, g, gReason: reason });
-        }
-      } else if (reason === "blocked") {
-        setError("This account is blocked from rewards.");
-      } else {
-        // treasury empty / send failed / signature issue: don't burn the day, let them retry
-        setError(`${gReasonText(reason)}. Tap to try again.`);
-      }
+      setReveal((cur) => (cur ? { ...cur, g: Number(d?.gAmount) || 0, gReason: d?.reason } : cur));
     } catch {
-      setError("Could not reach the reward. Check your connection and try again.");
+      // signature rejected / offline — XP is already granted; note it softly
+      setReveal((cur) => (cur ? { ...cur, gReason: "sign" } : cur));
     } finally {
       setClaiming(false);
     }
@@ -209,11 +202,11 @@ function gReasonText(reason?: string) {
       return "already claimed today, back tomorrow";
     case "sign":
     case "signin":
-      return "approve the free signature to claim it";
+      return "the bonus G$ needs a quick wallet approval, XP is already yours";
     case "send-failed":
-      return "couldn't send right now, try again";
+      return "the bonus G$ couldn't send this time, XP is already yours";
     case "treasury-empty":
-      return "today's pool is empty";
+      return "the bonus G$ pool is empty today, XP is already yours";
     case "blocked":
       return "this account is blocked from rewards";
     case "no-treasury":
