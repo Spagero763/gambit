@@ -8,7 +8,7 @@ import { cupShareAmount, cupSharePaid, payCupShare } from "@/lib/server/cupShare
 import { weekIndex, weekKey, weekSeed, weekStart, weekEnd, CUP_SPLIT } from "@/lib/cup";
 import { notify } from "@/lib/server/push";
 import { limited } from "@/lib/server/rateLimit";
-import { parseUnits } from "viem";
+import { parseUnits, formatUnits } from "viem";
 
 export const runtime = "nodejs";
 
@@ -19,10 +19,30 @@ export const runtime = "nodejs";
  * whitelisted GoodDollar identity, and the UNIQUE(week, root) constraint means
  * a human with five linked wallets still gets exactly one seat.
  */
-const PRIZE_USDM = Number(process.env.CUP_PRIZE_USDM ?? "10");
+// CUP_PRIZE_USDM is the CEILING — the most the cup will ever pay. The actual
+// prize is whatever is funded in the vault, capped at this. So the owner funds a
+// small amount from rake earnings (not fresh capital), the app never promises
+// more than is really there, and settle can never overdraw or fail on
+// underfunding. Self-limiting by design.
+const PRIZE_CAP_USDM = Number(process.env.CUP_PRIZE_USDM ?? "10");
 // The cup shows as Coming Soon until opening day — set CUP_OPEN=1 in Vercel to
 // open entries (no redeploy needed). Settlement of past weeks stays available.
 const CUP_OPEN = process.env.CUP_OPEN === "1";
+
+// Read the real funded prize (vault balance, capped), cached so a hot endpoint
+// doesn't hammer the RPC. Falls back to the cap on a read hiccup.
+let prizeCache: { value: number; at: number } | null = null;
+async function fundedPrize(): Promise<number> {
+  if (prizeCache && Date.now() - prizeCache.at < 60_000) return prizeCache.value;
+  try {
+    const bal = Number(formatUnits(await cupVaultBalance(), 18));
+    const value = Math.min(PRIZE_CAP_USDM, Math.floor(bal * 100) / 100);
+    prizeCache = { value, at: Date.now() };
+    return value;
+  } catch {
+    return prizeCache?.value ?? PRIZE_CAP_USDM;
+  }
+}
 
 const clampScore = (v: unknown) => {
   const n = Math.floor(Number(v));
@@ -82,7 +102,7 @@ export async function GET(req: NextRequest) {
       seed: weekSeed(i),
       startsAt: weekStart(i),
       endsAt: weekEnd(i),
-      prize: PRIZE_USDM,
+      prize: await fundedPrize(), // the real funded amount, never more than is in the vault
       split: CUP_SPLIT,
       entries: board.slice(0, 20),
       count: board.length,
@@ -226,9 +246,13 @@ export async function POST(req: NextRequest) {
           const bannedSet = new Set((flags ?? []).filter((f) => f.banned).map((f) => f.address));
           pool = pool.filter((e) => !bannedSet.has(e.address));
         }
+        // the pot is whatever the vault actually holds, capped at the ceiling —
+        // never more than is funded, so the payout can't overdraw or over-promise
+        const funded = Number(formatUnits(await cupVaultBalance(), 18));
+        const pot = Math.min(PRIZE_CAP_USDM, Math.floor(funded * 100) / 100);
         winners = pool.slice(0, 3).map((e, idx) => ({
           address: e.address,
-          amount: Number((PRIZE_USDM * CUP_SPLIT[idx]).toFixed(4)),
+          amount: Number((pot * CUP_SPLIT[idx]).toFixed(4)),
           tx: null,
         }));
         await db.from("cup_weeks").update({ winners }).eq("week", wk);
@@ -245,6 +269,16 @@ export async function POST(req: NextRequest) {
       const MEDALS = ["🥇 Weekly Cup champion", "🥈 Weekly Cup 2nd", "🥉 Weekly Cup 3rd"];
       const unpaid = winners.filter((w) => !w.tx);
       const owed = unpaid.reduce((s, w) => s + w.amount, 0);
+
+      // No cash funded this week: record the podium for bragging rights and
+      // settle cleanly, no payout. Never tries to send a zero-value tx.
+      if (owed <= 0) {
+        await db
+          .from("cup_weeks")
+          .update({ status: "settled", settled_at: new Date().toISOString(), settle_error: null, winners })
+          .eq("week", wk);
+        return NextResponse.json({ ok: true, settled: true, winners });
+      }
 
       if (cupContract() && unpaid.length === winners.length) {
         // preferred: ONE relayer tx via the WeeklyCup vault pays the whole
