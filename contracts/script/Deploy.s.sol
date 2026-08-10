@@ -20,7 +20,7 @@ import {ArcadeEscrow} from "../src/ArcadeEscrow.sol";
 contract Deploy is Script {
     function run() external {
         address relayer = vm.envOr("RELAYER", address(0x2b0755026F8312D0c600229774999F7EBC1f70f9));
-        address feeRecipient = vm.envOr("FEE_RECIPIENT", address(0x32a3596C25A98950E850E3531a0aA87f1506e5d7));
+        address feeRecipient = vm.envOr("FEE_RECIPIENT", address(0x0A39ABC474D355fF0e7174E28745F5535f9BA28E));
         address stakeToken = vm.envOr("STAKE_TOKEN", address(0x765DE816845861e75A25fCA122bb6898B8B1282a));
 
         uint16 feeBps = 500; // 5%

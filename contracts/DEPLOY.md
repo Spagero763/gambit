@@ -21,7 +21,7 @@ cast wallet address --account gambit-deployer
 
 ```bash
 export RELAYER=0x2b0755026F8312D0c600229774999F7EBC1f70f9
-export FEE_RECIPIENT=0x32a3596C25A98950E850E3531a0aA87f1506e5d7
+export FEE_RECIPIENT=0x0A39ABC474D355fF0e7174E28745F5535f9BA28E
 # STAKE_TOKEN defaults to cUSD (same address on Sepolia and mainnet)
 ```
 

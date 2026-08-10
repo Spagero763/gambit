@@ -13,8 +13,12 @@ dashboard we link from the MiniPay submission and the site.
 | RewardsVault (Referral) | `0xED328Ce807ad1F97472b119755fB1d43E1fD0A75` | USDm | `RewardPaid`, `Swept` |
 | RewardsVault (Claims) | `0x47302b7e3C7674bb307fd7768eA6d2462C12Ebd5` | G$ | `RewardPaid`, `Swept` |
 
-Owner of all four: `0x32a3596C25A98950E850E3531a0aA87f1506e5d7`.
+Owner of all four: `0x0A39ABC474D355fF0e7174E28745F5535f9BA28E`.
 Relayer of all four: `0xa4fB1ED5abbaFC0820e5399aE9E61C9a3B16ACbe`.
+
+Ownership moved here from `0x32a3596C25A98950E850E3531a0aA87f1506e5d7` on
+2026-08-10 after that key was exposed. The old address still appears in
+pre-August events, so filter owner-only actions by date, not by address alone.
 
 **Do NOT add `0x28825CB6a2D9f13947e4023317904A38Bd35dB9e`** — that is the escrow
 on **Sepolia testnet**. It is play money and would inflate the dashboard with
