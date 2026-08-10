@@ -8,9 +8,9 @@ import { hasToken, signIn, getToken } from "@/lib/profile";
 import { ExternalA } from "@/components/ExternalA";
 import { AdminVaultActions } from "@/components/AdminVaultActions";
 import { AdminTokenAllowlist } from "@/components/AdminTokenAllowlist";
+import { OWNER_ADDRESS as OWNER } from "@/lib/owner";
 import { cn } from "@/lib/cn";
 
-const OWNER = "0x32a3596c25a98950e850e3531a0aa87f1506e5d7";
 const EXPLORER: Record<number, string> = { 42220: "https://celoscan.io/tx/", 11142220: "https://sepolia.celoscan.io/tx/" };
 
 interface Vault {
