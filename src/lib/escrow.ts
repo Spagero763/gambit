@@ -74,6 +74,27 @@ export const ESCROW_ABI = [
     outputs: [{ name: "", type: "address[]" }],
   },
   {
+    // Which ERC20s the escrow will accept a stake in. Read before offering a
+    // token: staking one that isn't allowed reverts, and the player has already
+    // paid gas on the approve by then.
+    type: "function",
+    name: "allowedTokens",
+    stateMutability: "view",
+    inputs: [{ name: "", type: "address" }],
+    outputs: [{ name: "", type: "bool" }],
+  },
+  {
+    // Owner-only. Signed by the owner wallet in the browser, never by the server.
+    type: "function",
+    name: "setTokenAllowed",
+    stateMutability: "nonpayable",
+    inputs: [
+      { name: "token", type: "address" },
+      { name: "allowed", type: "bool" },
+    ],
+    outputs: [],
+  },
+  {
     type: "function",
     name: "matches",
     stateMutability: "view",

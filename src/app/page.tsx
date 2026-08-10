@@ -2,7 +2,6 @@ import { Backdrop } from "@/components/Backdrop";
 import { Header } from "@/components/Header";
 import { Hero } from "@/components/Hero";
 import { DailyReward } from "@/components/DailyReward";
-import { GoodDollarCard } from "@/components/GoodDollarCard";
 import { DailyChallengeCard } from "@/components/DailyChallengeCard";
 import { GameGrid } from "@/components/GameGrid";
 import { TrustStrip } from "@/components/TrustStrip";
@@ -24,7 +23,6 @@ export default function Home() {
         <Hero />
         <div className="px-5 lg:px-0">
           <DailyReward />
-          <GoodDollarCard />
           <DailyChallengeCard />
           <LazySaveProgressPrompt />
           <LazyActiveGames />

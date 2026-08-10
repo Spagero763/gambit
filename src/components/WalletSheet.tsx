@@ -1,57 +1,32 @@
 "use client";
 
-import { useState } from "react";
 import { motion } from "framer-motion";
-import { X, Copy, Check, ArrowUpRight, User as UserIcon, LogOut } from "lucide-react";
+import { X, User as UserIcon, LogOut } from "lucide-react";
 import Link from "next/link";
-import { useBalance } from "wagmi";
 import { usePrivy } from "@privy-io/react-auth";
-import { tokensFor } from "@/lib/tokens";
-import { ACTIVE_CHAIN_ID } from "@/lib/wagmi";
+import { useInMiniPay, ADD_CASH_URL } from "@/lib/minipay";
+import { useStableBalances } from "@/hooks/useStableBalances";
 import { useSettings, AVATAR_HEX } from "@/lib/settings";
+import { displayName } from "@/lib/handle";
 import { Avatar } from "@/components/Avatar";
-import { SendFunds } from "@/components/SendFunds";
 import { Portal } from "@/components/Portal";
 
-function short(a: string) {
-  return `${a.slice(0, 6)}…${a.slice(-4)}`;
-}
-
-/** One balance row — native CELO when `token` is undefined, else an ERC-20. */
-function BalanceRow({ address, token, symbol }: { address: `0x${string}`; token?: `0x${string}`; symbol: string }) {
-  const { data } = useBalance({ address, token, query: { enabled: !!address } });
-  const v = data ? Number(data.formatted) : 0;
-  return (
-    <div className="flex items-center justify-between rounded-xl border border-line bg-void-800 px-3.5 py-2.5">
-      <span className="text-sm font-medium text-ink">{symbol}</span>
-      <span className="nums text-sm text-ink-dim">{v.toLocaleString(undefined, { maximumFractionDigits: 4 })}</span>
-    </div>
-  );
-}
-
 /**
- * The wallet modal Privy doesn't provide: tap the wallet chip → see your
- * address, balances, and Withdraw. Mirrors the "tap wallet → manage" pattern
- * people know from WalletConnect, so the cash-out path is obvious.
+ * The wallet modal. Tap the wallet chip → see who you are, what you hold, and
+ * the deposit path.
+ *
+ * MiniPay review items 5 & 3 shape this: inside the Mini App there is no Copy,
+ * Send, or Withdraw button and no raw 0x… address shown — instead the deposit
+ * link opens so players can fund themselves in their own stablecoin (USD₮,
+ * USDC, or USDm). On the open web the withdraw path is still there (in
+ * Profile), because funds must not be trapped outside MiniPay.
  */
 export function WalletSheet({ address, onClose }: { address: `0x${string}`; onClose: () => void }) {
-  const [copied, setCopied] = useState(false);
-  const [withdraw, setWithdraw] = useState(false);
   const { logout } = usePrivy();
   const [settings] = useSettings();
-  const tokens = tokensFor(ACTIVE_CHAIN_ID);
-
-  const copy = async () => {
-    try {
-      await navigator.clipboard.writeText(address);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 1500);
-    } catch {
-      /* clipboard blocked */
-    }
-  };
-
-  if (withdraw) return <SendFunds address={address} onClose={() => setWithdraw(false)} />;
+  const miniPay = useInMiniPay();
+  const { balances, total, loading } = useStableBalances(address);
+  const name = displayName(settings.name, address);
 
   return (
     <Portal>
@@ -68,49 +43,64 @@ export function WalletSheet({ address, onClose }: { address: `0x${string}`; onCl
             <button onClick={onClose} className="rounded-lg p-1 text-ink-faint hover:text-ink"><X className="h-5 w-5" /></button>
           </div>
 
-          {/* identity + address */}
+          {/* identity — no raw address, ever */}
           <div className="mt-4 flex items-center gap-3">
             <Avatar
               image={settings.avatarImage || undefined}
               color={AVATAR_HEX[settings.avatar] ?? AVATAR_HEX.teal}
-              name={settings.name || address.slice(2, 4)}
+              name={name}
               size={40}
               rounded="rounded-xl"
             />
             <div className="min-w-0">
-              <p className="truncate text-sm font-semibold text-ink">{settings.name || "Your account"}</p>
-              <button onClick={copy} className="group inline-flex items-center gap-1.5 font-mono text-[11px] text-ink-faint hover:text-ink">
-                {short(address)}
-                {copied ? <Check className="h-3 w-3 text-teal" /> : <Copy className="h-3 w-3 opacity-60 group-hover:opacity-100" />}
-              </button>
+              <p className="truncate text-sm font-semibold text-ink">{name}</p>
+              <p className="text-[11px] text-ink-faint">Celo wallet</p>
             </div>
           </div>
 
-          {/* balances */}
+          {/* balances, all stablecoins; CELO is never surfaced */}
           <p className="mb-2 mt-5 text-xs font-medium text-ink-faint">Balances</p>
           <div className="space-y-2">
-            <BalanceRow address={address} symbol="CELO" />
-            {tokens.map((t) => (
-              <BalanceRow key={t.address} address={address} token={t.address} symbol={t.symbol} />
+            {balances.map((b) => (
+              <div key={b.token.address} className="flex items-center justify-between rounded-xl border border-line bg-void-800 px-3.5 py-2.5">
+                <span className="text-sm font-medium text-ink">{b.token.symbol}</span>
+                <span className="nums text-sm text-ink-dim">{b.amount.toLocaleString(undefined, { maximumFractionDigits: 4 })}</span>
+              </div>
             ))}
+            {loading && <div className="h-9 animate-pulse rounded-xl border border-line bg-void-800" />}
+            {total > 0 && (
+              <div className="flex items-center justify-between rounded-xl border border-teal/20 bg-teal/10 px-3.5 py-2.5">
+                <span className="text-sm font-medium text-teal">Total</span>
+                <span className="nums text-sm font-semibold text-teal">{total.toFixed(2)}</span>
+              </div>
+            )}
           </div>
 
-          {/* actions */}
-          <button
-            onClick={() => setWithdraw(true)}
-            className="btn-primary mt-4 flex w-full items-center justify-center gap-2 rounded-xl py-3 text-sm shadow-glow"
-          >
-            <ArrowUpRight className="h-4 w-4" /> Withdraw / Send
-          </button>
-          <p className="mt-2 text-center text-[11px] text-ink-faint">Cash out your G$/USDm to any wallet or exchange.</p>
+          {/* in MiniPay the only way money moves in is the Add Cash deeplink */}
+          {miniPay && (
+            <a
+              href={ADD_CASH_URL}
+              className="btn-primary mt-4 flex w-full items-center justify-center gap-2 rounded-xl py-3 text-sm shadow-glow"
+            >
+              Add cash
+            </a>
+          )}
+          <p className="mt-2 text-center text-[11px] text-ink-faint">
+            {miniPay
+              ? "Add cash in USDT, USDC or USDm. Network fee and deposits are paid in Celo, which you never need to buy."
+              : "Your wallet on Celo. Deposit a stablecoin or play a free game."}
+          </p>
 
           <div className="mt-4 flex items-center justify-between border-t border-line pt-3">
             <Link href="/profile" onClick={onClose} className="inline-flex items-center gap-1.5 text-[13px] font-medium text-ink-dim hover:text-ink">
               <UserIcon className="h-3.5 w-3.5" /> Profile
             </Link>
-            <button onClick={() => logout()} className="inline-flex items-center gap-1.5 text-[13px] font-medium text-ink-faint transition-colors hover:text-rose">
-              <LogOut className="h-3.5 w-3.5" /> Sign out
-            </button>
+            {/* nothing to sign out of in MiniPay — the wallet is the app */}
+            {!miniPay && (
+              <button onClick={() => logout()} className="inline-flex items-center gap-1.5 text-[13px] font-medium text-ink-faint transition-colors hover:text-rose">
+                <LogOut className="h-3.5 w-3.5" /> Sign out
+              </button>
+            )}
           </div>
         </motion.div>
       </div>

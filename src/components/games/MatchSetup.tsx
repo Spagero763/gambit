@@ -6,7 +6,9 @@ import { ArrowLeft, Bot, Swords, Wallet, Loader2, ShieldCheck, Copy, Check, Aler
 import Link from "next/link";
 import { StakeRules } from "./StakeRules";
 import { useAccount, useSwitchChain, useSignMessage, useBalance } from "wagmi";
-import { usePrivy } from "@privy-io/react-auth";
+import { useWalletAuth } from "@/hooks/useWalletAuth";
+import { useAllowedTokens } from "@/hooks/useAllowedTokens";
+import { useStableBalances } from "@/hooks/useStableBalances";
 import { Game } from "@/lib/games";
 import { GameCover } from "@/components/art/GameCover";
 import { Difficulty, DIFFICULTIES, SUPPORTS_DIFFICULTY } from "@/lib/difficulty";
@@ -15,7 +17,7 @@ import { hasToken, signIn } from "@/lib/profile";
 import { registerMatch, joinServerMatch } from "@/lib/matchClient";
 import { ShareButton } from "@/components/ShareButton";
 import { ACTIVE_CHAIN_ID } from "@/lib/wagmi";
-import { tokensFor, StakeToken } from "@/lib/tokens";
+import { StakeToken } from "@/lib/tokens";
 import { parseUnits, formatUnits } from "viem";
 import { cn } from "@/lib/cn";
 
@@ -44,18 +46,28 @@ export function MatchSetup({
   const [rulesSeen, setRulesSeen] = useState(false);
   const [stake, setStake] = useState<number>(game.minStake);
   const [custom, setCustom] = useState("");
-  const tokens = tokensFor(ACTIVE_CHAIN_ID);
-  const [token, setToken] = useState<StakeToken>(tokens[0]);
   const [difficulty, setDifficulty] = useState<Difficulty>("normal");
   const [joinId, setJoinId] = useState("");
   const [copied, setCopied] = useState(false);
   const { address, isConnected } = useAccount();
-  const { login } = usePrivy();
+  const { canSignIn, signIn: signInWallet } = useWalletAuth();
   const { switchChain } = useSwitchChain();
   const { createMatch, joinMatch, cancelMatch, step, error, matchId, ready, onActiveChain, reset } = useStakeMatch();
   const [cancelling, setCancelling] = useState(false);
   const { signMessageAsync } = useSignMessage();
   const [authed, setAuthed] = useState(false);
+
+  // Which tokens the escrow actually accepts, and what this player holds. Both
+  // read live: a token the contract rejects must never reach the picker (the
+  // player would pay gas on the approve and then watch the stake revert), and
+  // the default should be the stablecoin they already have money in.
+  const { tokens } = useAllowedTokens();
+  const { balances, preferred } = useStableBalances(address);
+  // null = "nobody has chosen yet", so the live default below can still apply
+  const [picked, setPicked] = useState<StakeToken | null>(null);
+  const preferredAllowed = tokens.find((t) => t.address === preferred?.token.address);
+  const token = picked && tokens.some((t) => t.address === picked.address) ? picked : preferredAllowed ?? tokens[0];
+
   useEffect(() => {
     setAuthed(hasToken(address));
   }, [address]);
@@ -91,7 +103,7 @@ export function MatchSetup({
     }
     if (tok) {
       const found = tokens.find((t) => t.address.toLowerCase() === tok.toLowerCase());
-      if (found) setToken(found);
+      if (found) setPicked(found);
     }
     if (s) {
       const n = parseFloat(s);
@@ -255,20 +267,26 @@ export function MatchSetup({
 
             {tokens.length > 1 && (
               <div className="mb-3">
-                <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-ink-faint">Token</p>
-                <div className="grid grid-cols-2 gap-2">
-                  {tokens.map((t) => (
-                    <button
-                      key={t.address}
-                      onClick={() => setToken(t)}
-                      className={cn(
-                        "rounded-xl border px-3 py-2 text-sm font-semibold transition-colors",
-                        token.address === t.address ? "border-teal/50 bg-teal/[0.1] text-ink" : "border-line bg-void-800 text-ink-dim hover:text-ink"
-                      )}
-                    >
-                      {t.symbol}
-                    </button>
-                  ))}
+                <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-ink-faint">Stake in</p>
+                <div className="grid grid-cols-3 gap-2">
+                  {tokens.map((t) => {
+                    const held = balances.find((b) => b.token.address === t.address)?.amount ?? 0;
+                    return (
+                      <button
+                        key={t.address}
+                        onClick={() => setPicked(t)}
+                        className={cn(
+                          "rounded-xl border px-2 py-2 text-sm font-semibold transition-colors",
+                          token.address === t.address ? "border-teal/50 bg-teal/[0.1] text-ink" : "border-line bg-void-800 text-ink-dim hover:text-ink"
+                        )}
+                      >
+                        {t.symbol}
+                        {/* what they hold, so picking a token they have no money
+                            in is an obvious mistake rather than a silent one */}
+                        <span className="nums mt-0.5 block text-[10px] font-medium text-ink-faint">{held.toFixed(2)}</span>
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
             )}
@@ -346,12 +364,19 @@ export function MatchSetup({
             </div>
 
             {!isConnected ? (
-              <button
-                onClick={() => login()}
-                className="btn-primary mt-4 flex w-full items-center justify-center gap-2 rounded-2xl py-3.5 text-sm shadow-glow"
-              >
-                <Wallet className="h-4 w-4" /> Connect to stake
-              </button>
+              canSignIn ? (
+                <button
+                  onClick={signInWallet}
+                  className="btn-primary mt-4 flex w-full items-center justify-center gap-2 rounded-2xl py-3.5 text-sm shadow-glow"
+                >
+                  <Wallet className="h-4 w-4" /> Connect to stake
+                </button>
+              ) : (
+                // MiniPay connects on its own; asking would be a dead button
+                <div className="mt-4 flex w-full items-center justify-center gap-2 rounded-2xl border border-line bg-void-700 py-3.5 text-sm text-ink-dim">
+                  Connecting your wallet…
+                </div>
+              )
             ) : !onActiveChain ? (
               <button
                 onClick={() => switchChain({ chainId: ACTIVE_CHAIN_ID })}

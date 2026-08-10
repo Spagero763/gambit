@@ -7,6 +7,7 @@ import { usePrivy } from "@privy-io/react-auth";
 import { hasToken, signIn, getToken } from "@/lib/profile";
 import { ExternalA } from "@/components/ExternalA";
 import { AdminVaultActions } from "@/components/AdminVaultActions";
+import { AdminTokenAllowlist } from "@/components/AdminTokenAllowlist";
 import { cn } from "@/lib/cn";
 
 const OWNER = "0x32a3596c25a98950e850e3531a0aa87f1506e5d7";
@@ -20,7 +21,7 @@ interface Vault {
 }
 interface Status {
   relayer: { address: string; balanceCELO: number; lowGas: boolean } | null;
-  vaults: { cup: Vault | null; claims: Vault | null; referral: Vault | null } | null;
+  vaults: { cup: Vault | null; referral: Vault | null } | null;
   cup?: { address: string; score: number; name: string | null; banned: boolean }[];
   week?: string;
   matches: any[];
@@ -119,13 +120,13 @@ export function AdminPanel() {
       {/* prize vaults: balances + low warnings + one-tap cup settle */}
       {data?.vaults && (
         <>
-          <div className="mt-3 grid grid-cols-3 gap-2">
+          <div className="mt-3 grid grid-cols-2 gap-2">
             <VaultCard label="Cup" unit="USDm" v={data.vaults.cup} />
-            <VaultCard label="Claims" unit="G$" v={data.vaults.claims} />
             <VaultCard label="Referral" unit="USDm" v={data.vaults.referral} />
           </div>
           <div className="mt-2">
             <AdminVaultActions vaults={data.vaults} owner={OWNER} onDone={load} />
+            <AdminTokenAllowlist owner={OWNER} />
           </div>
         </>
       )}

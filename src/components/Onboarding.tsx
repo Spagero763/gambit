@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { Sparkles, Wallet, Gamepad2, Swords, User, Check, ArrowLeft, ArrowRight } from "lucide-react";
 import { useAccount } from "wagmi";
-import { usePrivy } from "@privy-io/react-auth";
+import { useWalletAuth } from "@/hooks/useWalletAuth";
 import { Modal } from "./Modal";
 import { cn } from "@/lib/cn";
 
@@ -13,7 +13,7 @@ const STEPS = [
   {
     icon: Sparkles,
     title: "Welcome to Gambit",
-    body: "Five classic games — chess, Naija Whot, tic-tac-toe, snakes & ladders, and a block puzzle. Play free against the bot, or stake USDm on a 1v1 and the winner takes the pot.",
+    body: "Five classic games: chess, Naija Whot, tic-tac-toe, snakes & ladders, and a block puzzle. Play free against the bot, or stake a stablecoin on a 1v1 and the winner takes the pot.",
   },
   {
     icon: Wallet,
@@ -24,7 +24,7 @@ const STEPS = [
   {
     icon: Gamepad2,
     title: "Pick a game & play",
-    body: "Tap any game to start instantly vs the bot. Choose “Staked 1v1” to put USDm on the line — sign in once, set your stake, and play.",
+    body: "Tap any game to start instantly vs the bot. Choose “Staked 1v1” to put money on the line, set your stake in USDT, USDC or USDm, and play.",
   },
   {
     icon: Swords,
@@ -38,11 +38,20 @@ const STEPS = [
   },
 ] as const;
 
+// In MiniPay the second step is not an instruction, it is a statement of fact:
+// the player is already signed in before they read it. Same slot, no CTA.
+const CONNECT_MINIPAY = {
+  icon: Wallet,
+  title: "You are already signed in",
+  body: "MiniPay brought your wallet with you, so there is nothing to create and nothing to sign. Your stablecoin balance is ready to stake.",
+  connect: true,
+} as const;
+
 export function Onboarding() {
   const [open, setOpen] = useState(false);
   const [i, setI] = useState(0);
   const { isConnected } = useAccount();
-  const { login: openWallet } = usePrivy();
+  const { canSignIn, signIn: signInWallet } = useWalletAuth();
 
   useEffect(() => {
     try {
@@ -64,9 +73,10 @@ export function Onboarding() {
     }
   };
 
-  const step = STEPS[i];
+  const steps = canSignIn ? STEPS : STEPS.map((s) => ("connect" in s && s.connect ? CONNECT_MINIPAY : s));
+  const step = steps[i];
   const Icon = step.icon;
-  const last = i === STEPS.length - 1;
+  const last = i === steps.length - 1;
 
   return (
     <Modal open={open} onClose={finish} title="Getting started">
@@ -83,10 +93,12 @@ export function Onboarding() {
               <span className="inline-flex items-center gap-1.5 rounded-xl border border-teal/40 bg-teal/[0.08] px-3 py-2 text-sm font-medium text-teal">
                 <Check className="h-4 w-4" /> Signed in
               </span>
-            ) : (
-              <button onClick={() => openWallet()} className="btn-primary inline-flex items-center gap-2 rounded-xl px-5 py-2.5 text-sm shadow-glow">
+            ) : canSignIn ? (
+              <button onClick={signInWallet} className="btn-primary inline-flex items-center gap-2 rounded-xl px-5 py-2.5 text-sm shadow-glow">
                 <Wallet className="h-4 w-4" /> Sign in
               </button>
+            ) : (
+              <span className="text-sm text-ink-dim">Connecting your wallet…</span>
             )}
           </div>
         )}
@@ -94,7 +106,7 @@ export function Onboarding() {
 
       {/* progress dots */}
       <div className="mt-6 flex justify-center gap-1.5">
-        {STEPS.map((_, n) => (
+        {steps.map((_, n) => (
           <span key={n} className={cn("h-1.5 rounded-full transition-all", n === i ? "w-5 bg-teal" : "w-1.5 bg-void-600")} />
         ))}
       </div>

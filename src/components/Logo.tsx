@@ -30,9 +30,12 @@ export function GambitMark({ size = 34, className }: { size?: number; className?
 
 export function Logo({ className }: { className?: string }) {
   return (
-    <div className={cn("flex items-center gap-2.5", className)}>
-      <GambitMark size={32} />
-      <span className="text-[19px] font-semibold tracking-tight text-ink">Gambit</span>
+    <div className={cn("flex min-w-0 items-center gap-2 min-[380px]:gap-2.5", className)}>
+      <GambitMark size={30} className="shrink-0" />
+      {/* truncates instead of colliding with the header controls on 360px screens */}
+      <span className="truncate text-[18px] font-semibold tracking-tight text-ink min-[380px]:text-[19px]">
+        Gambit
+      </span>
     </div>
   );
 }

@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { BackLink } from "@/components/BackLink";
 
 export const metadata: Metadata = {
   title: "Terms of Service | Gambit",
@@ -9,8 +10,9 @@ export const metadata: Metadata = {
 /** Plain-language terms. Required for the MiniPay listing; useful everywhere. */
 export default function TermsPage() {
   return (
-    <main className="mx-auto w-full max-w-2xl px-5 pb-28 pt-8">
-      <h1 className="font-display text-2xl font-bold">Terms of Service</h1>
+    <main className="mx-auto w-full max-w-2xl px-5 pb-28" style={{ paddingTop: "calc(1.5rem + env(safe-area-inset-top))" }}>
+      <BackLink />
+      <h1 className="mt-4 font-display text-2xl font-bold">Terms of Service</h1>
       <p className="mt-1 text-xs text-ink-faint">Last updated: July 2026</p>
 
       <div className="mt-6 space-y-5 text-sm leading-relaxed text-ink-dim">
@@ -45,8 +47,8 @@ export default function TermsPage() {
           <h2 className="mb-1 font-semibold text-ink">Fair play</h2>
           <p>
             One account per person. Bots, exploits, collusion and multi account play in prized events are
-            prohibited. Prized tournaments may require proof that you are a unique human (for example GoodDollar
-            verification). We may exclude wallets that break these rules from prized events.
+            prohibited. We may exclude wallets that break these rules from prized events, and we may void a
+            result that came from breaking them.
           </p>
         </section>
 

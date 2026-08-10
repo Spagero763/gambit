@@ -1,13 +1,21 @@
 "use client";
 
-import { Settings as SettingsIcon, HelpCircle, Volume2, VolumeX } from "lucide-react";
+import { Settings as SettingsIcon, Volume2, VolumeX } from "lucide-react";
 import Link from "next/link";
 import { motion, useScroll, useTransform } from "framer-motion";
 import { Logo } from "./Logo";
 import { WalletPill } from "./WalletPill";
 import { useSettings } from "@/lib/settings";
 
-/** Sticky header that condenses as you scroll — the chrome feels alive. */
+/**
+ * Sticky header that condenses as you scroll.
+ *
+ * Layout note: the brand and the controls are separate flex children and the
+ * brand is allowed to shrink (`min-w-0` + a truncating wordmark). Previously the
+ * logo could not shrink, so on a 360px screen the control cluster was pushed
+ * left and the sound button sat on top of the "Gambit" wordmark. The controls
+ * are `shrink-0`, so the brand gives up space instead of overlapping.
+ */
 export function Header() {
   const { scrollY } = useScroll();
   const padY = useTransform(scrollY, [0, 90], [14, 8]);
@@ -15,7 +23,7 @@ export function Header() {
   const lineOpacity = useTransform(scrollY, [0, 90], [0, 1]);
 
   return (
-    <header className="sticky top-0 z-50">
+    <header className="sticky top-0 z-50" style={{ paddingTop: "env(safe-area-inset-top)" }}>
       {/* solid fade so content scrolls cleanly under the bar */}
       <div className="pointer-events-none absolute inset-x-0 top-0 h-full bg-void/85 backdrop-blur-sm mask-fade-b" />
       <motion.div
@@ -24,28 +32,21 @@ export function Header() {
       />
       <motion.div
         style={{ paddingTop: padY, paddingBottom: padY }}
-        className="relative mx-auto flex w-full max-w-2xl items-center justify-between px-5 lg:max-w-6xl"
+        className="relative mx-auto flex w-full max-w-2xl items-center gap-2 px-4 min-[380px]:px-5 lg:max-w-6xl"
       >
-        <Link href="/" aria-label="Home">
+        <Link href="/" aria-label="Home" className="min-w-0 shrink">
           <motion.div style={{ scale: logoScale, transformOrigin: "left center" }} whileTap={{ scale: 0.94 }}>
             <Logo />
           </motion.div>
         </Link>
-        <div className="flex items-center gap-2">
+        <div className="ml-auto flex shrink-0 items-center gap-1.5 min-[380px]:gap-2">
           <MuteButton />
-          <button
-            aria-label="How Gambit works"
-            onClick={() => window.dispatchEvent(new Event("gambit:tour"))}
-            className="hidden h-10 w-10 place-items-center rounded-xl border border-line bg-void-700 text-ink-dim transition-colors hover:text-ink min-[390px]:grid"
-          >
-            <HelpCircle className="h-[18px] w-[18px]" />
-          </button>
           <Link
             href="/settings"
             aria-label="Settings"
-            className="group grid h-10 w-10 place-items-center rounded-xl border border-line bg-void-700 text-ink-dim transition-colors hover:text-ink"
+            className="group grid h-9 w-9 shrink-0 place-items-center rounded-xl border border-line bg-void-700 text-ink-dim transition-colors hover:text-ink min-[380px]:h-10 min-[380px]:w-10"
           >
-            <SettingsIcon className="h-[18px] w-[18px] transition-transform duration-500 ease-out group-hover:rotate-90" />
+            <SettingsIcon className="h-[17px] w-[17px] transition-transform duration-500 ease-out group-hover:rotate-90" />
           </Link>
           <WalletPill />
         </div>
@@ -71,9 +72,9 @@ function MuteButton() {
       // start, so turning it on here also starts the music (that is why it stayed
       // silent before — nothing switched music on)
       onClick={() => update(muted ? { volume: 0.5, musicOn: true } : { volume: 0, musicOn: false })}
-      className="grid h-10 w-10 place-items-center rounded-xl border border-line bg-void-700 text-ink-dim transition-colors hover:text-ink"
+      className="grid h-9 w-9 shrink-0 place-items-center rounded-xl border border-line bg-void-700 text-ink-dim transition-colors hover:text-ink min-[380px]:h-10 min-[380px]:w-10"
     >
-      {muted ? <VolumeX className="h-[18px] w-[18px]" /> : <Volume2 className="h-[18px] w-[18px]" />}
+      {muted ? <VolumeX className="h-[17px] w-[17px]" /> : <Volume2 className="h-[17px] w-[17px]" />}
     </button>
   );
 }

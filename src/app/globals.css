@@ -145,7 +145,10 @@ body {
   }
   to {
     opacity: 1;
-    transform: translateY(0);
+    /* `none`, not translateY(0) — a zero transform still opens a stacking
+       context, and `both` keeps it forever. That is what stacked the "How it
+       works" panel under the "Play a free game" button. */
+    transform: none;
   }
 }
 .hero-in {

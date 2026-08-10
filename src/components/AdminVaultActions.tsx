@@ -8,7 +8,7 @@ import { ExternalA } from "@/components/ExternalA";
 import { cn } from "@/lib/cn";
 
 const CELO = 42220;
-// Both vault tokens on Celo (USDm and G$) are 18-decimal ERC20s.
+// The vault token (USDm) is an 18-decimal ERC20.
 const DECIMALS = 18;
 
 const vaultAbi = parseAbi(["function sweep(address token_, address to, uint256 amount)"]);
@@ -24,7 +24,7 @@ export interface VaultInfo {
 type Mode = "withdraw" | "fund";
 
 /**
- * Owner-only money controls for the three prize vaults.
+ * Owner-only money controls for the prize vaults.
  *
  * `sweep` on the vaults is `onlyOwner`, and the server's relayer is NOT the
  * owner — so every transaction here is signed by the connected owner wallet in
@@ -36,7 +36,7 @@ export function AdminVaultActions({
   owner,
   onDone,
 }: {
-  vaults: { cup: VaultInfo | null; claims: VaultInfo | null; referral: VaultInfo | null };
+  vaults: { cup: VaultInfo | null; referral: VaultInfo | null };
   owner: string;
   onDone?: () => void;
 }) {
@@ -45,7 +45,7 @@ export function AdminVaultActions({
   const { switchChain } = useSwitchChain();
   const { writeContractAsync } = useWriteContract();
 
-  const [which, setWhich] = useState<"cup" | "claims" | "referral">("cup");
+  const [which, setWhich] = useState<"cup" | "referral">("cup");
   const [mode, setMode] = useState<Mode>("withdraw");
   const [amount, setAmount] = useState("");
   const [to, setTo] = useState("");
@@ -57,7 +57,6 @@ export function AdminVaultActions({
 
   const OPTIONS = [
     { key: "cup" as const, label: "Cup", unit: "USDm", v: vaults.cup },
-    { key: "claims" as const, label: "Claims", unit: "G$", v: vaults.claims },
     { key: "referral" as const, label: "Referral", unit: "USDm", v: vaults.referral },
   ];
   const sel = OPTIONS.find((o) => o.key === which)!;

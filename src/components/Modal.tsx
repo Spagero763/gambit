@@ -3,7 +3,14 @@
 import { ReactNode } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { X } from "lucide-react";
+import { Portal } from "@/components/Portal";
 
+/**
+ * Portaled to <body> on purpose. Rendered in place, a `fixed` overlay is trapped
+ * by any transformed ancestor (our CSS entrance animations end on a transform),
+ * which stacks the modal BELOW later siblings — that is what made the "How it
+ * works" panel appear underneath the "Play a free game" button.
+ */
 export function Modal({
   open,
   onClose,
@@ -16,6 +23,7 @@ export function Modal({
   children: ReactNode;
 }) {
   return (
+    <Portal>
     <AnimatePresence>
       {open && (
         <motion.div
@@ -31,7 +39,7 @@ export function Modal({
             exit={{ scale: 0.95, opacity: 0 }}
             transition={{ type: "spring", stiffness: 280, damping: 26 }}
             onClick={(e) => e.stopPropagation()}
-            className="max-h-[85dvh] w-full max-w-md overflow-y-auto rounded-3xl border border-line bg-void-700 p-5 shadow-pop"
+            className="max-h-[85dvh] w-full max-w-md overflow-y-auto overscroll-contain rounded-3xl border border-line bg-void-700 p-5 shadow-pop"
           >
             <div className="flex items-center justify-between">
               <h2 className="text-lg font-semibold tracking-tight text-ink">{title}</h2>
@@ -48,5 +56,6 @@ export function Modal({
         </motion.div>
       )}
     </AnimatePresence>
+    </Portal>
   );
 }

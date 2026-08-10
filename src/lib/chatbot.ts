@@ -6,28 +6,14 @@
 //
 // Voice: plain, human, no dashes, no hype. Short answers a first-timer gets.
 
-export interface CupInfo {
-  prize?: number;
-  daysLeft?: number;
-}
-
 interface Entry {
   id: string;
   /** shown as a suggestion / the "question" bubble */
   q: string;
   /** words or phrases that should route a question to this answer */
   keywords: string[];
-  /** the answer; may fold in live cup info */
-  a: (cup: CupInfo | null) => string;
+  a: () => string;
 }
-
-const cupLine = (cup: CupInfo | null) => {
-  if (!cup) return "";
-  const bits: string[] = [];
-  if (cup.prize) bits.push(`This week the top 3 share ${cup.prize} USDm`);
-  if (cup.daysLeft && cup.daysLeft > 0) bits.push(`${cup.daysLeft} day${cup.daysLeft === 1 ? "" : "s"} left to enter`);
-  return bits.length ? ` ${bits.join(", ")}.` : "";
-};
 
 const ENTRIES: Entry[] = [
   {
@@ -42,36 +28,35 @@ const ENTRIES: Entry[] = [
     q: "Is it free to play?",
     keywords: ["free", "cost", "how much", "do i pay", "price", "spend"],
     a: () =>
-      "Yes. You can play the bot for free as much as you like, and the Weekly Cup is free to enter. You only put money down if you choose to play a staked match against a real person.",
+      "Yes. You can play the bot for free as much as you like. You only put money down if you choose to play a staked match against a real person.",
   },
   {
     id: "start",
     q: "How do I start?",
     keywords: ["start", "begin", "how do i play", "first", "new", "get going", "how to play"],
     a: () =>
-      "Open the app, sign in with your email, pick a game and tap Play. Start free against the bot to learn it, then try a staked match when you feel ready.",
+      "Open Gambit, pick a game and tap Play. You are signed in the moment you land, nothing to fill in. Start free against the bot to learn it, then try a staked match when you feel ready.",
   },
   {
     id: "earn",
     q: "How do I earn?",
     keywords: ["earn", "make money", "get paid", "win money", "reward", "profit", "cash"],
-    a: (cup) =>
-      "Three ways. Win a staked match and take the pot. Finish top 3 in the free Weekly Cup and share the prize. And claim your free daily reward every day for XP and a little G$." +
-      cupLine(cup),
+    a: () =>
+      "Two ways. Win a staked match and take the pot, paid the second the game ends. And claim your free daily reward every day to build XP and keep your streak alive.",
   },
   {
     id: "crypto",
     q: "Do I need crypto?",
     keywords: ["crypto", "bitcoin", "wallet", "need", "web3", "know crypto", "own"],
     a: () =>
-      "No. Sign in with your email and a wallet is made for you automatically. You do not need to know anything about crypto to play or to get paid.",
+      "No. Your wallet is ready the moment you land, nothing to set up. You do not need to know anything about crypto to play or to get paid.",
   },
   {
     id: "withdraw",
     q: "How do I cash out?",
     keywords: ["withdraw", "cash out", "cashout", "money out", "send money", "bank", "take out", "payout"],
     a: () =>
-      "Your winnings land straight in your wallet. From your profile you can send them to any address or wallet you use. Inside MiniPay you can cash out to your phone.",
+      "Your winnings land straight in your wallet the second the game ends, so there is nothing to claim. In MiniPay you cash out from your wallet screen the same way you would with any other money you hold.",
   },
   {
     id: "staking",
@@ -81,27 +66,18 @@ const ENTRIES: Entry[] = [
       "Pick a game and a stake, as little as 0.10. Both players put in the same amount, the winner takes 95 percent, and it is paid to their wallet the second the game ends. A draw refunds both players.",
   },
   {
-    id: "cup",
-    q: "How does the Weekly Cup work?",
-    keywords: ["cup", "weekly", "tournament", "leaderboard", "competition", "contest"],
-    a: (cup) =>
-      "The Weekly Cup is free to enter and humans only. Everyone plays the same board, and the top 3 scores share the prize, paid to their wallets." +
-      cupLine(cup) +
-      " A new cup starts every week.",
-  },
-  {
     id: "tokens",
-    q: "What is USDm and G$?",
-    keywords: ["usdm", "usdc", "g$", "gooddollar token", "stablecoin", "dollar", "what token", "currency"],
+    q: "Which money do I play with?",
+    keywords: ["usdt", "usdm", "usdc", "stablecoin", "dollar", "what token", "currency", "which money"],
     a: () =>
-      "USDm is a stablecoin, so 1 USDm is about 1 dollar. It is the money you stake and win. G$ is a free reward token you collect from your daily claims.",
+      "Stablecoins, so 1 is about 1 dollar. You can stake and win in USDT, USDC or USDm, whichever one you already hold. Gambit picks it up from your wallet on its own.",
   },
   {
     id: "daily",
     q: "What is the daily reward?",
     keywords: ["daily", "reward", "claim", "gift", "everyday", "each day"],
     a: () =>
-      "Tap the daily reward on the home screen once a day. You get XP and a little G$ sent to your wallet. Come back tomorrow to keep your streak going.",
+      "Tap the daily reward on the home screen once a day. You get XP straight away, no wallet popup and no waiting. Come back tomorrow to keep your streak going.",
   },
   {
     id: "streak",
@@ -116,13 +92,6 @@ const ENTRIES: Entry[] = [
     keywords: ["refer", "referral", "invite", "friend", "link", "code", "bring people"],
     a: () =>
       "Share your invite link from your profile. When a friend joins and plays, you earn a reward. The more friends who play, the more you collect.",
-  },
-  {
-    id: "verify",
-    q: "Why verify I am human?",
-    keywords: ["verify", "human", "gooddollar", "goodid", "face", "verification", "prove"],
-    a: () =>
-      "Verifying proves you are a real person, not a bot. It is free and takes about a minute. It lets you enter humans only cups and keeps the leaderboard fair for everyone.",
   },
   {
     id: "safe",
@@ -158,7 +127,7 @@ export const SUGGESTIONS = [
   "How do I start?",
   "Is it free to play?",
   "How do I earn?",
-  "How does the Weekly Cup work?",
+  "How does a staked match work?",
   "Do I need crypto?",
   "Is my money safe?",
 ];
@@ -185,7 +154,7 @@ function smallTalk(query: string): BotReply | null {
     return { text: "Anytime. Ask me anything else, or jump in and play. Good luck out there.", matched: true };
   if (RE.help.test(q))
     return {
-      text: "I can explain how to start, whether it is free, how to earn, the Weekly Cup, staked matches, cashing out, fees, and whether your money is safe. Tap one below or just ask.",
+      text: "I can explain how to start, whether it is free, how to earn, staked matches, cashing out, fees, and whether your money is safe. Tap one below or just ask.",
       matched: true,
       suggestions: SUGGESTIONS,
     };
@@ -216,7 +185,6 @@ const SYNONYMS: [RegExp, string][] = [
   [/\blegit\b|\bscam\b|\brug\b|\btrustworthy\b|\breliable\b|\bsecure\b/g, "safe"],
   [/\bnaira\b|\bpound\b|\bdollars?\b/g, "money"],
   [/\bopponent\b|\bother player\b|\bsomeone else\b|\breal person\b|\bvs\b|\bversus\b/g, "opponent"],
-  [/\bgooddollar\b|\bgood dollar\b|\bgoodid\b|\bgood id\b/g, "verify"],
   [/\brules\b|\bhow to win\b/g, "play"],
   [/\bwhot\b|\bchess\b|\bsnakes?\b|\bladders?\b|\bblitz\b|\btic ?tac ?toe\b/g, "games"],
 ];
@@ -256,7 +224,7 @@ export interface BotReply {
  * candidate questions instead of guessing, so the bot never confidently says the
  * wrong thing about someone's money.
  */
-export function askBot(query: string, cup: CupInfo | null): BotReply {
+export function askBot(query: string): BotReply {
   if (!query.trim()) return { text: FALLBACK, matched: false, suggestions: SUGGESTIONS.slice(0, 4) };
 
   // greetings, thanks, "what can you do" — handle these before the matcher so a
@@ -271,9 +239,9 @@ export function askBot(query: string, cup: CupInfo | null): BotReply {
 
   // Confident: a clear hit that is clearly ahead of the runner-up (this covers a
   // single strong keyword like "withdraw" or "fees").
-  if (top.s >= 2 && top.s - second.s >= 1.5) return { text: top.e.a(cup), matched: true };
+  if (top.s >= 2 && top.s - second.s >= 1.5) return { text: top.e.a(), matched: true };
   // Very strong hit, answer even if a second topic is somewhat close.
-  if (top.s >= 4) return { text: top.e.a(cup), matched: true };
+  if (top.s >= 4) return { text: top.e.a(), matched: true };
 
   // Some signal but two topics are close — ask rather than guess wrong.
   if (top.s >= 1) {

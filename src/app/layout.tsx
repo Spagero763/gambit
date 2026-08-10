@@ -25,7 +25,7 @@ const mono = JetBrains_Mono({
 });
 
 const DESCRIPTION =
-  "The games you grew up playing, now with real opponents and a real pot on Celo. Sign in with just an email and a wallet is made for you. Warm up free, then stake USDm or GoodDollar and the winner takes 95%, paid in seconds. Claim a little G$ every day.";
+  "The games you grew up playing, now with real opponents and a real pot on Celo. Open it and you are already in, nothing to sign up for. Warm up free, then stake USDT, USDC or USDm and the winner takes 95%, paid in seconds.";
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://www.bestgambit.live"),
@@ -59,6 +59,10 @@ export const viewport: Viewport = {
   themeColor: "#08080f",
   width: "device-width",
   initialScale: 1,
+  // Required for env(safe-area-inset-*) to report real values on notched iPhones.
+  // Without it iOS resolves those insets to 0 and the bottom nav sits under the
+  // home indicator.
+  viewportFit: "cover",
   // zoom stays enabled — locking it (maximumScale: 1) is hostile to low-vision
   // users and a MiniPay accessibility flag
 };

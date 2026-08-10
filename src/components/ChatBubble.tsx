@@ -6,7 +6,7 @@ import { X, Send } from "lucide-react";
 import { usePathname } from "next/navigation";
 import { Portal } from "@/components/Portal";
 import { GambitMark } from "@/components/Logo";
-import { askBot, SUGGESTIONS, type CupInfo } from "@/lib/chatbot";
+import { askBot, SUGGESTIONS } from "@/lib/chatbot";
 import { cn } from "@/lib/cn";
 
 // The bubble is hidden anywhere a game board or the ops panel is on screen, so
@@ -39,7 +39,6 @@ export function ChatBubble() {
   const [msgs, setMsgs] = useState<Msg[]>([{ from: "bot", text: GREETING }]);
   const [input, setInput] = useState("");
   const [typing, setTyping] = useState(false);
-  const cup = useRef<CupInfo | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const drag = useRef<{ dx: number; dy: number; moved: boolean } | null>(null);
 
@@ -65,18 +64,6 @@ export function ChatBubble() {
     // default: bottom-right, comfortably above the fixed nav
     setPos({ x: window.innerWidth - BUBBLE - MARGIN, y: window.innerHeight - BUBBLE - MARGIN - 96 });
   }, [rest]);
-
-  // live cup info so "what's the prize" answers with the real number
-  useEffect(() => {
-    if (!open || cup.current) return;
-    fetch("/api/cup")
-      .then((r) => r.json())
-      .then((d) => {
-        const daysLeft = d?.endsAt ? Math.max(0, Math.ceil((d.endsAt - Date.now()) / 86_400_000)) : undefined;
-        cup.current = { prize: Number(d?.prize) || undefined, daysLeft };
-      })
-      .catch(() => {});
-  }, [open]);
 
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
@@ -119,7 +106,7 @@ export function ChatBubble() {
     setMsgs((m) => [...m, { from: "me", text: q }]);
     setInput("");
     setTyping(true);
-    const reply = askBot(q, cup.current);
+    const reply = askBot(q);
     // a short, human-feeling think
     window.setTimeout(() => {
       setTyping(false);

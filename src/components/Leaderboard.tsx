@@ -13,7 +13,7 @@ import { useProfile } from "@/lib/profile";
 import { levelInfo } from "@/lib/progress";
 import { rankForXp } from "@/lib/rank";
 import { RankBadge } from "@/components/RankBadge";
-import { tokensFor } from "@/lib/tokens";
+import { tokensFor, USDM_ADDRESS } from "@/lib/tokens";
 import { ACTIVE_CHAIN_ID } from "@/lib/wagmi";
 import { Avatar } from "@/components/Avatar";
 import { cn } from "@/lib/cn";
@@ -98,12 +98,12 @@ export function Leaderboard() {
   const rows = useMemo<Standing[]>(() => {
     if (!raw) return [];
     const cutoff = Date.now() - 7 * 86400 * 1000;
-    const usdm = tokens[0].address.toLowerCase();
-    // one token at a time — you can't meaningfully add G$ and USDm into one
-    // "earnings" number. Legacy matches predate the token column → treat as USDm.
+    // one token at a time — you can't meaningfully add USDT and USDm into one
+    // "earnings" number. Legacy matches predate the token column and were all
+    // USDm, so they only ever count toward the USDm board.
     const filtered = raw.filter((m) => {
       const t = (m.token ?? "").toLowerCase();
-      const sameToken = t === tokenAddr || (tokenAddr === usdm && t === "");
+      const sameToken = t === tokenAddr || (tokenAddr === USDM_ADDRESS && t === "");
       if (!sameToken) return false;
       if (range === "week" && new Date(m.created_at).getTime() < cutoff) return false;
       return true;
@@ -178,7 +178,7 @@ export function Leaderboard() {
         </div>
       )}
 
-      {/* which token's earnings — USDm / USDC / G$ are separate boards */}
+      {/* which token's earnings — USDT / USDC / USDm are separate boards */}
       {!isPoints && (
         <div className="mt-2 flex gap-2">
           {tokens.map((t) => {

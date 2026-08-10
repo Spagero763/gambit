@@ -6,6 +6,7 @@ import { Volume2, Music, User as UserIcon, Check, Camera, Trash2, ShieldCheck, L
 import { PushToggle } from "@/components/PushToggle";
 import { useAccount, useSignMessage } from "wagmi";
 import { usePrivy } from "@privy-io/react-auth";
+import { useWalletAuth } from "@/hooks/useWalletAuth";
 import { useSettings, AVATARS, AVATAR_HEX } from "@/lib/settings";
 import { useProgress } from "@/lib/progress";
 import { useProfile, createProfile, setProfile } from "@/lib/profile";
@@ -40,7 +41,8 @@ function fileToAvatar(file: File): Promise<string> {
 export function Settings() {
   const [s, update] = useSettings();
   const { address, isConnected } = useAccount();
-  const { login, logout, authenticated } = usePrivy();
+  const { logout, authenticated } = usePrivy();
+  const { canSignIn, signIn: signInWallet } = useWalletAuth();
   const { signMessageAsync } = useSignMessage();
   const { hasProfile } = useProfile();
   const prog = useProgress();
@@ -134,12 +136,16 @@ export function Settings() {
         {/* Save profile to wallet */}
         <div className="mt-5 border-t border-line pt-4">
           {!isConnected || !address ? (
-            <button
-              onClick={() => login()}
-              className="flex w-full items-center justify-center gap-2 rounded-xl border border-line bg-void-800 py-2.5 text-sm font-medium text-ink-dim transition-colors hover:text-ink"
-            >
-              <Wallet className="h-4 w-4" /> Sign in to save your profile
-            </button>
+            canSignIn ? (
+              <button
+                onClick={signInWallet}
+                className="flex w-full items-center justify-center gap-2 rounded-xl border border-line bg-void-800 py-2.5 text-sm font-medium text-ink-dim transition-colors hover:text-ink"
+              >
+                <Wallet className="h-4 w-4" /> Sign in to save your profile
+              </button>
+            ) : (
+              <p className="text-center text-[13px] text-ink-dim">Connecting your wallet…</p>
+            )
           ) : (
             <SaveProfileButton
               hasProfile={hasProfile}
@@ -160,7 +166,7 @@ export function Settings() {
           <p className="mt-2 text-[11px] text-ink-faint">
             Signing is free (no gas). Saves your name, photo and streak to your wallet, synced across devices.
           </p>
-          {authenticated && (
+          {authenticated && canSignIn && (
             <button
               onClick={() => logout()}
               className="mt-3 text-[12px] font-medium text-ink-faint underline-offset-2 transition-colors hover:text-rose hover:underline"

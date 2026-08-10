@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { BackLink } from "@/components/BackLink";
 
 export const metadata: Metadata = {
   title: "Privacy Policy | Gambit",
@@ -9,8 +10,9 @@ export const metadata: Metadata = {
 /** Plain-language privacy policy. Required for the MiniPay listing. */
 export default function PrivacyPage() {
   return (
-    <main className="mx-auto w-full max-w-2xl px-5 pb-28 pt-8">
-      <h1 className="font-display text-2xl font-bold">Privacy Policy</h1>
+    <main className="mx-auto w-full max-w-2xl px-5 pb-28" style={{ paddingTop: "calc(1.5rem + env(safe-area-inset-top))" }}>
+      <BackLink />
+      <h1 className="mt-4 font-display text-2xl font-bold">Privacy Policy</h1>
       <p className="mt-1 text-xs text-ink-faint">Last updated: July 2026</p>
 
       <div className="mt-6 space-y-5 text-sm leading-relaxed text-ink-dim">
@@ -38,15 +40,6 @@ export default function PrivacyPage() {
             Sign in is handled by Privy. If you use email or a social account, Privy manages that credential and
             creates your embedded wallet; we receive your wallet address, not your password. Inside MiniPay,
             your MiniPay wallet connects directly and no email is involved.
-          </p>
-        </section>
-
-        <section>
-          <h2 className="mb-1 font-semibold text-ink">Identity verification</h2>
-          <p>
-            Free prized tournaments use GoodDollar identity to keep entries to one per real person. That check
-            reads a public on chain registry. We store the verification result, never biometric data — face
-            verification happens entirely with GoodDollar, not with us.
           </p>
         </section>
 

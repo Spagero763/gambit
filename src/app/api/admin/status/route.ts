@@ -11,7 +11,6 @@ export const runtime = "nodejs";
 
 const MIN_GAS_CELO = 0.05;
 const USDM = "0x765DE816845861e75A25fCA122bb6898B8B1282a" as const;
-const GDOLLAR = "0x62B8B11039FcfE5aB0C56E502b1C372A3d2a9c7A" as const;
 const erc20 = parseAbi(["function balanceOf(address) view returns (uint256)"]);
 
 const envAddr = (name: string): `0x${string}` | null => {
@@ -19,25 +18,22 @@ const envAddr = (name: string): `0x${string}` | null => {
   return a && a.startsWith("0x") && a.length === 42 ? (a as `0x${string}`) : null;
 };
 
-/** Balances of the three prize vaults + low-fund flags, for the ops card. */
+/** Balances of the prize vaults + low-fund flags, for the ops card. */
 async function vaultStatus() {
   const pub = createPublicClient({ chain: celo, transport: celoReadTransport() });
   const read = async (token: `0x${string}`, holder: `0x${string}` | null) =>
     holder ? Number(formatUnits((await pub.readContract({ address: token, abi: erc20, functionName: "balanceOf", args: [holder] })) as bigint, 18)) : null;
 
   const cupAddr = envAddr("CUP_CONTRACT");
-  const claimAddr = envAddr("CLAIM_CONTRACT");
   const refAddr = envAddr("REWARDS_CONTRACT");
-  const [cup, claims, referral] = await Promise.all([read(USDM, cupAddr), read(GDOLLAR, claimAddr), read(USDM, refAddr)]);
+  const [cup, referral] = await Promise.all([read(USDM, cupAddr), read(USDM, refAddr)]);
 
   const cupPrize = Number(process.env.CUP_PRIZE_USDM ?? "10");
-  const dailyG = Number(process.env.DAILY_G_AMOUNT ?? "1");
   const refPer = Number(process.env.REFERRAL_USDM ?? "0");
   // `token` is the ERC20 each vault pays out in — the admin UI needs it to
   // sweep (withdraw) or fund the vault from the owner's own wallet.
   return {
     cup: cup === null ? null : { address: cupAddr, token: USDM, balance: cup, low: cup < cupPrize },
-    claims: claims === null ? null : { address: claimAddr, token: GDOLLAR, balance: claims, low: claims < dailyG * 5 },
     referral: referral === null ? null : { address: refAddr, token: USDM, balance: referral, low: refPer > 0 && referral < refPer * 5 },
   };
 }

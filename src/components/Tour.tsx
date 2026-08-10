@@ -14,13 +14,13 @@ interface Step {
 
 const STEPS: Step[] = [
   { title: "Welcome to Gambit 👋", body: "The games you grew up playing, for real money. Warm up free against the bot, then challenge real people. Quick tour, 30 seconds." },
-  { sel: '[data-tour="wallet"]', title: "Your money lives here", body: "Think of it as your game account. Tap anytime to see your balance, add money, or send your winnings out. No crypto knowledge needed." },
-  { sel: '[data-tour="daily"]', title: "Free money, daily", body: "Come back every day and tap this. You get XP plus a little real G$ paid straight into your wallet. It costs you nothing." },
+  { sel: '[data-tour="wallet"]', title: "Your money lives here", body: "Think of it as your game account. Tap anytime to see what you are holding and add more. No crypto knowledge needed." },
+  { sel: '[data-tour="daily"]', title: "Free XP, daily", body: "Come back every day and tap this. One tap, instant XP, and your streak keeps growing. It costs you nothing." },
   { sel: '[data-tour="challenge"]', title: "The Daily Challenge", body: "One board, the whole world plays it, you get one shot at your score. Beat your friends and rub it in." },
   { sel: '[data-tour="games"]', title: "Pick your game", body: "Tap any game to play free. When you're ready, choose Staked 1v1, put money on it, and the winner takes 95% of the pot." },
-  { sel: '[data-tour="cups"]', title: "Cups", body: "Tournaments with bigger pots. There's also a free Weekly Cup where verified humans split a real prize." },
+  { sel: '[data-tour="cups"]', title: "Cups", body: "Tournaments with bigger pots. Join one, play your rounds, and the top finishers get paid." },
   { sel: '[data-tour="ranks"]', title: "Ranks", body: "The leaderboard. Win matches to climb it." },
-  { sel: '[data-tour="you"]', title: "You", body: "Your profile, match history, winnings and settings. Tap the ? up top anytime to see this tour again. Now go play!" },
+  { sel: '[data-tour="you"]', title: "You", body: "Your profile, match history, winnings and settings. How to play, support and the rest live here too. Now go play!" },
 ];
 
 const clamp = (v: number, lo: number, hi: number) => Math.min(hi, Math.max(lo, v));

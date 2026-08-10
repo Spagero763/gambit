@@ -1,22 +1,51 @@
 "use client";
 
 import { useState } from "react";
-import { HelpCircle, Gamepad2, Coins, Trophy, Wallet, Send } from "lucide-react";
+import { HelpCircle, Gamepad2, Coins, Trophy, Wallet, ArrowDownToLine } from "lucide-react";
+import { useInMiniPay } from "@/lib/minipay";
 import { Modal } from "./Modal";
 
 // The whole money journey in five steps a first-timer can follow.
 const STEPS = [
-  { icon: Wallet, title: "Sign in, get a wallet", body: "Just your email. A wallet is created for you, think of it as your game account. Add money from MiniPay or any Celo wallet whenever you want." },
   { icon: Gamepad2, title: "Warm up free", body: "Every game is free against the bot. No deposit, no catch, play all day." },
   { icon: Coins, title: "Enter a real match", body: "Ready? Pay a small entry fee to face a real person. Both entries sit locked in a contract nobody can touch, not even us. Pure skill, no luck, no house playing against you." },
   { icon: Trophy, title: "Winner takes 95%", body: "Win and the prize lands in your wallet in seconds. A draw refunds both players. If a game stalls, your money is always reclaimable." },
-  { icon: Send, title: "Cash out anytime", body: "Your money is yours. Send winnings to any wallet from your profile whenever you like." },
 ];
+
+// Step one reads differently depending on where you opened Gambit: in MiniPay
+// you are already signed in with a funded wallet, on the web you are not.
+const FIRST_MINIPAY = {
+  icon: Wallet,
+  title: "You are already in",
+  body: "MiniPay signs you in the moment you open Gambit. Your wallet and your stablecoins come with you, nothing to create and nothing to sign up for.",
+};
+const FIRST_WEB = {
+  icon: Wallet,
+  title: "Sign in, get a wallet",
+  body: "Just your email. A wallet is created for you, think of it as your game account. Add money from MiniPay or any Celo wallet whenever you want.",
+};
+
+// Cashing out is MiniPay's own screen inside the Mini App, so pointing at a
+// Gambit withdraw button there would send players somewhere that no longer
+// exists (review item 5).
+const LAST_MINIPAY = {
+  icon: ArrowDownToLine,
+  title: "Cash out anytime",
+  body: "Your winnings are yours the second they land. Withdraw them from your MiniPay wallet whenever you like.",
+};
+const LAST_WEB = {
+  icon: ArrowDownToLine,
+  title: "Cash out anytime",
+  body: "Your money is yours. Withdraw your winnings to any wallet from your profile whenever you like.",
+};
 
 /** "How it works" button + modal. Manual only — the first-run tour is Onboarding. */
 export function HowItWorks() {
   const [open, setOpen] = useState(false);
+  const miniPay = useInMiniPay();
   const close = () => setOpen(false);
+
+  const steps = [miniPay ? FIRST_MINIPAY : FIRST_WEB, ...STEPS, miniPay ? LAST_MINIPAY : LAST_WEB];
 
   return (
     <>
@@ -29,7 +58,7 @@ export function HowItWorks() {
 
       <Modal open={open} onClose={close} title="How Gambit works">
         <ul className="space-y-3">
-          {STEPS.map((s, i) => {
+          {steps.map((s, i) => {
             const Icon = s.icon;
             return (
               <li key={i} className="flex gap-3">

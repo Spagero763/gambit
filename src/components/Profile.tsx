@@ -4,25 +4,25 @@ import { useEffect, useMemo, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { Portal } from "@/components/Portal";
 import { handleFor } from "@/lib/handle";
-import { Wallet, ShieldCheck, Check, Loader2, Share2, Copy, Send, UserCog, Volume2, KeyRound, LifeBuoy, ChevronRight, X, ArrowLeft, Music } from "lucide-react";
+import { Wallet, ShieldCheck, Check, Loader2, Share2, Copy, Send, UserCog, Volume2, KeyRound, ChevronRight, X, ArrowLeft, Music } from "lucide-react";
 import Link from "next/link";
-import { useGoodId } from "@/hooks/useGoodId";
 import { inviteUrl } from "@/lib/share";
 import { ShareButton } from "@/components/ShareButton";
 import { formatUnits } from "viem";
-import { useAccount, useBalance, useSignMessage } from "wagmi";
+import { useAccount, useSignMessage } from "wagmi";
 import { usePrivy } from "@privy-io/react-auth";
-import { CUSD_ADDRESS } from "@/lib/wagmi";
+import { useInMiniPay } from "@/lib/minipay";
+import { useStableBalances } from "@/hooks/useStableBalances";
 import { supabase } from "@/lib/supabase";
 import { useSettings, AVATARS, AVATAR_HEX } from "@/lib/settings";
 import { useProgress } from "@/lib/progress";
 import { useProfile, createProfile, setProfile } from "@/lib/profile";
 import { Avatar } from "@/components/Avatar";
 import { SendFunds } from "@/components/SendFunds";
+import { InfoLinks } from "@/components/InfoLinks";
 import { AnimatedNumber } from "@/components/motion/AnimatedNumber";
 import { PlayerCard } from "@/components/PlayerCard";
 import { ReferralBoard } from "@/components/ReferralBoard";
-import { GoodIdCard } from "@/components/GoodIdCard";
 import { symbolForToken } from "@/lib/tokens";
 import { ProgressCard } from "@/components/Daily";
 import { Achievements } from "@/components/Achievements";
@@ -103,7 +103,9 @@ function relTime(iso: string) {
 export function Profile() {
   const { address, isConnected } = useAccount();
   const { login } = usePrivy();
-  const { data: bal } = useBalance({ address, token: CUSD_ADDRESS, query: { enabled: !!address } });
+  // the stablecoin they actually hold the most of, not a hard-coded one
+  const { preferred } = useStableBalances(address);
+  const miniPay = useInMiniPay();
   const [settings] = useSettings();
   const [sendOpen, setSendOpen] = useState(false);
   const [rows, setRows] = useState<MatchRow[] | null>(null);
@@ -185,15 +187,23 @@ export function Profile() {
           <span className="mx-auto grid h-12 w-12 place-items-center rounded-xl bg-void-600 text-teal">
             <Wallet className="h-5 w-5" />
           </span>
-          <p className="mt-4 text-sm text-ink-dim">
-            Sign in to see your record, net winnings and match history. Email or Google works — a wallet is created for you.
-          </p>
-          <button
-            onClick={() => login()}
-            className="btn-primary mt-5 w-full rounded-xl py-3 text-sm shadow-glow"
-          >
-            Sign in
-          </button>
+          {/* Inside MiniPay the wallet attaches by itself, so there is nothing to
+              offer here and no sign-in button to show (review item 2). */}
+          {miniPay ? (
+            <p className="mt-4 text-sm text-ink-dim">Connecting your wallet…</p>
+          ) : (
+            <>
+              <p className="mt-4 text-sm text-ink-dim">
+                Sign in to see your record, net winnings and match history. Email or Google works — a wallet is created for you.
+              </p>
+              <button
+                onClick={() => login()}
+                className="btn-primary mt-5 w-full rounded-xl py-3 text-sm shadow-glow"
+              >
+                Sign in
+              </button>
+            </>
+          )}
         </div>
 
         <div className="mt-4">
@@ -203,7 +213,7 @@ export function Profile() {
     );
   }
 
-  const amount = bal ? Number(bal.formatted) : 0;
+  const amount = preferred.amount;
 
   return (
     <section className="mx-auto w-full max-w-2xl px-5 pb-28 pt-2 lg:max-w-3xl">
@@ -222,29 +232,37 @@ export function Profile() {
         />
         <div className="min-w-0">
           <h1 className="truncate text-lg font-semibold tracking-tight">{displayName}</h1>
-          <CopyAddress address={address} />
+          {/* MiniPay: no raw address and no copy control. On the web the address
+              is still needed to fund an embedded wallet, so it stays. */}
+          {miniPay ? (
+            <p className="text-[11px] text-ink-faint">Celo wallet</p>
+          ) : (
+            <CopyAddress address={address} />
+          )}
         </div>
         <div className="ml-auto flex flex-col items-end gap-1.5">
           <div className="text-right">
             <AnimatedNumber value={amount} decimals={2} className="text-lg font-semibold text-ink" />
-            <p className="text-[11px] text-ink-faint">USDm balance</p>
+            <p className="text-[11px] text-ink-faint">{preferred.token.symbol} balance</p>
           </div>
-          <button
-            onClick={() => setSendOpen(true)}
-            className="inline-flex items-center gap-1.5 rounded-full border border-line bg-void-700 px-3 py-1.5 text-[12px] font-medium text-ink-dim transition-colors hover:border-line-strong hover:text-ink"
-          >
-            <Send className="h-3.5 w-3.5" /> Withdraw
-          </button>
+          {/* Withdraw lives outside MiniPay only: MiniPay has its own withdraw
+              screen, and duplicating it inside the Mini App was flagged in review. */}
+          {!miniPay && (
+            <button
+              onClick={() => setSendOpen(true)}
+              className="inline-flex items-center gap-1.5 rounded-full border border-line bg-void-700 px-3 py-1.5 text-[12px] font-medium text-ink-dim transition-colors hover:border-line-strong hover:text-ink"
+            >
+              <Send className="h-3.5 w-3.5" /> Withdraw
+            </button>
+          )}
         </div>
       </motion.div>
 
-      {sendOpen && <SendFunds address={address} onClose={() => setSendOpen(false)} />}
+      {sendOpen && !miniPay && <SendFunds address={address} onClose={() => setSendOpen(false)} />}
 
       <div className="mt-5">
         <PlayerCard />
       </div>
-
-      <GoodIdCard />
 
       {isConnected && address && !hasProfile && !profileLoading && (
         <ProfileSaveCard
@@ -283,6 +301,9 @@ export function Profile() {
       {/* account — the Settings essentials, reachable from You (office-hours
           feedback: people expected this here, not only behind the gear) */}
       <AccountLinks />
+
+      {/* support + the legal and how-to pages, in one obvious place */}
+      <InfoLinks />
 
       <h2 className="mb-3 mt-7 text-[15px] font-semibold tracking-tight">Recent matches</h2>
 
@@ -341,7 +362,7 @@ export function Profile() {
   );
 }
 
-type AccountView = "grid" | "profile" | "sound" | "wallet" | "verify";
+type AccountView = "grid" | "profile" | "sound" | "wallet";
 
 /**
  * Account, handled entirely in one popup. Every control (profile, sound, wallet
@@ -354,7 +375,6 @@ function AccountLinks() {
   const { address } = useAccount();
   const { user, exportWallet, authenticated, login } = usePrivy();
   const [settings, update] = useSettings();
-  const { verified, verify } = useGoodId();
   const { signMessageAsync } = useSignMessage();
   const prog = useProgress();
 
@@ -371,7 +391,6 @@ function AccountLinks() {
     { key: "profile", icon: UserCog, label: "Profile", sub: "Name & avatar", tint: "text-violet-bright" },
     { key: "sound", icon: Volume2, label: "Sound", sub: "Music & effects", tint: "text-teal" },
     { key: "wallet", icon: KeyRound, label: "Wallet key", sub: "Export it", tint: "text-amber" },
-    { key: "verify", icon: ShieldCheck, label: "Verify", sub: "For free G$", tint: "text-teal" },
   ];
 
   return (
@@ -385,7 +404,7 @@ function AccountLinks() {
         </span>
         <span className="min-w-0 flex-1">
           <span className="block text-sm font-medium text-ink">Account</span>
-          <span className="block truncate text-[11px] text-ink-faint">Profile, sound, wallet key, help</span>
+          <span className="block truncate text-[11px] text-ink-faint">Profile, sound, wallet key</span>
         </span>
         <ChevronRight className="h-4 w-4 shrink-0 text-ink-faint" />
       </button>
@@ -434,45 +453,26 @@ function AccountLinks() {
                     transition={{ duration: 0.18, ease: [0.22, 1, 0.36, 1] }}
                   >
                     {view === "grid" && (
-                      <>
-                        <div className="grid grid-cols-2 gap-2.5">
-                          {tiles.map((t, i) => (
-                            <motion.button
-                              key={t.key}
-                              onClick={() => setView(t.key)}
-                              initial={{ opacity: 0, y: 14, scale: 0.94 }}
-                              animate={{ opacity: 1, y: 0, scale: 1 }}
-                              transition={{ delay: 0.04 + i * 0.05, type: "spring", stiffness: 340, damping: 24 }}
-                              className="pressable flex h-full flex-col gap-2 rounded-2xl border border-line bg-void-800 p-3.5 text-left transition-colors hover:border-line-strong"
-                            >
-                              <span className={cn("grid h-9 w-9 place-items-center rounded-xl bg-void-600", t.tint)}>
-                                <t.icon className="h-4 w-4" />
-                              </span>
-                              <span>
-                                <span className="block text-[13px] font-semibold text-ink">{t.label}</span>
-                                <span className="block text-[11px] text-ink-faint">
-                                  {t.key === "verify" && verified ? "Verified ✓" : t.sub}
-                                </span>
-                              </span>
-                            </motion.button>
-                          ))}
-                        </div>
-                        <a
-                          href="https://wa.me/2348060158364?text=Hi%20Gambit%20support%2C%20I%20need%20help%20with"
-                          target="_blank"
-                          rel="noreferrer"
-                          className="pressable mt-2.5 flex items-center gap-3 rounded-2xl border border-teal/30 bg-teal/[0.07] px-4 py-3 transition-colors hover:border-teal/50"
-                        >
-                          <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-teal/15 text-teal">
-                            <LifeBuoy className="h-4 w-4" />
-                          </span>
-                          <span className="min-w-0 flex-1">
-                            <span className="block text-[13px] font-semibold text-ink">Help on WhatsApp</span>
-                            <span className="block truncate text-[11px] text-ink-faint">A real person replies fast</span>
-                          </span>
-                          <ChevronRight className="h-4 w-4 shrink-0 text-ink-faint" />
-                        </a>
-                      </>
+                      <div className="grid grid-cols-2 gap-2.5">
+                        {tiles.map((t, i) => (
+                          <motion.button
+                            key={t.key}
+                            onClick={() => setView(t.key)}
+                            initial={{ opacity: 0, y: 14, scale: 0.94 }}
+                            animate={{ opacity: 1, y: 0, scale: 1 }}
+                            transition={{ delay: 0.04 + i * 0.05, type: "spring", stiffness: 340, damping: 24 }}
+                            className="pressable flex h-full flex-col gap-2 rounded-2xl border border-line bg-void-800 p-3.5 text-left transition-colors hover:border-line-strong"
+                          >
+                            <span className={cn("grid h-9 w-9 place-items-center rounded-xl bg-void-600", t.tint)}>
+                              <t.icon className="h-4 w-4" />
+                            </span>
+                            <span>
+                              <span className="block text-[13px] font-semibold text-ink">{t.label}</span>
+                              <span className="block text-[11px] text-ink-faint">{t.sub}</span>
+                            </span>
+                          </motion.button>
+                        ))}
+                      </div>
                     )}
 
                     {view === "profile" && (
@@ -509,15 +509,6 @@ function AccountLinks() {
                             : "Sign in first to manage your wallet."}
                         </p>
                       ))}
-
-                    {view === "verify" && (
-                      <VerifyPanel
-                        verified={verified}
-                        onVerify={verify}
-                        onLogin={login}
-                        signedIn={authenticated && !!address}
-                      />
-                    )}
                   </motion.div>
                 </AnimatePresence>
               </motion.div>
@@ -715,64 +706,6 @@ function WalletPanel({ onExport }: { onExport: () => Promise<void> }) {
           </div>
         </div>
       )}
-    </div>
-  );
-}
-
-/** Inline verify — GoodDollar's own flow opens on tap. */
-function VerifyPanel({
-  verified,
-  onVerify,
-  onLogin,
-  signedIn,
-}: {
-  verified: boolean | null;
-  onVerify: () => Promise<void>;
-  onLogin: () => void;
-  signedIn: boolean;
-}) {
-  const [busy, setBusy] = useState(false);
-  const [err, setErr] = useState<string | null>(null);
-  if (verified) {
-    return (
-      <div className="py-4 text-center">
-        <span className="mx-auto grid h-12 w-12 place-items-center rounded-2xl bg-teal/15 text-teal">
-          <ShieldCheck className="h-6 w-6" />
-        </span>
-        <p className="mt-3 text-sm font-semibold text-teal">You are verified</p>
-        <p className="mt-1 text-[12px] text-ink-dim">You can claim the daily GoodDollar and enter humans-only events.</p>
-      </div>
-    );
-  }
-  return (
-    <div>
-      <p className="text-[13px] leading-snug text-ink-dim">
-        Verifying proves you are a real person, not a bot. It is free, takes about a minute, and unlocks the daily
-        GoodDollar money.
-      </p>
-      <button
-        onClick={async () => {
-          setErr(null);
-          if (!signedIn) {
-            onLogin();
-            return;
-          }
-          setBusy(true);
-          try {
-            await onVerify();
-          } catch (e: any) {
-            setErr(e?.message ?? "Could not start verification. Try again.");
-          } finally {
-            setBusy(false);
-          }
-        }}
-        className="btn-primary mt-4 inline-flex w-full items-center justify-center gap-2 rounded-xl py-2.5 text-sm shadow-glow disabled:opacity-60"
-        disabled={busy}
-      >
-        {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <ShieldCheck className="h-4 w-4" />}
-        {signedIn ? "Verify I'm human" : "Sign in to verify"}
-      </button>
-      {err && <p className="mt-2 text-[11px] text-rose">{err}</p>}
     </div>
   );
 }

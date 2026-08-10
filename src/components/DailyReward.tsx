@@ -2,71 +2,31 @@
 
 import { useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { Gift, Flame, X, Sparkles, Loader2 } from "lucide-react";
-import { useAccount, useSignMessage } from "wagmi";
-import { usePrivy } from "@privy-io/react-auth";
+import { Gift, Flame, X, Sparkles } from "lucide-react";
 import { useProgress, claimDailyReward, rewardClaimable, levelInfo } from "@/lib/progress";
-import { getToken, signIn } from "@/lib/profile";
 import { Confetti } from "@/components/motion/Confetti";
 import { Portal } from "@/components/Portal";
 import { play } from "@/lib/sfx";
-import { cn } from "@/lib/cn";
 
 /**
  * The daily-return hook: a free reward, claimable once a day, that grants XP
  * (which lifts you on the Points leaderboard) and grows with your streak.
  * Glows on the home screen when ready; opens a satisfying reveal when claimed.
+ *
+ * XP and the streak are client-side, so claiming needs no wallet, no network and
+ * no signature. One tap, instant reward — nothing between the player and it.
  */
 export function DailyReward() {
   const p = useProgress();
-  const { address } = useAccount();
-  const { signMessageAsync } = useSignMessage();
-  const { ready, authenticated, login } = usePrivy();
   const claimable = rewardClaimable(p);
-  const [reveal, setReveal] = useState<{ reward: number; day: number; g?: number; gReason?: string } | null>(null);
-  const [claiming, setClaiming] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [reveal, setReveal] = useState<{ reward: number; day: number } | null>(null);
   const lvl = levelInfo(p.xp);
 
-  const claim = async () => {
-    if (claiming) return;
-    setError(null);
-
-    // The XP + streak is client-side and costs nothing, so it ALWAYS works —
-    // grant it first, immediately. It must never be blocked by wallet signing,
-    // which is finicky in some wallets (MiniPay) and was making the whole daily
-    // reward error out. Not signed in? Still grant the XP, then nudge sign-in.
+  const claim = () => {
     const res = claimDailyReward();
     if (!res) return; // already claimed today
     play("win");
     setReveal({ reward: res.reward, day: res.day });
-
-    if (!authenticated || !address) {
-      // no wallet yet: XP is theirs, but the little G$ needs a wallet to land in
-      setReveal((cur) => (cur ? { ...cur, gReason: "signin" } : cur));
-      login();
-      return;
-    }
-
-    // then the little G$ faucet on top — best-effort. A signing hiccup or empty
-    // treasury just means no bonus G$ this time; the reward is already claimed.
-    setClaiming(true);
-    try {
-      let token = getToken(address);
-      if (!token) token = await signIn(address, (a) => signMessageAsync({ message: a.message }));
-      const r = await fetch("/api/claim/daily", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ token }),
-      });
-      const d = await r.json();
-      setReveal((cur) => (cur ? { ...cur, g: Number(d?.gAmount) || 0, gReason: d?.reason } : cur));
-    } catch {
-      // signature rejected / offline — XP is already granted; note it softly
-      setReveal((cur) => (cur ? { ...cur, gReason: "sign" } : cur));
-    } finally {
-      setClaiming(false);
-    }
   };
 
   return (
@@ -75,42 +35,32 @@ export function DailyReward() {
         <div className="mx-auto mt-4 w-full max-w-2xl">
         <motion.button
           onClick={claim}
-          disabled={claiming}
           data-tour="daily"
           initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
-          whileTap={{ scale: claiming ? 1 : 0.98 }}
-          className="group relative flex w-full items-center gap-3 overflow-hidden rounded-2xl border border-amber/40 px-4 py-3.5 text-left shadow-glow disabled:cursor-default"
+          whileTap={{ scale: 0.98 }}
+          className="group relative flex w-full items-center gap-3 overflow-hidden rounded-2xl border border-amber/40 px-4 py-3.5 text-left shadow-glow"
           style={{ background: "linear-gradient(110deg, rgba(227,179,65,0.16), rgba(62,207,142,0.10) 60%, rgba(227,179,65,0.16))" }}
         >
           {/* shine sweep */}
           <span className="pointer-events-none absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/15 to-transparent transition-transform duration-1000 group-hover:translate-x-full" />
           <motion.span
-            animate={claiming ? { scale: 1, rotate: 0 } : { rotate: [0, -10, 10, -6, 0], scale: [1, 1.08, 1] }}
-            transition={claiming ? { duration: 0.2 } : { duration: 1.4, repeat: Infinity, repeatDelay: 1.2 }}
+            animate={{ rotate: [0, -10, 10, -6, 0], scale: [1, 1.08, 1] }}
+            transition={{ duration: 1.4, repeat: Infinity, repeatDelay: 1.2 }}
             className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-amber/20 text-amber"
           >
-            {claiming ? <Loader2 className="h-5 w-5 animate-spin" /> : <Gift className="h-5 w-5" />}
+            <Gift className="h-5 w-5" />
           </motion.span>
           <span className="min-w-0 flex-1">
-            <span className="block text-sm font-bold text-ink">
-              {claiming ? "Sending your reward" : "Daily reward ready 🎁"}
-            </span>
+            <span className="block text-sm font-bold text-ink">Daily reward ready 🎁</span>
             <span className="block text-[12px] text-ink-dim">
-              {claiming
-                ? "Waiting for your G$ to land in your wallet…"
-                : !authenticated
-                  ? "Connect your wallet to claim XP and G$"
-                  : p.streak > 0
-                    ? `Day ${p.streak + (p.lastPlayed === today() ? 0 : 1)}. Tap to claim your XP and G$`
-                    : "Tap to claim free XP and G$, and start a streak"}
+              {p.streak > 0
+                ? `Day ${p.streak + (p.lastPlayed === today() ? 0 : 1)}. Tap to claim your XP`
+                : "Tap to claim free XP and start a streak"}
             </span>
           </span>
-          <span className="rounded-full bg-amber px-3 py-1.5 text-[12px] font-bold text-void">
-            {claiming ? "…" : !authenticated ? "Connect" : "Claim"}
-          </span>
+          <span className="rounded-full bg-amber px-3 py-1.5 text-[12px] font-bold text-void">Claim</span>
         </motion.button>
-        {error && <p className="mt-2 px-1 text-center text-[12px] font-medium text-rose">{error}</p>}
         </div>
       ) : (
         <div data-tour="daily" className="mx-auto mt-4 flex w-full max-w-2xl items-center gap-3 rounded-2xl border border-line bg-void-800 px-4 py-3">
@@ -166,20 +116,6 @@ export function DailyReward() {
               >
                 <Sparkles className="h-6 w-6 text-amber" /> +{reveal.reward} XP
               </motion.p>
-              {reveal.g ? (
-                <motion.p
-                  initial={{ opacity: 0, scale: 0.8 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  transition={{ delay: 0.35, type: "spring", stiffness: 240, damping: 16 }}
-                  className="mt-1 inline-flex items-center gap-1.5 rounded-full bg-teal/15 px-3 py-1 text-lg font-black text-teal"
-                >
-                  + {reveal.g} G$ 💚
-                </motion.p>
-              ) : reveal.gReason ? (
-                <p className="mt-1 text-[12px] text-ink-faint">G$ reward: {gReasonText(reveal.gReason)}</p>
-              ) : (
-                <p className="mt-1 text-[12px] text-ink-faint">checking your G$ reward…</p>
-              )}
               <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.4 }} className="mt-1 text-sm text-ink-dim">
                 Day {reveal.day} streak 🔥 — come back tomorrow for more.
               </motion.p>
@@ -193,30 +129,6 @@ export function DailyReward() {
       </Portal>
     </>
   );
-}
-
-/** Friendly explanation when the G$ side of the daily reward didn't pay. */
-function gReasonText(reason?: string) {
-  switch (reason) {
-    case "already":
-      return "already claimed today, back tomorrow";
-    case "sign":
-    case "signin":
-      return "the bonus G$ needs a quick wallet approval, XP is already yours";
-    case "send-failed":
-      return "the bonus G$ couldn't send this time, XP is already yours";
-    case "treasury-empty":
-      return "the bonus G$ pool is empty today, XP is already yours";
-    case "blocked":
-      return "this account is blocked from rewards";
-    case "no-treasury":
-    case "treasury-error":
-      return "temporarily unavailable";
-    case "no-profile":
-      return "save a profile to claim G$";
-    default:
-      return "unavailable";
-  }
 }
 
 function today() {

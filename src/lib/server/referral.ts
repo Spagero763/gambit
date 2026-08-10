@@ -11,20 +11,16 @@ import {
 import { privateKeyToAccount } from "viem/accounts";
 import { celo } from "viem/chains";
 import { supabaseAdmin } from "@/lib/supabase";
-import { goodIdRoot } from "@/lib/server/goodid";
 import { notify } from "@/lib/server/push";
 
 // Referral bonus: the INVITER earns REFERRAL_USDM from the on-chain
-// RewardsVault when an invited friend activates. Two activation paths:
+// RewardsVault when an invited friend activates, which means the friend
+// settling their FIRST staked match. The economics defend themselves there —
+// faking it costs more than the bonus pays.
 //
-//   1. the friend settles their FIRST staked match (economics self-defend:
-//      faking it costs more than the bonus), or
-//   2. the friend verifies they're a real human (GoodDollar) and has played —
-//      so non-stakers count too, and verification is the anti-farming gate.
-//
-// Either way the payment key is derived from the FRIEND's wallet, and the
-// vault pays each key exactly once — one bonus per friend, ever, enforced
-// on-chain. No bookkeeping table needed.
+// The payment key is derived from the FRIEND's wallet, and the vault pays each
+// key exactly once — one bonus per friend, ever, enforced on-chain. No
+// bookkeeping table needed.
 //
 // Env:
 //   REFERRAL_USDM     amount the inviter earns per friend (default 0 = off)
@@ -130,20 +126,7 @@ export async function creditReferrals(players: (string | null | undefined)[]): P
   }
 }
 
-/**
- * Free-play path: the friend hasn't staked, but they've played AND verified
- * they're a real human (GoodDollar). Verification is what stops account
- * farming here. Fire-and-forget from the profile sync.
- */
-export async function creditVerifiedReferral(invitee: string): Promise<void> {
-  try {
-    const p = invitee.toLowerCase();
-    if (!amount() || !vault()) return;
-    if (await referralPaid(p)) return; // cheap short-circuit before the identity read
-    const root = await goodIdRoot(p);
-    if (!root) return; // not a verified human yet — the staked path can still pay later
-    await payInviterFor(p);
-  } catch {
-    /* never break the caller */
-  }
-}
+// There used to be a second, free-play activation path: a friend who had merely
+// played counted once they proved they were a real human. That proof was the only
+// thing standing between the vault and account farming, so it went out with the
+// identity provider rather than staying behind with no gate at all.
