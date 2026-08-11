@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { Trophy, Users, ArrowRight } from "lucide-react";
+import { Trophy, Users, ArrowRight, Hourglass } from "lucide-react";
 import Link from "next/link";
 import { formatUnits } from "viem";
 import { supabase } from "@/lib/supabase";
@@ -78,17 +78,29 @@ export function Tournaments() {
       </div>
 
       <div className="mt-6">
-        <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-ink-faint">Join a tournament</p>
+        {/* Only label the list when there is a list. Nobody can create a
+            tournament in this release, so an empty list is the normal state and
+            "Join a tournament" above nothing reads as something being broken. */}
+        {rows !== null && rows.length > 0 && (
+          <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-ink-faint">Join a tournament</p>
+        )}
         {rows === null ? (
           <SkeletonList rows={3} />
         ) : rows.length === 0 ? (
           <div className="rounded-3xl border border-line bg-void-800 px-5 py-8 text-center">
-            <p className="text-sm font-semibold text-ink">No tournaments running right now</p>
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-amber/15 px-3 py-1 text-[11px] font-semibold uppercase tracking-wide text-amber">
+              <Hourglass className="h-3 w-3" /> Coming soon
+            </span>
+            <p className="mt-3 text-sm font-semibold text-ink">Tournaments are on the way</p>
             <p className="mx-auto mt-1 max-w-xs text-[13px] leading-snug text-ink-dim">
-              Check back soon. In the meantime you can play a staked 1v1 against a real person for the same money.
+              Knockout brackets with a real pot are next up. Staked 1v1 is live already and pays the same way, so you
+              can put money on a game today.
             </p>
-            <Link href="/" className="btn-primary mt-4 inline-flex items-center justify-center gap-2 rounded-2xl px-5 py-3 text-sm shadow-glow">
-              Pick a game <ArrowRight className="h-4 w-4" />
+            <Link
+              href="/"
+              className="mt-4 inline-flex items-center justify-center gap-1.5 text-[13px] font-semibold text-teal underline decoration-teal/40 underline-offset-4"
+            >
+              Play a staked 1v1 <ArrowRight className="h-3.5 w-3.5" />
             </Link>
           </div>
         ) : (
