@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase";
-import { referralPaid } from "@/lib/server/referral";
+import { referralPaid, referralSymbol } from "@/lib/server/referral";
 import { limited } from "@/lib/server/rateLimit";
 
 export const runtime = "nodejs";
@@ -48,6 +48,10 @@ export async function GET(req: NextRequest) {
       activated,
       earned: Number((activated * per).toFixed(2)),
       perFriend: per,
+      // The vault decides the payout token, not the copy. Sending the symbol
+      // means swapping the vault later needs no UI change, and the card can
+      // never name a token the contract does not actually pay.
+      symbol: await referralSymbol(),
       friends: perFriend,
     });
   } catch (e: any) {

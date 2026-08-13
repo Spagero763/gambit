@@ -9,6 +9,8 @@ interface Board {
   activated: number;
   earned: number;
   perFriend: number;
+  /** payout token symbol, read from the vault itself */
+  symbol?: string;
   friends: { name: string | null; played: number; paid: boolean }[];
 }
 
@@ -43,7 +45,7 @@ export function ReferralBoard({ address }: { address: string }) {
           <Users className="h-4 w-4 text-teal" /> Your referrals
         </p>
         <p className="text-[12px] text-ink-dim">
-          earned <AnimatedNumber value={b.earned} decimals={2} className="font-semibold text-teal" /> <span className="text-teal">USDm</span>
+          earned <AnimatedNumber value={b.earned} decimals={2} className="font-semibold text-teal" /> <span className="text-teal">{b.symbol ?? "USDm"}</span>
         </p>
       </div>
 
@@ -66,7 +68,7 @@ export function ReferralBoard({ address }: { address: string }) {
               <span className="ml-auto flex items-center gap-1 text-[11px]">
                 {f.paid ? (
                   <span className="flex items-center gap-1 font-semibold text-teal">
-                    <CheckCircle2 className="h-3.5 w-3.5" /> paid +{b.perFriend} USDm
+                    <CheckCircle2 className="h-3.5 w-3.5" /> paid +{b.perFriend} {b.symbol ?? "USDm"}
                   </span>
                 ) : (
                   <span className="flex items-center gap-1 text-ink-faint">

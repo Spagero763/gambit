@@ -714,12 +714,17 @@ function InviteCard({ refCode, address }: { refCode: string; address: string }) 
   const url = inviteUrl(refCode);
   const [copied, setCopied] = useState(false);
   const [per, setPer] = useState(0);
+  // the vault's own payout token, so the card never names one it cannot pay
+  const [sym, setSym] = useState("USDm");
 
   // live bonus amount from the server, so the card always tells the truth
   useEffect(() => {
     fetch(`/api/referrals?address=${address}`)
       .then((r) => r.json())
-      .then((d) => setPer(Number(d?.perFriend) || 0))
+      .then((d) => {
+        setPer(Number(d?.perFriend) || 0);
+        if (d?.symbol) setSym(String(d.symbol));
+      })
       .catch(() => {});
   }, [address]);
 
@@ -738,20 +743,20 @@ function InviteCard({ refCode, address }: { refCode: string; address: string }) 
   return (
     <div className="rounded-2xl border border-line bg-void-700 p-5 shadow-card">
       <div className="flex items-center gap-2">
-        <p className="text-sm font-semibold text-ink">Invite friends, earn USDm</p>
+        <p className="text-sm font-semibold text-ink">Invite friends, earn {sym}</p>
         <span className="rounded-full bg-teal/15 px-2 py-0.5 text-[10px] font-semibold text-teal">LIVE</span>
       </div>
       <p className="mt-0.5 text-[12px] text-ink-dim">
         {per > 0
-          ? `You earn ${fmt(per)} USDm for every friend who joins with your link and starts playing. They count once they verify as a real human and play, or stake their first match. Paid straight to your wallet.`
-          : `You earn a USDm bonus for every friend who joins with your link and starts playing, paid straight to your wallet from an on chain vault.`}{" "}
+          ? `You earn ${fmt(per)} ${sym} for every friend who joins with your link and starts playing. They count once they verify as a real human and play, or stake their first match. Paid straight to your wallet.`
+          : `You earn a bonus for every friend who joins with your link and starts playing, paid straight to your wallet from an on chain vault.`}{" "}
         Tap the link to copy it.
       </p>
       {per > 0 && (
         <div className="mt-2.5 flex flex-wrap gap-1.5">
           {[5, 10, 25].map((n) => (
             <span key={n} className="rounded-full border border-teal/25 bg-teal/[0.07] px-2.5 py-1 text-[11px] font-semibold text-teal">
-              {n} friends = {fmt(per * n)} USDm
+              {n} friends = {fmt(per * n)} {sym}
             </span>
           ))}
         </div>

@@ -12,6 +12,7 @@ import { privateKeyToAccount } from "viem/accounts";
 import { celo } from "viem/chains";
 import { supabaseAdmin } from "@/lib/supabase";
 import { notify } from "@/lib/server/push";
+import { symbolForToken } from "@/lib/tokens";
 
 // Referral bonus: the INVITER earns REFERRAL_USDM from the on-chain
 // RewardsVault when an invited friend activates, which means the friend
@@ -52,6 +53,30 @@ function relayerKey(): `0x${string}` {
 
 export const refKey = (invitee: string) =>
   keccak256(encodePacked(["string", "address"], ["referral", getAddress(invitee)]));
+
+/**
+ * The symbol of the token the referral vault actually pays in.
+ *
+ * The vault's token is immutable, so this is fixed per deployed vault — but
+ * reading it means the UI names whatever is really being paid instead of a
+ * hard-coded guess. Swap the vault for a USDT one and the copy follows on its
+ * own. Falls back to USDm, which is what the current vault holds.
+ */
+export async function referralSymbol(): Promise<string> {
+  const addr = vault();
+  if (!addr) return "USDm";
+  try {
+    const pub = createPublicClient({ chain: celo, transport: http(RPC) });
+    const token = (await pub.readContract({
+      address: addr,
+      abi: parseAbi(["function token() view returns (address)"]),
+      functionName: "token",
+    })) as `0x${string}`;
+    return symbolForToken(token);
+  } catch {
+    return "USDm";
+  }
+}
 
 /** Has this friend's referral already been paid out? Public read. */
 export async function referralPaid(invitee: string): Promise<boolean> {
