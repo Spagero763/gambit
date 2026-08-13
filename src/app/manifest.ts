@@ -3,10 +3,10 @@ import type { MetadataRoute } from "next";
 /** PWA manifest — makes Gambit installable to the home screen on phones. */
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: "Gambit — play classic games, stake USDm",
+    name: "Gambit — play classic games, stake USDT",
     short_name: "Gambit",
     description:
-      "Classic skill games on Celo. Play free, or stake USDm head to head — winner takes the pot.",
+      "Classic skill games on Celo. Play free, or stake USDT head to head — winner takes the pot.",
     start_url: "/",
     display: "standalone",
     orientation: "portrait",

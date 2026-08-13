@@ -53,7 +53,7 @@ export async function GET() {
         </div>
 
         <div style={{ marginTop: 26, fontSize: 25, color: "#8b8b94" }}>
-          Free to play · stake USDm &amp; $G · winner takes the pot · on Celo
+          Free to play · stake USDT · winner takes the pot · on Celo
         </div>
       </div>
     ),

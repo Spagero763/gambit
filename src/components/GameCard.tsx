@@ -4,6 +4,8 @@ import { useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { ArrowUpRight } from "lucide-react";
 import Link from "next/link";
+import { useAccount } from "wagmi";
+import { useStableBalances } from "@/hooks/useStableBalances";
 import { Game, accentMap } from "@/lib/games";
 import { GameCover } from "./art/GameCover";
 import { Tilt } from "./motion/Tilt";
@@ -20,6 +22,12 @@ export function GameCard({
   featured?: boolean;
 }) {
   const a = accentMap[game.accent];
+  // Name the stablecoin this player would actually stake in, not a fixed one.
+  // Signed out that is USDT (first in the list), which is also what MiniPay
+  // wants shown as the priority option.
+  const { address } = useAccount();
+  const { preferred } = useStableBalances(address);
+  const stakeSymbol = preferred?.token.symbol ?? "USDT";
   // press ripple radiating from the exact touch point — the tactile feedback
   // phones deserve (all the hover polish is invisible on touch screens)
   const [ripple, setRipple] = useState<{ key: number; x: number; y: number } | null>(null);
@@ -100,7 +108,7 @@ export function GameCard({
                   <>
                     <span>Min</span>
                     <span className="nums font-mono text-white/80">
-                      {game.minStake.toFixed(2)} USDm
+                      {game.minStake.toFixed(2)} {stakeSymbol}
                     </span>
                   </>
                 )}

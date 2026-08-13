@@ -13,7 +13,10 @@ const GAME_RULES: Record<string, string> = {
 };
 
 const TERMS = [
-  { icon: Coins, text: "Both players stake the same USDm amount into an on-chain escrow." },
+  // No token named here on purpose. Which stablecoin a player stakes depends on
+  // what they hold (USDT first), so naming one made this panel contradict the
+  // picker sitting right behind it.
+  { icon: Coins, text: "Both players stake the same amount, in the same stablecoin, into an on-chain escrow." },
   { icon: Trophy, text: "Win and you take the pot: both stakes, minus a 5% fee." },
   { icon: Scale, text: "A draw refunds both players in full." },
   { icon: AlarmClock, text: "If your opponent abandons, you can claim the win after 2 minutes." },

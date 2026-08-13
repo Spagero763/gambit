@@ -1,7 +1,7 @@
 import { ImageResponse } from "next/og";
 
 export const runtime = "edge";
-export const alt = "Gambit — play classic games, stake USDm";
+export const alt = "Gambit — play classic games, stake USDT";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
@@ -46,7 +46,7 @@ export default function OpengraphImage() {
         <div style={{ marginTop: 56, fontSize: 76, fontWeight: 800, lineHeight: 1.05, letterSpacing: -2, maxWidth: 900, display: "flex", flexDirection: "column" }}>
           <span>Play classic games.</span>
           <span>
-            Back yourself for <span style={{ color: "#3ecf8e" }}>USDm.</span>
+            Back yourself for <span style={{ color: "#3ecf8e" }}>USDT.</span>
           </span>
         </div>
 
