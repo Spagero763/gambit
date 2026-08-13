@@ -164,7 +164,7 @@ export function Settings() {
             />
           )}
           <p className="mt-2 text-[11px] text-ink-faint">
-            Signing is free (no gas). Saves your name, photo and streak to your wallet, synced across devices.
+            Signing is free (no network fee). Saves your name, photo and streak to your wallet, synced across devices.
           </p>
           {authenticated && canSignIn && (
             <button

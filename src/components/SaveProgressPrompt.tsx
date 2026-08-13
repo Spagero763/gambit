@@ -68,7 +68,7 @@ export function SaveProgressPrompt() {
                 You&apos;re <span className="font-semibold text-ink">Level {lvl.level}</span> with{" "}
                 <span className="nums font-semibold text-ink">{p.xp.toLocaleString()} XP</span>
                 {p.streak > 0 ? <> and a <span className="font-semibold text-amber">{p.streak}-day streak</span></> : null}. Right now that lives
-                only in this browser. Create a profile (one free signature, no gas) to pin it to your wallet, sync across devices, and appear on
+                only in this browser. Create a profile (one free signature, no network fee) to pin it to your wallet, sync across devices, and appear on
                 the leaderboards.
               </p>
               <Link

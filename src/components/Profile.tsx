@@ -804,7 +804,7 @@ function ProfileSaveCard({ onSave }: { onSave: () => Promise<unknown> }) {
         <div className="min-w-0 flex-1">
           <p className="text-sm font-semibold text-ink">Save your profile</p>
           <p className="mt-0.5 text-[12px] text-ink-dim">
-            Sign once (free, no gas) to save your name, photo and streak to this wallet — synced across devices.
+            Sign once (free, no network fee) to save your name, photo and streak to this wallet — synced across devices.
           </p>
           <button
             disabled={busy}
