@@ -56,6 +56,14 @@ export default function AboutPage() {
       </div>
 
       <section className="mt-6 rounded-2xl border border-line bg-void-800 p-4">
+        <h2 className="text-sm font-semibold text-ink">Who runs it</h2>
+        <p className="mt-1 text-[13px] leading-relaxed text-ink-dim">
+          Gambit is built and operated by Spagero, an independent developer. It is not operated, endorsed or backed
+          by Opera or MiniPay. If something goes wrong, come to us and we will sort it out.
+        </p>
+      </section>
+
+      <section className="mt-3 rounded-2xl border border-line bg-void-800 p-4">
         <h2 className="text-sm font-semibold text-ink">Play responsibly</h2>
         <p className="mt-1 text-[13px] leading-relaxed text-ink-dim">
           Staked matches put real money at risk and you can lose it. Only stake what you can afford to lose, and if

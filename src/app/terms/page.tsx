@@ -25,6 +25,18 @@ export default function TermsPage() {
           </p>
         </section>
 
+        {/* Required by the MiniPay listing: a player must never be left thinking
+            Opera or MiniPay stands behind the money side of this app. */}
+        <section>
+          <h2 className="mb-1 font-semibold text-ink">Who operates Gambit</h2>
+          <p>
+            Gambit is built and operated by Spagero, an independent developer in Nigeria. It is not operated,
+            endorsed or backed by Opera or MiniPay. Gambit may be listed inside the MiniPay Mini App directory,
+            but that is distribution only. Your agreement here is with Gambit, and questions, refunds or disputes
+            should come to us, not to Opera or MiniPay.
+          </p>
+        </section>
+
         <section>
           <h2 className="mb-1 font-semibold text-ink">Who can play</h2>
           <p>
