@@ -72,7 +72,7 @@ export function ReferralBoard({ address }: { address: string }) {
                   </span>
                 ) : (
                   <span className="flex items-center gap-1 text-ink-faint">
-                    <Clock className="h-3.5 w-3.5" /> {f.played > 0 ? "played, needs verification or a staked match" : "hasn't played yet"}
+                    <Clock className="h-3.5 w-3.5" /> {f.played > 0 ? "played free, needs a staked match" : "hasn't played yet"}
                   </span>
                 )}
               </span>

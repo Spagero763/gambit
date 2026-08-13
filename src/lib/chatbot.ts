@@ -91,7 +91,7 @@ const ENTRIES: Entry[] = [
     q: "How do referrals work?",
     keywords: ["refer", "referral", "invite", "friend", "link", "code", "bring people"],
     a: () =>
-      "Share your invite link from your profile. When a friend joins and plays, you earn a reward. The more friends who play, the more you collect.",
+      "Share your invite link from your profile. When a friend joins and plays their first staked match, your bonus is paid straight to your wallet. That is the only condition, and it pays once per friend.",
   },
   {
     id: "safe",

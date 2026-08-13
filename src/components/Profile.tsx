@@ -748,8 +748,8 @@ function InviteCard({ refCode, address }: { refCode: string; address: string }) 
       </div>
       <p className="mt-0.5 text-[12px] text-ink-dim">
         {per > 0
-          ? `You earn ${fmt(per)} ${sym} for every friend who joins with your link and starts playing. They count once they verify as a real human and play, or stake their first match. Paid straight to your wallet.`
-          : `You earn a bonus for every friend who joins with your link and starts playing, paid straight to your wallet from an on chain vault.`}{" "}
+          ? `You earn ${fmt(per)} ${sym} for every friend who joins with your link and plays a staked match. That is the only condition. Paid straight to your wallet from an on chain vault.`
+          : `You earn a bonus for every friend who joins with your link and plays a staked match, paid straight to your wallet from an on chain vault.`}{" "}
         Tap the link to copy it.
       </p>
       {per > 0 && (
