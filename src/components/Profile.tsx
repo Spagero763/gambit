@@ -292,7 +292,10 @@ export function Profile() {
       </div>
 
       <div className="mt-4">
-        <InviteCard refCode={(myProfile as any)?.ref_code ?? address} address={address.toLowerCase()} />
+        {/* No address fallback. A wallet in a link people paste into group chats
+            is a privacy leak and a MiniPay listing flag, so the card waits for
+            the real short code rather than quietly using the address. */}
+        <InviteCard refCode={(myProfile as any)?.ref_code ?? null} address={address.toLowerCase()} />
         <ReferralBoard address={address.toLowerCase()} />
       </div>
 
@@ -710,8 +713,12 @@ function WalletPanel({ onExport }: { onExport: () => Promise<void> }) {
   );
 }
 
-function InviteCard({ refCode, address }: { refCode: string; address: string }) {
+function InviteCard({ refCode, address }: { refCode: string | null; address: string }) {
   const url = inviteUrl(refCode);
+  // What the player reads on the card: the domain and their code, without the
+  // https:// and without a query string. Copying still puts the full URL on the
+  // clipboard — this is only what fits on one line and stays memorable.
+  const pretty = refCode ? `bestgambit.live/?ref=${refCode}` : null;
   const [copied, setCopied] = useState(false);
   const [per, setPer] = useState(0);
   // the vault's own payout token, so the card never names one it cannot pay
@@ -764,19 +771,24 @@ function InviteCard({ refCode, address }: { refCode: string; address: string }) 
       <div className="mt-3 flex items-center gap-2">
         <button
           onClick={copy}
-          title="Copy your invite link"
-          className="flex min-w-0 flex-1 items-center gap-1.5 rounded-xl border border-line bg-void-800 px-3 py-2.5 text-left text-[12px] text-ink-dim transition-colors hover:border-line-strong hover:text-ink"
+          disabled={!pretty}
+          title={pretty ? "Copy your invite link" : "Your link is being created"}
+          className="flex min-w-0 flex-1 items-center gap-1.5 rounded-xl border border-line bg-void-800 px-3 py-2.5 text-left text-[12px] text-ink-dim transition-colors hover:border-line-strong hover:text-ink disabled:opacity-60 disabled:hover:border-line"
         >
-          <span className="truncate">{url.replace(/^https?:\/\//, "")}</span>
-          {copied ? <Check className="h-3.5 w-3.5 shrink-0 text-teal" /> : <Copy className="h-3.5 w-3.5 shrink-0 opacity-60" />}
+          <span className="truncate">{pretty ?? "Creating your link…"}</span>
+          {pretty ? (
+            copied ? <Check className="h-3.5 w-3.5 shrink-0 text-teal" /> : <Copy className="h-3.5 w-3.5 shrink-0 opacity-60" />
+          ) : null}
         </button>
-        <ShareButton
-          text="Come play me on Gambit. Real games, real money, and you can start free. Use my link."
-          url={url}
-          className="btn-primary flex shrink-0 items-center gap-1.5 rounded-xl px-3.5 py-2.5 text-sm shadow-glow"
-        >
-          <Share2 className="h-4 w-4" /> Share
-        </ShareButton>
+        {pretty && (
+          <ShareButton
+            text="Come play me on Gambit. Real games, real money, and you can start free. Use my link."
+            url={url}
+            className="btn-primary flex shrink-0 items-center gap-1.5 rounded-xl px-3.5 py-2.5 text-sm shadow-glow"
+          >
+            <Share2 className="h-4 w-4" /> Share
+          </ShareButton>
+        )}
       </div>
     </div>
   );

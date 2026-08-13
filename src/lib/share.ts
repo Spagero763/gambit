@@ -1,6 +1,8 @@
 "use client";
 
-/** Sharing + referral helpers. The referral code is simply the inviter's wallet. */
+/** Sharing + referral helpers. Invite links carry a short random code, never a
+ *  wallet address — a link gets pasted into group chats, and a wallet in it
+ *  hands strangers the inviter's balance and full match history. */
 
 const REF_KEY = "gambit:ref";
 
@@ -9,12 +11,17 @@ function origin(): string {
   return "https://gambit-rose.vercel.app";
 }
 
-/** A shareable invite link carrying the inviter's referral code. Prefers a
- *  short ref code (no wallet details in the link); a wallet address still
- *  works for older links. */
+/** A shareable invite link carrying the inviter's short referral code.
+ *
+ *  A wallet address is never accepted here. Links created before short codes
+ *  existed still resolve on the way IN (see the API), but nothing new is minted
+ *  with an address in it. Without a code you get the plain site link, which
+ *  still works, it just earns nobody a bonus. */
 export function inviteUrl(ref?: string | null): string {
   const base = origin();
-  return ref ? `${base}/?ref=${ref.toLowerCase()}` : base;
+  const code = ref?.trim().toLowerCase();
+  if (!code || /^0x[0-9a-f]{40}$/.test(code)) return base;
+  return `${base}/?ref=${code}`;
 }
 
 /** Native share sheet when available, else copy to clipboard. Returns "shared" | "copied" | "failed". */
