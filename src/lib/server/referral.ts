@@ -38,12 +38,19 @@ const vaultAbi = parseAbi([
   "function paid(bytes32 key) view returns (bool)",
 ]);
 
-function amount(): number {
-  // REFERRAL_USDM is the old name, kept so the live Vercel value keeps working
-  // through the rename. Either one sets the bonus.
+/**
+ * The per-friend bonus, from env. Exported because three call sites need it and
+ * reading the env directly is how they drift: the API card once read only the
+ * old name and displayed 0 while payouts were configured correctly.
+ *
+ * REFERRAL_USDM is the pre-rename name, still honoured.
+ */
+export function referralAmount(): number {
   const n = Number(process.env.REFERRAL_BONUS ?? process.env.REFERRAL_USDM ?? "0");
   return Number.isFinite(n) && n > 0 ? n : 0;
 }
+
+const amount = referralAmount;
 
 function vault(): `0x${string}` | null {
   const a = process.env.REWARDS_CONTRACT?.trim();

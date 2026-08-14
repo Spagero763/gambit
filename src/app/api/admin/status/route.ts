@@ -6,6 +6,7 @@ import { relayerConfigured, relayerDiagnostics } from "@/lib/server/settle";
 import { celoReadTransport } from "@/lib/server/rpc";
 import { weekIndex, weekKey } from "@/lib/cup";
 import { decimalsForToken, symbolForToken } from "@/lib/tokens";
+import { referralAmount } from "@/lib/server/referral";
 import { celo } from "viem/chains";
 
 export const runtime = "nodejs";
@@ -48,7 +49,7 @@ async function vaultStatus() {
   const [cup, referral] = await Promise.all([readVault(cupAddr, USDM), readVault(refAddr, USDM)]);
 
   const cupPrize = Number(process.env.CUP_PRIZE_USDM ?? "10");
-  const refPer = Number(process.env.REFERRAL_BONUS ?? process.env.REFERRAL_USDM ?? "0");
+  const refPer = referralAmount();
   // `token` is the ERC20 each vault pays out in — the admin UI needs it to
   // sweep (withdraw) or fund the vault from the owner's own wallet.
   return {

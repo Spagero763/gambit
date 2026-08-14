@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase";
-import { referralPaid, referralSymbol } from "@/lib/server/referral";
+import { referralPaid, referralSymbol, referralAmount } from "@/lib/server/referral";
 import { limited } from "@/lib/server/rateLimit";
 
 export const runtime = "nodejs";
@@ -42,7 +42,9 @@ export async function GET(req: NextRequest) {
     );
 
     const activated = perFriend.filter((f) => f.paid).length;
-    const per = Number(process.env.REFERRAL_USDM ?? "0");
+    // Shared with the payout path — reading the env here directly is exactly how
+    // this drifted before, showing 0 on the card while payouts were configured.
+    const per = referralAmount();
     return NextResponse.json({
       invited: friends.length,
       activated,
