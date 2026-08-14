@@ -5,6 +5,7 @@ import { isOwner } from "@/lib/server/admin";
 import { relayerConfigured, relayerDiagnostics } from "@/lib/server/settle";
 import { celoReadTransport } from "@/lib/server/rpc";
 import { weekIndex, weekKey } from "@/lib/cup";
+import { decimalsForToken, symbolForToken } from "@/lib/tokens";
 import { celo } from "viem/chains";
 
 export const runtime = "nodejs";
@@ -21,20 +22,48 @@ const envAddr = (name: string): `0x${string}` | null => {
 /** Balances of the prize vaults + low-fund flags, for the ops card. */
 async function vaultStatus() {
   const pub = createPublicClient({ chain: celo, transport: celoReadTransport() });
-  const read = async (token: `0x${string}`, holder: `0x${string}` | null) =>
-    holder ? Number(formatUnits((await pub.readContract({ address: token, abi: erc20, functionName: "balanceOf", args: [holder] })) as bigint, 18)) : null;
+
+  /** Read a vault's balance in ITS OWN payout token, at that token's decimals.
+   *  The referral vault pays USDT (6 decimals) now, so assuming USDm's 18 here
+   *  would render a funded vault as 0.0000000000006 and trip the low-funds
+   *  warning forever. */
+  const readVault = async (holder: `0x${string}` | null, fallbackToken: `0x${string}`) => {
+    if (!holder) return null;
+    let token = fallbackToken;
+    try {
+      token = (await pub.readContract({
+        address: holder,
+        abi: parseAbi(["function token() view returns (address)"]),
+        functionName: "token",
+      })) as `0x${string}`;
+    } catch {
+      /* older vault without a public token() — fall back */
+    }
+    const raw = (await pub.readContract({ address: token, abi: erc20, functionName: "balanceOf", args: [holder] })) as bigint;
+    return { token, balance: Number(formatUnits(raw, decimalsForToken(token))), symbol: symbolForToken(token) };
+  };
 
   const cupAddr = envAddr("CUP_CONTRACT");
   const refAddr = envAddr("REWARDS_CONTRACT");
-  const [cup, referral] = await Promise.all([read(USDM, cupAddr), read(USDM, refAddr)]);
+  const [cup, referral] = await Promise.all([readVault(cupAddr, USDM), readVault(refAddr, USDM)]);
 
   const cupPrize = Number(process.env.CUP_PRIZE_USDM ?? "10");
-  const refPer = Number(process.env.REFERRAL_USDM ?? "0");
+  const refPer = Number(process.env.REFERRAL_BONUS ?? process.env.REFERRAL_USDM ?? "0");
   // `token` is the ERC20 each vault pays out in — the admin UI needs it to
   // sweep (withdraw) or fund the vault from the owner's own wallet.
   return {
-    cup: cup === null ? null : { address: cupAddr, token: USDM, balance: cup, low: cup < cupPrize },
-    referral: referral === null ? null : { address: refAddr, token: USDM, balance: referral, low: refPer > 0 && referral < refPer * 5 },
+    cup: cup === null ? null : { address: cupAddr, token: cup.token, symbol: cup.symbol, balance: cup.balance, low: cup.balance < cupPrize },
+    referral:
+      referral === null
+        ? null
+        : {
+            address: refAddr,
+            token: referral.token,
+            symbol: referral.symbol,
+            balance: referral.balance,
+            // fewer than 5 payouts left is the point to top up, not the point to panic
+            low: refPer > 0 && referral.balance < refPer * 5,
+          },
   };
 }
 

@@ -16,6 +16,8 @@ const EXPLORER: Record<number, string> = { 42220: "https://celoscan.io/tx/", 111
 interface Vault {
   address: string | null;
   token?: string;
+  /** payout token symbol, read from the vault itself */
+  symbol?: string;
   balance: number;
   low: boolean;
 }
@@ -121,8 +123,11 @@ export function AdminPanel() {
       {data?.vaults && (
         <>
           <div className="mt-3 grid grid-cols-2 gap-2">
-            <VaultCard label="Cup" unit="USDm" v={data.vaults.cup} />
-            <VaultCard label="Referral" unit="USDm" v={data.vaults.referral} />
+            {/* unit comes from the vault's own token — the referral vault pays
+                USDT now, and a card that says USDm while holding USDT is how a
+                funded vault gets mistaken for an empty one */}
+            <VaultCard label="Cup" unit={data.vaults.cup?.symbol ?? "USDm"} v={data.vaults.cup} />
+            <VaultCard label="Referral" unit={data.vaults.referral?.symbol ?? "USDm"} v={data.vaults.referral} />
           </div>
           <div className="mt-2">
             <AdminVaultActions vaults={data.vaults} owner={OWNER} onDone={load} />

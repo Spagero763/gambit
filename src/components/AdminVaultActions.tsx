@@ -5,11 +5,10 @@ import { Loader2, ArrowUpFromLine, ArrowDownToLine, ExternalLink, AlertTriangle 
 import { useAccount, useChainId, useSwitchChain, useWriteContract, useWaitForTransactionReceipt } from "wagmi";
 import { parseAbi, parseUnits, isAddress } from "viem";
 import { ExternalA } from "@/components/ExternalA";
+import { decimalsForToken } from "@/lib/tokens";
 import { cn } from "@/lib/cn";
 
 const CELO = 42220;
-// The vault token (USDm) is an 18-decimal ERC20.
-const DECIMALS = 18;
 
 const vaultAbi = parseAbi(["function sweep(address token_, address to, uint256 amount)"]);
 const erc20Abi = parseAbi(["function transfer(address to, uint256 amount) returns (bool)"]);
@@ -17,6 +16,8 @@ const erc20Abi = parseAbi(["function transfer(address to, uint256 amount) return
 export interface VaultInfo {
   address: string | null;
   token?: string;
+  /** payout token symbol, read from the vault itself */
+  symbol?: string;
   balance: number;
   low: boolean;
 }
@@ -56,8 +57,8 @@ export function AdminVaultActions({
   const { isLoading: confirming, isSuccess: confirmed } = useWaitForTransactionReceipt({ hash });
 
   const OPTIONS = [
-    { key: "cup" as const, label: "Cup", unit: "USDm", v: vaults.cup },
-    { key: "referral" as const, label: "Referral", unit: "USDm", v: vaults.referral },
+    { key: "cup" as const, label: "Cup", unit: vaults.cup?.symbol ?? "USDm", v: vaults.cup },
+    { key: "referral" as const, label: "Referral", unit: vaults.referral?.symbol ?? "USDm", v: vaults.referral },
   ];
   const sel = OPTIONS.find((o) => o.key === which)!;
   const vault = sel.v;
@@ -82,7 +83,10 @@ export function AdminVaultActions({
     setHash(undefined);
     setBusy(true);
     try {
-      const value = parseUnits(amount, DECIMALS);
+      // Decimals follow the vault's own token. Funding 10 USDT with an assumed
+      // 18 would move 10 trillion base units of a 6-decimal token, so this must
+      // never be a constant.
+      const value = parseUnits(amount, decimalsForToken(vault.token));
       const h =
         mode === "withdraw"
           ? // pull the token OUT of the vault, to wherever the owner says
