@@ -79,7 +79,9 @@ export default function RootLayout({
             wallet auth, on-chain reads and data don't each pay full connection
             latency on first use — a real first-paint win on mobile data. */}
         <link rel="preconnect" href="https://auth.privy.io" crossOrigin="anonymous" />
-        <link rel="preconnect" href="https://explorer-api.walletconnect.com" crossOrigin="anonymous" />
+        {/* No WalletConnect preconnect: nothing here uses it, so warming that
+            handshake cost a connection on every load and put a third-party origin
+            on the network manifest for a service we never call. */}
         <link rel="preconnect" href="https://forno.celo.org" crossOrigin="anonymous" />
         <link rel="preconnect" href="https://dyupcxcfsbmlvaalofad.supabase.co" crossOrigin="anonymous" />
         <link rel="dns-prefetch" href="https://auth.privy.io" />
