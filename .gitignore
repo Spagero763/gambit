@@ -17,3 +17,8 @@ next-env.d.ts
 .claude/
 build.log
 .agents/
+
+# Local working documents — reports and notes that live beside the code but
+# are not part of it. Keeps `git add -A` from sweeping binaries into the repo.
+*.docx
+~$*
