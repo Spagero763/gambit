@@ -95,6 +95,15 @@ export const ESCROW_ABI = [
     outputs: [],
   },
   {
+    // The id the next createMatch will take, so a server sweep can walk the
+    // recent range without depending on a database row existing for every match.
+    type: "function",
+    name: "nextMatchId",
+    stateMutability: "view",
+    inputs: [],
+    outputs: [{ name: "", type: "uint256" }],
+  },
+  {
     type: "function",
     name: "matches",
     stateMutability: "view",

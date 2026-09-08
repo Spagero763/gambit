@@ -60,6 +60,22 @@ export async function readMatchOnChain(matchId: bigint, chainId: number) {
   };
 }
 
+/** The id the next created match will take. One less than this is the newest
+ *  match that exists, which is where a sweep starts walking backwards. */
+export async function readNextMatchId(chainId: number): Promise<number> {
+  const cfg = CHAINS[chainId];
+  if (!cfg) throw new Error(`Unsupported chain ${chainId}`);
+  const escrow = ESCROW_ADDRESS[chainId];
+  if (!escrow) throw new Error(`No escrow on chain ${chainId}`);
+  const pub = createPublicClient({ chain: cfg.chain, transport: http(cfg.rpc) });
+  const n = (await pub.readContract({
+    address: escrow,
+    abi: ESCROW_ABI,
+    functionName: "nextMatchId",
+  })) as bigint;
+  return Number(n);
+}
+
 /** Who is ACTUALLY seated on-chain (lowercase). The source of truth for joins. */
 export async function readMatchPlayers(matchId: bigint, chainId: number): Promise<string[]> {
   const cfg = CHAINS[chainId];
