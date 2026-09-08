@@ -52,6 +52,9 @@ export async function readMatchOnChain(matchId: bigint, chainId: number) {
     token: String(m[0]).toLowerCase(),
     creator: String(m[1]).toLowerCase(),
     stake: BigInt(m[2] as bigint),
+    // seconds, frozen at creation — past this an Open room can no longer be
+    // joined by anyone, and cancelMatch stops being creator-only
+    joinDeadline: Number(m[4]),
     joined: Number(m[8]),
     status: Number(m[9]),
   };

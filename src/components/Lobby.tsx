@@ -30,6 +30,19 @@ interface Room {
 }
 
 
+// Mirrors joinWindow() on the escrow (600s). A room older than this cannot be
+// joined by anyone, so it has no business in a list of rooms to join.
+const JOIN_WINDOW_MS = 600 * 1000;
+
+// The lobby re-reads every few seconds; the refund sweep does not need to run
+// that often. Once every few minutes clears the backlog just as well.
+let lastSweep = 0;
+function askForRefunds() {
+  if (Date.now() - lastSweep < 3 * 60 * 1000) return;
+  lastSweep = Date.now();
+  void fetch("/api/match/sweep").catch(() => {});
+}
+
 function relTime(iso: string) {
   const d = (Date.now() - new Date(iso).getTime()) / 1000;
   if (d < 60) return "just now";
@@ -57,7 +70,15 @@ export function Lobby() {
       .eq("status", "open")
       .order("created_at", { ascending: false })
       .limit(50);
-    setRooms((data as Room[]) ?? []);
+
+    // A room dies 10 minutes after it opens: the contract refuses further joins,
+    // but the row stays "open" until something refunds it. Listing those was a
+    // trap — you tapped a room that looked live and got "the join window has
+    // closed". Hide them, and ask the server to hand the stake back.
+    const rows = (data as Room[]) ?? [];
+    const live = rows.filter((r) => Date.now() - new Date(r.created_at).getTime() < JOIN_WINDOW_MS);
+    setRooms(live);
+    if (live.length !== rows.length) askForRefunds();
     setRefreshing(false);
   }, []);
 
