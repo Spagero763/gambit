@@ -34,13 +34,18 @@ async function sweep(_req: NextRequest) {
   }
   try {
     const db = supabaseAdmin();
-    const { data } = await db
+    const { data, error } = await db
       .from("matches")
       .select("id,chain_id,status")
       .eq("status", "open")
       .order("id", { ascending: true })
       .limit(50);
 
+    // Surface it. Swallowing this once already made an empty result look like
+    // "nothing to refund" when the query itself had failed.
+    if (error) {
+      return NextResponse.json({ ok: false, stage: "read", error: error.message }, { status: 500 });
+    }
     const rows = data ?? [];
     const now = Math.floor(Date.now() / 1000);
     const refunded: number[] = [];
