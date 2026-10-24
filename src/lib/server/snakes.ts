@@ -1,5 +1,6 @@
 // Server-authoritative snakes & ladders. The server rolls the dice so a client
 // can never pick its own number — essential once USDm is on the line.
+import { randomInt } from "node:crypto";
 import { jumpTo } from "@/lib/games/snakesLayout";
 
 export interface SnakesState {
@@ -28,7 +29,7 @@ export function applySnakesRoll(state: SnakesState, player: string): SnakesOutco
   if (state.turn !== addr) throw new Error("Not your turn");
   if (!(addr in state.pos)) throw new Error("Not a player");
 
-  const roll = 1 + Math.floor(Math.random() * 6); // authoritative server RNG
+  const roll = randomInt(1, 7); // authoritative server RNG
   const from = state.pos[addr];
   const landing = from + roll;
   const dest = landing <= 100 ? jumpTo(landing) : from; // overshoot = stay

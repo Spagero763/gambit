@@ -17,20 +17,12 @@ import { hasToken, signIn } from "@/lib/profile";
 import { registerMatch, joinServerMatch } from "@/lib/matchClient";
 import { ShareButton } from "@/components/ShareButton";
 import { ACTIVE_CHAIN_ID } from "@/lib/wagmi";
+import { GAME_TYPE } from "@/lib/escrow";
 import { StakeToken } from "@/lib/tokens";
 import { parseUnits, formatUnits } from "viem";
 import { cn } from "@/lib/cn";
 
 const FEE = 0.05;
-
-// Map game slug to the contract gameType byte.
-const GAME_TYPE: Record<string, number> = {
-  chess: 0,
-  "tic-tac-toe": 1,
-  snakes: 2,
-  whot: 3,
-  blocks: 4,
-};
 
 type Mode = "free" | "staked";
 
@@ -89,6 +81,12 @@ export function MatchSetup({
   const busy = step === "approving" || step === "creating" || step === "joining";
   // tuple index 9 = status (2 = Active, both seats filled)
   const opponentJoined = created ? Number((created as readonly unknown[])[9]) === 2 : false;
+
+  // the joiner normally starts the match; if their call never landed, the
+  // creator's screen does it as soon as the escrow shows both seats filled
+  useEffect(() => {
+    if (opponentJoined && matchId !== null) void joinServerMatch(matchId).catch(() => undefined);
+  }, [opponentJoined, matchId]);
 
   // Deep-link from the lobby: /play/<slug>?room=<id>&stake=<cusd> → prefill join.
   useEffect(() => {
@@ -467,17 +465,9 @@ export function MatchSetup({
                     const id = await createMatch(stake, GAME_TYPE[game.slug] ?? 0, 2, token);
                     if (id !== null && address) {
                       try {
-                        await registerMatch({
-                          id,
-                          game: game.slug,
-                          chainId: ACTIVE_CHAIN_ID,
-                          stake: parseUnits(stake.toString(), token.decimals),
-                          creator: address,
-                          token: token.address,
-                          decimals: token.decimals,
-                        });
+                        await registerMatch({ id, game: game.slug, chainId: ACTIVE_CHAIN_ID, creator: address });
                       } catch {
-                        /* registration retried server-side on join */
+                        /* the room still refunds on-chain once its join window lapses */
                       }
                     }
                   }}
@@ -502,9 +492,9 @@ export function MatchSetup({
                       const ok = await joinMatch(BigInt(joinId), stake, token);
                       if (ok && address) {
                         try {
-                          await joinServerMatch(BigInt(joinId), address);
+                          await joinServerMatch(BigInt(joinId));
                         } catch {
-                          /* server will reconcile on first move */
+                          /* the creator's screen starts it too once it sees the seat filled */
                         }
                         onStart(difficulty, { matchId: BigInt(joinId), you: address });
                       }

@@ -83,7 +83,7 @@ export async function POST(req: NextRequest) {
 
       const winner = action === "refundMatch" ? null : m.winner ?? null;
       try {
-        const tx = await settleOnChain(BigInt(id), winner, settleChainId);
+        const tx = await settleOnChain(BigInt(id), winner, settleChainId, [m.creator, m.opponent]);
         await db.from("matches").update({ status: "settled", settle_tx: tx, winner, chain_id: settleChainId, settle_error: null }).eq("id", Number(id));
         return NextResponse.json({ ok: true, settled: true, refunded: !winner, settleTx: tx, chainId: settleChainId });
       } catch (e: any) {

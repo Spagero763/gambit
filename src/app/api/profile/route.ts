@@ -84,11 +84,13 @@ export async function POST(req: NextRequest) {
     const img = typeof profile?.avatarImage === "string" && profile.avatarImage.length < 120000 ? profile.avatarImage : null;
     const db = supabaseAdmin();
 
-    // referral is set once, on first creation, and never to yourself. The ref
-    // can be a wallet address (legacy links) or a short ref_code.
+    // referral is set once, when the profile is first created, and never to
+    // yourself. An existing player can't pick up an inviter later, otherwise
+    // any two wallets could name each other after the fact. The ref can be a
+    // wallet address (legacy links) or a short ref_code.
     const { data: existing } = await db.from("profiles").select("referred_by").eq("address", addr).maybeSingle();
     let referred_by: string | null = (existing?.referred_by as string | null) ?? null;
-    if (!referred_by && typeof referredBy === "string") {
+    if (!existing && typeof referredBy === "string") {
       const r = referredBy.toLowerCase().trim();
       if (/^0x[0-9a-f]{40}$/.test(r)) {
         if (r !== addr) referred_by = r;

@@ -16,14 +16,16 @@ const GAME_NAME: Record<string, string> = {
   whot: "Naija Whot",
 };
 
-/** "1.90 USDm" from a match row (stake is per-player; pot = 2× minus 5% fee). */
-function potText(match: { stake: string; decimals?: number | null }) {
-  const dec = match.decimals ?? 18;
-  const pot = Number(formatUnits(BigInt(match.stake || "0") * BigInt(2), dec)) * 0.95;
-  return `${pot.toFixed(2)} ${dec === 6 ? "USDC" : "USDm"}`;
-}
 import { verifyToken } from "@/lib/server/profileToken";
 import { limited } from "@/lib/server/rateLimit";
+import { symbolForToken } from "@/lib/tokens";
+
+/** "1.90 USDT" from a match row (stake is per-player; pot = 2× minus 5% fee). */
+function potText(match: { stake: string; decimals?: number | null; token?: string | null }) {
+  const dec = match.decimals ?? 18;
+  const pot = Number(formatUnits(BigInt(match.stake || "0") * BigInt(2), dec)) * 0.95;
+  return `${pot.toFixed(2)} ${symbolForToken(match.token)}`;
+}
 
 interface MoveOutcome {
   state: { turn: string };
@@ -84,23 +86,34 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: e?.message ?? "Illegal move" }, { status: 422 });
     }
 
-    // log the move
-    const { count } = await db
-      .from("moves")
-      .select("*", { count: "exact", head: true })
-      .eq("match_id", Number(id));
-    await db.from("moves").insert({
-      match_id: Number(id),
-      player: String(player).toLowerCase(),
-      move,
-      ply: (count ?? 0) + 1,
-    });
+    // A write only lands if nobody has written since we read the board. Without
+    // this, twenty parallel snakes rolls near 100 were twenty chances at the
+    // exact number, and whichever hit settled the match.
+    const commit = async (patch: Record<string, unknown>) => {
+      const { data } = await db
+        .from("matches")
+        .update(patch)
+        .eq("id", Number(id))
+        .eq("status", "active")
+        .eq("updated_at", match.updated_at)
+        .select("id");
+      if (!data?.length) return false;
+      const { count } = await db
+        .from("moves")
+        .select("*", { count: "exact", head: true })
+        .eq("match_id", Number(id));
+      await db.from("moves").insert({
+        match_id: Number(id),
+        player: String(player).toLowerCase(),
+        move,
+        ply: (count ?? 0) + 1,
+      });
+      return true;
+    };
+    const raced = () => NextResponse.json({ error: "The board changed. Refresh and try again." }, { status: 409 });
 
     if (!outcome.finished) {
-      await db
-        .from("matches")
-        .update({ state: outcome.state, turn: outcome.state.turn })
-        .eq("id", Number(id));
+      if (!(await commit({ state: outcome.state, turn: outcome.state.turn }))) return raced();
       // nudge the player whose turn it now is (tag replaces older turn pings)
       if (outcome.state.turn) {
         void notify([outcome.state.turn], {
@@ -120,24 +133,18 @@ export async function POST(req: NextRequest) {
         await rematchSubMatch(db, match);
         return NextResponse.json({ ok: true, finished: false, rematch: true, state: outcome.state });
       }
-      await db
-        .from("matches")
-        .update({ state: outcome.state, status: "settled", winner: outcome.winner, settle_error: null })
-        .eq("id", Number(id));
+      if (!(await commit({ state: outcome.state, status: "settled", winner: outcome.winner, settle_error: null }))) return raced();
       await advanceBracket(db, Number(match.tournament_id));
       return NextResponse.json({ ok: true, finished: true, winner: outcome.winner, settled: true, state: outcome.state });
     }
 
     // finished: mark settling, settle on-chain, record result
-    await db
-      .from("matches")
-      .update({ state: outcome.state, status: "settling", winner: outcome.winner, settle_error: null })
-      .eq("id", Number(id));
+    if (!(await commit({ state: outcome.state, status: "settling", winner: outcome.winner, settle_error: null }))) return raced();
 
     let settleTx: string | null = null;
     if (relayerConfigured()) {
       try {
-        settleTx = await settleOnChain(BigInt(id), outcome.winner, Number(match.chain_id));
+        settleTx = await settleOnChain(BigInt(id), outcome.winner, Number(match.chain_id), [match.creator, match.opponent]);
       } catch (e: any) {
         // leave as 'settling' so it can be retried; record the real reason
         await db
@@ -158,7 +165,7 @@ export async function POST(req: NextRequest) {
 
     // first staked match for an invited player? pay the referral bonus
     // (idempotent — the vault pays each key once, so every settle may try)
-    void creditReferrals([match.creator, match.opponent]);
+    void creditReferrals({ ...match, winner: outcome.winner });
 
     // result pushes: paid winner / refunded draw / commiserate loser
     const seats = [match.creator, match.opponent].filter(Boolean) as string[];

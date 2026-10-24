@@ -31,6 +31,12 @@ export const runtime = "nodejs";
 // else, which is what makes it safe to run unattended.
 const SCAN_DEPTH = 60; // ids back from the newest — comfortably covers the backlog
 const MAX_PER_RUN = 5; // keep one invocation cheap; the next run takes the rest
+const MIN_GAP_MS = 60_000;
+
+// Every lobby visit pings this, and each run costs RPC reads and possibly
+// relayer gas, so one run at a time and at most one a minute per instance.
+let lastRun = 0;
+let running = false;
 
 export async function GET(req: NextRequest) {
   return sweep(req);
@@ -43,6 +49,11 @@ async function sweep(_req: NextRequest) {
   if (!relayerConfigured()) {
     return NextResponse.json({ ok: false, reason: "relayer not configured" });
   }
+  if (running || Date.now() - lastRun < MIN_GAP_MS) {
+    return NextResponse.json({ ok: true, skipped: true });
+  }
+  running = true;
+  lastRun = Date.now();
   try {
     const chainId = ACTIVE_CHAIN_ID;
     const nextId = await readNextMatchId(chainId);
@@ -97,5 +108,7 @@ async function sweep(_req: NextRequest) {
     });
   } catch (e: any) {
     return NextResponse.json({ ok: false, error: e?.message ?? "sweep failed" }, { status: 500 });
+  } finally {
+    running = false;
   }
 }

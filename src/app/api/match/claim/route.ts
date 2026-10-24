@@ -48,20 +48,34 @@ export async function POST(req: NextRequest) {
 
     // bracket sub-match: forfeit advances the bracket; no on-chain settle here
     if (match.tournament_id) {
-      await db.from("matches").update({ status: "settled", winner: me, settle_error: null }).eq("id", Number(id));
+      const { data: claimed } = await db
+        .from("matches")
+        .update({ status: "settled", winner: me, settle_error: null })
+        .eq("id", Number(id))
+        .eq("status", "active")
+        .eq("updated_at", match.updated_at)
+        .select("id");
+      if (!claimed?.length) return NextResponse.json({ error: "Your opponent just moved" }, { status: 409 });
       await advanceBracket(db, Number(match.tournament_id));
       return NextResponse.json({ ok: true, settled: true, winner: me });
     }
 
-    // opponent timed out → you win by forfeit
-    await db.from("matches").update({ status: "settling", winner: me, settle_error: null }).eq("id", Number(id));
+    // opponent timed out → you win by forfeit, unless they moved while we checked
+    const { data: claimed } = await db
+      .from("matches")
+      .update({ status: "settling", winner: me, settle_error: null })
+      .eq("id", Number(id))
+      .eq("status", "active")
+      .eq("updated_at", match.updated_at)
+      .select("id");
+    if (!claimed?.length) return NextResponse.json({ error: "Your opponent just moved" }, { status: 409 });
     if (!relayerConfigured()) {
       return NextResponse.json({ ok: true, settled: false, winner: me });
     }
     try {
-      const settleTx = await settleOnChain(BigInt(id), me, Number(match.chain_id));
+      const settleTx = await settleOnChain(BigInt(id), me, Number(match.chain_id), [match.creator, match.opponent]);
       await db.from("matches").update({ status: "settled", settle_tx: settleTx, settle_error: null }).eq("id", Number(id));
-      void creditReferrals([match.creator, match.opponent]);
+      void creditReferrals({ ...match, winner: me });
       return NextResponse.json({ ok: true, settled: true, winner: me, settleTx });
     } catch (e: any) {
       const settle_error = String(e?.shortMessage ?? e?.message ?? "settle failed").slice(0, 300);

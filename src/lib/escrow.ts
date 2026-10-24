@@ -21,6 +21,15 @@ export const STAKE_TOKEN: Record<number, `0x${string}`> = {
 
 export const FEE_BPS = 500; // 5%, mirrors the contract default
 
+// Game slug to the contract's gameType byte.
+export const GAME_TYPE: Record<string, number> = {
+  chess: 0,
+  "tic-tac-toe": 1,
+  snakes: 2,
+  whot: 3,
+  blocks: 4,
+};
+
 // Minimal ABI: only what the app calls.
 export const ESCROW_ABI = [
   {

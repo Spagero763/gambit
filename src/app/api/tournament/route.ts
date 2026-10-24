@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase";
 import { verifyToken } from "@/lib/server/profileToken";
+import { isOwner } from "@/lib/server/admin";
 import { settleRanking, relayerConfigured, readMatchStatus, readMatchPlayers, cancelOnChain } from "@/lib/server/settle";
 import { newSeed } from "@/lib/server/tournament";
 import { seedBracket, advanceBracket, forceResolveStale, seedTable, tableMatchId, BRACKET_GAMES } from "@/lib/server/bracket";
@@ -8,11 +9,12 @@ import { mergeWhot, splitWhot, applyWhotDraw, WhotPublic, WhotPrivate } from "@/
 import { notify } from "@/lib/server/push";
 import { limited } from "@/lib/server/rateLimit";
 import { formatUnits } from "viem";
+import { symbolForToken } from "@/lib/tokens";
 
 const stageOf = (alive: number) => (alive <= 3 ? "Final" : alive <= 5 ? "Semi-final" : "Quarter-final");
 const prizeText = (t: any, frac: number) => {
   const pot = Number(formatUnits(BigInt(t.stake || "0"), t.decimals ?? 18)) * t.capacity * 0.95;
-  return `${(pot * frac).toFixed(2)} ${(t.decimals ?? 18) === 6 ? "USDC" : "USDm"}`;
+  return `${(pot * frac).toFixed(2)} ${symbolForToken(t.token)}`;
 };
 
 export const runtime = "nodejs";
@@ -207,6 +209,11 @@ export async function POST(req: NextRequest) {
       const creator = String(body.creator ?? "").toLowerCase();
       if (!creator || verifyToken(String(auth)) !== creator) {
         return NextResponse.json({ error: "Sign in to create a tournament" }, { status: 401 });
+      }
+      // creating cups is held back this release; the app hides it, so the API
+      // must too, or anyone could open a score cup and post their own scores
+      if (!isOwner(String(auth))) {
+        return NextResponse.json({ error: "Creating cups is coming soon" }, { status: 403 });
       }
       const capacity = Number(body.capacity);
       const format = body.format === "bracket" ? "bracket" : body.format === "table" ? "table" : "score";

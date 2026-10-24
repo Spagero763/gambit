@@ -55,6 +55,8 @@ export async function readMatchOnChain(matchId: bigint, chainId: number) {
     // seconds, frozen at creation — past this an Open room can no longer be
     // joined by anyone, and cancelMatch stops being creator-only
     joinDeadline: Number(m[4]),
+    gameType: Number(m[6]),
+    capacity: Number(m[7]),
     joined: Number(m[8]),
     status: Number(m[9]),
   };
@@ -146,15 +148,37 @@ function relayerKey(): `0x${string}` {
 }
 
 /**
- * Settle a match on-chain with the relayer key. `winner` null = draw.
+ * The two seats recorded in the database must be exactly the two wallets that
+ * staked on-chain. The contract only checks that the winner is seated, so
+ * without this a room whose database row names a different opponent (a second
+ * wallet of the creator's, say) would pay the creator out of a stranger's
+ * stake without that stranger ever playing.
+ */
+export async function assertSeats(matchId: bigint, chainId: number, seats: (string | null | undefined)[]) {
+  const [status, onchain] = await Promise.all([readMatchStatus(matchId, chainId), readMatchPlayers(matchId, chainId)]);
+  if (status !== 2) throw new Error("Match is not active on-chain");
+  const want = seats.map((s) => String(s ?? "").toLowerCase()).sort();
+  const have = [...onchain].sort();
+  if (want.length !== 2 || have.length !== 2 || want[0] !== have[0] || want[1] !== have[1]) {
+    throw new Error("Seats do not match the escrow");
+  }
+}
+
+/**
+ * Settle a match on-chain with the relayer key. `winner` null = draw, which
+ * refunds whoever is actually seated, so only a payout needs the seat check.
  * Server-only; the key never leaves the server env.
  */
-export async function settleOnChain(matchId: bigint, winner: string | null, chainId: number) {
+export async function settleOnChain(matchId: bigint, winner: string | null, chainId: number, seats: (string | null | undefined)[]) {
   const key = relayerKey();
   const cfg = CHAINS[chainId];
   if (!cfg) throw new Error(`Unsupported chain ${chainId}`);
   const escrow = ESCROW_ADDRESS[chainId];
   if (!escrow) throw new Error(`No escrow on chain ${chainId}`);
+  if (winner) {
+    await assertSeats(matchId, chainId, seats);
+    if (!seats.some((s) => s?.toLowerCase() === winner.toLowerCase())) throw new Error("Winner is not seated");
+  }
 
   const ranking = (winner ? [getAddress(winner)] : [ZERO]) as `0x${string}`[];
 
@@ -169,7 +193,8 @@ export async function settleOnChain(matchId: bigint, winner: string | null, chai
     args: [matchId, ranking],
     type: "legacy", // Celo / MiniPay use legacy transactions
   });
-  await pub.waitForTransactionReceipt({ hash });
+  const receipt = await pub.waitForTransactionReceipt({ hash });
+  if (receipt.status !== "success") throw new Error("declareResult reverted");
   return hash;
 }
 
@@ -197,6 +222,7 @@ export async function settleRanking(matchId: bigint, ranking: string[], chainId:
     args: [matchId, ordered],
     type: "legacy",
   });
-  await pub.waitForTransactionReceipt({ hash });
+  const receipt = await pub.waitForTransactionReceipt({ hash });
+  if (receipt.status !== "success") throw new Error("declareResult reverted");
   return hash;
 }

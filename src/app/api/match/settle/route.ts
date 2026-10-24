@@ -84,10 +84,10 @@ export async function POST(req: NextRequest) {
 
     const winner = refund ? null : match.winner ?? null;
     try {
-      const settleTx = await settleOnChain(BigInt(id), winner, settleChainId);
+      const settleTx = await settleOnChain(BigInt(id), winner, settleChainId, [match.creator, match.opponent]);
       // persist the corrected chain too, so the row matches on-chain reality
       await db.from("matches").update({ status: "settled", settle_tx: settleTx, winner, chain_id: settleChainId, settle_error: null }).eq("id", Number(id));
-      void creditReferrals([match.creator, match.opponent]);
+      void creditReferrals({ ...match, winner });
       return NextResponse.json({ ok: true, settled: true, refunded: !winner, settleTx, chainId: settleChainId });
     } catch (e: any) {
       const settle_error = String(e?.shortMessage ?? e?.message ?? "settle failed").slice(0, 300);

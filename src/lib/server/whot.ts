@@ -6,6 +6,7 @@
 //   table   — 3-8 players around one board; as players finish they take
 //             1st/2nd/3rd (the survival format) and the rest keep playing
 //             until the podium is decided.
+import { randomInt } from "node:crypto";
 import { Card, Shape, buildDeck, shuffle, isLegal, activeSpecials, DEFAULT_RULES } from "@/lib/games/whot";
 
 const SPECIALS = activeSpecials(DEFAULT_RULES); // {1,2,5,8,14}
@@ -52,7 +53,7 @@ function rngFrom(seed: number) {
 /** Deal a table of 2-8 players. Hand size shrinks so big tables fit the deck. */
 export function newWhotTable(players: string[]): WhotFull {
   const order = players.map((p) => p.toLowerCase());
-  const rng = rngFrom((Date.now() % 1_000_000) + 17);
+  const rng = rngFrom(randomInt(1, 0x7fffffff));
   const deck = shuffle(buildDeck(), rng);
   const handSize = order.length <= 4 ? 6 : order.length <= 6 ? 5 : 4;
   const hands: Record<string, Card[]> = Object.fromEntries(order.map((p) => [p, []]));
@@ -126,7 +127,7 @@ function nextActive(full: WhotFull, from: string): string {
 /** Draw `count` cards, reshuffling the discard pile back in when the market empties. */
 function drawCards(full: WhotFull, count: number): Card[] {
   const taken: Card[] = [];
-  const rng = rngFrom(full.market.length * 7 + full.pile.length * 13 + (Date.now() % 1000) + 3);
+  const rng = rngFrom(randomInt(1, 0x7fffffff));
   for (let i = 0; i < count; i++) {
     if (full.market.length === 0) {
       if (full.pile.length > 1) {

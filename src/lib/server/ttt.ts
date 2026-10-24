@@ -39,7 +39,7 @@ export function applyTtt(state: TttState, player: string, cell: number): TttOutc
   const addr = player.toLowerCase();
   if (state.turn !== addr) throw new Error("Not your turn");
   if (!(addr in state.marks)) throw new Error("Not a player");
-  if (cell < 0 || cell > 8 || state.board[cell]) throw new Error("Illegal cell");
+  if (!Number.isInteger(cell) || cell < 0 || cell > 8 || state.board[cell]) throw new Error("Illegal cell");
 
   const board = state.board.slice();
   board[cell] = state.marks[addr];

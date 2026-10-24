@@ -5,40 +5,34 @@ import { getToken } from "@/lib/profile";
 
 /** Client helpers that talk to the authoritative match server. */
 
-export async function registerMatch(args: {
-  id: bigint;
-  game: string;
-  chainId: number;
-  stake: bigint;
-  creator: string;
-  token?: string;
-  decimals?: number;
-}) {
-  const res = await fetch("/api/match/register", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      id: args.id.toString(),
-      game: args.game,
-      chainId: args.chainId,
-      stake: args.stake.toString(),
-      creator: args.creator,
-      token: args.token,
-      decimals: args.decimals,
-    }),
-  });
-  if (!res.ok) throw new Error((await res.json()).error ?? "register failed");
-  return res.json();
+const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+
+/** POST with a few retries; 4xx other than 409 means the request itself is wrong. */
+async function postRetry(url: string, body: unknown, tries: number) {
+  let last = "request failed";
+  for (let i = 0; i < tries; i++) {
+    try {
+      const res = await fetch(url, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
+      const data = await res.json().catch(() => ({}));
+      if (res.ok) return data;
+      last = data.error ?? last;
+      if (res.status >= 400 && res.status < 500 && res.status !== 409 && res.status !== 429) break;
+    } catch (e: any) {
+      last = e?.message ?? last;
+    }
+    await sleep(1500 * (i + 1));
+  }
+  throw new Error(last);
 }
 
-export async function joinServerMatch(id: bigint, opponent: string) {
-  const res = await fetch("/api/match/join", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ id: id.toString(), opponent }),
-  });
-  if (!res.ok) throw new Error((await res.json()).error ?? "join failed");
-  return res.json();
+/** Record a room the creator just opened on-chain; the server reads its terms from the escrow. */
+export function registerMatch(args: { id: bigint; game: string; chainId: number; creator: string }) {
+  return postRetry("/api/match/register", { id: args.id.toString(), game: args.game, chainId: args.chainId, creator: args.creator }, 4);
+}
+
+/** Start a match once both seats are filled on-chain. Safe for either player to call. */
+export function joinServerMatch(id: bigint) {
+  return postRetry("/api/match/join", { id: id.toString() }, 5);
 }
 
 export interface MoveResult {
@@ -86,7 +80,9 @@ export interface WhotView {
 export type WhotAction = { type: "play"; cardId: string; called?: Shape } | { type: "draw" };
 
 export async function fetchWhot(id: bigint, player: string): Promise<WhotView> {
-  const res = await fetch(`/api/match/whot?id=${id.toString()}&player=${player}`);
+  const res = await fetch(`/api/match/whot?id=${id.toString()}&player=${player}`, {
+    headers: { "x-gambit-token": getToken(player) ?? "" },
+  });
   const data = await res.json();
   if (!res.ok) throw new Error(data.error ?? "fetch failed");
   return data;

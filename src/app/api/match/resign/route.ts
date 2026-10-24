@@ -51,12 +51,18 @@ export async function POST(req: NextRequest) {
     }
 
     // money match: opponent takes the pot, settled on-chain right now
-    await db.from("matches").update({ status: "settling", winner, settle_error: null }).eq("id", Number(id));
+    const { data: claimed } = await db
+      .from("matches")
+      .update({ status: "settling", winner, settle_error: null })
+      .eq("id", Number(id))
+      .eq("status", "active")
+      .select("id");
+    if (!claimed?.length) return NextResponse.json({ error: "This match already ended" }, { status: 409 });
     if (!relayerConfigured()) return NextResponse.json({ ok: true, settled: false, winner });
     try {
-      const settleTx = await settleOnChain(BigInt(id), winner, Number(match.chain_id));
+      const settleTx = await settleOnChain(BigInt(id), winner, Number(match.chain_id), [match.creator, match.opponent]);
       await db.from("matches").update({ status: "settled", settle_tx: settleTx, settle_error: null }).eq("id", Number(id));
-      void creditReferrals([match.creator, match.opponent]);
+      void creditReferrals({ ...match, winner });
       void notify([winner], {
         title: "Opponent resigned — you win! 💰",
         body: `Room #${id}: the pot is on its way to your wallet.`,

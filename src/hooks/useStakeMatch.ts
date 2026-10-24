@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useState } from "react";
-import { parseUnits, maxUint256 } from "viem";
+import { parseUnits, formatUnits, maxUint256 } from "viem";
 import {
   useAccount,
   usePublicClient,
@@ -14,7 +14,7 @@ import {
   ERC20_ABI,
   STAKE_TOKEN,
 } from "@/lib/escrow";
-import { StakeToken } from "@/lib/tokens";
+import { StakeToken, decimalsForToken, symbolForToken } from "@/lib/tokens";
 import { friendlyError } from "@/lib/errors";
 import { ACTIVE_CHAIN_ID } from "@/lib/wagmi";
 import { miniPayTx, skipGasPreflight } from "@/lib/minipay";
@@ -162,6 +162,13 @@ export function useStakeMatch() {
         if (status !== 1) throw new Error("This room already started or was cancelled.");
         if (Date.now() > joinDeadline) throw new Error("The join window has closed — this room can't be joined anymore.");
         if (joined >= capacity) throw new Error("This room is already full.");
+        // The escrow charges the room's real entry, whatever a link or listing
+        // said. Refuse rather than let anyone pay more than they agreed to.
+        const roomToken = String(m[0]);
+        if (roomToken.toLowerCase() !== stakeToken.address.toLowerCase() || BigInt(m[2] as bigint) !== amount) {
+          const real = formatUnits(BigInt(m[2] as bigint), decimalsForToken(roomToken));
+          throw new Error(`This room's entry is ${real} ${symbolForToken(roomToken)}. Choose that amount to join. Nothing was charged.`);
+        }
         await preflight(amount, stakeToken.address, stakeToken.symbol);
         await ensureAllowance(amount, stakeToken.address);
 

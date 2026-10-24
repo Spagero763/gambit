@@ -13,6 +13,8 @@ import { advanceBracket, rematchSubMatch, settleTable, TABLE_SLOT } from "@/lib/
 import { notify } from "@/lib/server/push";
 import { verifyToken } from "@/lib/server/profileToken";
 import { limited } from "@/lib/server/rateLimit";
+import { symbolForToken } from "@/lib/tokens";
+import { creditReferrals } from "@/lib/server/referral";
 
 export const runtime = "nodejs";
 
@@ -44,12 +46,16 @@ async function loadPrivate(db: ReturnType<typeof supabaseAdmin>, id: number): Pr
   return (data?.state as WhotPrivate) ?? null;
 }
 
-/** GET /api/match/whot?id=&player= -> redacted view */
+/** GET /api/match/whot?id=&player= -> redacted view. Your hand needs your own session token. */
 export async function GET(req: NextRequest) {
   try {
     const id = Number(req.nextUrl.searchParams.get("id"));
     const player = req.nextUrl.searchParams.get("player") ?? "";
     if (!id || !player) return NextResponse.json({ error: "Bad request" }, { status: 400 });
+    const token = req.headers.get("x-gambit-token");
+    if (!token || verifyToken(token) !== player.toLowerCase()) {
+      return NextResponse.json({ error: "Sign in to see your hand" }, { status: 401 });
+    }
     const db = supabaseAdmin();
     let { data: match } = await db.from("matches").select("*").eq("id", id).single();
     if (!match) return NextResponse.json({ error: "Match not found" }, { status: 404 });
@@ -104,10 +110,24 @@ export async function POST(req: NextRequest) {
     }
 
     const { pub, priv: nextPriv } = splitWhot(outcome.full);
-    await db.from("match_private").upsert({ match_id: Number(id), state: nextPriv }, { onConflict: "match_id" });
+    // the table only moves if nobody has written since we read it; the hands
+    // follow the winning write so they can never belong to a different table
+    const commit = async (patch: Record<string, unknown>) => {
+      const { data } = await db
+        .from("matches")
+        .update(patch)
+        .eq("id", Number(id))
+        .eq("status", "active")
+        .eq("updated_at", match.updated_at)
+        .select("id");
+      if (!data?.length) return false;
+      await db.from("match_private").upsert({ match_id: Number(id), state: nextPriv }, { onConflict: "match_id" });
+      return true;
+    };
+    const raced = () => NextResponse.json({ error: "The table changed. Refresh and try again." }, { status: 409 });
 
     if (!outcome.finished) {
-      await db.from("matches").update({ state: pub, turn: pub.turn }).eq("id", Number(id));
+      if (!(await commit({ state: pub, turn: pub.turn }))) return raced();
       // survival table: someone just claimed a podium spot but play continues
       const prevFinished = ((match.state as any)?.finished ?? []) as string[];
       if ((pub.finished?.length ?? 0) > prevFinished.length) {
@@ -132,7 +152,7 @@ export async function POST(req: NextRequest) {
 
     // tournament play: nothing settles on this match — the escrow pays once.
     if (match.tournament_id) {
-      await db.from("matches").update({ state: pub, status: "settled", winner: outcome.winner, settle_error: null }).eq("id", Number(id));
+      if (!(await commit({ state: pub, status: "settled", winner: outcome.winner, settle_error: null }))) return raced();
       if (match.bracket_slot === TABLE_SLOT && outcome.ranking) {
         // survival table over → pay the podium from the tournament escrow
         await settleTable(db, Number(match.tournament_id), outcome.ranking);
@@ -145,11 +165,11 @@ export async function POST(req: NextRequest) {
     }
 
     // finished: settle on-chain (on the match's own chain)
-    await db.from("matches").update({ state: pub, status: "settling", winner: outcome.winner, settle_error: null }).eq("id", Number(id));
+    if (!(await commit({ state: pub, status: "settling", winner: outcome.winner, settle_error: null }))) return raced();
     let settleTx: string | null = null;
     if (relayerConfigured()) {
       try {
-        settleTx = await settleOnChain(BigInt(id), outcome.winner, Number(match.chain_id));
+        settleTx = await settleOnChain(BigInt(id), outcome.winner, Number(match.chain_id), [match.creator, match.opponent]);
       } catch (e: any) {
         const settle_error = String(e?.shortMessage ?? e?.message ?? "settle failed").slice(0, 300);
         await db.from("matches").update({ settle_error }).eq("id", Number(id));
@@ -159,12 +179,13 @@ export async function POST(req: NextRequest) {
       }
     }
     await db.from("matches").update({ status: "settled", settle_tx: settleTx, settle_error: null }).eq("id", Number(id));
+    void creditReferrals({ ...match, winner: outcome.winner });
     if (outcome.winner) {
       const dec = match.decimals ?? 18;
       const pot = (Number(BigInt(match.stake || "0") * BigInt(2)) / 10 ** dec) * 0.95;
       void notify([outcome.winner], {
         title: "You won! 💰",
-        body: `${pot.toFixed(2)} ${dec === 6 ? "USDC" : "USDm"} paid straight to your wallet.`,
+        body: `${pot.toFixed(2)} ${symbolForToken(match.token)} paid straight to your wallet.`,
         url: "/",
       });
       const loser = [match.creator, match.opponent].find(
