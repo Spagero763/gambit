@@ -108,6 +108,37 @@ drop trigger if exists profiles_touch on profiles;
 create trigger profiles_touch before update on profiles
   for each row execute function touch_updated_at();
 
+-- invite codes (short links, no wallet address in them) and admin bans
+alter table profiles add column if not exists ref_code text;
+create unique index if not exists profiles_ref_code_idx on profiles (ref_code);
+alter table profiles add column if not exists banned boolean not null default false;
+
+-- weekly cup: one row per week ("w123"), one entry per player per week.
+-- The status column is the guard that stops a retried payout paying twice.
+create table if not exists cup_weeks (
+  week          text primary key,
+  status        text not null default 'open',  -- open | settling | settled
+  winners       jsonb,
+  settle_error  text,
+  settled_at    timestamptz,
+  created_at    timestamptz not null default now()
+);
+create table if not exists cup_entries (
+  week        text not null,
+  address     text not null,                   -- lowercased wallet
+  score       integer not null default 0,
+  created_at  timestamptz not null default now(),
+  primary key (week, address)
+);
+create index if not exists cup_entries_week_score_idx on cup_entries (week, score desc);
+
+alter table cup_weeks enable row level security;
+drop policy if exists "cup weeks readable" on cup_weeks;
+create policy "cup weeks readable" on cup_weeks for select using (true);
+alter table cup_entries enable row level security;
+drop policy if exists "cup entries readable" on cup_entries;
+create policy "cup entries readable" on cup_entries for select using (true);
+
 -- scores: free-play results for weekly events (e.g. Block Blitz Showdown).
 -- Public read; writes go through the server. Casual board (no funds at stake).
 create table if not exists scores (
