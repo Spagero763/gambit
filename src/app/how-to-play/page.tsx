@@ -3,6 +3,7 @@ import Link from "next/link";
 import { Gamepad2, Coins, Trophy, Scale, ShieldCheck } from "lucide-react";
 import { GAMES } from "@/lib/games";
 import { BackLink } from "@/components/BackLink";
+import { Backdrop } from "@/components/Backdrop";
 
 export const metadata: Metadata = {
   title: "How to Play | Gambit",
@@ -41,6 +42,7 @@ const TERMS = [
 export default function HowToPlayPage() {
   return (
     <main className="mx-auto w-full max-w-2xl px-5 pb-28" style={{ paddingTop: "calc(1.5rem + env(safe-area-inset-top))" }}>
+      <Backdrop />
       <BackLink />
       <h1 className="mt-4 font-display text-2xl font-bold">How to Play</h1>
 

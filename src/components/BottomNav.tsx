@@ -32,7 +32,13 @@ export function BottomNav() {
         className="fixed inset-x-0 bottom-0 z-50 mx-auto w-[min(92%,26rem)]"
         style={{ marginBottom: "calc(0.75rem + env(safe-area-inset-bottom))" }}
       >
-      <div className="flex items-center justify-between rounded-2xl border border-line bg-void-700/95 px-1.5 py-1.5 shadow-pop backdrop-blur">
+      <div
+        className="flex items-center justify-between rounded-[26px] border border-white/10 px-1.5 py-1.5"
+        style={{
+          background: "linear-gradient(180deg, rgba(28,36,50,0.96), rgba(12,17,25,0.97))",
+          boxShadow: "inset 0 1px 0 rgba(255,255,255,0.1), 0 24px 48px -12px rgba(0,0,0,0.85)",
+        }}
+      >
         {TABS.map((t) => {
           const Icon = t.icon;
           const isActive =
@@ -42,17 +48,18 @@ export function BottomNav() {
               key={t.href}
               href={t.href}
               data-tour={t.tour}
-              className="relative flex flex-1 flex-col items-center gap-1 rounded-xl py-2"
+              className="relative flex flex-1 flex-col items-center gap-1 rounded-[20px] py-2"
             >
               {isActive && (
                 <motion.span
                   layoutId="navPill"
-                  className="absolute inset-0 rounded-xl bg-void-600"
+                  className="absolute inset-0 rounded-[20px] border border-teal/30"
+                  style={{
+                    background: "linear-gradient(180deg, rgba(62,224,155,0.2), rgba(62,224,155,0.06))",
+                    boxShadow: "inset 0 1px 0 rgba(255,255,255,0.1), 0 0 22px -6px rgba(62,224,155,0.6)",
+                  }}
                   transition={{ type: "spring", stiffness: 380, damping: 32 }}
-                >
-                  {/* soft accent glow under the active tab */}
-                  <span className="absolute inset-x-3 -bottom-1 h-2 rounded-full bg-teal/25 blur-md" />
-                </motion.span>
+                />
               )}
               <motion.span
                 whileTap={{ scale: 0.82 }}
@@ -69,7 +76,7 @@ export function BottomNav() {
               </motion.span>
               <span
                 className={cn(
-                  "relative text-[10px] font-medium transition-colors",
+                  "relative text-[11px] font-semibold transition-colors",
                   isActive ? "text-ink" : "text-ink-faint"
                 )}
               >

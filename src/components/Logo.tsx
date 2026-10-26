@@ -1,41 +1,39 @@
 import { cn } from "@/lib/cn";
 
-/** Geometric Gambit monogram: an open faceted "G" on a dark tile. Single accent. */
-export function GambitMark({ size = 34, className }: { size?: number; className?: string }) {
+/** The faceted G in Gambit green, lit from above. */
+export function GambitMark({ size = 30, className }: { size?: number; className?: string }) {
   return (
     <svg width={size} height={size} viewBox="0 0 48 48" className={className} aria-hidden>
-      <rect x="1.5" y="1.5" width="45" height="45" rx="13" fill="#16161a" />
-      <rect
-        x="1.5"
-        y="1.5"
-        width="45"
-        height="45"
-        rx="13"
+      <defs>
+        <linearGradient id="gm-tile" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stopColor="#1c2533" />
+          <stop offset="1" stopColor="#0b1018" />
+        </linearGradient>
+        <linearGradient id="gm-stroke" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0" stopColor="#8af7c8" />
+          <stop offset="1" stopColor="#22c47f" />
+        </linearGradient>
+      </defs>
+      <rect x="1" y="1" width="46" height="46" rx="13" fill="url(#gm-tile)" />
+      <rect x="1.5" y="1.5" width="45" height="45" rx="12.5" fill="none" stroke="rgba(255,255,255,0.12)" />
+      <path
+        d="M31 16.5 24 12.5l-11 6.3v11.4l11 6.3 11-6.3V24H25"
         fill="none"
-        stroke="rgba(255,255,255,0.1)"
-      />
-      <g
-        fill="none"
-        stroke="#3ecf8e"
-        strokeWidth="3.2"
+        stroke="url(#gm-stroke)"
+        strokeWidth="3.4"
         strokeLinejoin="round"
         strokeLinecap="round"
-      >
-        <path d="M31 16.5 L24 12.5 L13 18.8 L13 30.2 L24 36.5 L35 30.2 L35 24 L25 24" />
-      </g>
-      <circle cx="24" cy="24" r="2.2" fill="#3ecf8e" />
+      />
+      <circle cx="24" cy="24" r="2.3" fill="#3ee09b" />
     </svg>
   );
 }
 
 export function Logo({ className }: { className?: string }) {
   return (
-    <div className={cn("flex min-w-0 items-center gap-2 min-[380px]:gap-2.5", className)}>
-      <GambitMark size={30} className="shrink-0" />
-      {/* truncates instead of colliding with the header controls on 360px screens */}
-      <span className="truncate text-[18px] font-semibold tracking-tight text-ink min-[380px]:text-[19px]">
-        Gambit
-      </span>
-    </div>
+    <span className={cn("flex min-w-0 items-center gap-2.5", className)}>
+      <GambitMark size={32} className="shrink-0 drop-shadow-[0_6px_14px_rgba(62,224,155,0.25)]" />
+      <span className="display truncate text-[22px] font-extrabold leading-none text-ink">Gambit</span>
+    </span>
   );
 }

@@ -25,7 +25,7 @@ export function Header() {
   return (
     <header className="sticky top-0 z-50" style={{ paddingTop: "env(safe-area-inset-top)" }}>
       {/* solid fade so content scrolls cleanly under the bar */}
-      <div className="pointer-events-none absolute inset-x-0 top-0 h-full bg-void/85 backdrop-blur-sm mask-fade-b" />
+      <div className="pointer-events-none absolute inset-x-0 top-0 h-full bg-void/80 mask-fade-b" />
       <motion.div
         style={{ opacity: lineOpacity }}
         className="pointer-events-none absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-white/10 to-transparent"
@@ -44,7 +44,7 @@ export function Header() {
           <Link
             href="/settings"
             aria-label="Settings"
-            className="group grid h-9 w-9 shrink-0 place-items-center rounded-xl border border-line bg-void-700 text-ink-dim transition-colors hover:text-ink min-[380px]:h-10 min-[380px]:w-10"
+            className="glass pressable group grid h-10 w-10 shrink-0 place-items-center rounded-full text-ink-dim transition-colors hover:text-ink"
           >
             <SettingsIcon className="h-[17px] w-[17px] transition-transform duration-500 ease-out group-hover:rotate-90" />
           </Link>
@@ -57,7 +57,7 @@ export function Header() {
 
 /**
  * One-tap mute, always visible. Sound effects ship ON (they make the games feel
- * alive) and this is the promised escape hatch — no popup asking about sound,
+ * alive) and this is the promised escape hatch, no popup asking about sound,
  * just an icon that is there when someone in a quiet place needs it. Muting
  * zeroes the SFX volume and pauses music; unmuting restores a sensible volume.
  */
@@ -70,9 +70,9 @@ function MuteButton() {
       aria-label={muted ? "Turn sound on" : "Mute all sound"}
       // the tap itself is the user gesture browsers require before audio can
       // start, so turning it on here also starts the music (that is why it stayed
-      // silent before — nothing switched music on)
+      // silent before, nothing switched music on)
       onClick={() => update(muted ? { volume: 0.5, musicOn: true } : { volume: 0, musicOn: false })}
-      className="grid h-9 w-9 shrink-0 place-items-center rounded-xl border border-line bg-void-700 text-ink-dim transition-colors hover:text-ink min-[380px]:h-10 min-[380px]:w-10"
+      className="glass pressable grid h-10 w-10 shrink-0 place-items-center rounded-full text-ink-dim transition-colors hover:text-ink"
     >
       {muted ? <VolumeX className="h-[17px] w-[17px]" /> : <Volume2 className="h-[17px] w-[17px]" />}
     </button>

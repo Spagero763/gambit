@@ -1,68 +1,67 @@
 import type { Config } from "tailwindcss";
 
+// Night-table palette: deep blue-black, lit surfaces, Gambit green as the
+// brand and the colour of money. Blue is you, amber is them, red is trouble.
+const table = { DEFAULT: "#05070c", 2: "#0a0f18" };
+const card = { DEFAULT: "#0e131c", 2: "#141a25", 3: "#1c2330" };
+const rule = { DEFAULT: "rgba(255,255,255,0.08)", strong: "rgba(255,255,255,0.14)" };
+const ink = { DEFAULT: "#f2f5f8", soft: "#9ba5b4", faint: "#5f6878" };
+const you = { DEFAULT: "#5aa9ff", bright: "#9cc9ff", deep: "#2d6fd1" };
+const them = { DEFAULT: "#ffb547", deep: "#c47d14" };
+const won = { DEFAULT: "#3ee09b", bright: "#7bf5c1", deep: "#139a62" };
+const alert = { DEFAULT: "#ff5d6c", deep: "#c8323f" };
+
 const config: Config = {
-  content: [
-    "./src/app/**/*.{ts,tsx}",
-    "./src/components/**/*.{ts,tsx}",
-  ],
+  content: ["./src/app/**/*.{ts,tsx}", "./src/components/**/*.{ts,tsx}"],
   theme: {
     extend: {
       colors: {
-        // Near-black, slightly cool base + elevated surfaces.
-        void: {
-          DEFAULT: "#0a0a0c",
-          800: "#101013",
-          700: "#16161a",
-          600: "#1e1e23",
-        },
-        ink: {
-          DEFAULT: "#f4f4f5",
-          dim: "#9a9aa3",
-          faint: "#646470",
-        },
-        // Hairline borders/dividers. These were referenced app-wide but never
-        // defined, so Tailwind fell back to its light-gray default — harsh
-        // bright borders on a dark UI. Defining them refines every surface.
-        line: {
-          DEFAULT: "rgba(255,255,255,0.08)",
-          strong: "rgba(255,255,255,0.16)",
-        },
-        // Matured, low-neon hues. Emerald (`teal`) is the brand / money accent.
-        violet: {
-          DEFAULT: "#8e8bf0",
-          bright: "#aaa7ff",
-          deep: "#5d58c9",
-        },
-        teal: {
-          DEFAULT: "#3ecf8e",
-          deep: "#1f9d6b",
-        },
-        amber: {
-          DEFAULT: "#e3b341",
-        },
-        rose: {
-          DEFAULT: "#e06c8b",
-        },
+        table,
+        card,
+        rule,
+        ink: { ...ink, dim: ink.soft },
+        you,
+        them,
+        won,
+        alert,
+        gold: "#ffd66b",
+        felt: { DEFAULT: "#0d5b3c", deep: "#06301f" },
+        whot: { red: "#a3162e", deep: "#6e0f20", cream: "#f6efe1", paper: "#ece3d0" },
+
+        // the names most components were written with, mapped onto the palette
+        void: { DEFAULT: table.DEFAULT, 900: table.DEFAULT, 800: table[2], 700: card.DEFAULT, 600: card[2] },
+        line: { DEFAULT: rule.DEFAULT, strong: rule.strong },
+        teal: { DEFAULT: won.DEFAULT, deep: won.deep },
+        violet: you,
+        amber: { DEFAULT: them.DEFAULT },
+        rose: { DEFAULT: alert.DEFAULT },
       },
       fontFamily: {
-        sans: ["var(--font-sans)", "system-ui", "sans-serif"],
-        display: ["var(--font-display)", "system-ui", "sans-serif"],
-        mono: ["var(--font-mono)", "ui-monospace", "monospace"],
+        sans: ["var(--font-sans)", "ui-sans-serif", "system-ui", "-apple-system", "Segoe UI", "Roboto", "sans-serif"],
+        display: ["var(--font-display)", "ui-sans-serif", "system-ui", "sans-serif"],
+        mono: ["var(--font-mono)", "ui-monospace", "SFMono-Regular", "Menlo", "monospace"],
+      },
+      fontSize: {
+        micro: ["13px", "18px"],
+        small: ["14px", "20px"],
+        body: ["16px", "24px"],
       },
       borderRadius: {
+        chip: "12px",
+        tile: "24px",
+        sheet: "30px",
         "4xl": "2rem",
       },
       boxShadow: {
-        // Realistic, grounded shadows — no neon bloom.
-        card: "0 1px 2px rgba(0,0,0,0.4), 0 12px 28px -16px rgba(0,0,0,0.8)",
-        pop: "0 2px 6px rgba(0,0,0,0.5), 0 24px 48px -24px rgba(0,0,0,0.9)",
-        // Subtle green lift reserved for the single primary action.
-        glow: "0 1px 2px rgba(0,0,0,0.5), 0 10px 26px -14px rgba(31,157,107,0.5)",
-        "glow-teal": "0 1px 2px rgba(0,0,0,0.5), 0 10px 26px -14px rgba(31,157,107,0.5)",
+        lift: "0 1px 0 rgba(255,255,255,0.06) inset, 0 24px 48px -24px rgba(0,0,0,0.9)",
+        card: "0 1px 0 rgba(255,255,255,0.06) inset, 0 24px 48px -24px rgba(0,0,0,0.9)",
+        pop: "0 40px 80px -30px rgba(0,0,0,0.95)",
+        glow: "inset 0 1px 0 rgba(255,255,255,0.55), inset 0 -2px 0 rgba(0,60,35,0.35), 0 12px 28px -12px rgba(62,224,155,0.75)",
+        "glow-teal": "inset 0 1px 0 rgba(255,255,255,0.55), inset 0 -2px 0 rgba(0,60,35,0.35), 0 12px 28px -12px rgba(62,224,155,0.75)",
       },
       keyframes: {
         "pulse-soft": {
-          "0%, 100%": { opacity: "0.5" },
+          "0%, 100%": { opacity: "0.45" },
           "50%": { opacity: "1" },
         },
         shimmer: {
@@ -70,7 +69,7 @@ const config: Config = {
         },
       },
       animation: {
-        "pulse-soft": "pulse-soft 2.4s ease-in-out infinite",
+        "pulse-soft": "pulse-soft 1.4s ease-in-out infinite",
         shimmer: "shimmer 2.5s infinite",
       },
     },

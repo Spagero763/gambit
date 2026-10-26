@@ -36,9 +36,9 @@ export function WalletPill() {
   const progress = useProgress();
   const rank = rankForXp(progress.xp);
 
-  if (!ready) return <div className="h-9 w-24 rounded-xl border border-line bg-void-700 min-[380px]:h-10 min-[380px]:w-28" />;
+  if (!ready) return <div className="glass h-10 w-24 rounded-full min-[380px]:w-28" />;
 
-  // a connected wallet is all we need — injected (MiniPay) or Privy embedded
+  // a connected wallet is all we need, injected (MiniPay) or Privy embedded
   if (address) {
     const name = displayName(settings.name, address);
     return (
@@ -46,23 +46,24 @@ export function WalletPill() {
         <button
           onClick={() => setOpen(true)}
           data-tour="wallet"
-          className="flex max-w-[46vw] items-center gap-2 rounded-xl border border-line bg-void-700 py-1.5 pl-2 pr-2.5 text-left transition-colors hover:border-line-strong min-[380px]:max-w-none min-[380px]:pr-3"
+          className="glass pressable flex h-10 max-w-[46vw] items-center gap-2 rounded-full py-1 pl-1 pr-3 text-left min-[380px]:max-w-none"
         >
           <span className="relative shrink-0">
             <Avatar
               image={settings.avatarImage || undefined}
               color={AVATAR_HEX[settings.avatar] ?? AVATAR_HEX.teal}
               name={name}
-              size={26}
-              rounded="rounded-lg"
+              size={30}
+              rounded="rounded-full"
             />
             <span className="absolute -bottom-1 -right-1">
               <RankBadge rank={rank} size={14} />
             </span>
           </span>
           <div className="min-w-0 leading-tight">
-            <p className="truncate text-[11px] font-medium text-ink">{name}</p>
-            <p className="nums text-[10px] text-teal">
+            <p className="truncate text-[11px] font-semibold text-ink">{name}</p>
+            <p className="nums flex items-center gap-1 text-[11px] font-semibold text-teal">
+              <span className="h-1.5 w-1.5 rounded-full bg-teal shadow-[0_0_8px_rgba(62,224,155,0.9)]" />
               {preferred.amount.toFixed(2)} {preferred.token.symbol}
             </p>
           </div>
@@ -75,7 +76,7 @@ export function WalletPill() {
   // signed in but the embedded wallet is still provisioning
   if (authenticated) {
     return (
-      <div className="flex items-center gap-2 rounded-xl border border-line bg-void-700 px-3 py-2 text-xs text-ink-dim">
+      <div className="glass flex h-10 items-center gap-2 rounded-full px-3.5 text-xs text-ink-dim">
         <Loader2 className="h-3.5 w-3.5 animate-spin" /> Setting up…
       </div>
     );
@@ -85,7 +86,7 @@ export function WalletPill() {
   // offering a sign in the player does not need
   if (miniPay) {
     return (
-      <div className="flex items-center gap-2 rounded-xl border border-line bg-void-700 px-3 py-2 text-xs text-ink-dim">
+      <div className="glass flex h-10 items-center gap-2 rounded-full px-3.5 text-xs text-ink-dim">
         <Loader2 className="h-3.5 w-3.5 animate-spin" /> Connecting…
       </div>
     );
@@ -94,7 +95,7 @@ export function WalletPill() {
   return (
     <button
       onClick={() => login()}
-      className="btn-primary flex items-center gap-2 rounded-xl px-3 py-2 text-sm shadow-glow transition-colors min-[380px]:px-4"
+      className="btn-primary flex h-10 items-center gap-2 rounded-full px-4 text-sm"
     >
       <Wallet className="h-4 w-4" />
       Sign in

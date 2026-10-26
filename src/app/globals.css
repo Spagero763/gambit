@@ -4,27 +4,36 @@
 
 :root {
   color-scheme: dark;
+  --safe-b: env(safe-area-inset-bottom, 0px);
+  --safe-t: env(safe-area-inset-top, 0px);
 }
 
 * {
   -webkit-tap-highlight-color: transparent;
 }
 
+html {
+  background: #05070c;
+}
+
+/* transparent, or it would paint over the fixed backdrop */
 html,
 body {
-  background: #0a0a0c;
-  color: #f4f4f5;
+  color: #f2f5f8;
   overflow-x: hidden;
 }
 
 body {
   min-height: 100dvh;
-  font-feature-settings: "cv01", "cv03", "cv04", "tnum";
+  font-feature-settings: "cv01", "cv03", "cv04";
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
 }
 
-/* Quiet, neutral scrollbar — no neon. */
+::selection {
+  background: rgba(62, 224, 155, 0.35);
+}
+
 ::-webkit-scrollbar {
   width: 9px;
   height: 9px;
@@ -38,85 +47,137 @@ body {
   border: 2px solid transparent;
   background-clip: padding-box;
 }
-::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.18);
-  background-clip: padding-box;
-}
 
 /* Visible keyboard focus, invisible to mouse users. */
 :focus-visible {
-  outline: 2px solid rgba(62, 207, 142, 0.6);
+  outline: 2px solid #3ee09b;
   outline-offset: 2px;
 }
 
 @layer components {
-  /* Solid, matte elevated surface — replaces the old frosted glass.
-     Kept under the name `.glass` so existing markup upgrades in place. */
-  .glass {
-    background: #141417;
+  /* Lit glass: a pane with light catching its top edge over a dark base, so
+     the room's light tints it without the suits showing through. No
+     backdrop-filter, which Android WebViews re-blur on every frame. */
+  .glass,
+  .surface {
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.07), rgba(255, 255, 255, 0.025)), rgba(9, 13, 20, 0.75);
     border: 1px solid rgba(255, 255, 255, 0.08);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08), 0 20px 40px -24px rgba(0, 0, 0, 0.9);
   }
-
-  /* Slightly higher elevation (hover, active rows, popovers). */
   .surface-2 {
-    background: #1c1c20;
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.04)), rgba(9, 13, 20, 0.6);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12);
   }
-
+  /* opaque, for anything floating over a busy board or page */
+  .panel {
+    background: linear-gradient(180deg, #182131, #0e141e);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.1), 0 24px 48px -20px rgba(0, 0, 0, 0.9);
+  }
+  .sheet {
+    background: linear-gradient(180deg, #161e2b 0%, #0c1119 60%);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-bottom: 0;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.1), 0 -30px 60px -20px rgba(0, 0, 0, 0.8);
+  }
   .hairline {
     border: 1px solid rgba(255, 255, 255, 0.08);
   }
 
-  /* The single brand primary action. */
-  .btn-primary {
-    background: #3ecf8e;
-    color: #06120c;
-    font-weight: 650;
+  /* a player's place at the table; it lights up in their colour on their turn */
+  .seat {
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.07), rgba(255, 255, 255, 0.025)), rgba(9, 13, 20, 0.85);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+    transition: background 240ms, border-color 240ms, box-shadow 240ms;
   }
-  .btn-primary:hover {
-    background: #4cd897;
+  .seat[data-on="you"] {
+    background: linear-gradient(180deg, rgba(90, 169, 255, 0.18), rgba(90, 169, 255, 0.05)), rgba(9, 13, 20, 0.85);
+    border-color: rgba(90, 169, 255, 0.55);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12), 0 12px 32px -12px rgba(90, 169, 255, 0.6);
   }
+  .seat[data-on="them"] {
+    background: linear-gradient(180deg, rgba(255, 181, 71, 0.16), rgba(255, 181, 71, 0.04)), rgba(9, 13, 20, 0.85);
+    border-color: rgba(255, 181, 71, 0.5);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12), 0 12px 32px -12px rgba(255, 181, 71, 0.5);
+  }
+
+  /* The one action that matters on a screen: lit emerald. */
   .btn-primary {
-    transition: transform 0.12s ease, background 0.2s ease;
+    color: #03140c;
+    font-weight: 700;
+    background: linear-gradient(180deg, #6ff2b8 0%, #3ee09b 45%, #22c47f 100%);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.55), inset 0 -2px 0 rgba(0, 60, 35, 0.35), 0 12px 28px -12px rgba(62, 224, 155, 0.75);
+    transition: transform 120ms cubic-bezier(0.23, 1, 0.32, 1), filter 160ms;
   }
   .btn-primary:active {
-    transform: translateY(1px) scale(0.98);
+    transform: scale(0.97);
+    filter: brightness(0.95);
+  }
+  .btn-primary:disabled {
+    background: rgba(255, 255, 255, 0.08);
+    color: #5f6878;
+    box-shadow: none;
+  }
+
+  .btn-glass {
+    color: #f2f5f8;
+    font-weight: 650;
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0.05));
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.14);
+    transition: transform 120ms cubic-bezier(0.23, 1, 0.32, 1);
+  }
+  .btn-glass:active {
+    transform: scale(0.97);
+  }
+
+  .display {
+    font-family: var(--font-display), ui-sans-serif, system-ui, sans-serif;
+    font-variation-settings: "opsz" 96;
+    letter-spacing: -0.03em;
+  }
+
+  /* Money and wins: emerald that seems to give off light. */
+  .text-glow {
+    color: #6ff2b8;
+    text-shadow: 0 0 24px rgba(62, 224, 155, 0.45);
   }
 }
 
 @layer utilities {
-  /* Tactile press for any tappable element that isn't the primary button. */
   .pressable {
-    transition: transform 0.12s ease;
+    transition: transform 140ms cubic-bezier(0.23, 1, 0.32, 1);
   }
   .pressable:active {
-    transform: scale(0.96);
+    transform: scale(0.97);
   }
-}
-
-@layer utilities {
+  .nums {
+    font-variant-numeric: tabular-nums lining-nums;
+  }
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  .no-scrollbar {
+    scrollbar-width: none;
+  }
   .mask-fade-b {
     -webkit-mask-image: linear-gradient(to bottom, black 60%, transparent);
     mask-image: linear-gradient(to bottom, black 60%, transparent);
   }
 
-  /* Tabular figures for money, scores, addresses. */
-  .nums {
-    font-variant-numeric: tabular-nums;
-    font-feature-settings: "tnum";
-  }
-
-  /* Living gradient text — brand accent that slowly breathes across the word. */
+  /* brand accent that slowly breathes across the word */
   .text-shimmer {
-    background: linear-gradient(110deg, #3ecf8e 15%, #aaa7ff 40%, #e3b341 60%, #3ecf8e 85%);
+    background: linear-gradient(110deg, #3ee09b 15%, #7bf5c1 40%, #ffd66b 60%, #3ee09b 85%);
     background-size: 220% 100%;
     -webkit-background-clip: text;
     background-clip: text;
     color: transparent;
     animation: shimmer-x 7s ease-in-out infinite;
+    filter: drop-shadow(0 0 18px rgba(62, 224, 155, 0.35));
   }
 
-  /* Film grain for depth — kills the "flat dark page" feel. */
   .grain {
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)' opacity='0.5'/%3E%3C/svg%3E");
     background-size: 160px 160px;
@@ -133,62 +194,49 @@ body {
   }
 }
 
-/* Hero entrance in PURE CSS, not framer-motion. Critical: the old hero animated
-   from opacity:0 via JS, so the largest-contentful text stayed invisible until
-   ~1MB of wallet SDK downloaded and hydration ran — a 15s LCP on slow mobile.
-   CSS runs the moment styles arrive, with no JS, so the headline paints in
-   ~0.5s regardless of the bundle. Reduced-motion users get it instantly. */
-@keyframes heroIn {
+/* Entrances paint from CSS alone, so the first screen never waits on the
+   wallet SDK to hydrate. Each ends on `none`: a leftover zero transform still
+   opens a stacking context and traps fixed children. */
+@keyframes enter {
   from {
     opacity: 0;
-    transform: translateY(14px);
+    transform: translateY(10px);
   }
   to {
-    opacity: 1;
-    /* `none`, not translateY(0) — a zero transform still opens a stacking
-       context, and `both` keeps it forever. That is what stacked the "How it
-       works" panel under the "Play a free game" button. */
-    transform: none;
-  }
-}
-.hero-in {
-  animation: heroIn 0.55s cubic-bezier(0.22, 1, 0.36, 1) both;
-}
-@media (prefers-reduced-motion: reduce) {
-  .hero-in {
-    animation: none;
     opacity: 1;
     transform: none;
   }
 }
-
-/* Page-enter transition, also pure CSS (was framer-motion). App Router remounts
-   the template on every navigation, so this animation replays each time — the
-   same page-transition feel, but the content is never held invisible waiting for
-   JS. Ends at transform:none so it never traps position:fixed children. */
-@keyframes pageIn {
-  from {
-    opacity: 0;
-    transform: translateY(12px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
+.enter,
+.hero-in,
 .page-in {
-  animation: pageIn 0.42s cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation: enter 300ms cubic-bezier(0.23, 1, 0.32, 1) both;
 }
-@media (prefers-reduced-motion: reduce) {
-  .page-in {
-    animation: none;
+
+@keyframes deal {
+  from {
+    opacity: 0;
+    transform: translate(var(--dx, 0px), 60px) rotate(0deg);
+  }
+  to {
     opacity: 1;
-    transform: none;
+    transform: translate(0, 0) rotate(var(--rot, 0deg));
   }
 }
 
-/* Backdrop motion — pure CSS transforms (GPU, off the main thread) so the
-   ambient background costs ~nothing even on low-end phones. */
+/* the room's light, drifting; transform only, so it costs the GPU nothing */
+@keyframes drift-a {
+  0%, 100% { transform: translate3d(0, 0, 0) scale(1); }
+  50% { transform: translate3d(8%, 6%, 0) scale(1.12); }
+}
+@keyframes drift-b {
+  0%, 100% { transform: translate3d(0, 0, 0) scale(1.05); }
+  50% { transform: translate3d(-7%, 4%, 0) scale(0.92); }
+}
+@keyframes float {
+  0%, 100% { transform: translate3d(0, 0, 0) rotate(var(--r, 0deg)); }
+  50% { transform: translate3d(0, -26px, 0) rotate(calc(var(--r, 0deg) + 14deg)); }
+}
 @keyframes orb-a {
   0%, 100% { transform: translate3d(0, 0, 0) scale(1); }
   50% { transform: translate3d(7%, 5%, 0) scale(1.12); }
@@ -205,13 +253,22 @@ body {
   0%, 100% { transform: translate3d(0, 0, 0) rotate(var(--gr, 0deg)); }
   50% { transform: translate3d(0, -22px, 0) rotate(calc(var(--gr, 0deg) + 9deg)); }
 }
+@keyframes burst {
+  0% { opacity: 0; transform: translate(-50%, -50%) scale(0.4); }
+  12% { opacity: 1; }
+  70% { opacity: 1; }
+  100% { opacity: 0; transform: translate(calc(-50% + var(--x)), calc(-50% + var(--y) + 180px)) rotate(var(--spin)) scale(1); }
+}
+@keyframes ring {
+  from { opacity: 0.55; transform: scale(0.85); }
+  to { opacity: 0; transform: scale(1.9); }
+}
+@keyframes shine {
+  from { transform: translateX(-120%) skewX(-18deg); }
+  to { transform: translateX(220%) skewX(-18deg); }
+}
 .anim-bg {
   will-change: transform;
-}
-@media (prefers-reduced-motion: reduce) {
-  .anim-bg {
-    animation: none !important;
-  }
 }
 
 @media (prefers-reduced-motion: reduce) {
