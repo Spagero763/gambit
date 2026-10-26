@@ -6,6 +6,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { supabase } from "@/lib/supabase";
 import { submitMove } from "@/lib/matchClient";
 import { ChessPiece } from "./chess/ChessPiece";
+import { glideFor, useSlides } from "./chess/glide";
 import { SettleOverlay } from "./SettleOverlay";
 import { ResignButton } from "./ResignButton";
 import { TimeoutClaim } from "./TimeoutClaim";
@@ -168,13 +169,10 @@ export function StakedChess({ matchId, you, onExit }: { matchId: bigint; you: `0
     ? "Your move"
     : "Opponent is thinking";
 
-  // last move squares from history
-  const last = useMemo(() => {
-    if (!chess) return null;
-    const h = chess.history({ verbose: true }) as Move[];
-    const m = h[h.length - 1];
-    return m ? { from: m.from as Square, to: m.to as Square } : null;
-  }, [chess]);
+  // a position loaded from the server has no history, so the last move is
+  // read from what changed between the two positions
+  const slides = useSlides(fen);
+  const last = slides.moves[0] ?? null;
 
   return (
     <div className="mx-auto flex min-h-[100dvh] w-full max-w-md flex-col px-4 pb-[calc(16px+env(safe-area-inset-bottom))]">
@@ -227,11 +225,14 @@ export function StakedChess({ matchId, you, onExit }: { matchId: bigint; you: `0
                   {isLast && <span className="absolute inset-0 bg-[#f6d66b]/45" />}
                   {isSel && <span className="absolute inset-0 bg-[#f6d66b]/55" />}
                   {isCheckSq && <span className="absolute inset-0 bg-[radial-gradient(circle,rgba(224,108,139,0.95),transparent_72%)]" />}
-                  {piece && (
-                    <span className="relative z-10">
-                      <ChessPiece type={piece.type} color={piece.color} size={40} className="select-none" />
-                    </span>
-                  )}
+                  {piece && (() => {
+                    const g = glideFor(square, slides, flip);
+                    return (
+                      <span key={g.key} data-glide={g.on} style={g.style} className="absolute inset-0 z-10 grid place-items-center">
+                        <ChessPiece type={piece.type} color={piece.color} size={40} className="select-none" />
+                      </span>
+                    );
+                  })()}
                   {isTarget &&
                     (piece ? (
                       <span className="absolute inset-1 rounded-full ring-[3px] ring-black/30" />

@@ -78,6 +78,22 @@ export function WhotTable({
 
   const pushLog = (text: string, who: number) => setLog((l) => [{ text, who }, ...l].slice(0, 5));
 
+  // cards that were on screen last render; one of those that moves flies from
+  // where it was instead of appearing from nowhere
+  const shown = useRef<Set<string>>(new Set());
+  const dealing = useRef(true);
+  useEffect(() => {
+    const s = new Set<string>();
+    (hands.current[0] ?? []).forEach((c) => s.add(c.id));
+    if (n === 2) (hands.current[1] ?? []).slice(0, 10).forEach((c) => s.add(c.id));
+    if (market.current[0]) s.add(market.current[0].id);
+    shown.current = s;
+  });
+  useEffect(() => {
+    const t = setTimeout(() => (dealing.current = false), 1500);
+    return () => clearTimeout(t);
+  }, []);
+
   const top = () => pile.current[pile.current.length - 1];
 
   // deal once
@@ -324,7 +340,7 @@ export function WhotTable({
   return (
     <div className="mx-auto flex min-h-[100dvh] w-full max-w-md flex-col overflow-x-hidden px-4 pb-[calc(12px+env(safe-area-inset-bottom))]">
       <div className="flex items-center gap-3 pb-3 pt-[calc(12px+env(safe-area-inset-top))]">
-        <Link href="/" aria-label="Back to games" className="glass pressable grid h-11 w-11 shrink-0 place-items-center rounded-full text-ink">
+        <Link href="/" data-nav="back" aria-label="Back to games" className="glass pressable grid h-11 w-11 shrink-0 place-items-center rounded-full text-ink">
           <ArrowLeft className="h-5 w-5" />
         </Link>
         <h1 className="display min-w-0 flex-1 truncate text-[22px] font-extrabold text-ink">{title}</h1>
@@ -364,29 +380,47 @@ export function WhotTable({
         {seats.length === 2 && (
           <div aria-hidden className="absolute inset-x-0 top-5 flex justify-center -space-x-5">
             {(hands.current[1] ?? []).slice(0, 10).map((c, i, arr) => (
-              <div
+              <motion.div
                 key={c.id}
+                layoutId={`card-${c.id}`}
+                initial={shown.current.has(c.id) ? false : { opacity: 0 }}
+                animate={{ opacity: 1, rotate: ((arr.length - 1) / 2 - i) * 5, y: -Math.abs(i - (arr.length - 1) / 2) * 2 }}
+                transition={{ type: "spring", stiffness: 300, damping: 26 }}
                 className="h-[52px] w-[36px]"
-                style={{ transformOrigin: "50% 0%", transform: `rotate(${((arr.length - 1) / 2 - i) * 5}deg) translateY(${-Math.abs(i - (arr.length - 1) / 2) * 2}px)` }}
+                style={{ transformOrigin: "50% 0%" }}
               >
                 <WhotCardBack />
-              </div>
+              </motion.div>
             ))}
           </div>
         )}
         <button onClick={humanMarket} disabled={turn !== 0 || winner !== null || !!calling} className="pressable relative flex flex-col items-center gap-2 disabled:opacity-60">
           <div className="relative h-[112px] w-[78px]">
             <div className="absolute inset-0 translate-x-1 translate-y-1"><WhotCardBack /></div>
-            <div className="absolute inset-0"><WhotCardBack /></div>
+            {market.current[0] ? (
+              <motion.div key={market.current[0].id} layoutId={`card-${market.current[0].id}`} initial={false} className="absolute inset-0">
+                <WhotCardBack />
+              </motion.div>
+            ) : (
+              <div className="absolute inset-0"><WhotCardBack /></div>
+            )}
           </div>
           <span className="nums text-[12px] font-semibold text-white/75">Market {market.current.length}</span>
         </button>
 
         <div className="relative flex flex-col items-center gap-2">
-          <div data-coach="pile" className="relative h-[112px] w-[78px] drop-shadow-[0_14px_18px_rgba(0,0,0,0.45)]">
+          <div data-coach="pile" className="relative z-30 h-[112px] w-[78px] drop-shadow-[0_14px_18px_rgba(0,0,0,0.45)]">
             <AnimatePresence mode="popLayout">
               {t && (
-                <motion.div key={t.id} initial={{ y: -40, rotate: -10, opacity: 0 }} animate={{ y: 0, rotate: 0, opacity: 1 }} exit={{ opacity: 0 }} transition={{ type: "spring", stiffness: 300, damping: 24 }} className="absolute inset-0">
+                <motion.div
+                  key={t.id}
+                  layoutId={`card-${t.id}`}
+                  initial={shown.current.has(t.id) ? false : { y: -120, rotate: -10, opacity: 0 }}
+                  animate={{ y: 0, rotate: 0, opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ type: "spring", stiffness: 300, damping: 26 }}
+                  className="absolute inset-0 z-10"
+                >
                   <WhotCardFace shape={t.shape} num={t.num} />
                 </motion.div>
               )}
@@ -432,10 +466,12 @@ export function WhotTable({
           return (
             <motion.button
               key={c.id}
+              layout
+              layoutId={`card-${c.id}`}
               onClick={() => playHuman(c)}
-              initial={{ y: 60, opacity: 0 }}
-              animate={{ y: y - (legal ? 14 : 0), opacity: 1, rotate: rot }}
-              transition={{ type: "spring", stiffness: 300, damping: 24 }}
+              initial={shown.current.has(c.id) ? false : dealing.current ? { y: 60, opacity: 0 } : { x: -60, y: -220, rotate: -10, opacity: 0 }}
+              animate={{ x: 0, y: y - (legal ? 14 : 0), opacity: 1, rotate: rot }}
+              transition={{ type: "spring", stiffness: 300, damping: 26, delay: dealing.current ? i * 0.07 : 0 }}
               style={{
                 transformOrigin: "50% 110%",
                 marginLeft: i === 0 ? 0 : youHand.length > 7 ? -38 : youHand.length > 5 ? -30 : -22,

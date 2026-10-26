@@ -207,8 +207,8 @@ export function StakedSnakes({ matchId, you, onExit }: { matchId: bigint; you: `
 
           {/* tokens */}
           <div className="pointer-events-none absolute inset-2">
-            <Token pos={oppPos} color={THEM_HEX} offset={2.5} z={10} />
-            <Token pos={myPos} color={YOU_HEX} offset={-2.5} z={20} />
+            <Token pos={oppPos} dice={dice} color={THEM_HEX} offset={2.5} z={10} />
+            <Token pos={myPos} dice={dice} color={YOU_HEX} offset={-2.5} z={20} />
           </div>
         </div>
       </div>
@@ -269,20 +269,49 @@ export function StakedSnakes({ matchId, you, onExit }: { matchId: bigint; you: `
   );
 }
 
-function Token({ pos, color, offset, z }: { pos: number; color: string; offset: number; z: number }) {
-  const c = centerFrac(pos);
+const STEP = 0.14;
+
+// The server only sends where a token ended up, so the walk is rebuilt from
+// where it was and the dice: square by square, then up the ladder or down the
+// snake if that's how it got there.
+function walkFrom(from: number, to: number, dice: number) {
+  const landing = from + dice;
+  const climbed = SNAKES_LADDERS.ladders[landing] === to || SNAKES_LADDERS.snakes[landing] === to;
+  if (landing > 100 || (landing !== to && !climbed)) return { cells: [from, to], hops: 0 };
+  const cells = Array.from({ length: dice + 1 }, (_, i) => from + i);
+  return { cells: landing === to ? cells : [...cells, to], hops: dice };
+}
+
+function Token({ pos, dice, color, offset, z }: { pos: number; dice: number; color: string; offset: number; z: number }) {
+  const track = useRef({ pos, n: 0, cells: [pos], hops: 0 });
+  if (pos !== track.current.pos) {
+    track.current = { pos, n: track.current.n + 1, ...walkFrom(track.current.pos, pos, dice) };
+  }
+  const { cells, hops, n } = track.current;
+  const pts = cells.map(centerFrac);
+  const slide = cells.length - 1 - hops;
+  const duration = hops * STEP + (slide > 0 ? (hops ? 0.5 : 0.6) : 0);
+  const times = pts.map((_, i) => (duration ? Math.min(i, hops) * STEP + (i > hops ? duration - hops * STEP : 0) : 0) / (duration || 1));
+
   return (
     <motion.div
       className="absolute"
       style={{ zIndex: z }}
-      animate={{ left: `${c.x * 100 + offset}%`, top: `${c.y * 100}%` }}
-      transition={{ type: "tween", duration: 0.6, ease: "easeInOut" }}
+      initial={false}
+      animate={{ left: pts.map((c) => `${c.x * 100 + offset}%`), top: pts.map((c) => `${c.y * 100}%`) }}
+      transition={{ duration, times, ease: "easeInOut" }}
     >
-      <div className="h-[26px] w-[21px] -translate-x-1/2 -translate-y-[62%]">
-        <svg viewBox="0 0 100 100" className="h-full w-full" style={{ filter: "drop-shadow(0 2px 2px rgba(0,0,0,0.55))" }}>
-          <path d={MEEPLE_PATH} fill={color} stroke="rgba(0,0,0,0.5)" strokeWidth={6} strokeLinejoin="round" />
-        </svg>
-      </div>
+      <motion.div
+        key={n}
+        animate={hops ? { y: [0, -6, 0] } : undefined}
+        transition={{ duration: STEP, repeat: Math.max(0, hops - 1), ease: "easeOut" }}
+      >
+        <div className="h-[26px] w-[21px] -translate-x-1/2 -translate-y-[62%]">
+          <svg viewBox="0 0 100 100" className="h-full w-full" style={{ filter: "drop-shadow(0 2px 2px rgba(0,0,0,0.55))" }}>
+            <path d={MEEPLE_PATH} fill={color} stroke="rgba(0,0,0,0.5)" strokeWidth={6} strokeLinejoin="round" />
+          </svg>
+        </div>
+      </motion.div>
     </motion.div>
   );
 }

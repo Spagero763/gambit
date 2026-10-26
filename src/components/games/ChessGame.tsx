@@ -17,6 +17,7 @@ import { cn } from "@/lib/cn";
 import { ResultOverlay, ResultKind } from "./ResultOverlay";
 import { ChessPiece } from "./chess/ChessPiece";
 import { PlayerBar } from "./chess/PlayerBar";
+import { glideFor, useSlides } from "./chess/glide";
 
 const FILES = ["a", "b", "c", "d", "e", "f", "g", "h"];
 const START_TIME = 300;
@@ -40,6 +41,7 @@ interface Drag {
 export function ChessGame({ difficulty = "normal" }: { difficulty?: Difficulty }) {
   const gameRef = useRef(new Chess());
   const boardRef = useRef<HTMLDivElement>(null);
+  const droppedRef = useRef(false);
   const [fen, setFen] = useState(gameRef.current.fen());
   const [selected, setSelected] = useState<Square | null>(null);
   const [drag, setDrag] = useState<Drag | null>(null);
@@ -168,6 +170,8 @@ export function ChessGame({ difficulty = "normal" }: { difficulty?: Difficulty }
     if (!drag) return;
     const target = squareAt(e.clientX, e.clientY);
     if (drag.moved && target && target !== drag.from && targets.has(target)) {
+      // it's already under the finger, so it shouldn't slide there again
+      droppedRef.current = true;
       tryMove(drag.from, target);
     }
     setDrag(null);
@@ -220,6 +224,11 @@ export function ChessGame({ difficulty = "normal" }: { difficulty?: Difficulty }
     }
   }, [wTime, bTime, result]);
 
+  const slides = useSlides(fen, droppedRef.current);
+  useEffect(() => {
+    droppedRef.current = false;
+  }, [fen]);
+
   const board = game.board();
   const inCheck = game.inCheck();
   const edge = materialEdge(game); // +white
@@ -230,7 +239,7 @@ export function ChessGame({ difficulty = "normal" }: { difficulty?: Difficulty }
   return (
     <div className="mx-auto flex min-h-[100dvh] w-full max-w-md flex-col px-4 pb-[calc(16px+env(safe-area-inset-bottom))]">
       <div className="flex items-center gap-3 pb-3 pt-[calc(12px+env(safe-area-inset-top))]">
-        <Link href="/" aria-label="Back to games" className="glass pressable grid h-11 w-11 shrink-0 place-items-center rounded-full text-ink">
+        <Link href="/" data-nav="back" aria-label="Back to games" className="glass pressable grid h-11 w-11 shrink-0 place-items-center rounded-full text-ink">
           <ArrowLeft className="h-5 w-5" />
         </Link>
         <h1 className="display min-w-0 flex-1 truncate text-[24px] font-extrabold text-ink">Chess</h1>
@@ -323,14 +332,14 @@ export function ChessGame({ difficulty = "normal" }: { difficulty?: Difficulty }
                         </span>
                       )}
 
-                      {piece && !lifted && (
-                        <motion.div
-                          initial={false}
-                          className="relative z-10"
-                        >
-                          <ChessPiece type={piece.type} color={piece.color} size={42} className="select-none" />
-                        </motion.div>
-                      )}
+                      {piece && !lifted && (() => {
+                        const g = glideFor(square, slides);
+                        return (
+                          <span key={g.key} data-glide={g.on} style={g.style} className="absolute inset-0 z-10 grid place-items-center">
+                            <ChessPiece type={piece.type} color={piece.color} size={42} className="select-none" />
+                          </span>
+                        );
+                      })()}
 
                       {isTarget &&
                         (piece ? (

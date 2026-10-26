@@ -135,6 +135,22 @@ export function StakedWhot({ matchId, you, onExit }: { matchId: bigint; you: `0x
     return { rot: (i - mid) * spread, y: Math.abs(i - mid) * 4 };
   };
 
+  // your cards from the last render: a played one flies to the pile, a new one
+  // comes from the market, and the first hand deals in one card at a time
+  const shown = useRef<Set<string> | null>(null);
+  const [dealing, setDealing] = useState(true);
+  const hasView = !!view;
+  useEffect(() => {
+    if (view) shown.current = new Set(hand.map((c) => c.id));
+  });
+  useEffect(() => {
+    if (!hasView) return;
+    const t = setTimeout(() => setDealing(false), 1500);
+    return () => clearTimeout(t);
+  }, [hasView]);
+  const enterFrom = (id: string) =>
+    shown.current === null ? { y: 60, opacity: 0 } : shown.current.has(id) ? false : { x: -60, y: -220, rotate: -10, opacity: 0 };
+
   return (
     <div className="mx-auto flex min-h-[100dvh] w-full max-w-md flex-col overflow-x-hidden px-4 pb-[calc(12px+env(safe-area-inset-bottom))]">
       <StakedHeader
@@ -207,10 +223,18 @@ export function StakedWhot({ matchId, you, onExit }: { matchId: bigint; you: `0x
         </button>
 
         <div className="relative flex flex-col items-center gap-2">
-          <div className="relative h-[112px] w-[78px] drop-shadow-[0_14px_18px_rgba(0,0,0,0.45)]">
+          <div className="relative z-30 h-[112px] w-[78px] drop-shadow-[0_14px_18px_rgba(0,0,0,0.45)]">
             <AnimatePresence mode="popLayout">
               {top && (
-                <motion.div key={top.id} initial={{ y: -40, rotate: -10, opacity: 0 }} animate={{ y: 0, rotate: 0, opacity: 1 }} exit={{ opacity: 0 }} transition={{ type: "spring", stiffness: 300, damping: 24 }} className="absolute inset-0">
+                <motion.div
+                  key={top.id}
+                  layoutId={`card-${top.id}`}
+                  initial={shown.current?.has(top.id) ? false : { y: -120, rotate: -10, opacity: 0 }}
+                  animate={{ y: 0, rotate: 0, opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ type: "spring", stiffness: 300, damping: 26 }}
+                  className="absolute inset-0"
+                >
                   <WhotCardFace shape={top.shape} num={top.num} />
                 </motion.div>
               )}
@@ -245,10 +269,12 @@ export function StakedWhot({ matchId, you, onExit }: { matchId: bigint; you: `0x
           return (
             <motion.button
               key={c.id}
+              layout
+              layoutId={`card-${c.id}`}
               onClick={() => playCard(c)}
-              initial={{ y: 60, opacity: 0 }}
-              animate={{ y: y - (legal ? 14 : 0), opacity: 1, rotate: rot }}
-              transition={{ type: "spring", stiffness: 300, damping: 24 }}
+              initial={enterFrom(c.id)}
+              animate={{ x: 0, y: y - (legal ? 14 : 0), opacity: 1, rotate: rot }}
+              transition={{ type: "spring", stiffness: 300, damping: 26, delay: dealing ? i * 0.07 : 0 }}
               style={{
                 transformOrigin: "50% 110%",
                 marginLeft: i === 0 ? 0 : hand.length > 7 ? -38 : hand.length > 5 ? -30 : -22,
