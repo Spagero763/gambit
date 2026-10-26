@@ -1,7 +1,7 @@
 "use client";
 
-/** Last-resort boundary if the root layout itself throws. Minimal + self-contained. */
-export default function GlobalError({ error, reset }: { error: Error & { digest?: string }; reset: () => void }) {
+/** Last resort if the root layout itself throws. Self-contained on purpose. */
+export default function GlobalError({ reset }: { error: Error & { digest?: string }; reset: () => void }) {
   return (
     <html lang="en">
       <body
@@ -10,19 +10,19 @@ export default function GlobalError({ error, reset }: { error: Error & { digest?
           minHeight: "100dvh",
           display: "grid",
           placeItems: "center",
-          background: "#0a0a0c",
-          color: "#f4f4f5",
+          background: "#05070c",
+          color: "#f2f5f8",
           fontFamily: "system-ui, sans-serif",
           textAlign: "center",
-          padding: "24px",
+          padding: 24,
         }}
       >
         <div>
-          <p style={{ fontSize: 22, fontWeight: 700 }}>Something went wrong</p>
-          <p style={{ marginTop: 8, color: "#9a9aa3", fontSize: 14 }}>Please reload the app. Your funds are safe on-chain.</p>
+          <p style={{ fontSize: 24, fontWeight: 800 }}>Something went wrong</p>
+          <p style={{ marginTop: 8, color: "#9ba5b4", fontSize: 16 }}>Reload Gambit. Money in a match is safe in the contract.</p>
           <button
             onClick={reset}
-            style={{ marginTop: 20, background: "#3ecf8e", color: "#06120c", fontWeight: 650, border: 0, borderRadius: 14, padding: "12px 22px", fontSize: 14 }}
+            style={{ marginTop: 22, background: "#3ee09b", color: "#03140c", fontWeight: 700, border: 0, borderRadius: 999, padding: "14px 26px", fontSize: 16 }}
           >
             Reload
           </button>

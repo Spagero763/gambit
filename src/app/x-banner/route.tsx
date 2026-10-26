@@ -2,12 +2,9 @@ import { ImageResponse } from "next/og";
 
 export const runtime = "edge";
 
-/**
- * 1500x500 X / Twitter header. Content is vertically centred and kept off the
- * bottom-left, where X overlays the profile avatar. Generated with the same
- * edge image tech as the OG card — download it at /x-banner.
- */
+// 1500x500 X header. Kept clear of the bottom-left, where X puts the avatar.
 export async function GET() {
+  const display = await fetch(new URL("../fonts/bricolage-800.ttf", import.meta.url)).then((r) => r.arrayBuffer());
   return new ImageResponse(
     (
       <div
@@ -17,46 +14,22 @@ export async function GET() {
           display: "flex",
           flexDirection: "column",
           justifyContent: "center",
-          padding: "0 90px",
-          background: "linear-gradient(120deg, #0a0a0c 0%, #101018 55%, #0c160f 100%)",
-          color: "#f4f4f5",
+          alignItems: "flex-end",
+          padding: "0 110px",
+          backgroundImage: "radial-gradient(circle at 85% 20%, #0f3a2a 0%, #081019 45%, #05070c 100%)",
+          color: "#f2f5f8",
           fontFamily: "sans-serif",
         }}
       >
-        <div style={{ display: "flex", alignItems: "center", gap: 18 }}>
-          <div
-            style={{
-              width: 64,
-              height: 64,
-              borderRadius: 18,
-              background: "#16161a",
-              border: "2px solid rgba(255,255,255,0.1)",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              fontSize: 40,
-              fontWeight: 800,
-              color: "#3ecf8e",
-            }}
-          >
-            G
-          </div>
-          <div style={{ fontSize: 34, fontWeight: 700, letterSpacing: -1 }}>Gambit</div>
-        </div>
-
-        <div style={{ marginTop: 26, fontSize: 62, fontWeight: 800, lineHeight: 1.04, letterSpacing: -2, display: "flex", flexDirection: "column" }}>
-          <span>Play classic games.</span>
-          <span style={{ display: "flex" }}>
-            <span style={{ marginRight: 20 }}>Win</span>
-            <span style={{ color: "#3ecf8e" }}>real money.</span>
+        <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", fontFamily: "Bricolage", fontSize: 80, fontWeight: 800, lineHeight: 1, letterSpacing: -3 }}>
+          <span>Think you&apos;d win?</span>
+          <span style={{ display: "flex", color: "#9ba5b4" }}>
+            Put money<span style={{ marginLeft: 18, color: "#3ee09b" }}>on it.</span>
           </span>
         </div>
-
-        <div style={{ marginTop: 26, fontSize: 25, color: "#8b8b94" }}>
-          Free to play · stake USDT · winner takes the pot · on Celo
-        </div>
+        <div style={{ marginTop: 28, fontSize: 28, color: "#5f6878" }}>Naija Whot · Chess · Tic-tac-toe · Snakes & Ladders</div>
       </div>
     ),
-    { width: 1500, height: 500 }
+    { width: 1500, height: 500, fonts: [{ name: "Bricolage", data: display, weight: 800, style: "normal" }] }
   );
 }
