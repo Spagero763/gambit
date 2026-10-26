@@ -3,6 +3,7 @@ import Link from "next/link";
 import { Gamepad2, Coins, Trophy, Scale, ShieldCheck } from "lucide-react";
 import { GAMES } from "@/lib/games";
 import { BackLink } from "@/components/BackLink";
+import { ExternalA } from "@/components/ExternalA";
 
 export const metadata: Metadata = {
   title: "How to Play | Gambit",
@@ -18,7 +19,7 @@ const JOURNEY = [
   {
     icon: Coins,
     title: "Stake when you are ready",
-    body: "Open any game and pick Staked 1v1. Choose how much to put in, and the same amount comes from the opponent you are matched with. Both entries are locked in an on-chain escrow the moment the match starts.",
+    body: "Open any game and pick Play for money. Choose how much to put in, and the same amount comes from the opponent you are matched with. Both entries are locked in an on-chain escrow the moment the match starts.",
   },
   {
     icon: Trophy,
@@ -33,8 +34,8 @@ const JOURNEY = [
 ];
 
 const TERMS = [
-  "You can stake in USDT, USDC or USDm. 1 of each is worth about 1 dollar, and Gambit reads which one you hold, so just pick the token you have.",
-  "You also need a little CELO for the network fee. It is the cost of the transaction that pays the winner, and it is tiny.",
+  "You can stake in USDT, USDC or USDm. 1 of each is worth about 1 dollar, and Gambit reads which one you hold, so just pick the stablecoin you have.",
+  "Every transaction has a tiny network fee. In MiniPay it comes out of your stablecoin balance, so there is nothing else to get. Other wallets pay it in a little CELO.",
   "Cashing out is done from your wallet, not from Gambit. In MiniPay, open your wallet and withdraw there. On the web, use the Withdraw button on your profile.",
 ];
 
@@ -81,14 +82,12 @@ export default function HowToPlayPage() {
 
       <p className="mt-6 text-[13px] text-ink-faint">
         Need a hand? Message us on{" "}
-        <a
+        <ExternalA
           className="text-teal underline decoration-teal/40 underline-offset-2"
           href="https://wa.me/2348060158364?text=Hi%20Gambit%20support%2C%20I%20need%20help%20with"
-          target="_blank"
-          rel="noreferrer"
         >
           WhatsApp
-        </a>
+        </ExternalA>
         . Also see{" "}
         <Link className="text-teal underline decoration-teal/40 underline-offset-2" href="/about">
           About Gambit

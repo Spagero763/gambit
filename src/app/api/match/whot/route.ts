@@ -54,7 +54,7 @@ export async function GET(req: NextRequest) {
     if (!id || !player) return NextResponse.json({ error: "Bad request" }, { status: 400 });
     const token = req.headers.get("x-gambit-token");
     if (!token || verifyToken(token) !== player.toLowerCase()) {
-      return NextResponse.json({ error: "Sign in to see your hand" }, { status: 401 });
+      return NextResponse.json({ error: "This phone isn't confirmed for this seat yet" }, { status: 401 });
     }
     const db = supabaseAdmin();
     let { data: match } = await db.from("matches").select("*").eq("id", id).single();
@@ -84,7 +84,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Bad request" }, { status: 400 });
     }
     if (!token || verifyToken(String(token)) !== String(player).toLowerCase()) {
-      return NextResponse.json({ error: "Sign in to play (authentication required)" }, { status: 401 });
+      return NextResponse.json({ error: "This phone isn't confirmed for this seat yet" }, { status: 401 });
     }
     const db = supabaseAdmin();
     const { data: match, error } = await db.from("matches").select("*").eq("id", Number(id)).single();

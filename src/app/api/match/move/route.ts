@@ -54,7 +54,7 @@ export async function POST(req: NextRequest) {
     // authenticate: the caller must hold a session token for `player`, so an
     // opponent can't submit moves on your behalf.
     if (!token || verifyToken(String(token)) !== String(player).toLowerCase()) {
-      return NextResponse.json({ error: "Sign in to play (authentication required)" }, { status: 401 });
+      return NextResponse.json({ error: "This phone isn't confirmed for this seat yet" }, { status: 401 });
     }
     const db = supabaseAdmin();
 

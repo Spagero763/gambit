@@ -5,6 +5,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { ShieldCheck, LineChart, Code2, ExternalLink, X, ChevronRight } from "lucide-react";
 import Link from "next/link";
 import { Portal } from "@/components/Portal";
+import { useInMiniPay } from "@/lib/minipay";
 
 const ESCROW = "0xB34548Ad3A45C2a571f99341e5fb32abB4FACd05";
 
@@ -34,6 +35,7 @@ const LINKS = [
 
 export function TrustStrip() {
   const [open, setOpen] = useState(false);
+  const miniPay = useInMiniPay();
 
   return (
     <section className="mx-auto w-full max-w-2xl px-5 pb-4 lg:max-w-6xl">
@@ -87,8 +89,7 @@ export function TrustStrip() {
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: 0.05 + i * 0.06, type: "spring", stiffness: 340, damping: 24 }}
                       href={l.href}
-                      target="_blank"
-                      rel="noreferrer"
+                      {...(miniPay ? {} : { target: "_blank", rel: "noreferrer" })}
                       className="group flex items-start gap-3 rounded-2xl border border-line bg-void-800 p-3.5 transition-colors hover:border-teal/40"
                     >
                       <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-teal/15 text-teal">

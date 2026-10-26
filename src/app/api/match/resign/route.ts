@@ -24,7 +24,7 @@ export async function POST(req: NextRequest) {
     if (id === undefined || !player) return NextResponse.json({ error: "Bad request" }, { status: 400 });
     const me = String(player).toLowerCase();
     if (!token || verifyToken(String(token)) !== me) {
-      return NextResponse.json({ error: "Sign in to resign" }, { status: 401 });
+      return NextResponse.json({ error: "This phone isn't confirmed for this seat yet" }, { status: 401 });
     }
     const db = supabaseAdmin();
 

@@ -2,11 +2,14 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { motion } from "framer-motion";
-import { ArrowLeft, Bot, Swords, Wallet, Loader2, ShieldCheck, Copy, Check, AlertTriangle, HelpCircle, Share2, Clock } from "lucide-react";
+import { ArrowLeft, Bot, Swords, Wallet, Loader2, ShieldCheck, Copy, Check, AlertTriangle, HelpCircle, Share2, Clock, Plus } from "lucide-react";
+import { addCashUrl } from "@/lib/minipay";
 import Link from "next/link";
 import { StakeRules } from "./StakeRules";
-import { useAccount, useSwitchChain, useSignMessage, useBalance } from "wagmi";
+import { useAccount, useSwitchChain, useBalance } from "wagmi";
 import { useWalletAuth } from "@/hooks/useWalletAuth";
+import { useWalletReach } from "@/hooks/useWalletReach";
+import { WalletUnreachable } from "@/components/WalletUnreachable";
 import { useAllowedTokens } from "@/hooks/useAllowedTokens";
 import { useStableBalances } from "@/hooks/useStableBalances";
 import { useOpenRooms } from "@/hooks/useOpenRooms";
@@ -14,7 +17,6 @@ import { Game } from "@/lib/games";
 import { GameArt } from "@/components/art/TileArt";
 import { Difficulty, DIFFICULTIES, SUPPORTS_DIFFICULTY } from "@/lib/difficulty";
 import { useStakeMatch, useMatchState } from "@/hooks/useStakeMatch";
-import { hasToken, signIn } from "@/lib/profile";
 import { registerMatch, joinServerMatch } from "@/lib/matchClient";
 import { useProfiles, displayName } from "@/lib/profiles";
 import { ShareButton } from "@/components/ShareButton";
@@ -52,8 +54,7 @@ export function MatchSetup({
   const { switchChain } = useSwitchChain();
   const { createMatch, joinMatch, cancelMatch, step, error, matchId, ready, onActiveChain, reset } = useStakeMatch();
   const [cancelling, setCancelling] = useState(false);
-  const { signMessageAsync } = useSignMessage();
-  const [authed, setAuthed] = useState(false);
+  const reach = useWalletReach();
 
   // Which tokens the escrow actually accepts, and what this player holds. Both
   // read live: a token the contract rejects must never reach the picker (the
@@ -66,9 +67,6 @@ export function MatchSetup({
   const preferredAllowed = tokens.find((t) => t.address === preferred?.token.address);
   const token = picked && tokens.some((t) => t.address === picked.address) ? picked : preferredAllowed ?? tokens[0];
 
-  useEffect(() => {
-    setAuthed(hasToken(address));
-  }, [address]);
   // show the rules the first time a player opens the staked tab
   useEffect(() => {
     if (mode === "staked" && !rulesSeen) {
@@ -215,11 +213,11 @@ export function MatchSetup({
       <button onClick={signInWallet} className={buttonClass("primary", "lg", "w-full")}>
         <Wallet className="h-4 w-4" /> Connect to play for money
       </button>
+    ) : reach.failed ? (
+      <WalletUnreachable onRetry={reach.retry} />
     ) : (
-      // MiniPay connects on its own; asking would be a dead button
-      <div className="glass flex h-[54px] w-full items-center justify-center gap-2 rounded-full text-sm text-ink-dim">
-        <Loader2 className="h-4 w-4 animate-spin" /> Connecting your wallet…
-      </div>
+      // MiniPay attaches the wallet by itself, so there's nothing to say yet
+      <div aria-hidden className="glass h-[54px] w-full animate-pulse rounded-full" />
     )
   ) : !onActiveChain ? (
     <button
@@ -228,25 +226,20 @@ export function MatchSetup({
     >
       <AlertTriangle className="h-4 w-4" /> Switch network to play
     </button>
-  ) : !authed ? (
-    <div>
-      <button
-        onClick={async () => {
-          if (!address) return;
-          try {
-            await signIn(address, (a) => signMessageAsync({ message: a.message }));
-            setAuthed(true);
-          } catch {
-            /* user rejected or failed; button stays */
-          }
-        }}
-        className={buttonClass("primary", "lg", "w-full")}
-      >
-        <ShieldCheck className="h-4 w-4" /> Sign in to play (free, no network fee)
-      </button>
-      <p className="mt-2 text-center text-[12px] text-ink-faint">One free signature proves it&apos;s you, so only you can play your moves.</p>
-    </div>
   ) : null;
+
+  // not enough in the wallet: MiniPay can top it up in place of an error
+  const held = tokenBal ? Number(tokenBal.formatted) : null;
+  const short = isConnected && onActiveChain && validStake && held !== null && held < stake;
+  const topUp = !short ? null : reach.miniPay ? (
+    <a href={addCashUrl(token.symbol)} className={buttonClass("primary", "lg", "w-full")}>
+      <Plus className="h-4 w-4" /> Add {token.symbol} to play
+    </a>
+  ) : (
+    <p role="alert" className="glass rounded-[20px] px-4 py-3.5 text-center text-[14px] text-ink">
+      This wallet has {held!.toFixed(2)} {token.symbol}. Add at least {(stake - held!).toFixed(2)} more to play.
+    </p>
+  );
 
   const joinDeadline = created ? Number((created as readonly unknown[])[4]) * 1000 : 0;
 
@@ -420,7 +413,7 @@ export function MatchSetup({
                 </div>
                 {room.deadline > 0 && <Countdown until={room.deadline} />}
                 <div className="mt-4">
-                  {gate ?? (
+                  {gate ?? (busy ? null : topUp) ?? (
                     <button onClick={join} disabled={busy} className={buttonClass("primary", "lg", "w-full")}>
                       {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Swords className="h-4 w-4" />}
                       {step === "approving" ? `Approving ${room.tok?.symbol ?? ""}…` : step === "joining" ? "Joining…" : "Join and play"}
@@ -548,7 +541,7 @@ export function MatchSetup({
                 </div>
 
                 <div className="mt-4">
-                  {gate ?? (
+                  {gate ?? (busy ? null : topUp) ?? (
                     <button onClick={create} disabled={busy || !ready || !validStake} className={buttonClass("primary", "lg", "w-full")}>
                       {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Swords className="h-4 w-4" />}
                       {step === "approving" ? `Approving ${token.symbol}…` : step === "creating" ? "Opening your room…" : "Open a room"}
@@ -573,7 +566,7 @@ export function MatchSetup({
                 {room.status === 0 ? "There's no room with that number." : "That room already started or closed."}
               </p>
             )}
-            {error && <p className="mt-3 text-center text-[13px] text-rose">{error}</p>}
+            {error && <p role="alert" className="mt-3 text-center text-[13px] text-rose">{error}</p>}
 
             <p className="mt-4 flex items-center justify-center gap-1.5 text-center text-[12px] text-ink-faint">
               <ShieldCheck className="h-3.5 w-3.5" />

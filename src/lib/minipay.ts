@@ -41,9 +41,14 @@ export function skipGasPreflight(): boolean {
 
 /**
  * MiniPay's Add Cash deeplink. Listing rule: when someone's balance is too low
- * to act, send them here to top up instead of showing an error.
+ * to act, send them here to top up instead of showing an error. Tokens go in
+ * as upper-case codes.
  */
-export const ADD_CASH_URL = "https://link.minipay.xyz/add_cash?tokens=USDT,USDC,USDm";
+export const ADD_CASH_URL = "https://link.minipay.xyz/add_cash?tokens=USDT,USDC,USDM";
+
+export function addCashUrl(symbol: string) {
+  return `https://link.minipay.xyz/add_cash?tokens=${symbol.toUpperCase()}`;
+}
 
 /** Open the deposit screen (MiniPay) or fall back to a new tab elsewhere. */
 export function openDeposit() {

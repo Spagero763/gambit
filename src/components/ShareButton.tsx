@@ -4,6 +4,7 @@ import { useState } from "react";
 import { motion } from "framer-motion";
 import { Share2, Check, Copy, X as CloseIcon } from "lucide-react";
 import { Portal } from "@/components/Portal";
+import { ExternalA } from "@/components/ExternalA";
 
 /**
  * One share button for the whole app. On phones it opens the native share
@@ -89,16 +90,14 @@ export function ShareButton({
 
               <div className="mt-4 grid grid-cols-2 gap-2">
                 {targets.map((t) => (
-                  <a
+                  <ExternalA
                     key={t.name}
                     href={t.href}
-                    target="_blank"
-                    rel="noreferrer"
                     onClick={() => setOpen(false)}
                     className="rounded-xl border border-line bg-void-700 py-3 text-center text-sm font-medium text-ink transition-colors hover:border-teal/40"
                   >
                     {t.name}
-                  </a>
+                  </ExternalA>
                 ))}
               </div>
 

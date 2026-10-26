@@ -238,7 +238,7 @@ export function StakedSnakes({ matchId, you, onExit }: { matchId: bigint; you: `
         </button>
       </div>
       <p className="mt-2 text-center text-[14px] text-ink-dim">{status}</p>
-      {err && <p className="mt-1 text-center text-[12px] text-rose">{err}</p>}
+      {err && <p role="alert" className="mt-1 text-center text-[12px] text-rose">{err}</p>}
 
       <div className="mt-auto pt-3">
         <MoneySeat

@@ -18,6 +18,7 @@ import { StakeToken, decimalsForToken, symbolForToken } from "@/lib/tokens";
 import { friendlyError } from "@/lib/errors";
 import { ACTIVE_CHAIN_ID } from "@/lib/wagmi";
 import { miniPayTx, skipGasPreflight } from "@/lib/minipay";
+import { claimSession, proofSuffix } from "@/lib/stakeProof";
 
 // enough CELO for a few transactions' gas, below this, wallets show scary
 // fee estimates or "unavailable", so we catch it with a clear message first
@@ -87,7 +88,7 @@ export function useStakeMatch() {
           ...miniPayTx(),
         });
         const receipt = await publicClient.waitForTransactionReceipt({ hash });
-        if (receipt.status !== "success") throw new Error("Token approval failed on-chain");
+        if (receipt.status !== "success") throw new Error("The approval didn't go through. Nothing was charged. Try again.");
       }
     },
     [address, chainId, publicClient, writeContractAsync]
@@ -110,12 +111,15 @@ export function useStakeMatch() {
           abi: ESCROW_ABI,
           functionName: "createMatch",
           args: [stakeToken.address, amount, gameType, capacity],
+          dataSuffix: proofSuffix(address!),
           ...miniPayTx(),
         });
         const receipt = await publicClient.waitForTransactionReceipt({ hash });
         // waitForTransactionReceipt does NOT throw on revert, a reverted
         // create/join silently "succeeding" is how phantom seats happen.
         if (receipt.status !== "success") throw new Error("Transaction reverted on-chain");
+        // the creator has the whole wait for someone to join, so this runs behind it
+        void claimSession(address!, hash, chainId ?? ACTIVE_CHAIN_ID);
 
         // pull the match id from the MatchCreated event (topic[1])
         let id: bigint | null = null;
@@ -134,7 +138,7 @@ export function useStakeMatch() {
         return null;
       }
     },
-    [chainId, ensureAllowance, publicClient, writeContractAsync]
+    [address, chainId, ensureAllowance, preflight, publicClient, writeContractAsync]
   );
 
   /** Join an existing staked room by id. */
@@ -178,12 +182,14 @@ export function useStakeMatch() {
           abi: ESCROW_ABI,
           functionName: "joinMatch",
           args: [id],
+          dataSuffix: proofSuffix(address!),
           ...miniPayTx(),
         });
         const receipt = await publicClient.waitForTransactionReceipt({ hash });
         if (receipt.status !== "success") {
           throw new Error("Join failed on-chain. The room may be full or its join window expired");
         }
+        await claimSession(address!, hash, chainId ?? ACTIVE_CHAIN_ID);
         setMatchId(id);
         setStep("waiting");
         return true;
@@ -193,7 +199,7 @@ export function useStakeMatch() {
         return false;
       }
     },
-    [chainId, ensureAllowance, publicClient, writeContractAsync]
+    [address, chainId, ensureAllowance, preflight, publicClient, writeContractAsync]
   );
 
   /** Refund an unfilled room you created (creator may cancel anytime while open). */

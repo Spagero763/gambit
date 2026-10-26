@@ -20,7 +20,7 @@ const TERMS = [
   { icon: Trophy, text: "Win and you take the pot: both stakes, minus a 5% fee." },
   { icon: Scale, text: "A draw refunds both players in full." },
   { icon: AlarmClock, text: "If your opponent abandons, you can claim the win after 2 minutes." },
-  { icon: ShieldCheck, text: "Funds are held in an audited escrow and pay out automatically. Nothing can get stuck, and stalled stakes are always reclaimable." },
+  { icon: ShieldCheck, text: "Funds are held in a verified, open-source escrow and pay out automatically. Nothing can get stuck, and stalled stakes are always reclaimable." },
 ];
 
 export function StakeRules({ game, open, onClose }: { game: Game; open: boolean; onClose: () => void }) {

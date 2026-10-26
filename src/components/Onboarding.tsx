@@ -97,9 +97,7 @@ export function Onboarding() {
               <button onClick={signInWallet} className="btn-primary inline-flex items-center gap-2 rounded-xl px-5 py-2.5 text-sm shadow-glow">
                 <Wallet className="h-4 w-4" /> Sign in
               </button>
-            ) : (
-              <span className="text-sm text-ink-dim">Connecting your wallet…</span>
-            )}
+            ) : null}
           </div>
         )}
       </div>

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { recoverMessageAddress } from "viem";
 import { supabaseAdmin } from "@/lib/supabase";
-import { createToken } from "@/lib/server/profileToken";
+import { createToken, verifyToken } from "@/lib/server/profileToken";
 import { limited } from "@/lib/server/rateLimit";
 
 export const runtime = "nodejs";
@@ -63,22 +63,29 @@ export async function GET(req: NextRequest) {
   }
 }
 
-/** POST /api/profile  { address, message, signature, profile } -> { profile, token } */
+/** POST /api/profile  { address, token | (message, signature), profile } -> { profile, token } */
 export async function POST(req: NextRequest) {
   try {
     const rl = limited(req, "profile", 10, 60_000);
     if (rl) return rl;
-    const { address, message, signature, profile, referredBy } = await req.json();
-    if (!address || !message || !signature) {
+    const { address, message, signature, token, profile, referredBy } = await req.json();
+    if (!address || (!token && (!message || !signature))) {
       return NextResponse.json({ error: "Bad request" }, { status: 400 });
     }
     const addr = String(address).toLowerCase();
-    if (message !== profileMessage(addr)) {
-      return NextResponse.json({ error: "Unexpected message" }, { status: 400 });
-    }
-    const recovered = await recoverMessageAddress({ message, signature });
-    if (recovered.toLowerCase() !== addr) {
-      return NextResponse.json({ error: "Bad signature" }, { status: 401 });
+    // a live session (from a stake or an earlier sign-in) proves the wallet as well as a signature
+    if (token) {
+      if (verifyToken(String(token)) !== addr) {
+        return NextResponse.json({ error: "Session expired" }, { status: 401 });
+      }
+    } else {
+      if (message !== profileMessage(addr)) {
+        return NextResponse.json({ error: "Unexpected message" }, { status: 400 });
+      }
+      const recovered = await recoverMessageAddress({ message, signature });
+      if (recovered.toLowerCase() !== addr) {
+        return NextResponse.json({ error: "Bad signature" }, { status: 401 });
+      }
     }
 
     const img = typeof profile?.avatarImage === "string" && profile.avatarImage.length < 120000 ? profile.avatarImage : null;

@@ -130,7 +130,7 @@ export function AdminTokenAllowlist({ owner }: { owner: string }) {
         </ul>
       )}
 
-      {error && <p className="mt-2 text-[11px] font-medium text-rose">{error}</p>}
+      {error && <p role="alert" className="mt-2 text-[11px] font-medium text-rose">{error}</p>}
       {hash && (
         <p className="mt-2 text-center text-[11px]">
           {confirming ? <span className="text-ink-dim">Landing on-chain… </span> : <span className="font-semibold text-teal">Done. </span>}

@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { Wallet, Loader2 } from "lucide-react";
+import { Wallet, Loader2, RotateCcw } from "lucide-react";
+import { useWalletReach } from "@/hooks/useWalletReach";
 import { useAccount } from "wagmi";
 import { usePrivy } from "@privy-io/react-auth";
 import { useSettings, AVATAR_HEX } from "@/lib/settings";
@@ -30,6 +31,7 @@ export function WalletPill() {
   const { ready, authenticated, login } = usePrivy();
   const { address } = useAccount();
   const miniPay = useInMiniPay();
+  const reach = useWalletReach();
   const { preferred } = useStableBalances(address);
   const [settings] = useSettings();
   const [open, setOpen] = useState(false);
@@ -83,12 +85,14 @@ export function WalletPill() {
   }
 
   // inside MiniPay the connection lands on its own, so wait quietly rather than
-  // offering a sign in the player does not need
+  // offering a sign in the player does not need; speak up only if it fails
   if (miniPay) {
-    return (
-      <div className="glass flex h-10 items-center gap-2 rounded-full px-3.5 text-xs text-ink-dim">
-        <Loader2 className="h-3.5 w-3.5 animate-spin" /> Connecting…
-      </div>
+    return reach.failed ? (
+      <button role="alert" onClick={reach.retry} className="glass pressable flex h-11 items-center gap-2 rounded-full px-4 text-[14px] font-semibold text-rose">
+        <RotateCcw className="h-4 w-4" /> Retry wallet
+      </button>
+    ) : (
+      <div aria-hidden className="glass h-11 w-28 animate-pulse rounded-full" />
     );
   }
 

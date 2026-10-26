@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { Loader2 } from "lucide-react";
 import { useAccount } from "wagmi";
 import { hasToken } from "@/lib/profile";
+import { useInMiniPay } from "@/lib/minipay";
 import { pushSupported, isPushEnabled, enablePush, disablePush } from "@/lib/push";
 import { cn } from "@/lib/cn";
 
@@ -14,6 +15,7 @@ export function PushToggle() {
   const [busy, setBusy] = useState(false);
   const [supported, setSupported] = useState(true);
   const authed = hasToken(address);
+  const miniPay = useInMiniPay();
 
   useEffect(() => {
     setSupported(pushSupported());
@@ -68,7 +70,9 @@ export function PushToggle() {
         )}
       </button>
       {disabled && (
-        <p className="mt-1 text-[11px] text-ink-faint">Sign in first. Alerts are tied to your account.</p>
+        <p className="mt-1 text-[11px] text-ink-faint">
+          {miniPay ? "Alerts switch on after your first money match." : "Sign in first. Alerts are tied to your account."}
+        </p>
       )}
     </div>
   );

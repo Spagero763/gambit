@@ -36,7 +36,7 @@ export async function POST(req: NextRequest) {
 
     const sender = String(player).toLowerCase();
     if (verifyToken(String(token)) !== sender) {
-      return NextResponse.json({ error: "Sign in to chat" }, { status: 401 });
+      return NextResponse.json({ error: "This phone isn't confirmed for this seat yet" }, { status: 401 });
     }
 
     const db = supabaseAdmin();

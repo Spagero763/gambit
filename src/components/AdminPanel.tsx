@@ -162,7 +162,7 @@ export function AdminPanel() {
         {busyId === "settleCup" ? "Settling last week's cup…" : "Settle last week's cup now"}
       </button>
 
-      {msg && <p className="mt-3 rounded-xl border border-line bg-void-800 px-3 py-2 text-center text-[12px] text-ink-dim">{msg}</p>}
+      {msg && <p role="alert" className="mt-3 rounded-xl border border-line bg-void-800 px-3 py-2 text-center text-[12px] text-ink-dim">{msg}</p>}
 
       {/* cup moderation: kick suspicious entries, ban repeat offenders */}
       <Section title={`This week's cup entries (${data?.cup?.length ?? 0})`}>

@@ -87,7 +87,7 @@ export function WalletSheet({ address, onClose }: { address: `0x${string}`; onCl
           )}
           <p className="mt-2 text-center text-[11px] text-ink-faint">
             {miniPay
-              ? "Add cash in USDT, USDC or USDm. Network fee and deposits are paid in Celo, which you never need to buy."
+              ? "Add cash in USDT, USDC or USDm. The small network fee comes out of your balance, so there is nothing else to get."
               : "Your wallet on Celo. Deposit a stablecoin or play a free game."}
           </p>
 

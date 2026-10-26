@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useAccount } from "wagmi";
 import { usePrivy } from "@privy-io/react-auth";
 import {
@@ -9,6 +9,9 @@ import {
   setProfile,
   setProfileLoading,
   clearProfile,
+  createProfile,
+  hasToken,
+  useProfile,
 } from "@/lib/profile";
 import { useProgress, hydrateProgress } from "@/lib/progress";
 import { loadSettings, saveSettings } from "@/lib/settings";
@@ -89,6 +92,39 @@ export function ProfileSync() {
     // `user` only feeds the name fallback; re-running on it is harmless (idempotent)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [address, user]);
+
+  // a session (usually from a first money match) is all it takes to put a
+  // player who has no saved profile yet onto their account, no prompt
+  const { profile, loading, address: loadedFor } = useProfile();
+  const [session, setSession] = useState(0);
+  const created = useRef<string | null>(null);
+  useEffect(() => {
+    const bump = () => setSession((n) => n + 1);
+    window.addEventListener("gambit:session", bump);
+    return () => window.removeEventListener("gambit:session", bump);
+  }, []);
+  useEffect(() => {
+    if (!address || loading || profile || loadedFor !== address.toLowerCase() || !hasToken(address)) return;
+    if (created.current === address) return;
+    created.current = address;
+    const s = loadSettings();
+    createProfile(address, null, {
+      name: s.name,
+      avatar: s.avatar,
+      avatarImage: s.avatarImage,
+      xp: progress.xp,
+      streak: progress.streak,
+      lastPlayed: progress.lastPlayed,
+      played: progress.played,
+      wins: progress.wins,
+    })
+      .then((r) => setProfile(address, r.profile))
+      .catch(() => {
+        created.current = null;
+      });
+    // progress is read at the moment of creation, not tracked
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [address, loading, profile, loadedFor, session]);
 
   // push progression (debounced), only writes if a session token exists
   useEffect(() => {

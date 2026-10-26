@@ -291,7 +291,7 @@ export function StakedWhot({ matchId, you, onExit }: { matchId: bigint; you: `0x
         })}
       </div>
 
-      {err && <p className="mt-2 text-center text-[12px] text-rose">{err}</p>}
+      {err && <p role="alert" className="mt-2 text-center text-[12px] text-rose">{err}</p>}
 
       {/* call shape */}
       <AnimatePresence>

@@ -9,14 +9,16 @@ import Link from "next/link";
 import { inviteUrl } from "@/lib/share";
 import { ShareButton } from "@/components/ShareButton";
 import { formatUnits } from "viem";
-import { useAccount, useSignMessage } from "wagmi";
+import { useAccount } from "wagmi";
 import { usePrivy } from "@privy-io/react-auth";
 import { useInMiniPay } from "@/lib/minipay";
 import { useStableBalances } from "@/hooks/useStableBalances";
 import { supabase } from "@/lib/supabase";
 import { useSettings, AVATARS, AVATAR_HEX } from "@/lib/settings";
-import { useProgress } from "@/lib/progress";
-import { useProfile, createProfile, setProfile } from "@/lib/profile";
+import { useProfile } from "@/lib/profile";
+import { useSaveProfile } from "@/hooks/useSaveProfile";
+import { useWalletReach } from "@/hooks/useWalletReach";
+import { WalletUnreachable } from "@/components/WalletUnreachable";
 import { Avatar } from "@/components/Avatar";
 import { SendFunds } from "@/components/SendFunds";
 import { InfoLinks } from "@/components/InfoLinks";
@@ -109,9 +111,9 @@ export function Profile() {
   const [settings] = useSettings();
   const [sendOpen, setSendOpen] = useState(false);
   const [rows, setRows] = useState<MatchRow[] | null>(null);
-  const prog = useProgress();
   const { hasProfile, loading: profileLoading, profile: myProfile } = useProfile();
-  const { signMessageAsync } = useSignMessage();
+  const { mode: saveMode, save: saveProfile } = useSaveProfile();
+  const reach = useWalletReach();
 
   const me = address?.toLowerCase();
 
@@ -190,7 +192,7 @@ export function Profile() {
           {/* Inside MiniPay the wallet attaches by itself, so there is nothing to
               offer here and no sign-in button to show (review item 2). */}
           {miniPay ? (
-            <p className="mt-4 text-sm text-ink-dim">Connecting your wallet…</p>
+            reach.failed ? <WalletUnreachable onRetry={reach.retry} className="mt-4" /> : <div aria-hidden className="mx-auto mt-4 h-4 w-40 animate-pulse rounded-full bg-white/10" />
           ) : (
             <>
               <p className="mt-4 text-sm text-ink-dim">
@@ -264,22 +266,7 @@ export function Profile() {
         <PlayerCard />
       </div>
 
-      {isConnected && address && !hasProfile && !profileLoading && (
-        <ProfileSaveCard
-          onSave={() =>
-            createProfile(address, (a) => signMessageAsync({ message: a.message }), {
-              name: settings.name,
-              avatar: settings.avatar,
-              avatarImage: settings.avatarImage,
-              xp: prog.xp,
-              streak: prog.streak,
-              lastPlayed: prog.lastPlayed,
-              played: prog.played,
-              wins: prog.wins,
-            }).then((res) => setProfile(address, res.profile))
-          }
-        />
-      )}
+      {isConnected && address && !hasProfile && !profileLoading && <ProfileSaveCard mode={saveMode} onSave={saveProfile} />}
 
       <div className="mt-5 grid grid-cols-3 gap-3">
         <Stat label="Net P/L" value={`${net >= 0 ? "+" : ""}${net.toFixed(2)}`} accent={net > 0 ? "text-teal" : net < 0 ? "text-rose" : "text-ink"} sub={netUnit} />
@@ -378,8 +365,8 @@ function AccountLinks() {
   const { address } = useAccount();
   const { user, exportWallet, authenticated, login } = usePrivy();
   const [settings, update] = useSettings();
-  const { signMessageAsync } = useSignMessage();
-  const prog = useProgress();
+  const { save: saveProfile } = useSaveProfile();
+  const miniPay = useInMiniPay();
 
   const embedded = user?.linkedAccounts?.find(
     (a: any) => a.type === "wallet" && a.walletClientType === "privy"
@@ -394,7 +381,7 @@ function AccountLinks() {
     { key: "profile", icon: UserCog, label: "Profile", sub: "Name & avatar", tint: "text-violet-bright" },
     { key: "sound", icon: Volume2, label: "Sound", sub: "Music & effects", tint: "text-teal" },
     { key: "wallet", icon: KeyRound, label: "Wallet key", sub: "Export it", tint: "text-amber" },
-  ];
+  ].filter((t) => !(miniPay && t.key === "wallet")) as typeof tiles;
 
   return (
     <div className="mt-7">
@@ -478,27 +465,7 @@ function AccountLinks() {
                       </div>
                     )}
 
-                    {view === "profile" && (
-                      <ProfilePanel
-                        settings={settings}
-                        update={update}
-                        onSave={
-                          address
-                            ? () =>
-                                createProfile(address, (a) => signMessageAsync({ message: a.message }), {
-                                  name: settings.name,
-                                  avatar: settings.avatar,
-                                  avatarImage: settings.avatarImage,
-                                  xp: prog.xp,
-                                  streak: prog.streak,
-                                  lastPlayed: prog.lastPlayed,
-                                  played: prog.played,
-                                  wins: prog.wins,
-                                }).then((res) => setProfile(address, res.profile))
-                            : null
-                        }
-                      />
-                    )}
+                    {view === "profile" && <ProfilePanel settings={settings} update={update} onSave={saveProfile} />}
 
                     {view === "sound" && <SoundPanel settings={settings} update={update} />}
 
@@ -585,8 +552,10 @@ function ProfilePanel({
           {busy ? "Check your wallet…" : saved ? "Saved to leaderboards" : "Save"}
         </button>
       )}
-      {err && <p className="mt-2 text-[11px] text-rose">{err}</p>}
-      <p className="mt-2 text-[11px] text-ink-faint">Your name shows on every leaderboard and match.</p>
+      {err && <p role="alert" className="mt-2 text-[11px] text-rose">{err}</p>}
+      <p className="mt-2 text-[11px] text-ink-faint">
+        {onSave ? "Your name shows on every leaderboard and match." : "Kept on this phone. It goes on your account after your first money match."}
+      </p>
     </div>
   );
 }
@@ -804,7 +773,7 @@ function Stat({ label, value, sub, accent }: { label: string; value: string; sub
   );
 }
 
-function ProfileSaveCard({ onSave }: { onSave: () => Promise<unknown> }) {
+function ProfileSaveCard({ mode, onSave }: { mode: "save" | "sign" | "later"; onSave: (() => Promise<unknown>) | null }) {
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
   return (
@@ -814,11 +783,15 @@ function ProfileSaveCard({ onSave }: { onSave: () => Promise<unknown> }) {
           <ShieldCheck className="h-5 w-5" />
         </span>
         <div className="min-w-0 flex-1">
-          <p className="text-sm font-semibold text-ink">Save your profile</p>
+          <p className="text-sm font-semibold text-ink">{mode === "later" ? "Your progress is on this phone" : "Save your profile"}</p>
           <p className="mt-0.5 text-[12px] text-ink-dim">
-            Sign once (free, no network fee) to save your name, photo and streak to this wallet, synced across devices.
+            {mode === "later"
+              ? "Your name, photo and streak save to your account, and join the leaderboard, after your first money match."
+              : mode === "save"
+              ? "Save your name, photo and streak to your account, synced across devices."
+              : "Sign once (free, no network fee) to save your name, photo and streak to this wallet, synced across devices."}
           </p>
-          <button
+          {onSave && <button
             disabled={busy}
             onClick={async () => {
               setBusy(true);
@@ -834,9 +807,9 @@ function ProfileSaveCard({ onSave }: { onSave: () => Promise<unknown> }) {
             className="btn-primary mt-3 inline-flex items-center gap-2 rounded-xl px-4 py-2 text-sm shadow-glow disabled:opacity-60"
           >
             {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />}
-            {busy ? "Check your wallet…" : "Sign & save profile"}
-          </button>
-          {err && <p className="mt-2 text-[11px] text-rose">{err}</p>}
+            {busy ? (mode === "sign" ? "Check your wallet…" : "Saving…") : mode === "sign" ? "Sign & save profile" : "Save profile"}
+          </button>}
+          {err && <p role="alert" className="mt-2 text-[11px] text-rose">{err}</p>}
         </div>
       </div>
     </div>

@@ -5,6 +5,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { MessageCircle, Send, X } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { getToken } from "@/lib/profile";
+import { withSession } from "@/lib/matchClient";
 import { useProfiles, displayName, avatarHex } from "@/lib/profiles";
 import { Avatar } from "@/components/Avatar";
 import { play } from "@/lib/sfx";
@@ -115,11 +116,13 @@ export function MatchChat({ matchId, me }: { matchId: bigint; me: string }) {
     if (isTaunt(body)) popTaunt(body, true);
     scrollDown();
     try {
-      await fetch("/api/match/chat", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id: matchId.toString(), player: me, body, token: getToken(me) }),
-      });
+      await withSession(me, () =>
+        fetch("/api/match/chat", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ id: matchId.toString(), player: me, body, token: getToken(me) }),
+        })
+      );
     } catch {
       /* realtime/poll will reconcile */
     }

@@ -4,15 +4,18 @@ import { useState } from "react";
 import Link from "next/link";
 import { Volume2, Music, User as UserIcon, Check, Camera, Trash2, ShieldCheck, Loader2, Wallet, Bell, LifeBuoy, KeyRound } from "lucide-react";
 import { PushToggle } from "@/components/PushToggle";
-import { useAccount, useSignMessage } from "wagmi";
+import { useAccount } from "wagmi";
 import { usePrivy } from "@privy-io/react-auth";
 import { useWalletAuth } from "@/hooks/useWalletAuth";
+import { useSaveProfile } from "@/hooks/useSaveProfile";
+import { useWalletReach } from "@/hooks/useWalletReach";
+import { WalletUnreachable } from "@/components/WalletUnreachable";
 import { useSettings, AVATARS, AVATAR_HEX } from "@/lib/settings";
-import { useProgress } from "@/lib/progress";
-import { useProfile, createProfile, setProfile } from "@/lib/profile";
+import { useProfile } from "@/lib/profile";
 import { Avatar } from "@/components/Avatar";
 import { play } from "@/lib/sfx";
 import { cn } from "@/lib/cn";
+import { ExternalA } from "@/components/ExternalA";
 
 /** Read a file, centre-crop and downscale to a 160px square JPEG data URL. */
 function fileToAvatar(file: File): Promise<string> {
@@ -43,9 +46,9 @@ export function Settings() {
   const { address, isConnected } = useAccount();
   const { logout, authenticated } = usePrivy();
   const { canSignIn, signIn: signInWallet } = useWalletAuth();
-  const { signMessageAsync } = useSignMessage();
   const { hasProfile } = useProfile();
-  const prog = useProgress();
+  const { mode: saveMode, save: saveProfile } = useSaveProfile();
+  const reach = useWalletReach();
 
   return (
     <section className="mx-auto w-full max-w-2xl px-5 pb-28 pt-2">
@@ -143,28 +146,18 @@ export function Settings() {
               >
                 <Wallet className="h-4 w-4" /> Sign in to save your profile
               </button>
-            ) : (
-              <p className="text-center text-[13px] text-ink-dim">Connecting your wallet…</p>
-            )
-          ) : (
-            <SaveProfileButton
-              hasProfile={hasProfile}
-              onSave={() =>
-                createProfile(address, (a) => signMessageAsync({ message: a.message }), {
-                  name: s.name,
-                  avatar: s.avatar,
-                  avatarImage: s.avatarImage,
-                  xp: prog.xp,
-                  streak: prog.streak,
-                  lastPlayed: prog.lastPlayed,
-                  played: prog.played,
-                  wins: prog.wins,
-                }).then((res) => setProfile(address, res.profile))
-              }
-            />
-          )}
+            ) : reach.failed ? (
+              <WalletUnreachable onRetry={reach.retry} />
+            ) : null
+          ) : saveProfile ? (
+            <SaveProfileButton hasProfile={hasProfile} signs={saveMode === "sign"} onSave={saveProfile} />
+          ) : null}
           <p className="mt-2 text-[11px] text-ink-faint">
-            Signing is free (no network fee). Saves your name, photo and streak to your wallet, synced across devices.
+            {saveMode === "later"
+              ? "Kept on this phone. Your name, photo and streak save to your account after your first money match."
+              : saveMode === "sign"
+              ? "Signing is free (no network fee). Saves your name, photo and streak to your wallet, synced across devices."
+              : "Saves your name, photo and streak to your account, synced across devices."}
           </p>
           {authenticated && canSignIn && (
             <button
@@ -247,10 +240,8 @@ export function Settings() {
       </div>
 
       {/* support, a real human answers on WhatsApp; required to be reachable in-app */}
-      <a
+      <ExternalA
         href="https://wa.me/2348060158364?text=Hi%20Gambit%20support%2C%20I%20need%20help%20with"
-        target="_blank"
-        rel="noreferrer"
         className="mt-6 flex items-center gap-3 rounded-2xl border border-teal/30 bg-teal/[0.06] p-4 transition-colors hover:border-teal/50"
       >
         <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-teal/15 text-teal">
@@ -260,7 +251,7 @@ export function Settings() {
           <span className="block text-sm font-medium text-ink">Need help? Message us on WhatsApp</span>
           <span className="block text-[11px] text-ink-faint">Payment issues, stuck games, anything. A real person replies fast.</span>
         </span>
-      </a>
+      </ExternalA>
 
       {/* your wallet is YOURS, key export (embedded wallets only) */}
       <ExportWallet />
@@ -356,7 +347,7 @@ function ExportWallet() {
   );
 }
 
-function SaveProfileButton({ hasProfile, onSave }: { hasProfile: boolean; onSave: () => Promise<unknown> }) {
+function SaveProfileButton({ hasProfile, signs, onSave }: { hasProfile: boolean; signs: boolean; onSave: () => Promise<unknown> }) {
   const [busy, setBusy] = useState(false);
   const [saved, setSaved] = useState(false);
   const [err, setErr] = useState<string | null>(null);
@@ -381,9 +372,9 @@ function SaveProfileButton({ hasProfile, onSave }: { hasProfile: boolean; onSave
         className="btn-primary flex w-full items-center justify-center gap-2 rounded-xl py-2.5 text-sm shadow-glow disabled:opacity-60"
       >
         {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : saved ? <Check className="h-4 w-4" /> : <ShieldCheck className="h-4 w-4" />}
-        {busy ? "Check your wallet…" : saved ? "Saved" : hasProfile ? "Update profile" : "Sign & save profile"}
+        {busy ? (signs ? "Check your wallet…" : "Saving…") : saved ? "Saved" : hasProfile ? "Update profile" : signs ? "Sign & save profile" : "Save profile"}
       </button>
-      {err && <p className="mt-1.5 text-[11px] text-rose">{err}</p>}
+      {err && <p role="alert" className="mt-1.5 text-[11px] text-rose">{err}</p>}
     </div>
   );
 }

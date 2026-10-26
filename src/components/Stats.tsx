@@ -11,6 +11,7 @@ import { useProfiles, displayName } from "@/lib/profiles";
 import { Skeleton } from "@/components/Skeleton";
 import { Counter } from "@/components/Counter";
 import { cn } from "@/lib/cn";
+import { ExternalA } from "@/components/ExternalA";
 
 const ease = [0.22, 1, 0.36, 1] as const;
 
@@ -194,14 +195,12 @@ export function Stats() {
       <p className="mt-1 flex flex-wrap items-center gap-1.5 text-sm text-ink-dim">
         <ShieldCheck className="h-4 w-4 shrink-0 text-teal" />
         Real activity, settled on Celo.
-        <a
+        <ExternalA
           href="https://celoscan.io/address/0xB34548Ad3A45C2a571f99341e5fb32abB4FACd05"
-          target="_blank"
-          rel="noreferrer"
           className="text-teal underline decoration-teal/40 underline-offset-2 hover:decoration-teal"
         >
           Verify it yourself
-        </a>
+        </ExternalA>
       </p>
 
       {loading ? (

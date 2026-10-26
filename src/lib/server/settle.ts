@@ -2,6 +2,7 @@ import { createWalletClient, createPublicClient, http, getAddress } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
 import { celo, celoSepolia } from "viem/chains";
 import { ESCROW_ABI, ESCROW_ADDRESS } from "@/lib/escrow";
+import { CELO_READ_URLS } from "@/lib/server/rpc";
 
 const ZERO = "0x0000000000000000000000000000000000000000" as const;
 
@@ -12,6 +13,32 @@ const CHAINS: Record<number, { chain: typeof celo | typeof celoSepolia; rpc: str
   [celo.id]: { chain: celo, rpc: "https://forno.celo.org" },
   [celoSepolia.id]: { chain: celoSepolia, rpc: "https://forno.celo-sepolia.celo-testnet.org" },
 };
+
+/**
+ * A transaction as the chain recorded it: who sent it, to where, and with what
+ * calldata. Endpoints are tried in turn, since a lagging forno node can answer
+ * "not found" for a receipt that is long settled.
+ */
+export async function readTx(hash: `0x${string}`, chainId: number) {
+  const cfg = CHAINS[chainId];
+  if (!cfg) throw new Error(`Unsupported chain ${chainId}`);
+  let last: unknown;
+  for (const url of chainId === celo.id ? CELO_READ_URLS : [cfg.rpc]) {
+    try {
+      const pub = createPublicClient({ chain: cfg.chain, transport: http(url) });
+      const [tx, receipt] = await Promise.all([pub.getTransaction({ hash }), pub.getTransactionReceipt({ hash })]);
+      return {
+        from: tx.from.toLowerCase(),
+        to: tx.to?.toLowerCase() ?? null,
+        input: tx.input.toLowerCase(),
+        ok: receipt.status === "success",
+      };
+    } catch (e) {
+      last = e;
+    }
+  }
+  throw last;
+}
 
 export function relayerConfigured() {
   return !!process.env.RELAYER_PRIVATE_KEY;

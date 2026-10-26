@@ -2,10 +2,18 @@
 
 import type { Card, Shape } from "@/lib/games/whot";
 import { getToken } from "@/lib/profile";
+import { claimSession } from "@/lib/stakeProof";
 
 /** Client helpers that talk to the authoritative match server. */
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+
+/** A 401 means this phone has no live session; the stake on record can mint one, then it's sent again. */
+export async function withSession(player: string, send: () => Promise<Response>): Promise<Response> {
+  const res = await send();
+  if (res.status !== 401 || !(await claimSession(player))) return res;
+  return send();
+}
 
 /** POST with a few retries; 4xx other than 409 means the request itself is wrong. */
 async function postRetry(url: string, body: unknown, tries: number) {
@@ -47,11 +55,13 @@ export interface MoveResult {
 }
 
 export async function submitMove(id: bigint, player: string, move: unknown): Promise<MoveResult> {
-  const res = await fetch("/api/match/move", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ id: id.toString(), player, move, token: getToken(player) }),
-  });
+  const res = await withSession(player, () =>
+    fetch("/api/match/move", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id: id.toString(), player, move, token: getToken(player) }),
+    })
+  );
   const data = await res.json();
   if (!res.ok) throw new Error(data.error ?? "move failed");
   return data;
@@ -80,20 +90,24 @@ export interface WhotView {
 export type WhotAction = { type: "play"; cardId: string; called?: Shape } | { type: "draw" };
 
 export async function fetchWhot(id: bigint, player: string): Promise<WhotView> {
-  const res = await fetch(`/api/match/whot?id=${id.toString()}&player=${player}`, {
-    headers: { "x-gambit-token": getToken(player) ?? "" },
-  });
+  const res = await withSession(player, () =>
+    fetch(`/api/match/whot?id=${id.toString()}&player=${player}`, {
+      headers: { "x-gambit-token": getToken(player) ?? "" },
+    })
+  );
   const data = await res.json();
   if (!res.ok) throw new Error(data.error ?? "fetch failed");
   return data;
 }
 
 export async function whotAction(id: bigint, player: string, action: WhotAction): Promise<WhotView> {
-  const res = await fetch("/api/match/whot", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ id: id.toString(), player, action, token: getToken(player) }),
-  });
+  const res = await withSession(player, () =>
+    fetch("/api/match/whot", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id: id.toString(), player, action, token: getToken(player) }),
+    })
+  );
   const data = await res.json();
   if (!res.ok) throw new Error(data.error ?? "move failed");
   return data;
@@ -125,10 +139,12 @@ export async function claimWin(id: bigint, player: string): Promise<{ ok: boolea
 
 /** Resign: concede the match, opponent wins the pot instantly. Authenticated. */
 export async function resignMatch(id: bigint, player: string): Promise<{ ok: boolean; settled?: boolean; winner?: string; error?: string }> {
-  const res = await fetch("/api/match/resign", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ id: id.toString(), player, token: getToken(player) }),
-  });
+  const res = await withSession(player, () =>
+    fetch("/api/match/resign", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id: id.toString(), player, token: getToken(player) }),
+    })
+  );
   return res.json();
 }

@@ -121,7 +121,7 @@ export function SettleOverlay({
           >
             {reclaiming ? "Reclaiming…" : "Still stuck? Reclaim stakes (refund both, after 1h)"}
           </button>
-          {reclaimError && <p className="mx-auto mt-1 max-w-[16rem] text-[10px] text-rose">{reclaimError}</p>}
+          {reclaimError && <p role="alert" className="mx-auto mt-1 max-w-[16rem] text-[10px] text-rose">{reclaimError}</p>}
         </div>
       ) : (
         <div className="mt-1">

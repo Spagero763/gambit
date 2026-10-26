@@ -13,6 +13,7 @@ import { StakedSnakes } from "./StakedSnakes";
 import { WhotGame } from "./whot/WhotGame";
 import { StakedWhot } from "./StakedWhot";
 import { BoardCoach } from "./BoardCoach";
+import { SeatCheck } from "./SeatCheck";
 import { GameCover } from "@/components/art/GameCover";
 import { Difficulty } from "@/lib/difficulty";
 import type { StakeCtx } from "./PlayFlow";
@@ -56,6 +57,7 @@ export function GameStage({
     <>
       {!stake && <BoardCoach slug={game.slug} />}
       {body}
+      {stake && <SeatCheck you={stake.you} />}
     </>
   );
 }

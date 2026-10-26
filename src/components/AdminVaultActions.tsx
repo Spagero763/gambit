@@ -188,7 +188,7 @@ export function AdminVaultActions({
           )}
 
           {overdraw && <p className="mt-2 text-[11px] font-medium text-rose">That is more than the vault holds.</p>}
-          {error && <p className="mt-2 text-[11px] font-medium text-rose">{error}</p>}
+          {error && <p role="alert" className="mt-2 text-[11px] font-medium text-rose">{error}</p>}
 
           <button
             onClick={submit}

@@ -22,14 +22,31 @@ export function profileMessage(address: string) {
 const tokenKey = (a: string) => `gambit:ptoken:${a.toLowerCase()}`;
 export function getToken(address: string): string | null {
   if (typeof window === "undefined") return null;
-  return localStorage.getItem(tokenKey(address));
+  try {
+    return localStorage.getItem(tokenKey(address));
+  } catch {
+    return null;
+  }
 }
-function setToken(address: string, token: string) {
-  if (typeof window !== "undefined") localStorage.setItem(tokenKey(address), token);
+export function setToken(address: string, token: string) {
+  try {
+    localStorage.setItem(tokenKey(address), token);
+    window.dispatchEvent(new Event("gambit:session"));
+  } catch {
+    /* private mode; the session lasts this page only */
+  }
 }
 
+/** A session that exists and hasn't expired (the payload is `address.expiry`). */
 export function hasToken(address?: string | null): boolean {
-  return !!(address && getToken(address));
+  const t = address ? getToken(address) : null;
+  if (!t) return false;
+  try {
+    const payload = atob(t.split(".")[0].replace(/-/g, "+").replace(/_/g, "/"));
+    return Number(payload.split(".")[1]) > Date.now();
+  } catch {
+    return false;
+  }
 }
 
 /** Sign in (prove wallet ownership) to get a session token for playing. */
@@ -71,13 +88,25 @@ export interface ProfileDraft {
   wins: number;
 }
 
+/**
+ * Save the profile to the account. A live session is enough; without one the web
+ * can still prove the wallet with a signature, but MiniPay never asks for one,
+ * so there the profile waits for the session a first money match brings.
+ */
 export async function createProfile(
   address: string,
-  signMessageAsync: (args: { message: string }) => Promise<string>,
+  signMessageAsync: ((args: { message: string }) => Promise<string>) | null,
   data: ProfileDraft
 ): Promise<{ profile: ServerProfile; token: string }> {
-  const message = profileMessage(address);
-  const signature = await signMessageAsync({ message });
+  let auth: Record<string, string>;
+  if (hasToken(address)) {
+    auth = { token: getToken(address)! };
+  } else if (signMessageAsync) {
+    const message = profileMessage(address);
+    auth = { message, signature: await signMessageAsync({ message }) };
+  } else {
+    throw new Error("Your profile saves to your account after your first money match.");
+  }
   let referredBy: string | undefined;
   try {
     referredBy = localStorage.getItem("gambit:ref") || undefined;
@@ -87,7 +116,7 @@ export async function createProfile(
   const res = await fetch("/api/profile", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ address, message, signature, profile: data, referredBy }),
+    body: JSON.stringify({ address, ...auth, profile: data, referredBy }),
   });
   const json = await res.json();
   if (!res.ok) throw new Error(json.error ?? "Could not save profile");

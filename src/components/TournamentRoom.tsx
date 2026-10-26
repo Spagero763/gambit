@@ -2,10 +2,12 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
-import { ArrowLeft, Trophy, Users, Loader2, Wallet, ShieldCheck, AlertTriangle, Play, Copy, Check, ExternalLink, Crown } from "lucide-react";
+import { ArrowLeft, Trophy, Users, Loader2, Wallet, AlertTriangle, Play, Copy, Check, ExternalLink, Crown } from "lucide-react";
 import Link from "next/link";
-import { useAccount, useSwitchChain, useSignMessage } from "wagmi";
+import { useAccount, useSwitchChain } from "wagmi";
 import { useWalletAuth } from "@/hooks/useWalletAuth";
+import { useWalletReach } from "@/hooks/useWalletReach";
+import { WalletUnreachable } from "@/components/WalletUnreachable";
 import { formatUnits } from "viem";
 import { BlockBlitz } from "@/components/games/blocks/BlockBlitz";
 import { StakedChess } from "@/components/games/StakedChess";
@@ -15,7 +17,6 @@ import { StakedWhot } from "@/components/games/StakedWhot";
 import { useStakeMatch } from "@/hooks/useStakeMatch";
 import { ACTIVE_CHAIN_ID } from "@/lib/wagmi";
 import { tokensFor, symbolForToken, decimalsForToken } from "@/lib/tokens";
-import { hasToken, signIn } from "@/lib/profile";
 import { supabase } from "@/lib/supabase";
 import { useProfiles, displayName, avatarHex } from "@/lib/profiles";
 import { SkeletonList } from "@/components/Skeleton";
@@ -89,10 +90,8 @@ export function TournamentRoom({ id }: { id: string }) {
   const { address, isConnected } = useAccount();
   const { canSignIn, signIn: signInWallet } = useWalletAuth();
   const { switchChain } = useSwitchChain();
-  const { signMessageAsync } = useSignMessage();
+  const reach = useWalletReach();
   const { joinMatch, cancelMatch, reclaimStalled, step, error, ready, onActiveChain } = useStakeMatch();
-  const [authed, setAuthed] = useState(false);
-  useEffect(() => setAuthed(hasToken(address)), [address]);
   // resolve player names/avatars (empty until the view loads, hook stays unconditional)
   const profiles = useProfiles(view?.players.map((p) => p.address) ?? []);
   // join-window countdown: a cup must fill within 10 minutes or it's
@@ -188,7 +187,7 @@ export function TournamentRoom({ id }: { id: string }) {
         >
           {busy ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : null} Refund my stake (on-chain)
         </button>
-        {msg && <p className="mt-2 text-[11px] text-teal">{msg}</p>}
+        {msg && <p role="alert" className="mt-2 text-[11px] text-teal">{msg}</p>}
         <Link href="/tournaments" className="mt-5 inline-flex items-center gap-2 text-teal"><ArrowLeft className="h-4 w-4" /> All tournaments</Link>
       </div>
     );
@@ -438,21 +437,14 @@ export function TournamentRoom({ id }: { id: string }) {
             <button onClick={signInWallet} className="btn-primary flex w-full items-center justify-center gap-2 rounded-2xl py-3.5 text-sm shadow-glow">
               <Wallet className="h-4 w-4" /> Sign in
             </button>
+          ) : reach.failed ? (
+            <WalletUnreachable onRetry={reach.retry} />
           ) : (
-            <div className="flex w-full items-center justify-center gap-2 rounded-2xl border border-line bg-void-700 py-3.5 text-sm text-ink-dim">
-              Connecting your wallet…
-            </div>
+            <div aria-hidden className="h-[52px] w-full animate-pulse rounded-2xl border border-line bg-void-700" />
           )
         ) : !onActiveChain ? (
           <button onClick={() => switchChain({ chainId: ACTIVE_CHAIN_ID })} className="flex w-full items-center justify-center gap-2 rounded-2xl bg-amber py-3.5 text-sm font-semibold text-void">
             <AlertTriangle className="h-4 w-4" /> Switch network
-          </button>
-        ) : !authed ? (
-          <button
-            onClick={async () => { if (!address) return; try { await signIn(address, (a) => signMessageAsync({ message: a.message })); setAuthed(true); } catch {} }}
-            className="btn-primary flex w-full items-center justify-center gap-2 rounded-2xl py-3.5 text-sm shadow-glow"
-          >
-            <ShieldCheck className="h-4 w-4" /> Sign in (free, no network fee)
           </button>
         ) : !joined ? (
           t.status !== "open" ? (

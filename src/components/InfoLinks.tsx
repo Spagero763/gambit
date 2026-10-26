@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { BookOpen, Info, LifeBuoy, ScrollText, Lock, ChevronRight, ExternalLink } from "lucide-react";
+import { ExternalA } from "@/components/ExternalA";
 
 const SUPPORT = "https://wa.me/2348060158364?text=Hi%20Gambit%20support%2C%20I%20need%20help%20with";
 
@@ -27,10 +28,8 @@ export function InfoLinks() {
 
       <div className="space-y-2">
         {/* support first: someone opening this block usually wants a person */}
-        <a
+        <ExternalA
           href={SUPPORT}
-          target="_blank"
-          rel="noreferrer"
           className="pressable flex items-center gap-3 rounded-2xl border border-teal/30 bg-teal/[0.07] px-4 py-3.5 transition-colors hover:border-teal/50"
         >
           <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-teal/15 text-teal">
@@ -41,7 +40,7 @@ export function InfoLinks() {
             <span className="block truncate text-[11px] text-ink-faint">Message us on WhatsApp, a real person replies</span>
           </span>
           <ExternalLink className="h-4 w-4 shrink-0 text-ink-faint" />
-        </a>
+        </ExternalA>
 
         {LINKS.map((l) => (
           <Link
