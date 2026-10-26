@@ -15,10 +15,6 @@ export interface PublicProfile {
 
 const cache = new Map<string, PublicProfile | null>();
 
-export function shortAddr(a: string) {
-  return `${a.slice(0, 6)}…${a.slice(-4)}`;
-}
-
 /** The name to render for an address, profile name first, then a stable
  *  board-game handle. Raw 0x… is never anyone's primary identity. */
 export function displayName(addr: string, p?: PublicProfile | null) {

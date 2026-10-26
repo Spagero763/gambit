@@ -7,7 +7,7 @@ import Link from "next/link";
 import { useAccount } from "wagmi";
 import { supabase } from "@/lib/supabase";
 import { aggregateStandings, Standing } from "@/lib/leaderboard";
-import { useProfiles, displayName, avatarHex, shortAddr, PublicProfile } from "@/lib/profiles";
+import { useProfiles, displayName, avatarHex, PublicProfile } from "@/lib/profiles";
 import { SkeletonList } from "@/components/Skeleton";
 import { useProfile } from "@/lib/profile";
 import { levelInfo } from "@/lib/progress";
@@ -248,7 +248,7 @@ const MEDAL = ["text-amber", "text-ink-dim", "text-[#c08457]"];
 function PointsRowItem({ p, rank, isMe }: { p: PointsRow; rank: number; isMe: boolean }) {
   const lvl = levelInfo(p.xp);
   const tier = rankForXp(p.xp);
-  const name = p.name?.trim() || shortAddr(p.address);
+  const name = p.name?.trim() || displayName(p.address);
   return (
     <motion.li
       initial={{ opacity: 0, y: 6 }}
@@ -304,7 +304,7 @@ function Row({ row, rank, sort, isMe, profile, unit }: { row: Standing; rank: nu
           {displayName(row.handle, profile)} {isMe && <span className="text-teal">· you</span>}
         </p>
         <p className="text-[11px] text-ink-faint">
-          {row.wins}W · {row.losses}L{named ? <span className="font-mono"> · {shortAddr(row.handle)}</span> : ""}
+          {row.wins}W · {row.losses}L
         </p>
       </div>
 
