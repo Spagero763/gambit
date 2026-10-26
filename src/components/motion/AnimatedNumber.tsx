@@ -10,6 +10,7 @@ import { useReducedMotion } from "framer-motion";
  */
 export function AnimatedNumber({
   value,
+  from,
   decimals = 0,
   durationMs = 700,
   prefix = "",
@@ -17,6 +18,8 @@ export function AnimatedNumber({
   className,
 }: {
   value: number;
+  /** count up from here on first show, instead of starting at the value */
+  from?: number;
   decimals?: number;
   durationMs?: number;
   prefix?: string;
@@ -24,8 +27,8 @@ export function AnimatedNumber({
   className?: string;
 }) {
   const reduce = useReducedMotion();
-  const [display, setDisplay] = useState(value);
-  const fromRef = useRef(value);
+  const [display, setDisplay] = useState(from ?? value);
+  const fromRef = useRef(from ?? value);
   const rafRef = useRef<number | undefined>(undefined);
 
   useEffect(() => {

@@ -1,11 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useState } from "react";
+import { AnimatePresence } from "framer-motion";
 import { Game } from "@/lib/games";
 import { Difficulty } from "@/lib/difficulty";
 import { GameStage } from "./GameStage";
 import { MatchSetup } from "./MatchSetup";
 import { MoneyNudge } from "./ResultOverlay";
+import { VersusIntro } from "./VersusIntro";
 
 export interface StakeCtx {
   matchId: bigint;
@@ -15,6 +17,8 @@ export interface StakeCtx {
 export function PlayFlow({ game }: { game: Game }) {
   const [opts, setOpts] = useState<{ difficulty: Difficulty; stake?: StakeCtx } | null>(null);
   const [setupMode, setSetupMode] = useState<"free" | "staked" | undefined>(undefined);
+  const [intro, setIntro] = useState(false);
+  const endIntro = useCallback(() => setIntro(false), []);
 
   if (game.status !== "live") return <GameStage game={game} />;
 
@@ -28,7 +32,11 @@ export function PlayFlow({ game }: { game: Game }) {
         key={setupMode ?? "first"}
         game={game}
         initialMode={setupMode}
-        onStart={(difficulty, stake) => setOpts({ difficulty, stake })}
+        onStart={(difficulty, stake, fresh) => {
+          setOpts({ difficulty, stake });
+          // the board loads underneath while the two players meet
+          setIntro(!!stake && !!fresh);
+        }}
       />
     );
 
@@ -40,6 +48,9 @@ export function PlayFlow({ game }: { game: Game }) {
   return (
     <MoneyNudge.Provider value={opts.stake ? undefined : toMoney}>
       <GameStage game={game} difficulty={opts.difficulty} stake={opts.stake} />
+      <AnimatePresence>
+        {intro && opts.stake && <VersusIntro key="vs" matchId={opts.stake.matchId} you={opts.stake.you} onDone={endIntro} />}
+      </AnimatePresence>
     </MoneyNudge.Provider>
   );
 }

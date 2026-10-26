@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { motion } from "framer-motion";
 import { Loader2, ExternalLink, RotateCcw, Share2, CheckCircle2 } from "lucide-react";
 import Link from "next/link";
 import { formatUnits } from "viem";
@@ -13,6 +14,7 @@ import { symbolForToken } from "@/lib/tokens";
 import { inviteUrl } from "@/lib/share";
 import { ShareButton } from "@/components/ShareButton";
 import { ExternalA } from "@/components/ExternalA";
+import { ease, winEase } from "@/lib/motion";
 import { cn } from "@/lib/cn";
 
 const FEE = 0.05;
@@ -78,9 +80,14 @@ export function SettleOverlay({
   return (
     <div className="text-center">
       {result === "win" && !settling && <Confetti className="fixed z-10" />}
-      <p className={cn("display text-[38px] font-extrabold leading-none", result === "draw" ? "text-amber" : result === "win" ? "text-glow" : "text-ink")}>
+      <motion.p
+        initial={{ scale: result === "win" ? 0.6 : 0.9, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        transition={{ duration: 0.45, ease: result === "win" ? winEase : ease }}
+        className={cn("display text-[38px] font-extrabold leading-none", result === "draw" ? "text-amber" : result === "win" ? "text-glow" : "text-ink")}
+      >
         {result === "draw" ? "Draw" : result === "win" ? "You won" : "You lost"}
-      </p>
+      </motion.p>
 
       {settling ? (
         <div className="mt-2">
@@ -121,18 +128,28 @@ export function SettleOverlay({
           {result === "lose" ? (
             <p className="text-sm text-ink-dim">Pot paid to opponent</p>
           ) : (
-            <div className="mx-auto mt-3 flex max-w-[19rem] items-center justify-center gap-2 rounded-full border border-teal/35 bg-teal/[0.1] px-4 py-2.5 shadow-[0_0_28px_-10px_rgba(62,224,155,0.7)]">
-              <CheckCircle2 className="h-5 w-5 shrink-0 text-teal" />
-              <p className="nums text-left text-[14px] font-semibold text-teal">
-                {result === "draw" ? "Stake refunded to your wallet" : "Paid to your wallet"}
-                {payout ? (
-                  <>
-                    {" · "}
-                    <AnimatedNumber value={payout} decimals={2} suffix={` ${symbol}`} />
-                  </>
-                ) : null}
-              </p>
-            </div>
+            <>
+              {payout ? (
+                <div className="relative mt-4 grid place-items-center">
+                  <span aria-hidden className="absolute h-24 w-24 rounded-full border-2 border-teal/50 opacity-0" style={{ animation: "ring 1s 150ms cubic-bezier(0.22,1,0.36,1) forwards" }} />
+                  <p className="relative">
+                    <AnimatedNumber
+                      value={payout}
+                      from={0}
+                      decimals={2}
+                      durationMs={1100}
+                      prefix="+"
+                      className={cn("display text-[46px] font-extrabold leading-none", result === "win" ? "text-glow" : "text-ink")}
+                    />
+                    <span className="ml-1.5 text-[18px] font-bold text-ink-dim">{symbol}</span>
+                  </p>
+                </div>
+              ) : null}
+              <div className="mx-auto mt-3 flex max-w-[19rem] items-center justify-center gap-2 rounded-full border border-teal/35 bg-teal/[0.1] px-4 py-2 shadow-[0_0_28px_-10px_rgba(62,224,155,0.7)]">
+                <CheckCircle2 className="h-4 w-4 shrink-0 text-teal" />
+                <p className="text-[14px] font-semibold text-teal">{result === "draw" ? "Stake refunded to your wallet" : "Paid to your wallet"}</p>
+              </div>
+            </>
           )}
           {settleTx && chainId && (
             <ExternalA

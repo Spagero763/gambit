@@ -36,7 +36,8 @@ export function MatchSetup({
 }: {
   game: Game;
   initialMode?: Mode;
-  onStart: (difficulty: Difficulty, stake?: { matchId: bigint; you: `0x${string}` }) => void;
+  /** `fresh` is a match that just filled, as opposed to one being resumed */
+  onStart: (difficulty: Difficulty, stake?: { matchId: bigint; you: `0x${string}` }, fresh?: boolean) => void;
 }) {
   const [mode, setMode] = useState<Mode>(initialMode);
   const [rulesOpen, setRulesOpen] = useState(false);
@@ -88,9 +89,13 @@ export function MatchSetup({
   const opponentJoined = created ? Number((created as readonly unknown[])[9]) === 2 : false;
 
   // the joiner normally starts the match; if their call never landed, the
-  // creator's screen does it as soon as the escrow shows both seats filled
+  // creator's screen does it as soon as the escrow shows both seats filled.
+  // Either way the creator goes straight to the table.
   useEffect(() => {
-    if (opponentJoined && matchId !== null) void joinServerMatch(matchId).catch(() => undefined);
+    if (!opponentJoined || matchId === null) return;
+    void joinServerMatch(matchId).catch(() => undefined);
+    if (address) onStart(difficulty, { matchId, you: address }, true);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [opponentJoined, matchId]);
 
   // A room someone is about to join is priced by the escrow, not by the link
@@ -189,7 +194,7 @@ export function MatchSetup({
       } catch {
         /* the creator's screen starts it too once it sees the seat filled */
       }
-      onStart(difficulty, { matchId: BigInt(joinId), you: address });
+      onStart(difficulty, { matchId: BigInt(joinId), you: address }, true);
     }
   };
 
@@ -255,7 +260,7 @@ export function MatchSetup({
           <GameArt slug={game.slug} className="relative h-full w-full" />
         </div>
         <div className="absolute inset-x-0 top-0 flex items-center justify-between px-4 pt-[calc(12px+env(safe-area-inset-top))]">
-          <Link href="/" aria-label="Back to games" className="glass pressable grid h-11 w-11 place-items-center rounded-full text-ink">
+          <Link href="/" data-nav="back" aria-label="Back to games" className="glass pressable grid h-11 w-11 place-items-center rounded-full text-ink">
             <ArrowLeft className="h-5 w-5" />
           </Link>
           {resuming && (
@@ -343,7 +348,7 @@ export function MatchSetup({
                   <>
                     <p className="display text-[26px] font-extrabold text-teal">Opponent joined</p>
                     <p className="mt-1 text-[14px] text-ink-dim">Your match is live.</p>
-                    <button onClick={() => onStart(difficulty, matchId && address ? { matchId, you: address } : undefined)} className={buttonClass("primary", "lg", "mt-4 w-full")}>
+                    <button onClick={() => onStart(difficulty, matchId && address ? { matchId, you: address } : undefined, true)} className={buttonClass("primary", "lg", "mt-4 w-full")}>
                       Start match
                     </button>
                   </>

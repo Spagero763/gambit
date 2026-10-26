@@ -180,7 +180,7 @@ function sub(o: { when?: number; peak?: number; freq?: number; dur?: number } = 
   });
 }
 
-type Sfx = "tap" | "place" | "win" | "lose" | "deal" | "roll" | "clear" | "capture" | "check";
+type Sfx = "tap" | "place" | "win" | "lose" | "deal" | "roll" | "clear" | "capture" | "check" | "versus";
 
 /** Where the action happened, so the sound comes from there. */
 export interface PlayOpts {
@@ -203,6 +203,7 @@ const HAPTIC: Record<Sfx, number | number[]> = {
   clear: 30,
   win: [30, 50, 30, 50, 80],
   lose: 60,
+  versus: [18, 70, 40],
 };
 
 function buzz(sound: Sfx) {
@@ -289,6 +290,14 @@ export function play(sound: Sfx, opts: PlayOpts = {}) {
       [1318, 1568, 2093].forEach((f, i) =>
         tone({ freq: f, type: "triangle", dur: 0.45, peak: V(0.05), when: 0.5 + i * 0.05, filter: 6000, space: 0.35 }) // sparkle
       );
+      break;
+
+    case "versus":
+      // two seats meet: a rising rush, then a heavy hit with a ring after it
+      noise({ dur: 0.3, peak: V(0.12), filter: 500, sweepTo: 5200, type: "bandpass" });
+      sub({ when: 0.28, peak: V(0.3), freq: 55, dur: 0.45 });
+      noise({ dur: 0.08, peak: V(0.22), filter: 2400, sweepTo: 600, when: 0.28 });
+      [392, 587].forEach((f) => tone({ freq: f, type: "triangle", dur: 0.5, peak: V(0.09), when: 0.3, space: 0.3 }));
       break;
 
     case "lose":

@@ -270,3 +270,16 @@ export function useMatchState(id?: bigint) {
     query: { enabled: id !== undefined && !!escrow, refetchInterval: 4000 },
   });
 }
+
+/** Who is seated in a match, straight from the escrow. */
+export function useMatchPlayers(id?: bigint) {
+  const { chainId } = useAccount();
+  const { address: escrow } = escrowFor(chainId);
+  return useReadContract({
+    address: escrow,
+    abi: ESCROW_ABI,
+    functionName: "players",
+    args: id !== undefined ? [id] : undefined,
+    query: { enabled: id !== undefined && !!escrow },
+  });
+}
