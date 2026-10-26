@@ -46,7 +46,7 @@ export async function POST(req: NextRequest) {
         .select("address");
       if (upErr) return NextResponse.json({ error: `ban failed: ${upErr.message}` }, { status: 500 });
       if (!updated?.length) {
-        // no profile yet (played the cup without ever saving one) — create the
+        // no profile yet (played the cup without ever saving one), create the
         // row so the flag has somewhere to live
         const { error: insErr } = await db.from("profiles").insert({ address: addr, name: "", avatar: "teal", banned });
         if (insErr) return NextResponse.json({ error: `ban failed: ${insErr.message}` }, { status: 500 });
@@ -59,7 +59,7 @@ export async function POST(req: NextRequest) {
       // read back the truth rather than trusting the write
       const { data: check } = await db.from("profiles").select("banned").eq("address", addr).maybeSingle();
       if (!!check?.banned !== banned) {
-        return NextResponse.json({ error: "ban did not persist — check the profiles table" }, { status: 500 });
+        return NextResponse.json({ error: "ban did not persist, check the profiles table" }, { status: 500 });
       }
       return NextResponse.json({ ok: true, banned, address: addr });
     }

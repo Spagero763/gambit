@@ -10,7 +10,7 @@ export async function submitScore(address: string | undefined, game: string, sco
       body: JSON.stringify({ address, game, score }),
     });
   } catch {
-    /* ignore — scores are non-critical */
+    /* ignore, scores are non-critical */
   }
 }
 

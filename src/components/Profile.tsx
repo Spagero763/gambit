@@ -72,7 +72,7 @@ function CopyAddress({ address }: { address: string }) {
       setCopied(true);
       setTimeout(() => setCopied(false), 1500);
     } catch {
-      /* clipboard blocked — ignore */
+      /* clipboard blocked, ignore */
     }
   };
   return (
@@ -155,7 +155,7 @@ export function Profile() {
   const losses = played.filter((p) => p.result === "lose").length;
   const decided = wins + losses;
   const winRate = decided ? Math.round((wins / decided) * 100) : 0;
-  // P/L can't mix tokens — show the net for the token you've played most.
+  // P/L can't mix tokens, show the net for the token you've played most.
   const { net, netUnit } = useMemo(() => {
     const by: Record<string, { net: number; decided: number }> = {};
     for (const p of played) {
@@ -175,7 +175,7 @@ export function Profile() {
     return { net: by[unit]?.net ?? 0, netUnit: unit };
   }, [played]);
   const avatarHex = AVATAR_HEX[settings.avatar] ?? AVATAR_HEX.teal;
-  // never hex as a name — that is both unfriendly and a MiniPay listing rule.
+  // never hex as a name, that is both unfriendly and a MiniPay listing rule.
   // (the address still shows in CopyAddress, where it IS an address, not a name)
   const displayName = settings.name || handleFor(address);
 
@@ -194,7 +194,7 @@ export function Profile() {
           ) : (
             <>
               <p className="mt-4 text-sm text-ink-dim">
-                Sign in to see your record, net winnings and match history. Email or Google works — a wallet is created for you.
+                Sign in to see your record, net winnings and match history. Email or Google works. A wallet is created for you.
               </p>
               <button
                 onClick={() => login()}
@@ -284,7 +284,7 @@ export function Profile() {
       <div className="mt-5 grid grid-cols-3 gap-3">
         <Stat label="Net P/L" value={`${net >= 0 ? "+" : ""}${net.toFixed(2)}`} accent={net > 0 ? "text-teal" : net < 0 ? "text-rose" : "text-ink"} sub={netUnit} />
         <Stat label="Record" value={`${wins}–${losses}`} accent="text-ink" sub="W–L" />
-        <Stat label="Win rate" value={decided ? `${winRate}%` : "—"} accent="text-ink" sub={`${decided} settled`} />
+        <Stat label="Win rate" value={decided ? `${winRate}%` : "-"} accent="text-ink" sub={`${decided} settled`} />
       </div>
 
       <div className="mt-5">
@@ -301,7 +301,7 @@ export function Profile() {
 
       <Achievements />
 
-      {/* account — the Settings essentials, reachable from You (office-hours
+      {/* account, the Settings essentials, reachable from You (office-hours
           feedback: people expected this here, not only behind the gear) */}
       <AccountLinks />
 
@@ -369,7 +369,7 @@ type AccountView = "grid" | "profile" | "sound" | "wallet";
 
 /**
  * Account, handled entirely in one popup. Every control (profile, sound, wallet
- * export, verify) opens inline as a sub-view — no jump to another page. The user
+ * export, verify) opens inline as a sub-view, no jump to another page. The user
  * stays put and the popup swaps its body.
  */
 function AccountLinks() {
@@ -659,7 +659,7 @@ function SoundPanel({
   );
 }
 
-/** Inline wallet key export — Privy opens its own secure reveal, no page jump. */
+/** Inline wallet key export, Privy opens its own secure reveal, no page jump. */
 function WalletPanel({ onExport }: { onExport: () => Promise<void> }) {
   const [confirming, setConfirming] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -717,7 +717,7 @@ function InviteCard({ refCode, address }: { refCode: string | null; address: str
   const url = inviteUrl(refCode);
   // What the player reads on the card: the domain and their code, without the
   // https:// and without a query string. Copying still puts the full URL on the
-  // clipboard — this is only what fits on one line and stays memorable.
+  // clipboard, this is only what fits on one line and stays memorable.
   const pretty = refCode ? `bestgambit.live/?ref=${refCode}` : null;
   const [copied, setCopied] = useState(false);
   const [per, setPer] = useState(0);
@@ -816,7 +816,7 @@ function ProfileSaveCard({ onSave }: { onSave: () => Promise<unknown> }) {
         <div className="min-w-0 flex-1">
           <p className="text-sm font-semibold text-ink">Save your profile</p>
           <p className="mt-0.5 text-[12px] text-ink-dim">
-            Sign once (free, no network fee) to save your name, photo and streak to this wallet — synced across devices.
+            Sign once (free, no network fee) to save your name, photo and streak to this wallet, synced across devices.
           </p>
           <button
             disabled={busy}

@@ -8,7 +8,7 @@ import { BracketMatch, TournamentRow } from "@/lib/tournamentClient";
 import { cn } from "@/lib/cn";
 
 /**
- * The tournament table — football-knockout style. Rounds stack top to bottom
+ * The tournament table, football-knockout style. Rounds stack top to bottom
  * (Quarter-finals → Semi-finals → Final, bronze beneath); when a match ends,
  * the winner pops into their slot in the next round so everyone watching the
  * table sees who advances.

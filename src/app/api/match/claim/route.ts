@@ -13,8 +13,8 @@ const TURN_TIMEOUT_MS = 120_000;
 
 /**
  * Claim a win when the opponent abandons (device off, closed app, ragequit).
- * The waiting player wins the pot. This — plus the contract's permissionless
- * `reclaimStalled` after 1h — means staked funds can never get stuck.
+ * The waiting player wins the pot. This, plus the contract's permissionless
+ * `reclaimStalled` after 1h, means staked funds can never get stuck.
  *
  * Body: { id, player }
  */
@@ -36,7 +36,7 @@ export async function POST(req: NextRequest) {
 
     const toMove = String(match.turn ?? (match.state as any)?.turn ?? "").toLowerCase();
     if (!toMove) return NextResponse.json({ error: "No active turn" }, { status: 409 });
-    if (toMove === me) return NextResponse.json({ error: "It's your turn — just make your move" }, { status: 409 });
+    if (toMove === me) return NextResponse.json({ error: "It's your turn. Just make your move" }, { status: 409 });
 
     const elapsed = Date.now() - new Date(match.updated_at).getTime();
     if (elapsed < TURN_TIMEOUT_MS) {

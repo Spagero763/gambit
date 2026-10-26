@@ -4,8 +4,8 @@
  * Music = real audio files, one mood per game, looped with crossfades.
  *
  * Files live in /public/music/<key>.mp3 (see public/music/README.md for the
- * curated track list). A missing file is skipped silently — no errors, no
- * fallback beeps — so tracks can be added one at a time and the app never
+ * curated track list). A missing file is skipped silently, no errors, no
+ * fallback beeps, so tracks can be added one at a time and the app never
  * breaks. Autoplay-blocked starts are retried on the first user gesture.
  */
 
@@ -46,7 +46,7 @@ function elementFor(key: MusicKey): HTMLAudioElement {
   if (cached) return cached;
   const el = new Audio(SRC[key]);
   el.loop = true;
-  // stream it instead of pulling the entire file up front — music starts sooner
+  // stream it instead of pulling the entire file up front, music starts sooner
   // and a player who only stays a minute only pays for a minute of data
   el.preload = "none";
   el.volume = 0;
@@ -71,7 +71,7 @@ function fade(el: HTMLAudioElement, to: number, ms: number, onDone?: () => void)
   requestAnimationFrame(tick);
 }
 
-/** Some browsers block autoplay until the user interacts — retry then. */
+/** Some browsers block autoplay until the user interacts, retry then. */
 function hookGesture() {
   if (gestureHooked || typeof window === "undefined") return;
   gestureHooked = true;
@@ -88,7 +88,7 @@ export function playMusic(key: MusicKey, volume = vol) {
   vol = clamp(volume);
   wanted = key;
 
-  // already on this track — just make sure the volume is right
+  // already on this track, just make sure the volume is right
   if (currentKey === key && current && !current.paused) {
     current.volume = vol;
     return;
@@ -103,7 +103,7 @@ export function playMusic(key: MusicKey, volume = vol) {
   el.play()
     .then(() => fade(el, vol, 600))
     .catch(() => {
-      // autoplay blocked or file missing — arm a gesture retry, stay silent
+      // autoplay blocked or file missing, arm a gesture retry, stay silent
       hookGesture();
     });
   current = el;

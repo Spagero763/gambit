@@ -121,8 +121,7 @@ export function ChatBubble() {
 
   return (
     <Portal>
-      {/* the bubble — the Gambit mark itself, so it reads as "Gambit is here",
-          not a generic AI widget */}
+      {/* the bubble is the Gambit mark itself, so it reads as "Gambit is here" */}
       <motion.button
         aria-label="Ask Gambit"
         onPointerDown={onDown}
@@ -153,7 +152,7 @@ export function ChatBubble() {
             </motion.span>
           )}
         </AnimatePresence>
-        {/* a real "online" dot, not an AI sparkle */}
+        {/* an "online" dot */}
         {!open && (
           <span className="absolute -right-1 -top-1 h-3.5 w-3.5 rounded-full border-2 border-void-800 bg-teal">
             <span className="absolute inset-0 animate-ping rounded-full bg-teal/70" />
@@ -216,7 +215,7 @@ export function ChatBubble() {
                       {m.text}
                     </p>
                   </div>
-                  {/* "did you mean" chips — tapping sends the exact question */}
+                  {/* "did you mean" chips, tapping sends the exact question */}
                   {m.from === "bot" && m.suggestions && m.suggestions.length > 0 && (
                     <div className="mt-1.5 flex flex-wrap gap-1.5">
                       {m.suggestions.map((s) => (

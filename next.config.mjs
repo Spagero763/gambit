@@ -2,7 +2,7 @@
 const nextConfig = {
   reactStrictMode: true,
   experimental: {
-    // tree-shake icon imports. NOTE: framer-motion is deliberately NOT here —
+    // tree-shake icon imports. NOTE: framer-motion is deliberately NOT here:
     // optimizing its barrel import can subtly break animations (e.g. the
     // ambient background / spotlight), and the bundle win isn't worth it.
     optimizePackageImports: ["lucide-react"],

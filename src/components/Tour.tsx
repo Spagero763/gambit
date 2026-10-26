@@ -84,7 +84,7 @@ export function Tour() {
   const below = rect ? rect.top < vh * 0.5 : true; // element high up → tooltip below it
 
   // Card spans the width (with side margins) and pins below the element when it's
-  // up top, else above it — so it's always fully on-screen and the buttons are
+  // up top, else above it, so it's always fully on-screen and the buttons are
   // always tappable on small phones. Centered when there's no target.
   const cardStyle: React.CSSProperties = rect
     ? {

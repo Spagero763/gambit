@@ -1,6 +1,6 @@
 import { celo, celoSepolia } from "viem/chains";
 
-/** A stake token. `decimals` matters — USDm is 18, USDT and USDC are 6. */
+/** A stake token. `decimals` matters, USDm is 18, USDT and USDC are 6. */
 export interface StakeToken {
   address: `0x${string}`;
   symbol: string;
@@ -22,7 +22,7 @@ const USDC_CELO: StakeToken = {
 };
 
 // Tether USD₮ on Celo mainnet (6 decimals). Address taken from MiniPay's own
-// mainnet token list — USDT support is mandatory for a MiniPay listing.
+// mainnet token list, USDT support is mandatory for a MiniPay listing.
 // Must be allowlisted on the escrow (owner calls setTokenAllowed) to be staked.
 const USDT_CELO: StakeToken = {
   address: "0x48065fbBE25f71C9282ddf5e1cD6D6A887483D5e",
@@ -30,7 +30,7 @@ const USDT_CELO: StakeToken = {
   decimals: 6,
 };
 
-// MiniPay supports USDT, USDC and USDm only — in that order of prominence.
+// MiniPay supports USDT, USDC and USDm only, in that order of prominence.
 export const STAKE_TOKENS: Record<number, StakeToken[]> = {
   [celo.id]: [USDT_CELO, USDC_CELO, CUSD],
   [celoSepolia.id]: [CUSD],
@@ -42,7 +42,7 @@ export function tokensFor(chainId?: number): StakeToken[] {
 
 /**
  * USDm, the token Gambit launched on. Match rows written before the token column
- * existed have no token recorded, and every one of them was a USDm stake — so
+ * existed have no token recorded, and every one of them was a USDm stake, so
  * anything reading history needs this explicitly rather than reaching for the
  * first token in the list, which is now USDT.
  */

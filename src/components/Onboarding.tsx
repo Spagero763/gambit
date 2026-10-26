@@ -18,7 +18,7 @@ const STEPS = [
   {
     icon: Wallet,
     title: "Sign in & save your progress",
-    body: "Sign in with email, Google or Farcaster — a wallet is created for you automatically, no app or seed phrase needed. Already have a wallet? Connect that instead. Just want to try it? Play free without signing in.",
+    body: "Sign in with email, Google or Farcaster. A wallet is created for you automatically, no app or seed phrase needed. Already have a wallet? Connect that instead. Just want to try it? Play free without signing in.",
     connect: true,
   },
   {
@@ -29,7 +29,7 @@ const STEPS = [
   {
     icon: Swords,
     title: "Find real opponents",
-    body: "Open “Live rooms” at the top of the games list to join an open staked match — or create your own and share the link with a friend.",
+    body: "Open “Live rooms” at the top of the games list to join an open staked match, or create your own and share the link with a friend.",
   },
   {
     icon: User,

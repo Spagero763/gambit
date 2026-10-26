@@ -38,7 +38,7 @@ async function vaultStatus() {
         functionName: "token",
       })) as `0x${string}`;
     } catch {
-      /* older vault without a public token() — fall back */
+      /* older vault without a public token(), fall back */
     }
     const raw = (await pub.readContract({ address: token, abi: erc20, functionName: "balanceOf", args: [holder] })) as bigint;
     return { token, balance: Number(formatUnits(raw, decimalsForToken(token))), symbol: symbolForToken(token) };
@@ -50,7 +50,7 @@ async function vaultStatus() {
 
   const cupPrize = Number(process.env.CUP_PRIZE_USDM ?? "10");
   const refPer = referralAmount();
-  // `token` is the ERC20 each vault pays out in — the admin UI needs it to
+  // `token` is the ERC20 each vault pays out in, the admin UI needs it to
   // sweep (withdraw) or fund the vault from the owner's own wallet.
   return {
     cup: cup === null ? null : { address: cupAddr, token: cup.token, symbol: cup.symbol, balance: cup.balance, low: cup.balance < cupPrize },
@@ -102,7 +102,7 @@ export async function GET(req: NextRequest) {
     try {
       vaults = await vaultStatus();
     } catch {
-      /* vault reads are best-effort — the panel still works without them */
+      /* vault reads are best-effort, the panel still works without them */
     }
 
     // this week's cup entries with names + ban flags, for moderation

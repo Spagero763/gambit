@@ -37,7 +37,7 @@ export function TrustStrip() {
 
   return (
     <section className="mx-auto w-full max-w-2xl px-5 pb-4 lg:max-w-6xl">
-      {/* compact bar — the passive trust signal, always visible */}
+      {/* compact bar, the passive trust signal, always visible */}
       <button
         onClick={() => setOpen(true)}
         className="pressable flex w-full items-center gap-2.5 rounded-2xl border border-line bg-void-800/60 px-4 py-3 transition-colors hover:border-teal/40"

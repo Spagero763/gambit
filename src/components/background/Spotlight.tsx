@@ -10,7 +10,7 @@ import {
 } from "framer-motion";
 
 /**
- * A soft emerald light that follows the pointer across the whole page —
+ * A soft emerald light that follows the pointer across the whole page, 
  * the backdrop feels alive and responsive without ever shouting.
  */
 export function Spotlight() {

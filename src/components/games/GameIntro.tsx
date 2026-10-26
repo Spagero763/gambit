@@ -5,10 +5,10 @@ import { AnimatePresence, motion } from "framer-motion";
 import { X } from "lucide-react";
 import { Portal } from "@/components/Portal";
 
-/** Your first 3 moves — an action guide shown once the first time you open each game. */
+/** Your first 3 moves, an action guide shown once the first time you open each game. */
 const INTROS: Record<string, { title: string; lines: string[] }> = {
   chess: {
-    title: "Chess — your first moves",
+    title: "Chess: your first moves",
     lines: [
       "Tap a center pawn, then tap two squares forward to open up.",
       "Bring out a knight (the horse) toward the middle.",
@@ -16,35 +16,35 @@ const INTROS: Record<string, { title: string; lines: string[] }> = {
     ],
   },
   whot: {
-    title: "Naija Whot — your first moves",
+    title: "Naija Whot: your first moves",
     lines: [
       "Tap a card in your hand that matches the top card's shape or number.",
       "No match? Tap the market pile to draw a card.",
-      "Save specials (Pick Two, Whot 20) — empty your hand first to win.",
+      "Save specials (Pick Two, Whot 20). Empty your hand first to win.",
     ],
   },
   "tic-tac-toe": {
-    title: "Tic-Tac-Toe — your first moves",
+    title: "Tic-Tac-Toe: your first moves",
     lines: [
-      "Tap the center square first — it's the strongest spot.",
+      "Tap the center square first. It's the strongest spot.",
       "Grab a corner next to set up two ways to win.",
       "Block your opponent the moment they get two in a row.",
     ],
   },
   snakes: {
-    title: "Snakes & Ladders — your first moves",
+    title: "Snakes & Ladders: your first moves",
     lines: [
       "Tap to roll the dice and move forward.",
       "Land on a ladder's base to shoot up the board.",
-      "Dodge snake heads — they slide you back down. First to the top wins.",
+      "Dodge snake heads. They slide you back down. First to the top wins.",
     ],
   },
   blocks: {
-    title: "Block Blitz — your first moves",
+    title: "Block Blitz: your first moves",
     lines: [
       "Drag a shape from the tray onto the board (or tap a shape, then a cell).",
       "Fill a whole row or column to clear it and score.",
-      "Leave room — if no shape fits anywhere, it's game over.",
+      "Leave room. If no shape fits anywhere, it's game over.",
     ],
   },
 };
@@ -108,7 +108,7 @@ export function GameIntro({ slug }: { slug: string }) {
                 ))}
               </ul>
               <button onClick={close} className="btn-primary mt-5 w-full rounded-2xl py-3 text-sm shadow-glow">
-                Got it — let&apos;s play
+                Got it, let&apos;s play
               </button>
             </motion.div>
           </motion.div>

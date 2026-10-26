@@ -12,7 +12,7 @@ export const runtime = "nodejs";
 /**
  * What is left of the Weekly Cup: settlement only.
  *
- * The cup itself is retired — there is no prize funding behind it, and a free
+ * The cup itself is retired, there is no prize funding behind it, and a free
  * cup that cannot pay its podium is worse than no cup. Entry and score
  * submission are gone with it, so no one can join a week that will never pay.
  *
@@ -62,14 +62,14 @@ export async function POST(req: NextRequest) {
           .select();
         if (!claimed?.length) return NextResponse.json({ error: "Settling already in progress" }, { status: 409 });
       } else if (!row.settle_error && winners?.every((w) => w.tx)) {
-        // settling, no error, everything paid — finish the bookkeeping below
+        // settling, no error, everything paid, finish the bookkeeping below
       } else if (!row.settle_error && !winners) {
         return NextResponse.json({ error: "Settling already in progress" }, { status: 409 });
       }
 
       if (!winners) {
         // rank: best score first, ties broken deterministically by address.
-        // Only players who actually played (score > 0) can win — and banned
+        // Only players who actually played (score > 0) can win, and banned
         // wallets are skipped even if their entry row still exists.
         const { data: entries } = await db
           .from("cup_entries")
@@ -113,7 +113,7 @@ export async function POST(req: NextRequest) {
         // the contract enforces once-per-week and emits WeekSettled.
         try {
           if (await cupWeekSettledOnChain(i)) {
-            // paid on-chain in a previous attempt whose tx we lost — record that
+            // paid on-chain in a previous attempt whose tx we lost, record that
             winners.forEach((w) => (w.tx = w.tx ?? "onchain"));
           } else {
             if ((await cupVaultBalance()) < parseUnits(owed.toString(), 18)) {

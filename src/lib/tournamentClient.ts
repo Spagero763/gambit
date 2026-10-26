@@ -23,7 +23,7 @@ export interface TournamentRow {
   created_at: string;
 }
 
-/** A bracket sub-match (semi/bronze/final) — a real 1v1 in `matches`. */
+/** A bracket sub-match (semi/bronze/final), a real 1v1 in `matches`. */
 export interface BracketMatch {
   id: number;
   game: string;

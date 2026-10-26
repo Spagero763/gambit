@@ -8,7 +8,7 @@ import { useInMiniPay } from "@/lib/minipay";
 /**
  * The app's one answer to "is this player signed in, and how do they sign in?"
  *
- * `signedIn` is a connected wallet, not Privy's `authenticated` — inside MiniPay
+ * `signedIn` is a connected wallet, not Privy's `authenticated`, inside MiniPay
  * the injected wallet attaches on load and Privy never authenticates, so keying
  * off `authenticated` left "Sign in" buttons all over a session that was already
  * signed in (MiniPay review item 2).

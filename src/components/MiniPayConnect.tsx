@@ -9,7 +9,7 @@ const ATTEMPTS = [0, 400, 1200];
 
 /**
  * MiniPay listing rule: Mini Apps must connect to the wallet automatically on
- * load — no connect button, no wallet modal, no signature prompt. Outside
+ * load, no connect button, no wallet modal, no signature prompt. Outside
  * MiniPay this renders nothing and Privy handles sign-in as usual.
  *
  * The injected provider is sometimes not registered on the very first render,

@@ -6,7 +6,7 @@ import { cn } from "@/lib/cn";
  * Shimmering loading placeholders shaped like the content they stand in for.
  * Dead "Loading…" text is the fastest way for an app to feel cheap; a surface
  * that shimmers where the content will land feels instant even when it isn't.
- * Pure CSS background animation — costs nothing on low-end phones.
+ * Pure CSS background animation, costs nothing on low-end phones.
  */
 export function Skeleton({ className }: { className?: string }) {
   return (

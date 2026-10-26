@@ -1,7 +1,7 @@
 "use client";
 
 // Monthly season on top of the lifetime rank ladder: your rank never resets
-// (prestige is permanent), but each calendar month opens a fresh XP season —
+// (prestige is permanent), but each calendar month opens a fresh XP season, 
 // a reason to come back on the 1st and climb again. Season XP is measured
 // against a baseline snapshot of your XP taken the first time you show up in
 // a given month. No schema, no server: it lives beside the rest of the local

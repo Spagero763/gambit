@@ -14,7 +14,7 @@ import { play } from "@/lib/sfx";
  * Glows on the home screen when ready; opens a satisfying reveal when claimed.
  *
  * XP and the streak are client-side, so claiming needs no wallet, no network and
- * no signature. One tap, instant reward — nothing between the player and it.
+ * no signature. One tap, instant reward, nothing between the player and it.
  */
 export function DailyReward() {
   const p = useProgress();
@@ -78,7 +78,7 @@ export function DailyReward() {
         </div>
       )}
 
-      {/* reveal — portaled to <body> so it centers on the viewport, not under the fold */}
+      {/* reveal, portaled to <body> so it centers on the viewport, not under the fold */}
       <Portal>
       <AnimatePresence>
         {reveal && (
@@ -117,7 +117,7 @@ export function DailyReward() {
                 <Sparkles className="h-6 w-6 text-amber" /> +{reveal.reward} XP
               </motion.p>
               <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.4 }} className="mt-1 text-sm text-ink-dim">
-                Day {reveal.day} streak 🔥 — come back tomorrow for more.
+                Day {reveal.day} streak 🔥. Come back tomorrow for more.
               </motion.p>
               <button onClick={() => setReveal(null)} className="btn-primary mt-6 w-full rounded-2xl py-3 text-sm shadow-glow">
                 Nice!

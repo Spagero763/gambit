@@ -4,7 +4,7 @@ import { getToken } from "@/lib/profile";
 
 /** Web-push client helpers: subscribe this device to match/tournament alerts. */
 
-// VAPID public key — not a secret (it ships to every browser by design).
+// VAPID public key, not a secret (it ships to every browser by design).
 const PUBLIC_KEY =
   process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY ||
   "BPxpkRzBPPbV4L_3DDaXwQkc_tEr-bme5VSagbUyXrDBDgpWFnmHZE42EXrHuwXD9TGqjALBZA_W0ZjJQZQ3OAE";

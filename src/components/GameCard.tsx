@@ -28,7 +28,7 @@ export function GameCard({
   const { address } = useAccount();
   const { preferred } = useStableBalances(address);
   const stakeSymbol = preferred?.token.symbol ?? "USDT";
-  // press ripple radiating from the exact touch point — the tactile feedback
+  // press ripple radiating from the exact touch point, the tactile feedback
   // phones deserve (all the hover polish is invisible on touch screens)
   const [ripple, setRipple] = useState<{ key: number; x: number; y: number } | null>(null);
 
@@ -72,7 +72,7 @@ export function GameCard({
             </AnimatePresence>
             <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/35 to-transparent" />
 
-            {/* top meta — floats above the surface in 3D */}
+            {/* top meta, floats above the surface in 3D */}
             <div
               className="absolute inset-x-0 top-0 flex items-center justify-between p-3"
               style={{ transform: "translateZ(22px)" }}
@@ -85,7 +85,7 @@ export function GameCard({
               </span>
             </div>
 
-            {/* bottom content — deeper parallax layer */}
+            {/* bottom content, deeper parallax layer */}
             <div
               className="absolute inset-x-0 bottom-0 p-3.5"
               style={{ transform: "translateZ(30px)" }}
@@ -115,7 +115,7 @@ export function GameCard({
               </div>
             </div>
 
-            {/* orbiting accent ring — only the 1px border area shows */}
+            {/* orbiting accent ring, only the 1px border area shows */}
             <span
               aria-hidden
               className="pointer-events-none absolute inset-0 rounded-2xl opacity-0 transition-opacity duration-500 group-hover:opacity-100"

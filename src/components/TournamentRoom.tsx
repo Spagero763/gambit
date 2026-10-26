@@ -93,10 +93,10 @@ export function TournamentRoom({ id }: { id: string }) {
   const { joinMatch, cancelMatch, reclaimStalled, step, error, ready, onActiveChain } = useStakeMatch();
   const [authed, setAuthed] = useState(false);
   useEffect(() => setAuthed(hasToken(address)), [address]);
-  // resolve player names/avatars (empty until the view loads — hook stays unconditional)
+  // resolve player names/avatars (empty until the view loads, hook stays unconditional)
   const profiles = useProfiles(view?.players.map((p) => p.address) ?? []);
   // join-window countdown: a cup must fill within 10 minutes or it's
-  // auto-cancelled (everyone refunded) — keep players aware and the row honest
+  // auto-cancelled (everyone refunded), keep players aware and the row honest
   const [now, setNow] = useState(() => Date.now());
   useEffect(() => {
     const t = setInterval(() => setNow(Date.now()), 1000);
@@ -104,7 +104,7 @@ export function TournamentRoom({ id }: { id: string }) {
   }, []);
   const expirySynced = useRef(0); // last chain-sync timestamp (throttle)
 
-  // podium celebration — shown once per tournament when it settles
+  // podium celebration, shown once per tournament when it settles
   const [podium, setPodium] = useState(false);
   useEffect(() => {
     const t = view?.tournament;
@@ -127,7 +127,7 @@ export function TournamentRoom({ id }: { id: string }) {
 
   // While the cup is open, self-heal from chain truth every ~10s: import any
   // seats whose browser failed to report, start the cup the moment the escrow
-  // is full — and once the join window lapses, keep retrying the refund until
+  // is full, and once the join window lapses, keep retrying the refund until
   // the chain confirms it. The server/contract enforce all correctness.
   useEffect(() => {
     const t = view?.tournament;
@@ -170,7 +170,7 @@ export function TournamentRoom({ id }: { id: string }) {
 
   if (notFound) {
     // Extremely rare: the on-chain match exists but its DB row never landed.
-    // The stake is still safe in escrow — offer the on-chain refund directly so
+    // The stake is still safe in escrow, offer the on-chain refund directly so
     // a creator can always recover funds without leaving the app.
     return (
       <div className="mx-auto w-full max-w-md px-5 py-10 text-center">
@@ -180,7 +180,7 @@ export function TournamentRoom({ id }: { id: string }) {
           onClick={async () => {
             setBusy(true); setMsg(null);
             try { const ok = await cancelMatch(tid); if (ok) setMsg("Refunded. Your stake was returned to your wallet."); }
-            catch (e: any) { setMsg(e?.message ?? "Refund failed — you may not be the creator, or the cup already started."); }
+            catch (e: any) { setMsg(e?.message ?? "Refund failed. You may not be the creator, or the cup already started."); }
             finally { setBusy(false); }
           }}
           disabled={busy || !isConnected}
@@ -257,7 +257,7 @@ export function TournamentRoom({ id }: { id: string }) {
 
   // Each round deals a different board; everyone alive grinds the same one.
   // Full-screen overlay (above the page Header + bottom nav) so nothing covers
-  // the board — same clean canvas as free play / staked 1v1.
+  // the board, same clean canvas as free play / staked 1v1.
   if (playing && t.status === "active" && joined && iAmAlive && me && !isBracketCup) {
     return (
       <div className="fixed inset-0 z-[60] overflow-y-auto bg-void">
@@ -273,7 +273,7 @@ export function TournamentRoom({ id }: { id: string }) {
     );
   }
 
-  // playing a bracket/table sub-match — the real staked board, full-screen,
+  // playing a bracket/table sub-match, the real staked board, full-screen,
   // clean (no page Header / bottom nav). The board's own back button returns
   // here via onExit, so it's a single clean header like free play.
   if (playingMatch && me) {
@@ -300,7 +300,7 @@ export function TournamentRoom({ id }: { id: string }) {
         await refresh();
       }
     } catch (e: any) {
-      setMsg(friendlyError(e, "Join failed — please try again."));
+      setMsg(friendlyError(e, "Join failed. Please try again."));
     } finally {
       setBusy(false);
     }
@@ -311,11 +311,11 @@ export function TournamentRoom({ id }: { id: string }) {
     setMsg(null);
     try {
       const res = await settleTournamentNow(tid);
-      if (!res.ok && res.error) setMsg(friendlyError(res.error, "Couldn't close the round — try again."));
-      else if (!res.ok && res.retryInMs) setMsg(`Not everyone has finished — you can force payout in ${Math.ceil(res.retryInMs / 60000)} min.`);
+      if (!res.ok && res.error) setMsg(friendlyError(res.error, "Couldn't close the round. Try again."));
+      else if (!res.ok && res.retryInMs) setMsg(`Not everyone has finished. You can force payout in ${Math.ceil(res.retryInMs / 60000)} min.`);
       await refresh();
     } catch (e: any) {
-      setMsg(friendlyError(e, "Couldn't close the round — try again."));
+      setMsg(friendlyError(e, "Couldn't close the round. Try again."));
     } finally {
       setBusy(false);
     }
@@ -331,7 +331,7 @@ export function TournamentRoom({ id }: { id: string }) {
     try {
       await cancelMatch(tid).catch(() => false);
       const res = await syncTournamentCancelled(tid).catch(() => ({ ok: false, error: undefined as string | undefined }));
-      if (!res.ok) setMsg(friendlyError(res.error, "Couldn't cancel yet — try again in a moment."));
+      if (!res.ok) setMsg(friendlyError(res.error, "Couldn't cancel yet. Try again in a moment."));
       await refresh();
     } finally {
       setBusy(false);
@@ -348,11 +348,11 @@ export function TournamentRoom({ id }: { id: string }) {
       const ok = await reclaimStalled(tid).catch(() => false);
       const res = await syncTournamentCancelled(tid).catch(() => ({ ok: false, error: undefined as string | undefined }));
       if (!ok && !res.ok) {
-        setMsg(friendlyError(res.error, "Not refundable yet — the contract windows haven't lapsed."));
+        setMsg(friendlyError(res.error, "Not refundable yet. The contract windows haven't lapsed."));
       }
       await refresh();
     } catch (e: any) {
-      setMsg(friendlyError(e, "Refund failed — try again shortly."));
+      setMsg(friendlyError(e, "Refund failed. Try again shortly."));
     } finally {
       setBusy(false);
     }
@@ -362,7 +362,7 @@ export function TournamentRoom({ id }: { id: string }) {
     <div className="mx-auto w-full max-w-2xl px-5 pb-28 pt-4">
       {holdAtTable ? (
         <span className="inline-flex w-fit items-center gap-2 rounded-full glass px-3 py-1.5 text-sm text-amber">
-          ⚔️ Cup in progress — you&apos;re at the table
+          ⚔️ Cup in progress: you&apos;re at the table
         </span>
       ) : (
         <Link href="/tournaments" className="inline-flex w-fit items-center gap-2 rounded-full glass px-3 py-1.5 text-sm text-ink-dim">
@@ -474,14 +474,14 @@ export function TournamentRoom({ id }: { id: string }) {
               if (left <= 0)
                 return (
                   <p className="mt-2 text-[12px] font-semibold text-rose">
-                    Join window closed — refunding everyone on-chain (takes ~15 seconds)…
+                    Join window closed. Refunding everyone on-chain (takes ~15 seconds)…
                   </p>
                 );
               const m = Math.floor(left / 60000);
               const s = Math.floor((left % 60000) / 1000);
               return (
                 <p className={cn("nums mt-2 text-[12px] font-semibold", left < 120000 ? "text-rose" : "text-amber")}>
-                  ⏱ Join window closes in {m}:{s.toString().padStart(2, "0")} — everyone must stake before then
+                  ⏱ Join window closes in {m}:{s.toString().padStart(2, "0")}. Everyone must stake before then
                 </p>
               );
             })()}
@@ -495,7 +495,7 @@ export function TournamentRoom({ id }: { id: string }) {
             {iAmOut ? (
               <div className="text-center">
                 <p className="font-semibold text-ink">You&apos;re out of the cup</p>
-                <p className="mt-1 text-sm text-ink-dim">Stay and watch the table play out — or bow out now.</p>
+                <p className="mt-1 text-sm text-ink-dim">Stay and watch the table play out, or bow out now.</p>
                 <Link
                   href="/tournaments"
                   className="mt-3 inline-flex items-center justify-center gap-1.5 rounded-xl border border-line bg-void-800 px-5 py-2.5 text-[13px] font-medium text-ink-dim transition-colors hover:text-rose"
@@ -514,7 +514,7 @@ export function TournamentRoom({ id }: { id: string }) {
               <p className="text-center text-sm text-ink-dim">
                 {bracket.length === 0
                   ? "Drawing the bracket…"
-                  : "You're through — waiting for the other matches. Watch the table below."}
+                  : "You're through. Waiting for the other matches. Watch the table below."}
               </p>
             )}
             <button onClick={settle} disabled={busy} className="flex w-full items-center justify-center gap-2 rounded-2xl border border-line bg-void-800 py-2.5 text-[12px] text-ink-dim transition-colors hover:text-ink disabled:opacity-60">
@@ -539,7 +539,7 @@ export function TournamentRoom({ id }: { id: string }) {
                       <p className="text-2xl">{MEDAL[myTablePlace] ?? "✅"}</p>
                       <p className="mt-1 font-semibold text-ink">
                         You finished {["1st", "2nd", "3rd"][myTablePlace] ?? `${myTablePlace + 1}th`}
-                        {myTablePlace < 3 ? " — prize locked" : ""}
+                        {myTablePlace < 3 ? " · prize locked" : ""}
                       </p>
                       <p className="mt-0.5 text-sm text-ink-dim">Your cards are done. Watch the table decide the rest.</p>
                     </div>
@@ -572,7 +572,7 @@ export function TournamentRoom({ id }: { id: string }) {
           <div className="text-center">
             <p className="font-semibold text-ink">Knocked out</p>
             <p className="mt-1 text-sm text-ink-dim">
-              You fell in round {meRow?.eliminated_round}. Stick around — the {stage.toLowerCase()} is live below.
+              You fell in round {meRow?.eliminated_round}. Stick around, the {stage.toLowerCase()} is live below.
             </p>
           </div>
         ) : (
@@ -598,12 +598,12 @@ export function TournamentRoom({ id }: { id: string }) {
         )}
       </div>
 
-      {/* bracket — the tournament table */}
+      {/* bracket, the tournament table */}
       {isBracketCup && bracket.length > 0 && (
         <BracketTree tournament={t} bracket={bracket} me={me} profiles={profiles} onPlay={(m) => setPlayingMatch(m)} />
       )}
 
-      {/* survival table — live seats, card counts, locked podium places */}
+      {/* survival table, live seats, card counts, locked podium places */}
       {isTableCup && tableMatch && (
         <div className="mt-6">
           <p className="mb-3 flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-ink-faint">
@@ -685,7 +685,7 @@ export function TournamentRoom({ id }: { id: string }) {
               >
                 <div className="flex min-w-0 items-center gap-3">
                   <span className="w-6 shrink-0 text-center text-sm">
-                    {showMedal ? MEDAL[medalIdx] : <span className="text-ink-faint">{out ? "—" : i + 1}</span>}
+                    {showMedal ? MEDAL[medalIdx] : <span className="text-ink-faint">{out ? "-" : i + 1}</span>}
                   </span>
                   <Avatar
                     image={profiles[p.address.toLowerCase()]?.avatar_image || undefined}

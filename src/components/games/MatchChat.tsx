@@ -17,7 +17,7 @@ interface Msg {
   created_at: string;
 }
 
-// one-tap taunts — the banter layer. These pop BIG over the board for both
+// one-tap taunts, the banter layer. These pop BIG over the board for both
 // players (see the floating overlay below), because playing your cousin at Whot
 // was never quiet.
 const QUICK = ["🔥", "😂", "😮‍💨", "Is that all? 😏", "Too easy 😎", "Hurry up ⏳", "Nice move 👌", "GG 🤝", "Rematch?"];
@@ -66,7 +66,7 @@ export function MatchChat({ matchId, me }: { matchId: bigint; me: string }) {
       const data = await res.json();
       if (Array.isArray(data.messages)) setMsgs(data.messages);
     } catch {
-      /* offline blip — next poll catches up */
+      /* offline blip, next poll catches up */
     }
   }, [matchId]);
 
@@ -127,7 +127,7 @@ export function MatchChat({ matchId, me }: { matchId: bigint; me: string }) {
 
   return (
     <>
-      {/* taunts pop big over the board — the banter both players see */}
+      {/* taunts pop big over the board, the banter both players see */}
       <AnimatePresence>
         {taunt && (
           <motion.div
@@ -151,7 +151,7 @@ export function MatchChat({ matchId, me }: { matchId: bigint; me: string }) {
         )}
       </AnimatePresence>
 
-      {/* floating bubble — pinned to the right edge at mid-height so it never
+      {/* floating bubble, pinned to the right edge at mid-height so it never
           sits over the hand of cards (bottom) or the opponent strip (top) */}
       <motion.button
         onClick={() => setOpen((o) => !o)}

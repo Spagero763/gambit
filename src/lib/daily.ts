@@ -19,7 +19,7 @@ export function daySeed(n: number): number {
 }
 
 // A different game each day. Block Blitz days are a score battle on the same
-// seeded board; the others are "beat the bot" days — win any free game of it
+// seeded board; the others are "beat the bot" days, win any free game of it
 // and the challenge is cleared.
 export const DAILY_GAMES = ["blocks", "chess", "snakes", "tic-tac-toe", "whot"] as const;
 export type DailyGame = (typeof DAILY_GAMES)[number];
@@ -90,7 +90,7 @@ export function recordDaily(n: number, score: number): { result: DailyResult; st
     localStorage.setItem(key(n), JSON.stringify(result));
     localStorage.setItem(STREAK_KEY, JSON.stringify({ streak, day: n }));
   } catch {
-    /* private mode — the run still counts on screen */
+    /* private mode, the run still counts on screen */
   }
   return { result, streak, first: true };
 }

@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { Progress, levelInfo, loadProgress } from "@/lib/progress";
 
 /**
- * Achievements — long-term goals beyond the daily loop. Derived entirely from
+ * Achievements, long-term goals beyond the daily loop. Derived entirely from
  * the progression we already track (games played, wins, streak, level), so
  * there's no schema and no new data: they just light up as you play.
  */
@@ -12,7 +12,7 @@ export interface Achievement {
   id: string;
   name: string;
   desc: string;
-  icon: string; // emoji — reads instantly, no asset
+  icon: string; // emoji, reads instantly, no asset
   tier: "bronze" | "silver" | "gold";
   /** current numeric progress + the goal, from a Progress snapshot */
   measure: (p: Progress) => { value: number; goal: number };
@@ -70,7 +70,7 @@ export function useNewAchievements(p: Progress): { newly: Achievement[]; dismiss
 
   useEffect(() => {
     // Seed the baseline from the REAL stored progress (read synchronously), not
-    // the default snapshot the hook starts with — otherwise everything a
+    // the default snapshot the hook starts with, otherwise everything a
     // returning player has already earned would fire as "new" on first load.
     if (!seededRef.current) {
       seededRef.current = true;

@@ -8,11 +8,11 @@ import { notify } from "@/lib/server/push";
 
 /**
  * Bracket cups: four players stake into ONE escrow pot, then play real 1v1
- * sub-matches — two semi-finals on separate boards, winners meet in the final,
+ * sub-matches, two semi-finals on separate boards, winners meet in the final,
  * losers play a bronze match (the pot pays exactly top three: 50/30/20).
  *
  * Sub-matches are ordinary rows in `matches` (so the existing boards, move
- * auth, chat and turn-forfeit all just work) — but they carry tournament_id,
+ * auth, chat and turn-forfeit all just work), but they carry tournament_id,
  * hold no stake of their own, and NEVER settle on-chain. Only the finished
  * bracket settles the tournament's escrow once, to [champion, runner-up, 3rd].
  */
@@ -33,7 +33,7 @@ const SEMIS = (cap: number) => (cap === 8 ? [4, 5] : [0, 1]);
 const BRONZE = (cap: number) => (cap === 8 ? 6 : 2);
 const FINAL = (cap: number) => (cap === 8 ? 7 : 3);
 
-/** Deterministic shuffle from the tournament seed — fair, reproducible draw. */
+/** Deterministic shuffle from the tournament seed, fair, reproducible draw. */
 function drawOrder<T>(arr: T[], seed: number): T[] {
   const a = [...arr];
   let s = seed >>> 0 || 1;
@@ -79,7 +79,7 @@ async function createSubMatch(
     priv = split.priv;
   }
   // ORDER MATTERS: match_private has a foreign key onto matches(id), so the
-  // match row must exist FIRST — writing priv before it silently failed and
+  // match row must exist FIRST, writing priv before it silently failed and
   // dealt a Whot sub-match with no hands.
   const { error: mErr } = await db.from("matches").upsert(
     {
@@ -150,7 +150,7 @@ export async function seedBracket(db: SupabaseClient, t: any) {
   }
   void notify(field, {
     title: "Your cup is live! 🏁",
-    body: `Cup #${t.id}: the ${field.length === 8 ? "quarter-finals are" : "semi-finals are"} set — find your board and play.`,
+    body: `Cup #${t.id}: the ${field.length === 8 ? "quarter-finals are" : "semi-finals are"} set. Find your board and play.`,
     url: `/tournament/${t.id}`,
   });
 }
@@ -166,7 +166,7 @@ const loserOf = (m: any): string | null => {
 /**
  * Called whenever a sub-match finishes: open the bronze + final once both
  * semis are done; settle the tournament escrow once bronze + final are done.
- * Idempotent — safe to call repeatedly.
+ * Idempotent, safe to call repeatedly.
  */
 export async function advanceBracket(db: SupabaseClient, tournamentId: number) {
   const { data: t } = await db.from("tournaments").select("*").eq("id", tournamentId).maybeSingle();
@@ -207,7 +207,7 @@ export async function advanceBracket(db: SupabaseClient, tournamentId: number) {
     }
     if (!byA[FINAL(cap)]) {
       await createSubMatch(db, t, FINAL(cap), sf1W, sf2W);
-      void notify([sf1W, sf2W], { title: "The FINAL is live 🏆", body: `Cup #${t.id}: winner takes the crown — and half the pot.`, url: `/tournament/${t.id}` });
+      void notify([sf1W, sf2W], { title: "The FINAL is live 🏆", body: `Cup #${t.id}: winner takes the crown, and half the pot.`, url: `/tournament/${t.id}` });
     }
   }
 
@@ -299,7 +299,7 @@ export async function settleTable(db: SupabaseClient, tournamentId: number, rank
 
 /**
  * Force-resolve a sub-match nobody is finishing (both sides idle long past the
- * turn-forfeit window): the player to move loses — same rule the per-turn
+ * turn-forfeit window): the player to move loses, same rule the per-turn
  * forfeit enforces, applied by the field instead of the opponent.
  */
 export async function forceResolveStale(db: SupabaseClient, tournamentId: number, staleMs: number) {

@@ -5,7 +5,7 @@ import { ESCROW_ABI, ESCROW_ADDRESS } from "@/lib/escrow";
 
 const ZERO = "0x0000000000000000000000000000000000000000" as const;
 
-// Settle on the chain the match was actually created on — derived from the
+// Settle on the chain the match was actually created on, derived from the
 // match's stored chain_id, NOT a global env var. This makes payouts robust to
 // env drift (e.g. NEXT_PUBLIC_CHAIN being wrong on the server).
 const CHAINS: Record<number, { chain: typeof celo | typeof celoSepolia; rpc: string }> = {
@@ -18,7 +18,7 @@ export function relayerConfigured() {
 }
 
 /** Read a match's on-chain Status enum (1=Open 2=Active 3=Settled 4=Cancelled).
- *  No key needed — public read. Lets the server reconcile DB rows to chain truth. */
+ *  No key needed, public read. Lets the server reconcile DB rows to chain truth. */
 export async function readMatchStatus(matchId: bigint, chainId: number): Promise<number> {
   const cfg = CHAINS[chainId];
   if (!cfg) throw new Error(`Unsupported chain ${chainId}`);
@@ -52,7 +52,7 @@ export async function readMatchOnChain(matchId: bigint, chainId: number) {
     token: String(m[0]).toLowerCase(),
     creator: String(m[1]).toLowerCase(),
     stake: BigInt(m[2] as bigint),
-    // seconds, frozen at creation — past this an Open room can no longer be
+    // seconds, frozen at creation, past this an Open room can no longer be
     // joined by anyone, and cancelMatch stops being creator-only
     joinDeadline: Number(m[4]),
     gameType: Number(m[6]),
@@ -97,7 +97,7 @@ export async function readMatchPlayers(matchId: bigint, chainId: number): Promis
 /**
  * Relayer-driven cancelMatch: refunds every on-chain staker of an UNFILLED
  * match. The contract enforces who may call it (creator anytime while Open,
- * anyone once the join window has lapsed), so exposing this is safe — a revert
+ * anyone once the join window has lapsed), so exposing this is safe, a revert
  * just means "not allowed yet".
  */
 export async function cancelOnChain(matchId: bigint, chainId: number) {

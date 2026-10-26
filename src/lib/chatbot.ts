@@ -1,7 +1,7 @@
 // Gambit's help bot brain. A curated knowledge base, NOT an LLM: there is no API
 // key to leak and it cannot hallucinate a wrong answer about money. It also
 // contains ZERO knowledge of the admin panel, vaults, relayer or owner wallet by
-// construction — it cannot leak what is not in here. Scope is strictly the
+// construction, it cannot leak what is not in here. Scope is strictly the
 // player's world: what Gambit is, how to earn, how to play, how to get around.
 //
 // Voice: plain, human, no dashes, no hype. Short answers a first-timer gets.
@@ -219,7 +219,7 @@ export interface BotReply {
 }
 
 /**
- * Route a free-text question to the best curated answer — but only answer when
+ * Route a free-text question to the best curated answer, but only answer when
  * confident. When the top match is weak or two answers are close, we OFFER the
  * candidate questions instead of guessing, so the bot never confidently says the
  * wrong thing about someone's money.
@@ -227,7 +227,7 @@ export interface BotReply {
 export function askBot(query: string): BotReply {
   if (!query.trim()) return { text: FALLBACK, matched: false, suggestions: SUGGESTIONS.slice(0, 4) };
 
-  // greetings, thanks, "what can you do" — handle these before the matcher so a
+  // greetings, thanks, "what can you do", handle these before the matcher so a
   // simple "hi" is met with a welcome, not a fallback
   const chat = smallTalk(query);
   if (chat) return chat;
@@ -243,7 +243,7 @@ export function askBot(query: string): BotReply {
   // Very strong hit, answer even if a second topic is somewhat close.
   if (top.s >= 4) return { text: top.e.a(), matched: true };
 
-  // Some signal but two topics are close — ask rather than guess wrong.
+  // Some signal but two topics are close, ask rather than guess wrong.
   if (top.s >= 1) {
     const picks = ranked.filter((r) => r.s >= 1).slice(0, 3).map((r) => r.e.q);
     return {

@@ -58,7 +58,7 @@ export async function GET(req: NextRequest) {
     const withCode = await ensureRefCode(db, data);
     return NextResponse.json({ profile: withCode ?? null });
   } catch {
-    // Supabase not configured — behave as "no profile" so the app still runs.
+    // Supabase not configured, behave as "no profile" so the app still runs.
     return NextResponse.json({ profile: null });
   }
 }
@@ -99,7 +99,7 @@ export async function POST(req: NextRequest) {
           const { data: inviter } = await db.from("profiles").select("address").eq("ref_code", r).maybeSingle();
           if (inviter?.address && inviter.address !== addr) referred_by = inviter.address;
         } catch {
-          /* ref_code column missing — ignore the code */
+          /* ref_code column missing, ignore the code */
         }
       }
     }

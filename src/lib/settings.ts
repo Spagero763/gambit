@@ -5,8 +5,8 @@ import { useEffect, useState } from "react";
 export interface GambitSettings {
   soundOn: boolean;
   musicOn: boolean;
-  volume: number; // 0..1 — game sound effects
-  musicVolume: number; // 0..1 — background music, mixed well under the effects
+  volume: number; // 0..1, game sound effects
+  musicVolume: number; // 0..1, background music, mixed well under the effects
   name: string;
   avatar: string; // avatar colour id (fallback when no photo)
   avatarImage: string; // uploaded photo as a data URL ("" = none)

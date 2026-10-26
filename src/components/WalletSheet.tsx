@@ -16,7 +16,7 @@ import { Portal } from "@/components/Portal";
  * the deposit path.
  *
  * MiniPay review items 5 & 3 shape this: inside the Mini App there is no Copy,
- * Send, or Withdraw button and no raw 0x… address shown — instead the deposit
+ * Send, or Withdraw button and no raw 0x… address shown, instead the deposit
  * link opens so players can fund themselves in their own stablecoin (USD₮,
  * USDC, or USDm). On the open web the withdraw path is still there (in
  * Profile), because funds must not be trapped outside MiniPay.
@@ -43,7 +43,7 @@ export function WalletSheet({ address, onClose }: { address: `0x${string}`; onCl
             <button onClick={onClose} className="rounded-lg p-1 text-ink-faint hover:text-ink"><X className="h-5 w-5" /></button>
           </div>
 
-          {/* identity — no raw address, ever */}
+          {/* identity, no raw address, ever */}
           <div className="mt-4 flex items-center gap-3">
             <Avatar
               image={settings.avatarImage || undefined}
@@ -95,7 +95,7 @@ export function WalletSheet({ address, onClose }: { address: `0x${string}`; onCl
             <Link href="/profile" onClick={onClose} className="inline-flex items-center gap-1.5 text-[13px] font-medium text-ink-dim hover:text-ink">
               <UserIcon className="h-3.5 w-3.5" /> Profile
             </Link>
-            {/* nothing to sign out of in MiniPay — the wallet is the app */}
+            {/* nothing to sign out of in MiniPay, the wallet is the app */}
             {!miniPay && (
               <button onClick={() => logout()} className="inline-flex items-center gap-1.5 text-[13px] font-medium text-ink-faint transition-colors hover:text-rose">
                 <LogOut className="h-3.5 w-3.5" /> Sign out

@@ -24,7 +24,7 @@ export function aggregateStandings(matches: SettledMatch[]): Standing[] {
     by.get(a) ?? by.set(a, { handle: a, net: 0, wins: 0, losses: 0 }).get(a)!;
 
   for (const m of matches) {
-    if (!m.winner) continue; // draws are refunded — no effect on standings
+    if (!m.winner) continue; // draws are refunded, no effect on standings
     const stake = Number(formatUnits(BigInt(m.stake || "0"), m.decimals ?? 18));
     const winner = m.winner.toLowerCase();
     const players = [m.creator?.toLowerCase(), m.opponent?.toLowerCase()].filter(Boolean) as string[];

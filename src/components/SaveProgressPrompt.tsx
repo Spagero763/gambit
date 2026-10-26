@@ -14,7 +14,7 @@ const DISMISS_KEY = "gambit:saveprompt:dismissed";
  * Nudges a player to create a profile once they have progress worth keeping.
  * Without a profile, XP / wins / streak live only in this browser and vanish
  * if storage clears or they switch devices; a profile (one free signature)
- * pins them to their wallet and syncs everywhere — and onto the leaderboards.
+ * pins them to their wallet and syncs everywhere, and onto the leaderboards.
  */
 export function SaveProgressPrompt() {
   const p = useProgress();
@@ -30,7 +30,7 @@ export function SaveProgressPrompt() {
     }
   }, []);
 
-  // worth saving once they've built something up — or as soon as they connect
+  // worth saving once they've built something up, or as soon as they connect
   // a wallet (clear intent) without a profile yet
   const hasProgress = p.played >= 1 || p.xp >= 50 || p.streak >= 1;
   const show = !dismissed && !loading && !hasProfile && (hasProgress || isConnected);

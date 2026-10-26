@@ -80,7 +80,7 @@ export async function POST(req: NextRequest) {
       turn = s.turn;
     } else if (match.game === "whot") {
       const { pub, priv } = splitWhot(newWhot(match.creator, opp));
-      state = pub; // public row holds only top/counts/active/turn — never hands
+      state = pub; // public row holds only top/counts/active/turn, never hands
       turn = pub.turn;
       hidden = priv;
     }
@@ -106,7 +106,7 @@ export async function POST(req: NextRequest) {
     // tell the creator their challenger arrived
     void notify([match.creator], {
       title: "Opponent joined! ⚔️",
-      body: `Room #${id} is live — your match starts now.`,
+      body: `Room #${id} is live. Your match starts now.`,
       url: `/play/${match.game}?room=${id}`,
     });
 

@@ -1,7 +1,7 @@
 /**
  * A friendly, deterministic display handle for wallets with no profile name.
  * The same address always maps to the same handle (on every device), so the
- * leaderboard stays consistent — and raw 0x… hex never appears as a player's
+ * leaderboard stays consistent, and raw 0x… hex never appears as a player's
  * primary identity (a MiniPay listing rule, and just nicer to compete against).
  */
 

@@ -7,7 +7,7 @@ import { ACHIEVEMENTS, TIER_COLOR, isUnlocked, useNewAchievements } from "@/lib/
 import { Confetti } from "@/components/motion/Confetti";
 import { cn } from "@/lib/cn";
 
-/** Badge grid for the profile — unlocked ones glow, locked show progress. */
+/** Badge grid for the profile, unlocked ones glow, locked show progress. */
 export function Achievements() {
   const p = useProgress();
   const unlockedCount = ACHIEVEMENTS.filter((a) => isUnlocked(a, p)).length;

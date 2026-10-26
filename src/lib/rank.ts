@@ -1,7 +1,7 @@
 import { levelInfo } from "@/lib/progress";
 
 /**
- * Rank ladder — a named prestige tier derived entirely from the XP/level a
+ * Rank ladder, a named prestige tier derived entirely from the XP/level a
  * player already earns (no new data, no schema). Turns a bare "Lv 6" into
  * status they can chase and show off: Rookie → Bronze → Silver → Gold →
  * Platinum → Diamond → Legend. Retention + a premium, shareable identity.
@@ -45,7 +45,7 @@ export function rankForLevel(level: number, xpPct = 0): RankState {
   return { ...cur, next, progress };
 }
 
-/** Rank from raw XP — the common entry point. */
+/** Rank from raw XP, the common entry point. */
 export function rankForXp(xp: number): RankState {
   const info = levelInfo(xp);
   return rankForLevel(info.level, info.pct);

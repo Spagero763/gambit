@@ -5,7 +5,7 @@ import { completeDailyWin } from "./daily";
 
 /**
  * Local progression: XP + levels, a daily streak, and rotating daily quests.
- * This is the retention engine — reasons to come back every day. Free play
+ * This is the retention engine, reasons to come back every day. Free play
  * counts, so no wallet is required. Stored in localStorage; later we can sync
  * to Supabase for cross-device + a global XP leaderboard.
  */

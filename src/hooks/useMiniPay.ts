@@ -5,7 +5,7 @@ import { useEffect, useState } from "react";
 /**
  * Detects whether we're running inside MiniPay's in-app browser. Connection is
  * handled by Privy now (its modal lists the injected MiniPay wallet), so this
- * is detection-only — used to tailor copy/UX.
+ * is detection-only, used to tailor copy/UX.
  */
 export function useMiniPay() {
   const [isMiniPay, setIsMiniPay] = useState(false);

@@ -1,7 +1,7 @@
 "use client";
 
 /** Sharing + referral helpers. Invite links carry a short random code, never a
- *  wallet address — a link gets pasted into group chats, and a wallet in it
+ *  wallet address, a link gets pasted into group chats, and a wallet in it
  *  hands strangers the inviter's balance and full match history. */
 
 const REF_KEY = "gambit:ref";
@@ -32,7 +32,7 @@ export async function shareOrCopy(data: { title?: string; text?: string; url: st
       return "shared";
     }
   } catch {
-    // user cancelled or share failed — fall through to copy
+    // user cancelled or share failed, fall through to copy
   }
   try {
     await navigator.clipboard.writeText(`${data.text ? data.text + " " : ""}${data.url}`);

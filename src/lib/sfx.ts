@@ -3,7 +3,7 @@
 import { loadSettings } from "./settings";
 
 /**
- * Web Audio sound design — synthesized in-browser, no asset files, produced
+ * Web Audio sound design, synthesized in-browser, no asset files, produced
  * like a track rather than beeped like a form:
  *
  *   voices → stereo pan → master gain → compressor → speakers
@@ -12,7 +12,7 @@ import { loadSettings } from "./settings";
  * - SPATIAL: every voice can pan, and the games pass WHERE the action happened,
  *   so a piece dropped on the left of the board sounds from the left.
  * - SPACE: a procedurally generated impulse response gives sounds a real room
- *   to ring in (wins bloom, losses sigh) — still zero downloaded bytes.
+ *   to ring in (wins bloom, losses sigh), still zero downloaded bytes.
  * - BASS: a dedicated sub layer (40–60Hz sine thumps) under impacts, felt more
  *   than heard on phones with any bass response.
  * - GLUE: a mastering compressor keeps it loud, warm and clip-free.
@@ -61,7 +61,7 @@ function audio(): AudioContext | null {
       verb.buffer = impulse(ctx);
       verb.connect(master);
     } catch {
-      verb = null; // ancient webview — everything still plays dry
+      verb = null; // ancient webview, everything still plays dry
     }
   }
   return ctx;
@@ -186,11 +186,11 @@ type Sfx = "tap" | "place" | "win" | "lose" | "deal" | "roll" | "clear" | "captu
 export interface PlayOpts {
   /** -1 left … 1 right (e.g. board column mapped across the stereo field) */
   pan?: number;
-  /** frequency multiplier — combos pitch up (1 = normal, 1.12 = brighter) */
+  /** frequency multiplier, combos pitch up (1 = normal, 1.12 = brighter) */
   pitch?: number;
 }
 
-// Haptics paired with each sound — the fifth feedback pillar (flash, shake,
+// Haptics paired with each sound, the fifth feedback pillar (flash, shake,
 // floating text, sound, particles… and touch). A tiny physical tick makes every
 // move feel tactile on phones. Patterns in ms; iOS ignores vibrate() (no-op).
 const HAPTIC: Record<Sfx, number | number[]> = {
@@ -209,7 +209,7 @@ function buzz(sound: Sfx) {
   try {
     if (typeof navigator !== "undefined" && "vibrate" in navigator) navigator.vibrate(HAPTIC[sound]);
   } catch {
-    /* not supported — fine */
+    /* not supported, fine */
   }
 }
 
@@ -217,7 +217,7 @@ export function play(sound: Sfx, opts: PlayOpts = {}) {
   const s = loadSettings();
   if (!s.soundOn) return;
   const v = Math.min(1, Math.max(0, s.volume));
-  if (v <= 0) return; // muted mutes the haptics too — one switch rules all
+  if (v <= 0) return; // muted mutes the haptics too, one switch rules all
   buzz(sound);
   const ac = audio();
   if (!ac) return;
@@ -239,7 +239,7 @@ export function play(sound: Sfx, opts: PlayOpts = {}) {
       break;
 
     case "capture":
-      // heavier knock — two pieces colliding, with real weight under it
+      // heavier knock, two pieces colliding, with real weight under it
       noise({ dur: 0.07, peak: V(0.24), filter: 2600, sweepTo: 500, pan });
       tone({ freq: 150, type: "triangle", dur: 0.17, peak: V(0.22), sweepTo: 60, pan });
       tone({ freq: 320, type: "square", dur: 0.05, peak: V(0.08), pan });
@@ -247,7 +247,7 @@ export function play(sound: Sfx, opts: PlayOpts = {}) {
       break;
 
     case "check":
-      // an alarm that rings in the room — danger should feel spacious
+      // an alarm that rings in the room, danger should feel spacious
       tone({ freq: 784, type: "sine", dur: 0.1, peak: V(0.14), pan, space: 0.22 });
       tone({ freq: 1175, type: "sine", dur: 0.16, peak: V(0.14), when: 0.08, pan, space: 0.28 });
       break;
@@ -267,7 +267,7 @@ export function play(sound: Sfx, opts: PlayOpts = {}) {
       break;
 
     case "clear":
-      // rising sparkle arpeggio — combos pitch it up, and it blooms in the room
+      // rising sparkle arpeggio, combos pitch it up, and it blooms in the room
       [523, 659, 784, 1046].forEach((f, i) =>
         tone({ freq: P(f), type: "triangle", dur: 0.2, peak: V(0.13), when: i * 0.05, filter: 4000, pan, space: 0.2 })
       );
@@ -276,7 +276,7 @@ export function play(sound: Sfx, opts: PlayOpts = {}) {
 
     case "win":
       // triumphant rise, a chest-deep drop under it, then a chord that blooms
-      // in the hall with shimmer on top — a produced moment, not a beep
+      // in the hall with shimmer on top, a produced moment, not a beep
       sub({ peak: V(0.26), freq: 65, dur: 0.5 });
       [523, 659, 784, 1046, 1318].forEach((f, i) =>
         tone({ freq: f, type: "sine", dur: 0.55, peak: V(0.16), when: i * 0.08, space: 0.16 })
@@ -292,7 +292,7 @@ export function play(sound: Sfx, opts: PlayOpts = {}) {
       break;
 
     case "lose":
-      // soft descending minor with a low sigh — it should ache a little
+      // soft descending minor with a low sigh, it should ache a little
       sub({ peak: V(0.14), freq: 48, dur: 0.5 });
       [392, 330, 262].forEach((f, i) =>
         tone({ freq: f, type: "sine", dur: 0.34, peak: V(0.15), when: i * 0.13, sweepTo: f * 0.94, filter: 1800, space: 0.25 })

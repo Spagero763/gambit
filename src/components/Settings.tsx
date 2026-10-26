@@ -246,7 +246,7 @@ export function Settings() {
         <p className="mt-1 text-[10px] text-ink-faint">Music by Kevin MacLeod (incompetech.com) · CC BY 4.0</p>
       </div>
 
-      {/* support — a real human answers on WhatsApp; required to be reachable in-app */}
+      {/* support, a real human answers on WhatsApp; required to be reachable in-app */}
       <a
         href="https://wa.me/2348060158364?text=Hi%20Gambit%20support%2C%20I%20need%20help%20with"
         target="_blank"
@@ -262,10 +262,10 @@ export function Settings() {
         </span>
       </a>
 
-      {/* your wallet is YOURS — key export (embedded wallets only) */}
+      {/* your wallet is YOURS, key export (embedded wallets only) */}
       <ExportWallet />
 
-      {/* legal — required to be reachable in-app (MiniPay listing rule) */}
+      {/* legal, required to be reachable in-app (MiniPay listing rule) */}
       <div className="mt-4 flex items-center justify-center gap-4 text-[11px] text-ink-faint">
         <Link href="/terms" className="transition-colors hover:text-ink">Terms of Service</Link>
         <span>·</span>
@@ -280,7 +280,7 @@ export function Settings() {
  *
  * This is what makes Gambit genuinely yours: the escrow has no owner withdraw,
  * and you can walk away with your wallet whenever you like. Privy opens its own
- * secure modal to reveal the key — it never touches our servers or our code.
+ * secure modal to reveal the key, it never touches our servers or our code.
  *
  * Only shown for Privy EMBEDDED wallets. People who signed in with MiniPay or
  * another wallet already hold their own keys, so there is nothing to export.

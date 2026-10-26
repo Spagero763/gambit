@@ -16,7 +16,7 @@ import { captureRef } from "@/lib/share";
 
 /**
  * Best display name we can infer from a social sign-in, so email/Google/
- * Farcaster users get a real name on the leaderboard instead of their 0x —
+ * Farcaster users get a real name on the leaderboard instead of their 0x, 
  * without typing anything. They can still change it in Settings.
  */
 function suggestedName(user: any): string {
@@ -77,7 +77,7 @@ export function ProfileSync() {
           });
         } else if (!s.name) {
           // brand-new (often social) sign-in with no saved profile and no name
-          // yet — seed a friendly default from their Google/Farcaster/email id
+          // yet, seed a friendly default from their Google/Farcaster/email id
           const guess = suggestedName(user);
           if (guess) saveSettings({ ...s, name: guess });
         }
@@ -90,7 +90,7 @@ export function ProfileSync() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [address, user]);
 
-  // push progression (debounced) — only writes if a session token exists
+  // push progression (debounced), only writes if a session token exists
   useEffect(() => {
     if (!address) return;
     const t = setTimeout(() => {

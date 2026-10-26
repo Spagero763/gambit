@@ -100,7 +100,7 @@ function evaluate(game: Chess): number {
   return score;
 }
 
-/** Captures and promotions first — sharpens alpha-beta pruning (MVV-LVA-ish). */
+/** Captures and promotions first, sharpens alpha-beta pruning (MVV-LVA-ish). */
 function order(moves: Move[]): Move[] {
   return [...moves].sort((a, b) => weight(b) - weight(a));
 }

@@ -1,5 +1,5 @@
 // Server-authoritative snakes & ladders. The server rolls the dice so a client
-// can never pick its own number — essential once USDm is on the line.
+// can never pick its own number, essential once USDm is on the line.
 import { randomInt } from "node:crypto";
 import { jumpTo } from "@/lib/games/snakesLayout";
 

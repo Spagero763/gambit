@@ -1,4 +1,4 @@
-// Weekly Cup calendar — shared by client and server so both derive the same
+// Weekly Cup calendar, shared by client and server so both derive the same
 // week, board seed and deadline with no coordination. Weeks run Monday 00:00
 // UTC → Monday 00:00 UTC.
 
@@ -18,7 +18,7 @@ export const weekOf = (key: string) => Number(key.slice(1));
 export const weekStart = (i: number) => EPOCH_MONDAY + i * WEEK_MS;
 export const weekEnd = (i: number) => weekStart(i) + WEEK_MS;
 
-/** Deterministic board seed for the week — everyone plays the same board. */
+/** Deterministic board seed for the week, everyone plays the same board. */
 export function weekSeed(i: number): number {
   const s = (i * 2654435761) % 0x7fffffff; // Knuth multiplicative hash
   return s > 0 ? s : 1;

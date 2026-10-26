@@ -1,6 +1,6 @@
 // MiniPay compatibility helpers (listing rules from docs.minipay.xyz).
 //
-// MiniPay is Opera's stablecoin wallet: users hold USDT/USDC/USDm and NO CELO —
+// MiniPay is Opera's stablecoin wallet: users hold USDT/USDC/USDm and NO CELO, 
 // the wallet pays network fees in stablecoins itself (fee abstraction). Its
 // in-app browser injects window.ethereum with isMiniPay, requires apps to
 // connect silently (no button, no modal, no signature on load), and only
@@ -32,7 +32,7 @@ export function miniPayTx(): { type: "legacy" } | Record<string, never> {
 
 /**
  * Should we skip the "you need CELO for the network fee" preflight? Inside
- * MiniPay the answer is yes — users hold zero CELO by design and MiniPay pays
+ * MiniPay the answer is yes, users hold zero CELO by design and MiniPay pays
  * network fees from their stablecoin balance, so the check would wrongly block.
  */
 export function skipGasPreflight(): boolean {

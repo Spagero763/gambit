@@ -15,7 +15,7 @@ export const runtime = "nodejs";
 // A staked room has a ten minute join window. Miss it and the contract refuses
 // further joins, but it does not hand the money back on its own. Until this
 // existed nothing ever called cancelMatch, so an unfilled room sat there holding
-// the creator's stake — one had been stuck for eighteen days. The money was
+// the creator's stake, one had been stuck for eighteen days. The money was
 // never lost, since cancelMatch is permissionless once the window lapses, but
 // nobody was actually doing it, which to the player is the same thing.
 //
@@ -29,7 +29,7 @@ export const runtime = "nodejs";
 // that is still Open and past its deadline, and it can only pay the original
 // stakers. There is no argument this route could pass that sends money somewhere
 // else, which is what makes it safe to run unattended.
-const SCAN_DEPTH = 60; // ids back from the newest — comfortably covers the backlog
+const SCAN_DEPTH = 60; // ids back from the newest, comfortably covers the backlog
 const MAX_PER_RUN = 5; // keep one invocation cheap; the next run takes the rest
 const MIN_GAP_MS = 60_000;
 

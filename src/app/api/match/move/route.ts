@@ -126,7 +126,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ ok: true, finished: false, state: outcome.state });
     }
 
-    // bracket sub-match: no money here — the tournament escrow pays the podium.
+    // bracket sub-match: no money here, the tournament escrow pays the podium.
     // A draw can't advance a bracket, so it triggers an instant rematch.
     if (match.tournament_id) {
       if (!outcome.winner) {
@@ -164,7 +164,7 @@ export async function POST(req: NextRequest) {
       .eq("id", Number(id));
 
     // first staked match for an invited player? pay the referral bonus
-    // (idempotent — the vault pays each key once, so every settle may try)
+    // (idempotent, the vault pays each key once, so every settle may try)
     void creditReferrals({ ...match, winner: outcome.winner });
 
     // result pushes: paid winner / refunded draw / commiserate loser
@@ -184,7 +184,7 @@ export async function POST(req: NextRequest) {
         });
       }
     } else {
-      void notify(seats, { title: "Draw — stakes refunded", body: "Your stake is back in your wallet.", url: "/" });
+      void notify(seats, { title: "Draw: stakes refunded", body: "Your stake is back in your wallet.", url: "/" });
     }
 
     return NextResponse.json({

@@ -27,7 +27,7 @@ interface LiveCup {
 }
 
 /**
- * "Your games" — one tap back into anything you have running: live 1v1s
+ * "Your games", one tap back into anything you have running: live 1v1s
  * (deep-links auto-resume the board) and cups you're entered in. The single
  * most important navigation aid: nobody should ever lose a live match because
  * they closed the app.

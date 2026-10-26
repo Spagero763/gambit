@@ -90,7 +90,7 @@ export function Events() {
           </div>
           <h2 className="mt-3 text-xl font-semibold tracking-tight text-ink">Block Blitz · Weekly Showdown</h2>
           <p className="mt-1 text-[13px] leading-relaxed text-ink-dim">
-            Highest single-game score wins the week. Free to enter — connect your wallet to put your score on the board.
+            Highest single-game score wins the week. Free to enter. Connect your wallet to put your score on the board.
           </p>
           <div className="mt-4 flex items-center gap-3">
             <Link href="/play/blocks" className="btn-primary inline-flex items-center gap-1.5 rounded-xl px-4 py-2.5 text-sm shadow-glow">

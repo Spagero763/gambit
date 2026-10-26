@@ -17,11 +17,11 @@ import { symbolForToken, decimalsForToken } from "@/lib/tokens";
 
 // Referral bonus: the INVITER is paid from the on-chain RewardsVault when an
 // invited friend settles their FIRST staked match. That is the whole condition.
-// Playing a staked match is its own anti-farming gate — the friend must put real
+// Playing a staked match is its own anti-farming gate, the friend must put real
 // money at risk, which costs more than the bonus pays.
 //
 // The payment key is derived from the FRIEND's wallet, and the vault pays each
-// key exactly once — one bonus per friend, ever, enforced on-chain. No
+// key exactly once, one bonus per friend, ever, enforced on-chain. No
 // bookkeeping table needed.
 //
 // The payout token and its decimals are read from the vault, so changing the
@@ -78,7 +78,7 @@ export const refKey = (invitee: string) =>
  * it looks: USDT is 6 decimals and USDm is 18, so a hard-coded 18 would compute
  * a payout 10^12 times too large against a USDT vault.
  *
- * Cached per process — the value cannot change for a given vault address.
+ * Cached per process, the value cannot change for a given vault address.
  */
 const tokenCache = new Map<string, { address: `0x${string}`; symbol: string; decimals: number }>();
 
@@ -194,7 +194,7 @@ export interface SettledMatch {
 
 /**
  * Fire-and-forget after a staked match settles: pay the referral bonus for any
- * player who was invited and hasn't been credited yet. Never throws — a
+ * player who was invited and hasn't been credited yet. Never throws, a
  * referral hiccup must not affect match settlement.
  *
  * Only a decided match counts, since a draw refunds both sides and proves
@@ -213,7 +213,7 @@ export async function creditReferrals(m: SettledMatch): Promise<void> {
       try {
         await payInviterFor(p, seats.find((s) => s !== p));
       } catch {
-        /* next player — the vault key makes retries safe on a future settle */
+        /* next player, the vault key makes retries safe on a future settle */
       }
     }
   } catch {

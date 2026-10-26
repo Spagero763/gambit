@@ -25,7 +25,7 @@ const MIN_STAKE: Record<string, number> = Object.fromEntries(GAMES.map((g) => [g
  */
 export async function POST(req: NextRequest) {
   try {
-    // registering also broadcasts a push to every subscriber — keep it tight
+    // registering also broadcasts a push to every subscriber, keep it tight
     const rl = limited(req, "register", 10, 60_000);
     if (rl) return rl;
     const { id, game, chainId, creator } = await req.json();

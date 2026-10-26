@@ -27,7 +27,7 @@ export function MusicPlayer() {
   const [s] = useSettings();
   const pathname = usePathname();
 
-  // music has its own level, mixed under the sound effects — at equal volume it
+  // music has its own level, mixed under the sound effects, at equal volume it
   // fought the game and that is what made it feel cheap
   const level = s.musicVolume ?? 0.3;
 

@@ -3,7 +3,7 @@ import crypto from "crypto";
 /**
  * Lightweight session token so a wallet can sync its progression after a single
  * sign-in, without signing again on every update. HMAC-signed (address + expiry)
- * with a server-only secret. Not a security boundary for funds — it only gates
+ * with a server-only secret. Not a security boundary for funds, it only gates
  * writes to that wallet's own cosmetic profile row.
  */
 const SECRET =

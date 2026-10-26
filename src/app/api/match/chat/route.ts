@@ -25,7 +25,7 @@ export async function GET(req: NextRequest) {
   }
 }
 
-/** POST { id, player, body, token } — only a seated, signed-in player may chat. */
+/** POST { id, player, body, token }, only a seated, signed-in player may chat. */
 export async function POST(req: NextRequest) {
   try {
     const rl = limited(req, "chat", 20, 10_000);

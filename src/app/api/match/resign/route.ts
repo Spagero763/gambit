@@ -11,7 +11,7 @@ export const runtime = "nodejs";
 
 /**
  * Resign a staked match: you concede, your opponent wins the pot instantly.
- * No waiting out the idle-forfeit window, no hostage matches. Authenticated —
+ * No waiting out the idle-forfeit window, no hostage matches. Authenticated, 
  * resigning costs you your stake, so only your own session token may do it.
  *
  * Body: { id, player, token }
@@ -35,7 +35,7 @@ export async function POST(req: NextRequest) {
     const participants = [match.creator, match.opponent].filter(Boolean).map((a: string) => a.toLowerCase());
     if (!participants.includes(me)) return NextResponse.json({ error: "Not a player in this match" }, { status: 403 });
     const winner = participants.find((a) => a !== me);
-    if (!winner) return NextResponse.json({ error: "No opponent yet — cancel the room instead" }, { status: 409 });
+    if (!winner) return NextResponse.json({ error: "No opponent yet. Cancel the room instead" }, { status: 409 });
 
     // bracket sub-match: concede advances the bracket; the tournament escrow
     // pays the podium later, so there's no money to move here
@@ -44,7 +44,7 @@ export async function POST(req: NextRequest) {
       await advanceBracket(db, Number(match.tournament_id));
       void notify([winner], {
         title: "Opponent resigned ✅",
-        body: `Room #${id}: they conceded — you advance.`,
+        body: `Room #${id}: they conceded, you advance.`,
         url: `/tournament/${match.tournament_id}`,
       });
       return NextResponse.json({ ok: true, settled: true, winner });
@@ -64,7 +64,7 @@ export async function POST(req: NextRequest) {
       await db.from("matches").update({ status: "settled", settle_tx: settleTx, settle_error: null }).eq("id", Number(id));
       void creditReferrals({ ...match, winner });
       void notify([winner], {
-        title: "Opponent resigned — you win! 💰",
+        title: "Opponent resigned. You win! 💰",
         body: `Room #${id}: the pot is on its way to your wallet.`,
         url: "/",
       });
@@ -72,7 +72,7 @@ export async function POST(req: NextRequest) {
     } catch (e: any) {
       const settle_error = String(e?.shortMessage ?? e?.message ?? "settle failed").slice(0, 300);
       await db.from("matches").update({ settle_error }).eq("id", Number(id));
-      // stays in `settling` — the winner's client can drive the retry path
+      // stays in `settling`, the winner's client can drive the retry path
       return NextResponse.json({ ok: true, settled: false, winner, error: settle_error }, { status: 200 });
     }
   } catch (e: any) {

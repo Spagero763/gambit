@@ -33,7 +33,7 @@ function clientIp(req: NextRequest): string {
 /** Returns a 429 response if the caller is over the limit, else null. */
 export function limited(req: NextRequest, name: string, limit = 30, windowMs = 10_000): NextResponse | null {
   if (!rateLimit(`${name}:${clientIp(req)}`, limit, windowMs)) {
-    return NextResponse.json({ error: "Too many requests — slow down." }, { status: 429 });
+    return NextResponse.json({ error: "Too many requests. Slow down." }, { status: 429 });
   }
   return null;
 }

@@ -61,7 +61,7 @@ export async function GET(req: NextRequest) {
     if (!match) return NextResponse.json({ error: "Match not found" }, { status: 404 });
     let priv = await loadPrivate(db, id);
     // Self-heal: an active match with no private state means the deal was
-    // lost (e.g. the old bracket FK ordering bug) — nobody has seen a card,
+    // lost (e.g. the old bracket FK ordering bug), nobody has seen a card,
     // so dealing fresh is fair and unblocks both players.
     if (!priv && match.game === "whot" && match.status === "active" && match.creator && match.opponent) {
       await rematchSubMatch(db, match);
@@ -135,7 +135,7 @@ export async function POST(req: NextRequest) {
         const MEDALS = ["🥇 1st", "🥈 2nd", "🥉 3rd"];
         void notify([justDone], {
           title: `${MEDALS[pub.finished.length - 1] ?? "Finished"}! 🃏`,
-          body: `You're out of cards — placement locked. The table plays on.`,
+          body: `You're out of cards. Placement locked. The table plays on.`,
           url: match.tournament_id ? `/tournament/${match.tournament_id}` : "/",
         });
       }
@@ -150,7 +150,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json(view({ ...match, state: pub }, nextPriv, String(player)));
     }
 
-    // tournament play: nothing settles on this match — the escrow pays once.
+    // tournament play: nothing settles on this match, the escrow pays once.
     if (match.tournament_id) {
       if (!(await commit({ state: pub, status: "settled", winner: outcome.winner, settle_error: null }))) return raced();
       if (match.bracket_slot === TABLE_SLOT && outcome.ranking) {

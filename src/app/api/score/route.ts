@@ -7,7 +7,7 @@ export const runtime = "nodejs";
 const GAMES = new Set(["blocks", "chess", "tic-tac-toe", "snakes", "whot"]);
 
 /**
- * Submit a free-play score for the weekly events board. Casual / no funds —
+ * Submit a free-play score for the weekly events board. Casual / no funds, 
  * rate-limited and clamped, requires a connected wallet address.
  *
  * Body: { address, game, score }

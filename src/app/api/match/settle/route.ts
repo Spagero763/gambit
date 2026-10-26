@@ -63,7 +63,7 @@ export async function POST(req: NextRequest) {
     if (match.status === "settled") {
       return NextResponse.json({ ok: true, settled: true, settleTx: match.settle_tx });
     }
-    // A forced refund (winner = none) is admin-only — otherwise anyone could
+    // A forced refund (winner = none) is admin-only, otherwise anyone could
     // grief an in-progress match by refunding it. Players abandon-recover via
     // /api/match/claim (timeout forfeit) or the on-chain reclaimStalled instead.
     if (refund) {

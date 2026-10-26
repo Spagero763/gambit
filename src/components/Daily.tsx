@@ -16,7 +16,7 @@ export function ProgressCard() {
   const lvl = levelInfo(p.xp);
   const claimable = p.quests.some((q) => q.progress >= q.goal && !q.claimed);
   // Claiming pops a centered reward so it's tappable instantly, wherever the
-  // quest sits on the page — no scrolling to the inline row.
+  // quest sits on the page, no scrolling to the inline row.
   const [reveal, setReveal] = useState<{ xp: number; label: string } | null>(null);
 
   return (
@@ -102,7 +102,7 @@ export function ProgressCard() {
       </ul>
     </div>
 
-    {/* claim reveal — portaled to <body> so it centers on the viewport */}
+    {/* claim reveal, portaled to <body> so it centers on the viewport */}
     <Portal>
     <AnimatePresence>
       {reveal && (
@@ -141,7 +141,7 @@ export function ProgressCard() {
               <Sparkles className="h-6 w-6 text-amber" /> +{reveal.xp} XP
             </motion.p>
             <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.4 }} className="mt-1 text-sm text-ink-dim">
-              Quest complete — {reveal.label}
+              Quest complete: {reveal.label}
             </motion.p>
             <button onClick={() => setReveal(null)} className="btn-primary mt-6 w-full rounded-2xl py-3 text-sm shadow-glow">
               Collect
@@ -155,14 +155,14 @@ export function ProgressCard() {
   );
 }
 
-/** Compact strip for the home page — a daily-return hook that links to profile. */
+/** Compact strip for the home page, a daily-return hook that links to profile. */
 export function DailyStrip() {
   const p = useProgress();
   const lvl = levelInfo(p.xp);
   const claimed = p.quests.filter((q) => q.claimed).length;
   const claimable = p.quests.some((q) => q.progress >= q.goal && !q.claimed);
 
-  // A brand-new visitor has streak 0, Lv 1, Quests 0/3 — a scoreboard of zeros
+  // A brand-new visitor has streak 0, Lv 1, Quests 0/3, a scoreboard of zeros
   // reads as "nobody's here." Hide it until they've actually done something, so
   // the progression surface is a reward they unlock, not dead weight on arrival.
   const fresh = p.played === 0 && p.xp === 0 && p.streak === 0 && claimed === 0;

@@ -6,7 +6,7 @@ import { limited } from "@/lib/server/rateLimit";
 export const runtime = "nodejs";
 
 /**
- * GET /api/referrals?address=0x... — the inviter's referral scoreboard:
+ * GET /api/referrals?address=0x..., the inviter's referral scoreboard:
  * everyone who joined with their link, whether each has activated (bonus paid
  * on-chain), and the running total earned. Public-read; addresses are only
  * echoed back as display data the inviter already owns.
@@ -42,7 +42,7 @@ export async function GET(req: NextRequest) {
     );
 
     const activated = perFriend.filter((f) => f.paid).length;
-    // Shared with the payout path — reading the env here directly is exactly how
+    // Shared with the payout path, reading the env here directly is exactly how
     // this drifted before, showing 0 on the card while payouts were configured.
     const per = referralAmount();
     return NextResponse.json({

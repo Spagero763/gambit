@@ -3,7 +3,7 @@ import { supabaseAdmin } from "@/lib/supabase";
 
 /**
  * Server-side push: look up the wallets' registered devices and notify them.
- * Fire-and-forget by design — a push failure must NEVER fail game logic.
+ * Fire-and-forget by design, a push failure must NEVER fail game logic.
  */
 
 const PUBLIC_KEY =
@@ -45,7 +45,7 @@ export async function notify(addresses: string[], payload: PushPayload): Promise
   }
 }
 
-/** Notify EVERY subscribed device except `except` — open-challenge broadcasts.
+/** Notify EVERY subscribed device except `except`, open-challenge broadcasts.
  *  Capped so a busy day can't turn into a notification storm. */
 export async function broadcast(payload: PushPayload, except?: string): Promise<void> {
   try {
@@ -72,7 +72,7 @@ async function sendAll(
       try {
         await webpush.sendNotification(row.sub, json);
       } catch (e: any) {
-        // endpoint gone (user revoked / browser cleared) — prune it
+        // endpoint gone (user revoked / browser cleared), prune it
         if (e?.statusCode === 404 || e?.statusCode === 410) {
           await db.from("push_subs").delete().eq("endpoint", row.endpoint);
         }

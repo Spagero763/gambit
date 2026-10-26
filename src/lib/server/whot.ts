@@ -2,8 +2,8 @@
 // here / in match_private; clients receive a redacted view.
 //
 // One engine for both formats:
-//   1v1     — order of two; first to empty their hand wins the pot.
-//   table   — 3-8 players around one board; as players finish they take
+//   1v1, order of two; first to empty their hand wins the pot.
+//   table, 3-8 players around one board; as players finish they take
 //             1st/2nd/3rd (the survival format) and the rest keep playing
 //             until the podium is decided.
 import { randomInt } from "node:crypto";
@@ -24,7 +24,7 @@ export interface WhotFull {
   pending: WhotPending | null;
   order: string[];
   turn: string;
-  finished: string[]; // placement order — players who emptied their hand
+  finished: string[]; // placement order, players who emptied their hand
 }
 
 /** Public, non-secret slice safe to store in the realtime matches row. */
@@ -38,7 +38,7 @@ export interface WhotPublic {
   finished: string[];
 }
 
-/** Secret slice — match_private only. */
+/** Secret slice, match_private only. */
 export interface WhotPrivate {
   hands: Record<string, Card[]>;
   market: Card[];
@@ -146,7 +146,7 @@ const cont = (full: WhotFull): WhotOutcome => ({ full, finished: false, winner: 
 
 /**
  * Mark a player as having emptied their hand. The game ends when only one
- * player still holds cards — the podium is the finish order plus that last
+ * player still holds cards, the podium is the finish order plus that last
  * player (1v1: just [winner]).
  */
 function finishPlayer(full: WhotFull, addr: string): WhotOutcome {
@@ -156,7 +156,7 @@ function finishPlayer(full: WhotFull, addr: string): WhotOutcome {
     const ranking = [...full.finished, ...live];
     return { full, finished: true, winner: ranking[0] ?? null, ranking, draw: false };
   }
-  // table plays on — pass the turn along
+  // table plays on, pass the turn along
   full.pending = null; // a finishing special fizzles; the table continues clean
   full.turn = nextActive(full, addr);
   return cont(full);

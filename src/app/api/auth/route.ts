@@ -8,7 +8,7 @@ export const runtime = "nodejs";
 /**
  * Sign-in: a wallet proves ownership with a signature and receives a session
  * token. The token is then required to submit moves, so an opponent can't play
- * on your behalf. No DB write — pure auth.
+ * on your behalf. No DB write, pure auth.
  *
  * Body: { address, message, signature } -> { token }
  */

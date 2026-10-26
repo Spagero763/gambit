@@ -97,7 +97,7 @@ export function Stats() {
           .select("id,stake,capacity,status,token,decimals")
           .in("status", ["active", "settling", "settled"])
           .limit(2000),
-        // a player who only ever entered a cup still staked — their money is on
+        // a player who only ever entered a cup still staked, their money is on
         // the cup, not on any match row
         supabase!.from("tournament_players").select("tournament_id,address").limit(5000),
       ]);
@@ -121,7 +121,7 @@ export function Stats() {
 
     // Only rows with real money on them are "staked". Tournament bracket
     // sub-matches are zero-stake rows and must never be counted as staked
-    // matches, or as stakers — the cup itself holds the stake.
+    // matches, or as stakers, the cup itself holds the stake.
     const stakedMatches = ms.filter((m) => isStaked(m.stake));
 
     const volume: Record<string, number> = {};

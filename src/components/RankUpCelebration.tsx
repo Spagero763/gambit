@@ -14,7 +14,7 @@ import { inviteUrl } from "@/lib/share";
 /**
  * Full-screen moment when a player crosses into a new rank tier: confetti, the
  * big rank emblem springing in, and a share button. This is the retention
- * payoff of the rank ladder — the dopamine hit that makes the next match matter.
+ * payoff of the rank ladder, the dopamine hit that makes the next match matter.
  * Mounted once, globally (see LayoutExtras).
  */
 export function RankUpCelebration() {

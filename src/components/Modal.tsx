@@ -8,7 +8,7 @@ import { Portal } from "@/components/Portal";
 /**
  * Portaled to <body> on purpose. Rendered in place, a `fixed` overlay is trapped
  * by any transformed ancestor (our CSS entrance animations end on a transform),
- * which stacks the modal BELOW later siblings — that is what made the "How it
+ * which stacks the modal BELOW later siblings, that is what made the "How it
  * works" panel appear underneath the "Play a free game" button.
  */
 export function Modal({

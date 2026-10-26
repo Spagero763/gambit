@@ -77,7 +77,7 @@ export function Leaderboard() {
     };
   }, []);
 
-  // points board — every profile by XP (free + staked players alike)
+  // points board, every profile by XP (free + staked players alike)
   useEffect(() => {
     if (sort !== "points" || points !== null || !supabase) return;
     let active = true;
@@ -98,7 +98,7 @@ export function Leaderboard() {
   const rows = useMemo<Standing[]>(() => {
     if (!raw) return [];
     const cutoff = Date.now() - 7 * 86400 * 1000;
-    // one token at a time — you can't meaningfully add USDT and USDm into one
+    // one token at a time, you can't meaningfully add USDT and USDm into one
     // "earnings" number. Legacy matches predate the token column and were all
     // USDm, so they only ever count toward the USDm board.
     const filtered = raw.filter((m) => {
@@ -178,7 +178,7 @@ export function Leaderboard() {
         </div>
       )}
 
-      {/* which token's earnings — USDT / USDC / USDm are separate boards */}
+      {/* which token's earnings, USDT / USDC / USDm are separate boards */}
       {!isPoints && (
         <div className="mt-2 flex gap-2">
           {tokens.map((t) => {

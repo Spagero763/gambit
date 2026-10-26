@@ -5,7 +5,7 @@ import { supabase } from "@/lib/supabase";
 import { AVATAR_HEX } from "@/lib/settings";
 import { handleFor } from "@/lib/handle";
 
-/** Public face of a player — what everyone else sees instead of a 0x address. */
+/** Public face of a player, what everyone else sees instead of a 0x address. */
 export interface PublicProfile {
   address: string;
   name: string | null;
@@ -19,7 +19,7 @@ export function shortAddr(a: string) {
   return `${a.slice(0, 6)}…${a.slice(-4)}`;
 }
 
-/** The name to render for an address — profile name first, then a stable
+/** The name to render for an address, profile name first, then a stable
  *  board-game handle. Raw 0x… is never anyone's primary identity. */
 export function displayName(addr: string, p?: PublicProfile | null) {
   return p?.name?.trim() || handleFor(addr);

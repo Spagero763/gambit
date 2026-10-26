@@ -19,7 +19,7 @@ import { friendlyError } from "@/lib/errors";
 import { ACTIVE_CHAIN_ID } from "@/lib/wagmi";
 import { miniPayTx, skipGasPreflight } from "@/lib/minipay";
 
-// enough CELO for a few transactions' gas — below this, wallets show scary
+// enough CELO for a few transactions' gas, below this, wallets show scary
 // fee estimates or "unavailable", so we catch it with a clear message first
 const MIN_GAS_WEI = BigInt(2_000_000_000_000_000); // 0.002 CELO
 
@@ -57,7 +57,7 @@ export function useStakeMatch() {
         publicClient.readContract({ address: tokenAddress, abi: ERC20_ABI, functionName: "balanceOf", args: [address] }) as Promise<bigint>,
       ]);
       if (bal < amount) throw new Error(`Not enough ${symbol} in this wallet to cover the stake.`);
-      // MiniPay users hold no CELO — the wallet pays gas from their stablecoins
+      // MiniPay users hold no CELO, the wallet pays gas from their stablecoins
       if (!skipGasPreflight() && gas < MIN_GAS_WEI) throw new Error("This wallet needs a little CELO for the network fee. Send it about 0.01 CELO and try again.");
     },
     [address, publicClient]
@@ -75,7 +75,7 @@ export function useStakeMatch() {
       })) as bigint;
       if (allowance < amount) {
         setStep("approving");
-        // approve a max allowance once, not the exact stake every time — the
+        // approve a max allowance once, not the exact stake every time, the
         // escrow consumes the whole allowance per match, so an exact approval
         // forces a fresh approve tx on every match. Approving max means repeat
         // players skip the approval step entirely (one less gas tx per match).
@@ -113,7 +113,7 @@ export function useStakeMatch() {
           ...miniPayTx(),
         });
         const receipt = await publicClient.waitForTransactionReceipt({ hash });
-        // waitForTransactionReceipt does NOT throw on revert — a reverted
+        // waitForTransactionReceipt does NOT throw on revert, a reverted
         // create/join silently "succeeding" is how phantom seats happen.
         if (receipt.status !== "success") throw new Error("Transaction reverted on-chain");
 
@@ -146,7 +146,7 @@ export function useStakeMatch() {
         if (!escrow || !publicClient) throw new Error("Wrong network");
         const amount = parseUnits(stakeAmount.toString(), stakeToken.decimals);
 
-        // verify the room is actually joinable before any wallet popups —
+        // verify the room is actually joinable before any wallet popups, 
         // this is what used to surface as scary gas estimates / "unavailable"
         const m = (await publicClient.readContract({
           address: escrow,
@@ -158,9 +158,9 @@ export function useStakeMatch() {
         const joinDeadline = Number(m[4]) * 1000;
         const joined = Number(m[8]);
         const capacity = Number(m[7]);
-        if (status === 0) throw new Error("That room doesn't exist — double-check the ID.");
+        if (status === 0) throw new Error("That room doesn't exist. Double-check the ID.");
         if (status !== 1) throw new Error("This room already started or was cancelled.");
-        if (Date.now() > joinDeadline) throw new Error("The join window has closed — this room can't be joined anymore.");
+        if (Date.now() > joinDeadline) throw new Error("The join window has closed. This room can't be joined anymore.");
         if (joined >= capacity) throw new Error("This room is already full.");
         // The escrow charges the room's real entry, whatever a link or listing
         // said. Refuse rather than let anyone pay more than they agreed to.
@@ -182,7 +182,7 @@ export function useStakeMatch() {
         });
         const receipt = await publicClient.waitForTransactionReceipt({ hash });
         if (receipt.status !== "success") {
-          throw new Error("Join failed on-chain — the room may be full or its join window expired");
+          throw new Error("Join failed on-chain. The room may be full or its join window expired");
         }
         setMatchId(id);
         setStep("waiting");
@@ -211,7 +211,7 @@ export function useStakeMatch() {
           ...miniPayTx(),
         });
         const receipt = await publicClient.waitForTransactionReceipt({ hash });
-        if (receipt.status !== "success") throw new Error("Cancel reverted — the room may have already started");
+        if (receipt.status !== "success") throw new Error("Cancel reverted. The room may have already started");
         return true;
       } catch (e: any) {
         setError(friendlyError(e));
@@ -236,7 +236,7 @@ export function useStakeMatch() {
           ...miniPayTx(),
         });
         const receipt = await publicClient.waitForTransactionReceipt({ hash });
-        if (receipt.status !== "success") throw new Error("Reclaim reverted — the settle window may not have lapsed yet");
+        if (receipt.status !== "success") throw new Error("Reclaim reverted. The settle window may not have lapsed yet");
         return true;
       } catch (e: any) {
         setError(friendlyError(e));

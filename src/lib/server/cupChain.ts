@@ -3,7 +3,7 @@ import { privateKeyToAccount } from "viem/accounts";
 import { celo } from "viem/chains";
 
 // The WeeklyCup prize vault on Celo mainnet. When CUP_CONTRACT is set, weekly
-// podium payouts go through the contract — one relayer transaction pays every
+// podium payouts go through the contract, one relayer transaction pays every
 // winner, the contract enforces once-per-week, and WeekSettled events are the
 // public record. Unset, the API falls back to direct treasury transfers.
 const RPC = "https://forno.celo.org";
@@ -38,7 +38,7 @@ export async function cupWeekSettledOnChain(week: number): Promise<boolean> {
   return (await pub.readContract({ address: addr, abi: cupAbi, functionName: "settled", args: [BigInt(week)] })) as boolean;
 }
 
-/** The vault's USDm balance (wei) — the prize must sit in the CONTRACT. */
+/** The vault's USDm balance (wei), the prize must sit in the CONTRACT. */
 export async function cupVaultBalance(): Promise<bigint> {
   const addr = cupContract();
   if (!addr) return BigInt(0);

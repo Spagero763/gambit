@@ -33,7 +33,7 @@ export function ShareButton({
         await (navigator as any).share({ title, text, url });
         return;
       } catch {
-        return; // user closed the native sheet — don't stack our picker on top
+        return; // user closed the native sheet, don't stack our picker on top
       }
     }
     setOpen(true);

@@ -28,7 +28,7 @@ type Mode = "withdraw" | "fund";
  * Owner-only money controls for the prize vaults.
  *
  * `sweep` on the vaults is `onlyOwner`, and the server's relayer is NOT the
- * owner — so every transaction here is signed by the connected owner wallet in
+ * owner, so every transaction here is signed by the connected owner wallet in
  * the browser. The owner key never exists server-side, which is exactly why the
  * escrow holding players' stakes has no sweep at all.
  */

@@ -22,7 +22,7 @@ export const runtime = "nodejs";
 /**
  * Staged knockout tournaments. Everyone in a round plays the same board; when
  * all alive players have submitted (or the round window lapses), the bottom
- * half is eliminated — Quarter-final → Semi-final → Final of three. The FINAL
+ * half is eliminated, Quarter-final → Semi-final → Final of three. The FINAL
  * round's scores decide the on-chain top-3 payout (50/30/20).
  */
 
@@ -38,7 +38,7 @@ const keepCount = (alive: number) => Math.max(3, Math.ceil(alive / 2));
  * When may this round be force-advanced? A round gets a full window from the
  * moment it actually starts. Prefer `round_started_at` (set on activation and
  * on each cut); if it's absent (older rows, or the column not yet added) fall
- * back to the original creation-anchored estimate — which stays identical to
+ * back to the original creation-anchored estimate, which stays identical to
  * the old behaviour, so nothing regresses. `round` is guarded to >= 1 so a
  * null/0 round can never yield an already-past deadline (the real bug: that let
  * a fresh round be force-settled the instant it activated).
@@ -61,7 +61,7 @@ async function markRoundStart(db: ReturnType<typeof supabaseAdmin>, id: number) 
   try {
     await db.from("tournaments").update({ round_started_at: new Date().toISOString() }).eq("id", id);
   } catch {
-    /* column not present yet — the creation-anchored fallback still applies */
+    /* column not present yet, the creation-anchored fallback still applies */
   }
 }
 
@@ -101,7 +101,7 @@ async function advanceOrSettle(db: ReturnType<typeof supabaseAdmin>, t: any, for
   const ranked = rankRound(alive);
 
   if (alive.length <= 3) {
-    // FINAL — settle the pot on this round's scores
+    // FINAL, settle the pot on this round's scores
     const ranking = ranked.slice(0, 3).map((p) => p.address);
     if (ranking.length < 3) return { done: false as const, error: "Need three finalists" };
     await db.from("tournaments").update({ status: "settling", winners: ranking, settle_error: null }).eq("id", t.id);
@@ -109,7 +109,7 @@ async function advanceOrSettle(db: ReturnType<typeof supabaseAdmin>, t: any, for
     try {
       const tx = await settleRanking(BigInt(t.id), ranking, Number(t.chain_id));
       await db.from("tournaments").update({ status: "settled", settle_tx: tx, settle_error: null }).eq("id", t.id);
-      // crown the podium — each winner learns their place + prize
+      // crown the podium, each winner learns their place + prize
       const MEDALS = ["🥇 Champion", "🥈 2nd place", "🥉 3rd place"];
       const SPLIT = [0.5, 0.3, 0.2];
       ranking.forEach((addr, i) => {
@@ -127,7 +127,7 @@ async function advanceOrSettle(db: ReturnType<typeof supabaseAdmin>, t: any, for
     }
   }
 
-  // CUT — eliminate the bottom of the round, reset scores for the survivors
+  // CUT, eliminate the bottom of the round, reset scores for the survivors
   const keep = keepCount(alive.length);
   const out = ranked.slice(keep).map((p) => p.address);
   if (out.length > 0) {
@@ -148,7 +148,7 @@ async function advanceOrSettle(db: ReturnType<typeof supabaseAdmin>, t: any, for
   const survivors = ranked.slice(0, keep).map((p) => p.address);
   void notify(survivors, {
     title: `You're through! ✅`,
-    body: `Cup #${t.id}: you advanced to the ${stageOf(keep)}. New board is live — play your run.`,
+    body: `Cup #${t.id}: you advanced to the ${stageOf(keep)}. New board is live. Play your run.`,
     url: `/tournament/${t.id}`,
   });
   if (out.length > 0) {
@@ -223,7 +223,7 @@ export async function POST(req: NextRequest) {
           return NextResponse.json({ error: "That game doesn't support bracket cups" }, { status: 400 });
         }
         if (capacity !== 4 && capacity !== 8) {
-          return NextResponse.json({ error: "Knockouts need a power of two — pick 4 or 8 players" }, { status: 400 });
+          return NextResponse.json({ error: "Knockouts need a power of two. Pick 4 or 8 players" }, { status: 400 });
         }
       } else if (format === "table") {
         if (game !== "whot") return NextResponse.json({ error: "Survival tables are a Whot format" }, { status: 400 });
@@ -266,11 +266,11 @@ export async function POST(req: NextRequest) {
       if (t.status !== "open") return NextResponse.json({ error: "Tournament is not open" }, { status: 409 });
       // The chain is the source of truth for seats: only players whose stake
       // actually landed in escrow may enter. (A reverted/failed join tx must
-      // never produce a phantom DB seat — that strands the whole cup.)
+      // never produce a phantom DB seat, that strands the whole cup.)
       const seated = await readMatchPlayers(BigInt(id), Number(t.chain_id));
       if (!seated.includes(addr)) {
         return NextResponse.json(
-          { error: "Your stake hasn't landed on-chain yet — confirm the join transaction and try again" },
+          { error: "Your stake hasn't landed on-chain yet. Confirm the join transaction and try again" },
           { status: 409 }
         );
       }
@@ -294,7 +294,7 @@ export async function POST(req: NextRequest) {
             allPlayers.map((p) => p.address),
             {
               title: "Your cup is live! 🏁",
-              body: `Cup #${id} is full — the ${stageOf(allPlayers.length)} has started. Play your run.`,
+              body: `Cup #${id} is full: the ${stageOf(allPlayers.length)} has started. Play your run.`,
               url: `/tournament/${id}`,
             }
           );
@@ -340,7 +340,7 @@ export async function POST(req: NextRequest) {
     }
 
     if (action === "settle") {
-      // advance the current round (or pay the final) — anyone can drive this
+      // advance the current round (or pay the final), anyone can drive this
       const { data: t } = await db.from("tournaments").select("*").eq("id", Number(id)).maybeSingle();
       if (!t) return NextResponse.json({ error: "Not found" }, { status: 404 });
       if (t.status === "settled") return NextResponse.json({ ok: true, settled: true, settleTx: t.settle_tx });
@@ -359,13 +359,13 @@ export async function POST(req: NextRequest) {
         return NextResponse.json(
           changed
             ? { ok: true, advanced: true }
-            : { error: "Matches are still being played — nothing to force yet", retryInMs: 60_000 },
+            : { error: "Matches are still being played, nothing to force yet", retryInMs: 60_000 },
           { status: changed ? 200 : 409 }
         );
       }
       if (t.format === "table") {
         // survival table: if the player to move has been idle 3+ minutes,
-        // they draw a card and the turn passes — the table can't be hostaged
+        // they draw a card and the turn passes, the table can't be hostaged
         const mid = tableMatchId(Number(id));
         const { data: tm } = await db.from("matches").select("*").eq("id", mid).maybeSingle();
         if (!tm || tm.status !== "active") {
@@ -403,7 +403,7 @@ export async function POST(req: NextRequest) {
     if (action === "sync") {
       // Self-heal from chain truth: if stakes landed on-chain but a player's
       // browser failed to report them (closed tab, network blip), import the
-      // missing seats and start the cup. Public + idempotent — the chain decides.
+      // missing seats and start the cup. Public + idempotent, the chain decides.
       const { data: t } = await db.from("tournaments").select("*").eq("id", Number(id)).maybeSingle();
       if (!t) return NextResponse.json({ error: "Not found" }, { status: 404 });
       if (t.status !== "open") return NextResponse.json({ ok: true, status: t.status });
@@ -418,7 +418,7 @@ export async function POST(req: NextRequest) {
           .from("tournament_players")
           .upsert({ tournament_id: Number(id), address: addr }, { onConflict: "tournament_id,address", ignoreDuplicates: true });
       }
-      if (onchain === 2 /* Active — full */) {
+      if (onchain === 2 /* Active, full */) {
         await db.from("tournaments").update({ status: "active" }).eq("id", Number(id));
         if (t.format === "bracket") {
           await seedBracket(db, { ...t, status: "active" });
@@ -428,7 +428,7 @@ export async function POST(req: NextRequest) {
           await markRoundStart(db, Number(id)); // score cup: round 1 starts now
           void notify(seated, {
             title: "Your cup is live! 🏁",
-            body: `Cup #${id} is full — the ${stageOf(seated.length)} has started. Play your run.`,
+            body: `Cup #${id} is full: the ${stageOf(seated.length)} has started. Play your run.`,
             url: `/tournament/${id}`,
           });
         }
@@ -438,7 +438,7 @@ export async function POST(req: NextRequest) {
     }
 
     if (action === "cancel") {
-      // Reconcile to on-chain truth — and if the escrow match never filled
+      // Reconcile to on-chain truth, and if the escrow match never filled
       // (Open past its join window), have the relayer cancel it on-chain so
       // every staker is refunded. The CONTRACT enforces who may cancel and
       // when, so this endpoint can safely be public.
@@ -446,12 +446,12 @@ export async function POST(req: NextRequest) {
       if (!t) return NextResponse.json({ error: "Not found" }, { status: 404 });
       if (t.status === "cancelled") return NextResponse.json({ ok: true, cancelled: true });
       let onchain = await readMatchStatus(BigInt(id), Number(t.chain_id));
-      if (onchain === 1 /* Open — unfilled */ && relayerConfigured()) {
+      if (onchain === 1 /* Open, unfilled */ && relayerConfigured()) {
         try {
           await cancelOnChain(BigInt(id), Number(t.chain_id));
           onchain = 4;
         } catch {
-          /* join window not lapsed yet (or raced) — fall through to 409 */
+          /* join window not lapsed yet (or raced), fall through to 409 */
         }
       }
       if (onchain === 4 /* Cancelled */) {
@@ -460,7 +460,7 @@ export async function POST(req: NextRequest) {
         void notify(
           players.map((p) => p.address),
           {
-            title: "Cup cancelled — stakes refunded",
+            title: "Cup cancelled: stakes refunded",
             body: `Cup #${id} didn't fill on-chain. Every stake was returned to its wallet.`,
             url: `/tournament/${id}`,
           }
