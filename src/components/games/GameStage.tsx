@@ -51,7 +51,7 @@ export function GameStage({
       body = <ComingSoon game={game} />;
   }
   // first-time on-board coach for free play (points the hand at the real board,
-  // tray, hand, dice…). Staked games skip it — those players know the rules.
+  // tray, hand, dice…). Staked games skip it, those players know the rules.
   return (
     <>
       {!stake && <BoardCoach slug={game.slug} />}
@@ -65,9 +65,9 @@ function ComingSoon({ game }: { game: Game }) {
     <div className="mx-auto flex w-full max-w-2xl flex-col px-5 py-5">
       <Link
         href="/"
-        className="inline-flex w-fit items-center gap-2 rounded-full glass px-3 py-1.5 text-sm text-ink-dim"
+        className="glass pressable inline-flex h-10 w-fit items-center gap-2 rounded-full px-4 text-[14px] font-semibold text-ink-dim"
       >
-        <ArrowLeft className="h-4 w-4" /> Lobby
+        <ArrowLeft className="h-4 w-4" /> Home
       </Link>
       <div className="mt-10 rounded-3xl glass p-8 text-center shadow-card">
         <div className="mx-auto h-24 w-40 overflow-hidden rounded-xl border border-white/10">

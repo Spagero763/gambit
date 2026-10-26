@@ -4,6 +4,9 @@
 
 /** Smooth "settle" curve for enters and layout shifts. */
 export const ease = [0.22, 1, 0.36, 1] as const;
+// sheets glide up and settle; wins overshoot a touch
+export const sheetEase = [0.32, 0.72, 0, 1] as const;
+export const winEase = [0.34, 1.56, 0.64, 1] as const;
 
 /** Named springs for interactions. */
 export const spring = {
@@ -34,13 +37,13 @@ export const stagger = (each = 0.055, delay = 0.04) => ({
   show: { transition: { staggerChildren: each, delayChildren: delay } },
 });
 
-/** A child that rises into place. Transform + opacity only — 60fps on cheap phones. */
+/** A child that rises into place. Transform + opacity only, 60fps on cheap phones. */
 export const rise = {
   hidden: { opacity: 0, y: 16 },
   show: { opacity: 1, y: 0, transition: { duration: 0.42, ease } },
 };
 
-/** A child that settles in with a little scale — for cards and tiles. */
+/** A child that settles in with a little scale, for cards and tiles. */
 export const settle = {
   hidden: { opacity: 0, y: 18, scale: 0.96 },
   show: { opacity: 1, y: 0, scale: 1, transition: { type: "spring", stiffness: 320, damping: 26 } },

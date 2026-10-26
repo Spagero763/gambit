@@ -5,6 +5,7 @@ import { Game } from "@/lib/games";
 import { Difficulty } from "@/lib/difficulty";
 import { GameStage } from "./GameStage";
 import { MatchSetup } from "./MatchSetup";
+import { MoneyNudge } from "./ResultOverlay";
 
 export interface StakeCtx {
   matchId: bigint;
@@ -13,6 +14,7 @@ export interface StakeCtx {
 
 export function PlayFlow({ game }: { game: Game }) {
   const [opts, setOpts] = useState<{ difficulty: Difficulty; stake?: StakeCtx } | null>(null);
+  const [setupMode, setSetupMode] = useState<"free" | "staked" | undefined>(undefined);
 
   if (game.status !== "live") return <GameStage game={game} />;
 
@@ -23,9 +25,21 @@ export function PlayFlow({ game }: { game: Game }) {
   if (!opts)
     return (
       <MatchSetup
+        key={setupMode ?? "first"}
         game={game}
+        initialMode={setupMode}
         onStart={(difficulty, stake) => setOpts({ difficulty, stake })}
       />
     );
-  return <GameStage game={game} difficulty={opts.difficulty} stake={opts.stake} />;
+
+  // a practice win is the moment to offer a real opponent
+  const toMoney = () => {
+    setSetupMode("staked");
+    setOpts(null);
+  };
+  return (
+    <MoneyNudge.Provider value={opts.stake ? undefined : toMoney}>
+      <GameStage game={game} difficulty={opts.difficulty} stake={opts.stake} />
+    </MoneyNudge.Provider>
+  );
 }

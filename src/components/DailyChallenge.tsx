@@ -33,7 +33,7 @@ function countdown(ms: number) {
 /**
  * The Daily Challenge rotates through the games. Block Blitz days are a score
  * battle on the same seeded board for everyone; the other days are beat-the-bot
- * days — win any free game of the featured game and the day is cleared. Either
+ * days, win any free game of the featured game and the day is cleared. Either
  * way the share card is the growth loop.
  */
 export function DailyChallenge() {
@@ -87,8 +87,8 @@ export function DailyChallenge() {
 
   return (
     <section className="mx-auto w-full max-w-2xl px-5 pb-28 pt-4">
-      <Link href="/" className="inline-flex w-fit items-center gap-2 rounded-full glass px-3 py-1.5 text-sm text-ink-dim">
-        <ArrowLeft className="h-4 w-4" /> Lobby
+      <Link href="/" className="glass pressable inline-flex h-10 w-fit items-center gap-2 rounded-full px-4 text-[14px] font-semibold text-ink-dim">
+        <ArrowLeft className="h-4 w-4" /> Home
       </Link>
 
       <motion.div

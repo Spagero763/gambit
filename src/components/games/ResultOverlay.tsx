@@ -1,29 +1,34 @@
 "use client";
 
+import { createContext, useContext } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { RotateCcw, Home } from "lucide-react";
-import Link from "next/link";
-import { Confetti } from "@/components/motion/Confetti";
-import { cn } from "@/lib/cn";
+import { Button } from "@/components/ui/Button";
+import { sheetEase } from "@/lib/motion";
+import { Confetti } from "@/components/ui/Confetti";
 
 export type ResultKind = "win" | "lose" | "draw" | null;
 
-const COPY: Record<
-  Exclude<ResultKind, null>,
-  { title: string; sub: string; tone: string }
-> = {
-  win: { title: "You take it", sub: "Round yours.", tone: "text-teal" },
-  lose: { title: "Not this one", sub: "Deal again.", tone: "text-rose" },
-  draw: { title: "Deadlock", sub: "Nobody breaks it. Re-rack.", tone: "text-amber" },
+/** Set by the practice screen when the game also has money matches. */
+export const MoneyNudge = createContext<(() => void) | undefined>(undefined);
+
+const COPY: Record<Exclude<ResultKind, null>, { title: string; sub: string }> = {
+  win: { title: "You won", sub: "Ready to play a real person?" },
+  lose: { title: "Not this time", sub: "Run it back." },
+  draw: { title: "Draw", sub: "Nobody broke through." },
 };
 
+/** End of a practice game. */
 export function ResultOverlay({
   result,
   onRematch,
+  onExit,
 }: {
   result: ResultKind;
   onRematch: () => void;
+  onExit?: () => void;
 }) {
+  const onMoney = useContext(MoneyNudge);
+  const nudge = result === "win" && onMoney;
   return (
     <AnimatePresence>
       {result && (
@@ -31,34 +36,31 @@ export function ResultOverlay({
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          className="absolute inset-0 z-30 grid place-items-center bg-void/70 backdrop-blur-sm"
+          transition={{ duration: 0.18 }}
+          className="fixed inset-0 z-[80] flex items-end bg-black/60"
         >
           {result === "win" && <Confetti />}
           <motion.div
-            initial={{ scale: 0.86, y: 16, opacity: 0 }}
-            animate={{ scale: 1, y: 0, opacity: 1 }}
-            exit={{ scale: 0.9, opacity: 0 }}
-            transition={{ type: "spring", stiffness: 260, damping: 22 }}
-            className="w-[min(86%,20rem)] rounded-3xl border border-line bg-void-700 p-6 text-center shadow-pop"
+            initial={{ y: "100%" }}
+            animate={{ y: 0 }}
+            exit={{ y: "100%" }}
+            transition={{ duration: 0.36, ease: sheetEase }}
+            className="mx-auto w-full max-w-md sheet rounded-t-sheet px-5 pb-[calc(24px+var(--safe-b))] pt-6"
           >
-            <p className={cn("text-2xl font-semibold tracking-tight", COPY[result].tone)}>
+            <p className={`display text-[42px] font-extrabold leading-none ${result === "win" ? "text-glow" : "text-ink"}`}>
               {COPY[result].title}
             </p>
-            <p className="mt-1 text-sm text-ink-dim">{COPY[result].sub}</p>
-
-            <div className="mt-5 flex gap-2.5">
-              <button
-                onClick={onRematch}
-                className="btn-primary flex flex-1 items-center justify-center gap-2 rounded-xl py-2.5 text-sm shadow-glow"
-              >
-                <RotateCcw className="h-4 w-4" /> Rematch
-              </button>
-              <Link
-                href="/"
-                className="flex items-center justify-center gap-2 rounded-xl border border-line bg-void-600 px-4 py-2.5 text-sm font-semibold text-ink-dim transition-colors hover:text-ink"
-              >
-                <Home className="h-4 w-4" />
-              </Link>
+            <p className="mt-2 text-body text-ink-soft">{COPY[result].sub}</p>
+            <div className="mt-6 grid gap-2.5">
+              {nudge && <Button onClick={onMoney}>Play someone for money</Button>}
+              <Button variant={nudge ? "secondary" : "primary"} onClick={onRematch}>
+                Play again
+              </Button>
+              {onExit && (
+                <Button variant={nudge ? "ghost" : "secondary"} onClick={onExit}>
+                  Done
+                </Button>
+              )}
             </div>
           </motion.div>
         </motion.div>

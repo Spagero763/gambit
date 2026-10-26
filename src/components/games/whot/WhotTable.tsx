@@ -18,7 +18,12 @@ import { play } from "@/lib/sfx";
 import { BOTS } from "@/lib/bots";
 import { useSettings, AVATAR_HEX } from "@/lib/settings";
 import { Avatar, BotFace } from "@/components/Avatar";
+import { Felt } from "@/components/art/Felt";
+import { TurnDot } from "../TurnDot";
+import { sheetEase } from "@/lib/motion";
 import { cn } from "@/lib/cn";
+import Link from "next/link";
+import { ArrowLeft } from "lucide-react";
 
 export interface Seat {
   name: string;
@@ -27,7 +32,7 @@ export interface Seat {
 
 type Pending = { amount: number; num: number } | null;
 
-const AVATAR_BG = ["#8e8bf0", "#3ecf8e", "#e3b341", "#e06c8b", "#5fb7e6", "#9bd154"];
+const AVATAR_BG = ["#5aa9ff", "#3ee09b", "#ffb547", "#ff5d6c", "#5fb7e6", "#9bd154"];
 
 export function WhotTable({
   seats,
@@ -59,7 +64,7 @@ export function WhotTable({
 
   // mirror into state purely for rendering. `seq` also lets the bot effect
   // re-fire when an action keeps the same player on turn (Hold On, General
-  // Market, Suspension in 1v1) — otherwise setTurn(sameValue) is a no-op and
+  // Market, Suspension in 1v1), otherwise setTurn(sameValue) is a no-op and
   // the bot would freeze after playing one of those.
   const [seq, force] = useState(0);
   const sync = () => force((x) => x + 1);
@@ -317,43 +322,36 @@ export function WhotTable({
   const t = top();
 
   return (
-    <div className="mx-auto flex min-h-[100dvh] w-full max-w-md flex-col overflow-x-hidden px-4 py-4">
-      <p className="text-center text-xs font-semibold uppercase tracking-wider text-ink-faint">{title}</p>
+    <div className="mx-auto flex min-h-[100dvh] w-full max-w-md flex-col overflow-x-hidden px-4 pb-[calc(12px+env(safe-area-inset-bottom))]">
+      <div className="flex items-center gap-3 pb-3 pt-[calc(12px+env(safe-area-inset-top))]">
+        <Link href="/" aria-label="Back to games" className="glass pressable grid h-11 w-11 shrink-0 place-items-center rounded-full text-ink">
+          <ArrowLeft className="h-5 w-5" />
+        </Link>
+        <h1 className="display min-w-0 flex-1 truncate text-[22px] font-extrabold text-ink">{title}</h1>
+      </div>
 
       {/* opponents */}
-      <div className="mt-3 flex flex-wrap items-start justify-center gap-2">
+      <div className="flex flex-wrap items-stretch justify-center gap-2">
         {seats.slice(1).map((op, oi) => {
           const pi = oi + 1;
           const isActive = turn === pi && winner === null;
           const hand = hands.current[pi] ?? [];
           const persona = BOTS.find((b) => b.name === op.name);
           return (
-            <div
-              key={pi}
-              className={cn(
-                "flex flex-col items-center gap-1 rounded-2xl border px-3 py-2 transition-all",
-                isActive ? "border-teal/40 bg-void-700" : "border-line bg-void-800"
+            <div key={pi} data-on={isActive ? "them" : undefined} className="seat flex min-w-0 flex-1 basis-[30%] items-center gap-2 rounded-[16px] px-2.5 py-2">
+              {persona ? (
+                <BotFace bot={persona} size={30} rounded="rounded-lg" />
+              ) : (
+                <span className="grid h-[30px] w-[30px] place-items-center rounded-lg text-[12px] font-semibold text-void" style={{ background: AVATAR_BG[pi % AVATAR_BG.length] }}>
+                  {op.name.slice(0, 1)}
+                </span>
               )}
-            >
-              <div className="flex items-center gap-2">
-                {persona ? (
-                  <BotFace bot={persona} size={28} rounded="rounded-lg" />
-                ) : (
-                  <span className="grid h-7 w-7 place-items-center rounded-lg text-[11px] font-semibold text-void" style={{ background: AVATAR_BG[pi % AVATAR_BG.length] }}>
-                    {op.name.slice(0, 1)}
-                  </span>
-                )}
-                <div className="leading-tight">
-                  <p className="text-[11px] font-bold text-ink">{op.name}</p>
-                  <p className="text-[9px] text-ink-faint">{hand.length} cards</p>
-                </div>
-              </div>
-              <div className="flex -space-x-3.5">
-                {hand.slice(0, 6).map((c, i) => (
-                  <div key={c.id} className="h-8 w-[22px]" style={{ transform: `rotate(${(i - 2.5) * 5}deg)` }}>
-                    <WhotCardBack />
-                  </div>
-                ))}
+              <div className="min-w-0 leading-tight">
+                <p className="truncate text-[13px] font-semibold text-ink">{op.name}</p>
+                <p className={cn("nums flex items-center gap-1.5 text-[12px]", isActive ? "text-them" : "text-ink-faint")}>
+                  {isActive && <TurnDot />}
+                  {isActive ? "Thinking" : `${hand.length} ${hand.length === 1 ? "card" : "cards"}`}
+                </p>
               </div>
             </div>
           );
@@ -361,54 +359,73 @@ export function WhotTable({
       </div>
 
       {/* table */}
-      <div className="mt-4 flex flex-1 items-center justify-center gap-6">
-        <button onClick={humanMarket} disabled={turn !== 0 || winner !== null || !!calling} className="flex flex-col items-center gap-1.5 disabled:opacity-50">
-          <div className="relative h-24 w-16">
+      <div className="relative my-3 flex flex-1 items-center justify-center gap-10 rounded-[36px] py-6 shadow-[0_30px_60px_-30px_rgba(0,0,0,0.9)]">
+        <Felt />
+        {seats.length === 2 && (
+          <div aria-hidden className="absolute inset-x-0 top-5 flex justify-center -space-x-5">
+            {(hands.current[1] ?? []).slice(0, 10).map((c, i, arr) => (
+              <div
+                key={c.id}
+                className="h-[52px] w-[36px]"
+                style={{ transformOrigin: "50% 0%", transform: `rotate(${((arr.length - 1) / 2 - i) * 5}deg) translateY(${-Math.abs(i - (arr.length - 1) / 2) * 2}px)` }}
+              >
+                <WhotCardBack />
+              </div>
+            ))}
+          </div>
+        )}
+        <button onClick={humanMarket} disabled={turn !== 0 || winner !== null || !!calling} className="pressable relative flex flex-col items-center gap-2 disabled:opacity-60">
+          <div className="relative h-[112px] w-[78px]">
             <div className="absolute inset-0 translate-x-1 translate-y-1"><WhotCardBack /></div>
             <div className="absolute inset-0"><WhotCardBack /></div>
           </div>
-          <span className="text-[10px] font-semibold text-ink-dim">Market · {market.current.length}</span>
+          <span className="nums text-[12px] font-semibold text-white/75">Market {market.current.length}</span>
         </button>
 
-        <div className="flex flex-col items-center gap-1.5">
-          <div data-coach="pile" className="relative h-24 w-16">
+        <div className="relative flex flex-col items-center gap-2">
+          <div data-coach="pile" className="relative h-[112px] w-[78px] drop-shadow-[0_14px_18px_rgba(0,0,0,0.45)]">
             <AnimatePresence mode="popLayout">
               {t && (
-                <motion.div key={t.id} initial={{ scale: 0.6, opacity: 0, rotate: -12 }} animate={{ scale: 1, opacity: 1, rotate: 0 }} exit={{ opacity: 0 }} transition={{ type: "spring", stiffness: 300, damping: 22 }} className="absolute inset-0">
+                <motion.div key={t.id} initial={{ y: -40, rotate: -10, opacity: 0 }} animate={{ y: 0, rotate: 0, opacity: 1 }} exit={{ opacity: 0 }} transition={{ type: "spring", stiffness: 300, damping: 24 }} className="absolute inset-0">
                   <WhotCardFace shape={t.shape} num={t.num} />
                 </motion.div>
               )}
             </AnimatePresence>
           </div>
-          <span className="flex items-center gap-1 text-[10px] font-semibold text-ink-dim">
-            <WhotShape shape={active.current} size={12} /> {SHAPE_LABEL[active.current]}
+          <span className="flex items-center gap-1.5 text-[12px] font-semibold text-white/75">
+            <WhotShape shape={active.current} size={13} color="#f6efe1" /> {SHAPE_LABEL[active.current]}
           </span>
         </div>
       </div>
 
       {/* status */}
-      <div className="mb-2 text-center">
+      <div className="mb-2 flex h-8 items-center justify-center text-center">
         {pending ? (
-          <span className="rounded-full bg-rose/15 px-3 py-1 text-xs font-bold text-rose">Draw {pending.amount} or stack a {pending.num}</span>
+          <span className="rounded-full bg-rose/15 px-4 py-1.5 text-[13px] font-semibold text-rose">Pick {pending.amount}, or answer with a {pending.num}</span>
         ) : (
-          <span className="text-sm text-ink-dim">{turn === 0 ? "Your turn" : `${seats[turn]?.name} plays`}</span>
+          <span className={cn("text-[14px]", turn === 0 && winner === null ? "font-semibold text-you" : "text-ink-dim")}>
+            {turn === 0 ? "Your turn" : `${seats[turn]?.name} is playing`}
+          </span>
         )}
       </div>
 
       {/* you */}
-      <div className="mb-1 flex items-center justify-center gap-2">
+      <div data-on={turn === 0 && winner === null ? "you" : undefined} className="seat flex items-center gap-2.5 rounded-[16px] px-3 py-2">
         <Avatar
           image={settings.avatarImage || undefined}
           color={AVATAR_HEX[settings.avatar] ?? AVATAR_HEX.teal}
           name={youName}
-          size={22}
-          rounded="rounded-md"
+          size={30}
+          rounded="rounded-lg"
         />
-        <span className={cn("text-[11px] font-medium", turn === 0 && winner === null ? "text-teal" : "text-ink-dim")}>{youName}</span>
+        <span className="flex-1 truncate text-[14px] font-semibold text-ink">{youName}</span>
+        <span className="nums text-[12px] text-ink-faint">
+          {youHand.length} {youHand.length === 1 ? "card" : "cards"}
+        </span>
       </div>
 
       {/* your hand */}
-      <div data-coach="hand" className="relative flex h-32 items-end justify-center">
+      <div data-coach="hand" className="relative mt-2 flex h-[132px] items-end justify-center">
         {youHand.map((c, i) => {
           const { rot, y } = fan(i, youHand.length);
           const legal = youLegal.has(c.id);
@@ -417,13 +434,17 @@ export function WhotTable({
               key={c.id}
               onClick={() => playHuman(c)}
               initial={{ y: 60, opacity: 0 }}
-              animate={{ y, opacity: 1, rotate: rot }}
-              whileHover={legal ? { y: y - 18, scale: 1.05 } : {}}
+              animate={{ y: y - (legal ? 14 : 0), opacity: 1, rotate: rot }}
               transition={{ type: "spring", stiffness: 300, damping: 24 }}
-              style={{ transformOrigin: "bottom center", marginLeft: i === 0 ? 0 : -20, zIndex: legal ? 20 + i : i }}
-              className={cn("h-28 w-[64px] shrink-0", turn === 0 && !legal && "opacity-55")}
+              style={{
+                transformOrigin: "50% 110%",
+                marginLeft: i === 0 ? 0 : youHand.length > 7 ? -38 : youHand.length > 5 ? -30 : -22,
+                zIndex: i,
+              }}
+              aria-label={`${c.shape === "whot" ? "Whot 20" : `${SHAPE_LABEL[c.shape]} ${c.num}`}${legal ? ", playable" : ""}`}
+              className={cn("h-[112px] w-[78px] shrink-0", turn === 0 && !legal && "opacity-50")}
             >
-              <div className={cn("h-full w-full rounded-xl", legal && "ring-2 ring-teal/80")}>
+              <div className={cn("h-full w-full rounded-[10px]", legal && "shadow-[0_0_0_2px_rgba(62,224,155,0.85),0_10px_24px_-8px_rgba(62,224,155,0.6)]")}>
                 <WhotCardFace shape={c.shape} num={c.num} />
               </div>
             </motion.button>
@@ -435,7 +456,7 @@ export function WhotTable({
       <div className="mt-3 h-6 overflow-hidden text-center">
         <AnimatePresence mode="popLayout">
           {log[0] && (
-            <motion.p key={log[0].text} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} className="text-xs text-ink-faint">
+            <motion.p key={log[0].text} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} className="text-[12px] text-ink-faint">
               {log[0].text}
             </motion.p>
           )}
@@ -445,14 +466,18 @@ export function WhotTable({
       {/* call shape */}
       <AnimatePresence>
         {calling && (
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-50 grid place-items-center bg-void/75 backdrop-blur-sm">
-            <motion.div initial={{ scale: 0.85, y: 14 }} animate={{ scale: 1, y: 0 }} className="w-[86%] max-w-xs rounded-3xl border border-line bg-void-700 p-5 text-center shadow-pop">
-              <p className="mb-4 text-sm font-semibold text-ink">Call a shape</p>
-              <div className="grid grid-cols-2 gap-3">
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-50 flex items-end bg-black/60">
+            <motion.div
+              initial={{ y: "100%" }}
+              animate={{ y: 0 }}
+              transition={{ duration: 0.32, ease: sheetEase }}
+              className="sheet mx-auto w-full max-w-md rounded-t-[30px] px-5 pb-[calc(24px+env(safe-area-inset-bottom))] pt-6"
+            >
+              <p className="display text-[24px] font-extrabold text-ink">I need...</p>
+              <div className="mt-4 grid grid-cols-5 gap-2">
                 {(["circle", "triangle", "cross", "square", "star"] as Shape[]).map((sh) => (
-                  <button key={sh} onClick={() => callShape(sh)} className="flex items-center justify-center gap-2 rounded-2xl border border-line bg-void-800 py-4 transition-colors hover:bg-void-600">
-                    <WhotShape shape={sh} size={22} />
-                    <span className="text-sm font-semibold text-ink">{SHAPE_LABEL[sh]}</span>
+                  <button key={sh} onClick={() => callShape(sh)} aria-label={SHAPE_LABEL[sh]} className="pressable grid aspect-square place-items-center rounded-[14px] bg-whot-cream">
+                    <WhotShape shape={sh} size={30} />
                   </button>
                 ))}
               </div>

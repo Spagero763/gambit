@@ -73,7 +73,7 @@ export function BlockBlitz({
   const [hover, setHover] = useState<{ r: number; c: number } | null>(null);
   const [score, setScore] = useState(0);
   const [best, setBest] = useState(initialBest ?? 0);
-  // the caller's best can arrive after mount (async fetch) — never lose it
+  // the caller's best can arrive after mount (async fetch), never lose it
   useEffect(() => {
     if (initialBest) setBest((b) => Math.max(b, initialBest));
   }, [initialBest]);
@@ -88,7 +88,7 @@ export function BlockBlitz({
 
   // Free play deals a fresh board on every visit. The seed starts deterministic
   // so the first server/client paint matches (no hydration mismatch), then we
-  // reseed on the client — otherwise the constant seed dealt the identical
+  // reseed on the client, otherwise the constant seed dealt the identical
   // opening pieces every single game. Tournaments keep their fixed seed.
   const dealt = useRef(false);
   useEffect(() => {
@@ -170,7 +170,7 @@ export function BlockBlitz({
       if (tournament) {
         onSubmit?.(finalScore); // server keeps each player's best run
       } else {
-        recordResult("blocks", "draw"); // solo run — counts as a match played
+        recordResult("blocks", "draw"); // solo run, counts as a match played
         submitScore(address, "blocks", finalScore); // weekly events board
       }
     }
@@ -218,17 +218,18 @@ export function BlockBlitz({
   };
 
   return (
-    <div className="mx-auto flex min-h-[100dvh] w-full max-w-md flex-col px-5 py-5">
-      <div className="flex items-center justify-between">
+    <div className="mx-auto flex min-h-[100dvh] w-full max-w-md flex-col px-4 pb-[calc(16px+env(safe-area-inset-bottom))]">
+      <div className="flex items-center gap-3 pb-3 pt-[calc(12px+env(safe-area-inset-top))]">
         {onExit ? (
-          <button onClick={onExit} className="inline-flex items-center gap-2 rounded-full border border-line bg-void-700 px-3 py-1.5 text-sm text-ink-dim transition-colors hover:text-ink">
-            <ArrowLeft className="h-4 w-4" /> Tournament
+          <button onClick={onExit} aria-label="Back to the cup" className="glass pressable grid h-11 w-11 shrink-0 place-items-center rounded-full text-ink">
+            <ArrowLeft className="h-5 w-5" />
           </button>
         ) : (
-          <Link href="/" className="inline-flex items-center gap-2 rounded-full border border-line bg-void-700 px-3 py-1.5 text-sm text-ink-dim transition-colors hover:text-ink">
-            <ArrowLeft className="h-4 w-4" /> Lobby
+          <Link href="/" aria-label="Back to games" className="glass pressable grid h-11 w-11 shrink-0 place-items-center rounded-full text-ink">
+            <ArrowLeft className="h-5 w-5" />
           </Link>
         )}
+        <h1 className="display min-w-0 flex-1 truncate text-[24px] font-extrabold text-ink">Block Blitz</h1>
         <AnimatePresence>
           {combo > 1 && (
             <motion.span
@@ -236,7 +237,7 @@ export function BlockBlitz({
               initial={{ scale: 0.6, opacity: 0, y: -6 }}
               animate={{ scale: 1, opacity: 1, y: 0 }}
               exit={{ scale: 0.6, opacity: 0 }}
-              className="rounded-full bg-amber/15 px-3 py-1.5 text-xs font-bold text-amber"
+              className="display nums rounded-full bg-amber/15 px-3 py-1.5 text-[14px] font-bold text-amber"
             >
               Combo ×{combo}
             </motion.span>
@@ -245,16 +246,16 @@ export function BlockBlitz({
       </div>
 
       {/* stat bar */}
-      <div className="mt-4 grid grid-cols-2 gap-3">
-        <div className="rounded-2xl border border-line bg-void-700 px-4 py-3">
-          <p className="text-[10px] font-semibold uppercase tracking-wide text-ink-faint">Score</p>
-          <motion.p key={score} initial={{ scale: 1.15 }} animate={{ scale: 1 }} className="nums text-2xl font-semibold tracking-tight text-ink">
+      <div className="grid grid-cols-2 gap-3">
+        <div className="glass rounded-[18px] px-4 py-3">
+          <p className="text-[12px] font-semibold text-ink-faint">Score</p>
+          <motion.p key={score} initial={{ scale: 1.15 }} animate={{ scale: 1 }} className="display nums text-[28px] font-extrabold leading-tight text-ink">
             {score.toLocaleString()}
           </motion.p>
         </div>
-        <div className="rounded-2xl border border-line bg-void-700 px-4 py-3">
-          <p className="text-[10px] font-semibold uppercase tracking-wide text-ink-faint">Best</p>
-          <p className="nums text-2xl font-semibold tracking-tight text-teal">{Math.max(best, score).toLocaleString()}</p>
+        <div className="glass rounded-[18px] px-4 py-3">
+          <p className="text-[12px] font-semibold text-ink-faint">Best</p>
+          <p className="display nums text-glow text-[28px] font-extrabold leading-tight">{Math.max(best, score).toLocaleString()}</p>
         </div>
       </div>
 
@@ -263,8 +264,11 @@ export function BlockBlitz({
         <motion.div
           animate={boardKick}
           data-coach="board"
-          className="relative grid aspect-square grid-cols-8 gap-1 rounded-3xl border border-white/10 bg-[#0c0b18] p-2.5 shadow-card"
-          style={{ boxShadow: "inset 0 2px 14px rgba(0,0,0,0.6), 0 20px 50px -20px rgba(0,0,0,0.8)" }}
+          className="relative grid aspect-square grid-cols-8 gap-1 rounded-tile border border-white/10 p-2.5"
+          style={{
+            background: "radial-gradient(120% 90% at 50% 0%, #24183f 0%, #130d26 55%, #0a0816 100%)",
+            boxShadow: "inset 0 1px 0 rgba(255,255,255,0.1), inset 0 2px 14px rgba(0,0,0,0.5), 0 30px 60px -30px rgba(0,0,0,0.9)",
+          }}
           onPointerLeave={() => setHover(null)}
         >
           {Array.from({ length: GRID * GRID }).map((_, i) => {
@@ -340,8 +344,8 @@ export function BlockBlitz({
                 key={p.id}
                 onPointerDown={(e) => startDrag(p, e)}
                 className={cn(
-                  "flex touch-none items-center justify-center rounded-2xl border py-4 transition-all",
-                  active ? "border-line-strong bg-void-700" : "border-line bg-void-800"
+                  "flex touch-none items-center justify-center rounded-[18px] py-4 transition-shadow",
+                  active ? "border border-teal/50 bg-teal/10 shadow-[0_0_28px_-8px_rgba(62,224,155,0.7)]" : "glass"
                 )}
               >
                 <div
@@ -366,8 +370,8 @@ export function BlockBlitz({
           })}
         </div>
 
-        <p className="mt-3 text-center text-[11px] text-ink-faint">
-          Drag a shape onto the board — or tap a shape, then tap a cell to drop it.
+        <p className="mt-3 text-center text-[12px] text-ink-faint">
+          Drag a shape onto the board, or tap a shape and then a square.
         </p>
 
         {/* the piece held under the finger while dragging. Portaled to <body> so
@@ -401,23 +405,24 @@ export function BlockBlitz({
               <motion.div
                 initial={{ scale: 0.85, y: 14 }}
                 animate={{ scale: 1, y: 0 }}
-                className="w-[78%] rounded-3xl border border-line bg-void-700 p-6 text-center shadow-pop"
+                className="panel w-[84%] rounded-[24px] p-6 text-center"
               >
-                <p className="text-2xl font-semibold tracking-tight text-rose">No moves left</p>
-                <p className="mt-1 text-sm text-ink-dim">Final score {score}</p>
+                <p className="display text-[26px] font-extrabold text-ink">No room left</p>
+                <p className="display nums mt-1 text-[40px] font-extrabold leading-none text-ink">{score.toLocaleString()}</p>
+                <p className="mt-1 text-[13px] text-ink-dim">{score >= best && score > 0 ? "New best" : `Best ${Math.max(best, score).toLocaleString()}`}</p>
                 {tournament && (
                   <p className="mt-2 text-[11px] text-teal">Run submitted. Your best score counts. Same board, try to beat it.</p>
                 )}
                 <button
                   onClick={reset}
-                  className="btn-primary mt-5 inline-flex w-full items-center justify-center gap-2 rounded-2xl py-3 text-sm shadow-glow"
+                  className="btn-primary pressable mt-5 inline-flex h-12 w-full items-center justify-center gap-2 rounded-full text-[15px]"
                 >
                   <RotateCcw className="h-4 w-4" /> {tournament ? "Try again (same board)" : "Play again"}
                 </button>
                 {tournament && onExit && (
                   <button
                     onClick={onExit}
-                    className="mt-2 inline-flex w-full items-center justify-center gap-2 rounded-2xl border border-line bg-void-800 py-3 text-sm text-ink-dim transition-colors hover:text-ink"
+                    className="btn-glass mt-2 inline-flex h-12 w-full items-center justify-center gap-2 rounded-full text-[15px]"
                   >
                     Back to standings
                   </button>

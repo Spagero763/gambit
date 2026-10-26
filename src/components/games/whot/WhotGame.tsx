@@ -1,14 +1,17 @@
 "use client";
 
-import { useState } from "react";
-import { AnimatePresence, motion } from "framer-motion";
+import { useContext, useState } from "react";
+import { motion } from "framer-motion";
 import { ArrowLeft, Bot, Trophy, Users, RotateCcw, Crown } from "lucide-react";
 import Link from "next/link";
 import { WhotTable, Seat } from "./WhotTable";
 import { WhotRules, DEFAULT_RULES } from "@/lib/games/whot";
-import { GameCover } from "@/components/art/GameCover";
 import { BOTS } from "@/lib/bots";
 import { recordResult } from "@/lib/progress";
+import { MoneyNudge } from "../ResultOverlay";
+import { Confetti } from "@/components/ui/Confetti";
+import { buttonClass } from "@/components/ui/Button";
+import { winEase } from "@/lib/motion";
 import { cn } from "@/lib/cn";
 
 // Names line up with the bot roster so each opponent shows its matching face.
@@ -37,7 +40,8 @@ function bots(count: number, offset = 0): Seat[] {
 export function WhotGame() {
   const [phase, setPhase] = useState<Phase>({ kind: "setup" });
   const [mode, setMode] = useState<Mode>("free");
-  const [count, setCount] = useState(4);
+  // 1v1 first: a practice table should feel like the money match it leads to
+  const [count, setCount] = useState(2);
   const [rules, setRules] = useState<WhotRules>(DEFAULT_RULES);
 
   const startFree = () => {
@@ -74,8 +78,10 @@ export function WhotGame() {
   if (phase.kind === "play") {
     const title =
       phase.mode === "tournament"
-        ? `Tournament · ${TOURNEY_ROUNDS[phase.round]}`
-        : `Free play · ${phase.seats.length} players`;
+        ? `Whot · ${TOURNEY_ROUNDS[phase.round]}`
+        : phase.seats.length === 2
+        ? "Naija Whot"
+        : `Whot · ${phase.seats.length} players`;
     return <WhotTable key={phase.match} seats={phase.seats} title={title} rules={phase.rules} onEnd={handleEnd} />;
   }
 
@@ -92,103 +98,110 @@ export function WhotGame() {
 
   // setup
   return (
-    <div className="mx-auto flex min-h-[100dvh] w-full max-w-md flex-col px-5 py-5">
-      <Link href="/" className="inline-flex w-fit items-center gap-2 rounded-full glass px-3 py-1.5 text-sm text-ink-dim">
-        <ArrowLeft className="h-4 w-4" /> Lobby
-      </Link>
-
-      <div className="mt-6 flex items-center gap-3">
-        <span className="h-14 w-14 overflow-hidden rounded-2xl border border-white/10">
-          <GameCover art="whot" className="h-full w-full" />
-        </span>
-        <div>
-          <h1 className="font-display text-2xl font-bold">Naija Whot</h1>
-          <p className="text-sm text-ink-dim">Call your shape. Shed your hand.</p>
+    <div className="mx-auto flex min-h-[100dvh] w-full max-w-md flex-col px-4 pb-[calc(24px+env(safe-area-inset-bottom))]">
+      <div className="flex items-center gap-3 pb-2 pt-[calc(12px+env(safe-area-inset-top))]">
+        <Link href="/" aria-label="Back to games" className="glass pressable grid h-11 w-11 shrink-0 place-items-center rounded-full text-ink">
+          <ArrowLeft className="h-5 w-5" />
+        </Link>
+        <div className="min-w-0">
+          <h1 className="display truncate text-[24px] font-extrabold leading-tight text-ink">Naija Whot</h1>
+          <p className="text-[13px] text-ink-dim">Practice against the computer</p>
         </div>
       </div>
 
       {/* mode */}
-      <div className="mt-6 grid grid-cols-2 rounded-2xl glass p-1">
+      <div className="glass mt-4 grid grid-cols-2 gap-1 rounded-full p-1">
         {([
-          { id: "free", label: "Free play", icon: Bot },
-          { id: "tournament", label: "Tournament", icon: Trophy },
+          { id: "free", label: "Table", icon: Bot },
+          { id: "tournament", label: "Bot tournament", icon: Trophy },
         ] as const).map((m) => {
           const Icon = m.icon;
           const active = mode === m.id;
           return (
-            <button key={m.id} onClick={() => setMode(m.id)} className="relative flex items-center justify-center gap-2 rounded-xl py-2.5 text-sm font-semibold">
-              {active && <motion.span layoutId="whotMode" className="absolute inset-0 rounded-xl bg-white/10" transition={{ type: "spring", stiffness: 380, damping: 30 }} />}
-              <Icon className={cn("relative h-4 w-4", active ? "text-ink" : "text-ink-faint")} />
+            <button key={m.id} onClick={() => setMode(m.id)} className="relative flex h-11 items-center justify-center gap-2 rounded-full text-[14px] font-semibold">
+              {active && (
+                <motion.span
+                  layoutId="whotMode"
+                  className="absolute inset-0 rounded-full border border-teal/30"
+                  style={{ background: "linear-gradient(180deg, rgba(62,224,155,0.22), rgba(62,224,155,0.07))" }}
+                  transition={{ type: "spring", stiffness: 380, damping: 30 }}
+                />
+              )}
+              <Icon className={cn("relative h-4 w-4", active ? "text-teal" : "text-ink-faint")} />
               <span className={cn("relative", active ? "text-ink" : "text-ink-faint")}>{m.label}</span>
             </button>
           );
         })}
       </div>
 
-      <AnimatePresence mode="wait">
-        {mode === "free" ? (
-          <motion.div key="free" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="mt-6">
-            <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-ink-faint">Players (you + bots)</p>
-            <div className="grid grid-cols-3 gap-2">
-              {[2, 4, 6].map((c) => (
+      {mode === "free" ? (
+        <div key="free" className="enter mt-5">
+          <p className="mb-2 text-[12px] font-bold uppercase tracking-[0.08em] text-ink-dim">Players at the table</p>
+          <div className="grid grid-cols-3 gap-2.5">
+            {[2, 4, 6].map((c) => (
+              <button
+                key={c}
+                onClick={() => setCount(c)}
+                className={cn(
+                  "pressable flex flex-col items-center gap-1 rounded-[20px] py-4",
+                  count === c ? "border border-teal/50 bg-teal/[0.1] shadow-[0_0_24px_-8px_rgba(62,224,155,0.6)]" : "glass"
+                )}
+              >
+                <Users className={cn("h-5 w-5", count === c ? "text-teal" : "text-ink-faint")} />
+                <span className={cn("display text-[20px] font-bold", count === c ? "text-ink" : "text-ink-dim")}>{c}</span>
+                <span className="text-[11px] text-ink-faint">{c === 2 ? "1 on 1" : `you + ${c - 1}`}</span>
+              </button>
+            ))}
+          </div>
+
+          <p className="mb-2 mt-5 text-[12px] font-bold uppercase tracking-[0.08em] text-ink-dim">House rules</p>
+          <div className="glass divide-y divide-white/[0.06] overflow-hidden rounded-[20px]">
+            {RULE_ITEMS.map((r) => {
+              const on = rules[r.key];
+              return (
                 <button
-                  key={c}
-                  onClick={() => setCount(c)}
-                  className={cn("flex flex-col items-center gap-1 rounded-2xl py-4 transition-all", count === c ? "glass ring-1 ring-white/25" : "bg-white/[0.03]")}
+                  key={r.key}
+                  onClick={() => setRules((prev) => ({ ...prev, [r.key]: !prev[r.key] }))}
+                  role="switch"
+                  aria-checked={on}
+                  className="flex w-full items-center justify-between px-4 py-3 text-left"
                 >
-                  <Users className={cn("h-5 w-5", count === c ? "text-ink" : "text-ink-faint")} />
-                  <span className={cn("text-sm font-bold", count === c ? "text-ink" : "text-ink-dim")}>{c}</span>
+                  <span>
+                    <span className="block text-[14px] font-semibold text-ink">{r.label}</span>
+                    <span className="block text-[12px] text-ink-faint">{r.note}</span>
+                  </span>
+                  <span className={cn("relative h-7 w-12 shrink-0 rounded-full transition-colors", on ? "bg-teal shadow-[0_0_14px_rgba(62,224,155,0.5)]" : "bg-white/10")}>
+                    <span className={cn("absolute top-1 h-5 w-5 rounded-full transition-transform duration-200 ease-out", on ? "translate-x-6 bg-white" : "translate-x-1 bg-ink-faint")} />
+                  </span>
                 </button>
-              ))}
-            </div>
+              );
+            })}
+          </div>
 
-            <p className="mb-2 mt-5 text-xs font-semibold uppercase tracking-wide text-ink-faint">House rules</p>
-            <div className="space-y-2">
-              {RULE_ITEMS.map((r) => {
-                const on = rules[r.key];
-                return (
-                  <button
-                    key={r.key}
-                    onClick={() => setRules((prev) => ({ ...prev, [r.key]: !prev[r.key] }))}
-                    className="flex w-full items-center justify-between rounded-2xl bg-white/[0.03] px-4 py-2.5 text-left"
-                  >
-                    <span>
-                      <span className="text-sm font-semibold text-ink">{r.label}</span>
-                      <span className="ml-2 text-[11px] text-ink-faint">{r.note}</span>
-                    </span>
-                    <span className={cn("relative h-5 w-9 rounded-full transition-colors", on ? "bg-teal" : "bg-white/15")}>
-                      <span className={cn("absolute top-0.5 h-4 w-4 rounded-full bg-white transition-all", on ? "left-[1.125rem]" : "left-0.5")} />
-                    </span>
-                  </button>
-                );
-              })}
+          <button onClick={startFree} className={buttonClass("primary", "lg", "mt-5 w-full")}>
+            Deal the cards
+          </button>
+        </div>
+      ) : (
+        <div key="tournament" className="enter mt-5">
+          <div className="glass rounded-[24px] p-5">
+            <p className="text-[14px] leading-relaxed text-ink-dim">
+              Four players per table. Win your <span className="text-ink">Semi-final</span> to reach the{" "}
+              <span className="text-ink">Final</span>. Win the final to be crowned champion.
+            </p>
+            <div className="mt-4 flex items-center gap-2 text-[12px] text-ink-faint">
+              <span className="rounded-full bg-white/5 px-3 py-1">Semi-final</span>
+              <span>→</span>
+              <span className="rounded-full bg-white/5 px-3 py-1">Final</span>
+              <span>→</span>
+              <span className="rounded-full bg-amber/15 px-3 py-1 text-amber">Champion</span>
             </div>
-
-            <button onClick={startFree} className="btn-primary mt-5 w-full rounded-2xl py-3.5 text-sm shadow-glow">
-              Start table
-            </button>
-          </motion.div>
-        ) : (
-          <motion.div key="tournament" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="mt-6">
-            <div className="rounded-3xl glass p-5 shadow-card">
-              <p className="text-sm leading-relaxed text-ink-dim">
-                Four players per table. Win your <span className="text-ink">Semi-final</span> to reach the
-                {" "}<span className="text-ink">Final</span>. Win the final to be crowned champion.
-              </p>
-              <div className="mt-4 flex items-center gap-2 text-xs text-ink-faint">
-                <span className="rounded-full bg-white/5 px-3 py-1">Semi-final</span>
-                <span>→</span>
-                <span className="rounded-full bg-white/5 px-3 py-1">Final</span>
-                <span>→</span>
-                <span className="rounded-full bg-amber/15 px-3 py-1 text-amber">Champion</span>
-              </div>
-            </div>
-            <button onClick={startTournament} className="mt-5 w-full rounded-2xl bg-amber py-3.5 text-sm font-semibold text-void shadow-glow transition-opacity hover:opacity-90">
-              Enter tournament
-            </button>
-          </motion.div>
-        )}
-      </AnimatePresence>
+          </div>
+          <button onClick={startTournament} className="pressable mt-5 flex h-[54px] w-full items-center justify-center rounded-full bg-amber text-[16px] font-bold text-void shadow-[0_12px_28px_-12px_rgba(255,181,71,0.7)]">
+            Enter the tournament
+          </button>
+        </div>
+      )}
     </div>
   );
 }
@@ -204,43 +217,27 @@ function Celebration({
   mode: Mode;
   onAgain: () => void;
 }) {
-  const confetti = Array.from({ length: 36 });
-  const colors = ["#8b7dff", "#27e1a6", "#ffc15e", "#ff6b9a", "#a89bff"];
+  const onMoney = useContext(MoneyNudge);
 
   return (
-    <div className="relative mx-auto grid min-h-[100dvh] w-full max-w-md place-items-center overflow-hidden px-6">
-      {youWon &&
-        confetti.map((_, i) => {
-          const x = Math.random() * 100;
-          const delay = Math.random() * 0.6;
-          const dur = 2.2 + Math.random() * 1.6;
-          const color = colors[i % colors.length];
-          return (
-            <motion.span
-              key={i}
-              className="absolute top-0 h-2.5 w-2 rounded-[1px]"
-              style={{ left: `${x}%`, background: color }}
-              initial={{ y: -20, opacity: 0, rotate: 0 }}
-              animate={{ y: "110vh", opacity: [0, 1, 1, 0], rotate: 360 }}
-              transition={{ duration: dur, delay, repeat: Infinity, ease: "linear" }}
-            />
-          );
-        })}
+    <div className="relative mx-auto grid min-h-[100dvh] w-full max-w-md place-items-center overflow-hidden px-5">
+      {youWon && <Confetti />}
 
-      <motion.div initial={{ scale: 0.8, y: 16, opacity: 0 }} animate={{ scale: 1, y: 0, opacity: 1 }} transition={{ type: "spring", stiffness: 220, damping: 18 }} className="relative z-10 w-full rounded-3xl glass p-8 text-center shadow-card">
-        <motion.div
-          initial={{ rotate: -12, scale: 0.7 }}
-          animate={{ rotate: 0, scale: 1 }}
-          transition={{ type: "spring", stiffness: 260, damping: 14, delay: 0.1 }}
-          className="mx-auto grid h-20 w-20 place-items-center rounded-3xl bg-gradient-to-br from-amber to-[#c9802b] shadow-glow"
-        >
+      <motion.div
+        initial={{ scale: 0.9, y: 16, opacity: 0 }}
+        animate={{ scale: 1, y: 0, opacity: 1 }}
+        transition={{ duration: 0.4, ease: winEase }}
+        className="panel relative z-10 w-full rounded-[28px] p-7 text-center"
+        style={{ background: youWon ? "radial-gradient(120% 80% at 50% 0%, rgba(255,214,107,0.18), rgba(0,0,0,0) 60%), linear-gradient(180deg, #182131, #0e141e)" : undefined }}
+      >
+        <div className="mx-auto grid h-20 w-20 place-items-center rounded-[24px] bg-gradient-to-br from-gold to-amber shadow-[0_14px_36px_-12px_rgba(255,181,71,0.75)]">
           {youWon ? <Crown className="h-10 w-10 text-void" /> : <Trophy className="h-10 w-10 text-void" />}
-        </motion.div>
+        </div>
 
-        <p className="mt-5 font-display text-3xl font-black tracking-tight">
-          {youWon ? (mode === "tournament" ? "Champion!" : "You win!") : `${champion} wins`}
+        <p className={cn("display mt-5 text-[34px] font-extrabold leading-none", youWon ? "text-glow" : "text-ink")}>
+          {youWon ? (mode === "tournament" ? "Champion" : "You won") : `${champion} wins`}
         </p>
-        <p className="mt-1 text-sm text-ink-dim">
+        <p className="mt-2 text-[14px] text-ink-dim">
           {youWon
             ? mode === "tournament"
               ? "You took the whole bracket."
@@ -250,12 +247,17 @@ function Celebration({
             : "Close one. Deal again."}
         </p>
 
-        <div className="mt-6 flex gap-2.5">
-          <button onClick={onAgain} className="btn-primary flex flex-1 items-center justify-center gap-2 rounded-2xl py-3 text-sm shadow-glow">
+        <div className="mt-6 grid gap-2.5">
+          {youWon && onMoney && (
+            <button onClick={onMoney} className={buttonClass("primary", "lg", "w-full")}>
+              Play someone for money
+            </button>
+          )}
+          <button onClick={onAgain} className={buttonClass(youWon && onMoney ? "secondary" : "primary", "lg", "w-full")}>
             <RotateCcw className="h-4 w-4" /> Play again
           </button>
-          <Link href="/" className="flex items-center justify-center rounded-2xl border border-line bg-void-600 px-4 py-3 text-sm font-semibold text-ink-dim transition-colors hover:text-ink">
-            Lobby
+          <Link href="/" className="mx-auto mt-1 text-[14px] font-semibold text-ink-faint">
+            Back to games
           </Link>
         </div>
       </motion.div>

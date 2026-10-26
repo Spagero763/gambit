@@ -1,8 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
-import { AnimatePresence, motion } from "framer-motion";
-import { useMemo } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Board, Cell, bestMove, evaluate } from "@/lib/games/tictactoe";
 import { Difficulty } from "@/lib/difficulty";
 import { play } from "@/lib/sfx";
@@ -14,6 +12,7 @@ import { cn } from "@/lib/cn";
 import { MatchShell } from "./MatchShell";
 import { ResultOverlay, ResultKind } from "./ResultOverlay";
 import { Mark } from "./xo/Mark";
+import { XOBoard } from "./xo/XOBoard";
 
 const EMPTY: Board = Array(9).fill(null);
 const HUMAN: Cell = "X";
@@ -23,7 +22,7 @@ function emptyIdx(b: Board) {
   return b.map((c, i) => (c ? -1 : i)).filter((i) => i >= 0);
 }
 
-// AI move by difficulty: easy mostly random, normal half-optimal, hard perfect
+// computer move by difficulty: easy mostly random, normal half-optimal, hard perfect
 function aiPick(b: Board, level: Difficulty): number {
   const open = emptyIdx(b);
   if (open.length === 0) return -1;
@@ -113,50 +112,23 @@ export function TicTacToe({ difficulty = "normal" }: { difficulty?: Difficulty }
         },
       ]}
     >
-      <div className="flex w-full max-w-[330px] flex-col items-center">
-        {/* scoreboard */}
+      <div className="flex w-full max-w-[340px] flex-col items-center">
         <div className="mb-4 flex w-full items-center justify-center gap-2 text-center">
           {[
-            { label: "You", val: score.you, c: "text-violet-bright" },
+            { label: "You", val: score.you, c: "text-you" },
             { label: "Draw", val: score.draw, c: "text-ink-faint" },
-            { label: "AI", val: score.ai, c: "text-teal" },
+            { label: "Them", val: score.ai, c: "text-them" },
           ].map((s) => (
-            <div key={s.label} className="flex-1 rounded-xl border border-line bg-void-800 py-2">
-              <p className={cn("nums text-xl font-semibold", s.c)}>{s.val}</p>
-              <p className="text-[10px] text-ink-faint">{s.label}</p>
+            <div key={s.label} className="glass flex-1 rounded-[16px] py-2">
+              <p className={cn("display nums text-[22px] font-bold", s.c)}>{s.val}</p>
+              <p className="text-[11px] text-ink-faint">{s.label}</p>
             </div>
           ))}
         </div>
 
-        {/* board: grid lines come from cell borders so marks always sit dead-center */}
-        <div className="relative aspect-square w-full rounded-3xl border border-line bg-void-700 p-3 shadow-card">
-          <div data-coach="grid" className="grid h-full w-full grid-cols-3 grid-rows-3">
-            {board.map((cell, i) => {
-              const col = i % 3;
-              const row = Math.floor(i / 3);
-              const inWin = winLine?.includes(i);
-              return (
-                <button
-                  key={i}
-                  onClick={() => mark(i)}
-                  className={cn(
-                    "relative grid place-items-center transition-colors",
-                    col < 2 && "border-r-2 border-white/10",
-                    row < 2 && "border-b-2 border-white/10",
-                    !cell && !result && turn === HUMAN && "hover:bg-white/[0.04]",
-                    inWin && "bg-[#f6d66b]/15"
-                  )}
-                >
-                  <div className="pointer-events-none h-full w-full">
-                    <AnimatePresence>{cell && <Mark key={cell} kind={cell} />}</AnimatePresence>
-                  </div>
-                </button>
-              );
-            })}
-          </div>
-
+        <XOBoard board={board} onCell={mark} canPlay={(i) => !board[i] && !result && turn === HUMAN} winLine={winLine}>
           <ResultOverlay result={result} onRematch={reset} />
-        </div>
+        </XOBoard>
       </div>
     </MatchShell>
   );

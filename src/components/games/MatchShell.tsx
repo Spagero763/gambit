@@ -1,10 +1,10 @@
 "use client";
 
 import { ReactNode } from "react";
-import { motion } from "framer-motion";
 import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import { cn } from "@/lib/cn";
+import { TurnDot } from "./TurnDot";
 
 export interface PlayerInfo {
   name: string;
@@ -13,8 +13,10 @@ export interface PlayerInfo {
   accent: string; // tailwind text color class
   clock?: string; // optional formatted time, e.g. "4:32"
   avatar?: ReactNode; // optional player/bot avatar shown instead of the mark
+  detail?: string;
 }
 
+/** A practice table: the computer across from you, the board between. */
 export function MatchShell({
   title,
   status,
@@ -26,78 +28,39 @@ export function MatchShell({
   players: [PlayerInfo, PlayerInfo];
   children: ReactNode;
 }) {
+  const [you, them] = players;
   return (
-    <div className="mx-auto flex min-h-[100dvh] w-full max-w-2xl flex-col px-5 py-5">
-      <div className="flex items-center justify-between">
-        <Link
-          href="/"
-          className="inline-flex items-center gap-2 rounded-full border border-line bg-void-700 px-3 py-1.5 text-sm text-ink-dim transition-colors hover:text-ink"
-        >
-          <ArrowLeft className="h-4 w-4" /> Lobby
+    <div className="mx-auto flex min-h-[100dvh] w-full max-w-md flex-col px-4 pb-[calc(16px+env(safe-area-inset-bottom))]">
+      <div className="flex items-center gap-3 pb-3 pt-[calc(12px+env(safe-area-inset-top))]">
+        <Link href="/" aria-label="Back to games" className="glass pressable grid h-11 w-11 shrink-0 place-items-center rounded-full text-ink">
+          <ArrowLeft className="h-5 w-5" />
         </Link>
-        <span className="rounded-full border border-line bg-void-700 px-3 py-1.5 text-xs font-semibold text-ink-dim">
-          Free play
-        </span>
+        <h1 className="display min-w-0 flex-1 truncate text-[24px] font-extrabold text-ink">{title}</h1>
+        <span className="glass rounded-full px-3 py-1.5 text-[12px] font-semibold text-ink-dim">Practice</span>
       </div>
 
-      <h1 className="mt-5 text-2xl font-semibold tracking-tight">{title}</h1>
-
-      {/* Player HUD */}
-      <div className="mt-4 flex items-center gap-3">
-        {players.map((p, i) => (
-          <div
-            key={i}
-            className={cn(
-              "flex flex-1 items-center gap-2.5 rounded-2xl border px-3 py-2.5 transition-all",
-              p.active ? "border-line-strong bg-void-700" : "border-line bg-void-800"
-            )}
-          >
-            {p.avatar ? (
-              <span className="block h-9 w-9 shrink-0 overflow-hidden rounded-lg ring-1 ring-line">{p.avatar}</span>
-            ) : (
-              <span
-                className={cn(
-                  "grid h-8 w-8 place-items-center rounded-lg bg-void-600 text-base font-semibold",
-                  p.accent
-                )}
-              >
-                {p.mark}
-              </span>
-            )}
-            <div className="leading-tight">
-              <p className="text-sm font-semibold text-ink">{p.name}</p>
-              <p className="text-[10px] text-ink-faint">
-                {p.active ? "to play" : "waiting"}
-              </p>
-            </div>
-            <div className="ml-auto flex items-center gap-2">
-              {p.clock && (
-                <span
-                  className={cn(
-                    "rounded-md bg-void-600 px-2 py-1 font-mono text-xs tabular-nums",
-                    p.active ? "text-ink" : "text-ink-faint"
-                  )}
-                >
-                  {p.clock}
-                </span>
-              )}
-              {p.active && (
-                <motion.span
-                  layoutId="turnDot"
-                  className="h-2 w-2 rounded-full bg-teal"
-                  transition={{ type: "spring", stiffness: 400, damping: 28 }}
-                />
-              )}
-            </div>
-          </div>
-        ))}
-      </div>
-
-      <p className="mt-3 text-center text-sm text-ink-dim">{status}</p>
-
-      <div className="relative mt-4 flex flex-1 items-start justify-center">
+      <Seat p={them} role="them" />
+      <div className="relative flex flex-1 flex-col items-center justify-center py-3">
         {children}
+        <p className="mt-3 text-[14px] text-ink-dim">{status}</p>
       </div>
+      <Seat p={you} role="you" />
+    </div>
+  );
+}
+
+function Seat({ p, role }: { p: PlayerInfo; role: "you" | "them" }) {
+  return (
+    <div data-on={p.active ? role : undefined} className="seat flex items-center gap-3 rounded-[18px] px-3 py-2.5">
+      <span className="block h-10 w-10 shrink-0 overflow-hidden rounded-xl">{p.avatar ?? p.mark}</span>
+      <div className="min-w-0 flex-1">
+        <p className="truncate text-[15px] font-semibold leading-tight text-ink">{p.name}</p>
+        <p className={cn("flex items-center gap-1.5 truncate text-[12px]", p.active ? (role === "you" ? "text-you" : "text-them") : "text-ink-faint")}>
+          {p.active && <TurnDot />}
+          {p.active ? (role === "you" ? "Your turn" : "Thinking") : p.detail ?? (role === "them" ? "Computer" : "Waiting")}
+        </p>
+      </div>
+      {p.clock && <span className={cn("display nums text-[18px] font-bold", p.active ? "text-ink" : "text-ink-faint")}>{p.clock}</span>}
     </div>
   );
 }

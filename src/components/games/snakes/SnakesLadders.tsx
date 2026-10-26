@@ -180,8 +180,8 @@ export function SnakesLadders({ difficulty = "normal" }: { difficulty?: Difficul
               key={t.id}
               onClick={() => setTheme(t)}
               className={cn(
-                "rounded-full border px-3 py-1 text-[11px] font-semibold transition-colors",
-                theme.id === t.id ? "border-line-strong bg-void-600 text-ink" : "border-transparent text-ink-faint hover:text-ink-dim"
+                "pressable rounded-full px-3.5 py-1.5 text-[12px] font-semibold",
+                theme.id === t.id ? "border border-teal/40 bg-teal/[0.12] text-ink" : "text-ink-faint hover:text-ink-dim"
               )}
             >
               {t.label}
@@ -191,20 +191,17 @@ export function SnakesLadders({ difficulty = "normal" }: { difficulty?: Difficul
 
         <Board theme={theme} tokenPos={tokenPos} layout={layout} />
 
-        <div data-coach="dice" className="mt-5 flex items-center gap-4">
+        <div data-coach="dice" className="mt-5 flex w-full items-center gap-4">
           <Dice value={dice} rolling={rolling} />
           <button
             onClick={() => roll(0)}
             disabled={turn !== 0 || !!result}
-            className={cn(
-              "btn-primary inline-flex items-center gap-2 rounded-2xl px-6 py-3 text-sm shadow-glow transition-opacity",
-              (turn !== 0 || !!result) && "opacity-40"
-            )}
+            className="btn-primary pressable inline-flex h-14 flex-1 items-center justify-center gap-2 rounded-full text-[17px]"
           >
-            <Dices className="h-4 w-4" /> Roll
+            <Dices className="h-5 w-5" /> Roll
           </button>
         </div>
-        <p className="mt-3 text-center text-[11px] text-ink-faint">
+        <p className="mt-3 text-center text-[12px] text-ink-faint">
           Roll exactly onto 100 to win. Overshoot and you hold.
         </p>
       </div>
@@ -218,7 +215,7 @@ export function SnakesLadders({ difficulty = "normal" }: { difficulty?: Difficul
 const MEEPLE_PATH =
   "M50 5C40 5 33 13 33 22C33 28 36 33 41 36C30 39 22 47 17 58C15 62 17 67 22 67L36 67C36 67 33 75 33 82C33 90 40 95 50 95C60 95 67 90 67 82C67 75 64 67 64 67L78 67C83 67 85 62 83 58C78 47 70 39 59 36C64 33 67 28 67 22C67 13 60 5 50 5Z";
 
-const TOKEN_HEX: Record<"violet" | "amber", string> = { violet: "#8e8bf0", amber: "#e3b341" };
+const TOKEN_HEX: Record<"violet" | "amber", string> = { violet: "#5aa9ff", amber: "#ffb547" };
 
 function Meeple({ color, className }: { color: string; className?: string }) {
   return (
@@ -392,7 +389,7 @@ function SnakePath({ from, to, color }: { from: number; to: number; color: strin
       {pts.slice(0, Math.floor(N * 0.7)).map((p, i) => (
         <path key={`h${i}`} d={seg(i)} fill="none" stroke="rgba(255,255,255,0.32)" strokeWidth={width(p.t) * 0.3} />
       ))}
-      {/* scale bands — short dark ticks across the front of the body */}
+      {/* scale bands, short dark ticks across the front of the body */}
       {pts.slice(1, Math.floor(N * 0.75)).map((p, i) =>
         i % 2 === 0 ? (
           <path

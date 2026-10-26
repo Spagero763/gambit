@@ -176,7 +176,7 @@ export function ChessGame({ difficulty = "normal" }: { difficulty?: Difficulty }
   useEffect(() => {
     if (turn !== "b" || result || promo) return;
     // a human-feeling think: 0.8 to 2.4 seconds of REAL time, during which the
-    // normal per-second tick runs the bot's clock down. No artificial jumps —
+    // normal per-second tick runs the bot's clock down. No artificial jumps, 
     // both clocks now burn actual elapsed time, like a real game.
     const think = 800 + Math.random() * 1600;
     const t = setTimeout(() => {
@@ -195,7 +195,7 @@ export function ChessGame({ difficulty = "normal" }: { difficulty?: Difficulty }
     return () => clearTimeout(t);
   }, [turn, fen, result, promo, settle, game, difficulty]);
 
-  // tick the side-to-move's clock. Keep the updater pure — flagging is handled
+  // tick the side-to-move's clock. Keep the updater pure, flagging is handled
   // in its own effect below (calling setResult inside an updater is a bug).
   useEffect(() => {
     if (result || promo) return;
@@ -228,23 +228,24 @@ export function ChessGame({ difficulty = "normal" }: { difficulty?: Difficulty }
   const aiCaptured = capturedOf(game, "w").list;
 
   return (
-    <div className="mx-auto flex min-h-[100dvh] w-full max-w-md flex-col px-4 py-4">
-      <div className="flex items-center justify-between">
-        <Link href="/" className="inline-flex items-center gap-2 rounded-full border border-line bg-void-700 px-3 py-1.5 text-sm text-ink-dim transition-colors hover:text-ink">
-          <ArrowLeft className="h-4 w-4" /> Lobby
+    <div className="mx-auto flex min-h-[100dvh] w-full max-w-md flex-col px-4 pb-[calc(16px+env(safe-area-inset-bottom))]">
+      <div className="flex items-center gap-3 pb-3 pt-[calc(12px+env(safe-area-inset-top))]">
+        <Link href="/" aria-label="Back to games" className="glass pressable grid h-11 w-11 shrink-0 place-items-center rounded-full text-ink">
+          <ArrowLeft className="h-5 w-5" />
         </Link>
+        <h1 className="display min-w-0 flex-1 truncate text-[24px] font-extrabold text-ink">Chess</h1>
         <span
           className={cn(
-            "rounded-full border px-3 py-1.5 text-xs font-semibold",
-            inCheck && !result ? "border-rose/40 bg-rose/10 text-rose" : "border-line bg-void-700 text-ink-dim"
+            "rounded-full px-3 py-1.5 text-[12px] font-semibold",
+            inCheck && !result ? "border border-rose/40 bg-rose/15 text-rose" : "glass text-ink-dim"
           )}
         >
-          {inCheck && !result ? "Check" : "Free play"}
+          {inCheck && !result ? "Check" : "Practice"}
         </span>
       </div>
 
       {/* opponent (top) */}
-      <div className="mt-4">
+      <div>
         <PlayerBar
           name={bot.name}
           pieceColor="b"
@@ -258,149 +259,150 @@ export function ChessGame({ difficulty = "normal" }: { difficulty?: Difficulty }
       </div>
 
       {/* board */}
-      <div className="relative mt-3">
-        <div
-          className="rounded-[20px] p-2.5"
-          style={{
-            background: "linear-gradient(160deg, #2b2620, #1a1611)",
-            boxShadow:
-              "inset 0 1px 0 rgba(255,255,255,0.1), inset 0 -4px 10px rgba(0,0,0,0.5), 0 26px 60px -26px rgba(0,0,0,0.95)",
-          }}
-        >
+      <div className="flex flex-1 flex-col justify-center py-3">
+        <div className="relative">
           <div
-            ref={boardRef}
-            onPointerDown={onDown}
-            onPointerMove={onMove}
-            onPointerUp={onUp}
-            data-coach="board"
-            className="relative grid aspect-square grid-cols-8 grid-rows-8 overflow-hidden rounded-md ring-1 ring-black/40"
-            style={{ touchAction: "none", boxShadow: "inset 0 2px 10px rgba(0,0,0,0.45)" }}
+            className="rounded-[20px] p-2.5"
+            style={{
+              background: "linear-gradient(160deg, #2b2620, #1a1611)",
+              boxShadow:
+                "inset 0 1px 0 rgba(255,255,255,0.1), inset 0 -4px 10px rgba(0,0,0,0.5), 0 26px 60px -26px rgba(0,0,0,0.95), 0 0 70px -24px rgba(255,200,120,0.3)",
+            }}
           >
-            {board.map((row, r) =>
-              row.map((piece, f) => {
-                const square = (FILES[f] + (8 - r)) as Square;
-                const lightSq = (r + f) % 2 === 0;
-                const isSel = selected === square;
-                const isTarget = targets.has(square);
-                const isLast = last && (last.from === square || last.to === square);
-                const isCheckSq = inCheck && piece?.type === "k" && piece.color === turn;
-                const lifted = drag?.moved && drag.from === square;
+            <div
+              ref={boardRef}
+              onPointerDown={onDown}
+              onPointerMove={onMove}
+              onPointerUp={onUp}
+              data-coach="board"
+              className="relative grid aspect-square grid-cols-8 grid-rows-8 overflow-hidden rounded-md ring-1 ring-black/40"
+              style={{ touchAction: "none", boxShadow: "inset 0 2px 10px rgba(0,0,0,0.45)" }}
+            >
+              {board.map((row, r) =>
+                row.map((piece, f) => {
+                  const square = (FILES[f] + (8 - r)) as Square;
+                  const lightSq = (r + f) % 2 === 0;
+                  const isSel = selected === square;
+                  const isTarget = targets.has(square);
+                  const isLast = last && (last.from === square || last.to === square);
+                  const isCheckSq = inCheck && piece?.type === "k" && piece.color === turn;
+                  const lifted = drag?.moved && drag.from === square;
 
-                return (
-                  <div
-                    key={square}
-                    className={cn(
-                      "relative flex items-center justify-center",
-                      lightSq ? "bg-[#eeeed2]" : "bg-[#769656]"
-                    )}
-                  >
-                    {isLast && <span className="absolute inset-0 bg-[#f6d66b]/45" />}
-                    {isSel && <span className="absolute inset-0 bg-[#f6d66b]/55" />}
-                    {isCheckSq && (
-                      <span className="absolute inset-0 bg-[radial-gradient(circle,rgba(224,108,139,0.95),transparent_72%)]" />
-                    )}
+                  return (
+                    <div
+                      key={square}
+                      className={cn(
+                        "relative flex items-center justify-center",
+                        lightSq ? "bg-[#eeeed2]" : "bg-[#769656]"
+                      )}
+                    >
+                      {isLast && <span className="absolute inset-0 bg-[#f6d66b]/45" />}
+                      {isSel && <span className="absolute inset-0 bg-[#f6d66b]/55" />}
+                      {isCheckSq && (
+                        <span className="absolute inset-0 bg-[radial-gradient(circle,rgba(224,108,139,0.95),transparent_72%)]" />
+                      )}
 
-                    {f === 0 && (
-                      <span
-                        className={cn(
-                          "absolute left-0.5 top-0.5 text-[8px] font-bold",
-                          lightSq ? "text-[#769656]" : "text-[#eeeed2]"
-                        )}
-                      >
-                        {8 - r}
-                      </span>
-                    )}
-                    {r === 7 && (
-                      <span
-                        className={cn(
-                          "absolute bottom-0 right-0.5 text-[8px] font-bold",
-                          lightSq ? "text-[#769656]" : "text-[#eeeed2]"
-                        )}
-                      >
-                        {FILES[f]}
-                      </span>
-                    )}
+                      {f === 0 && (
+                        <span
+                          className={cn(
+                            "absolute left-0.5 top-0.5 text-[8px] font-bold",
+                            lightSq ? "text-[#769656]" : "text-[#eeeed2]"
+                          )}
+                        >
+                          {8 - r}
+                        </span>
+                      )}
+                      {r === 7 && (
+                        <span
+                          className={cn(
+                            "absolute bottom-0 right-0.5 text-[8px] font-bold",
+                            lightSq ? "text-[#769656]" : "text-[#eeeed2]"
+                          )}
+                        >
+                          {FILES[f]}
+                        </span>
+                      )}
 
-                    {piece && !lifted && (
-                      <motion.div
-                        initial={false}
-                        className="relative z-10"
-                      >
-                        <ChessPiece type={piece.type} color={piece.color} size={42} className="select-none" />
-                      </motion.div>
-                    )}
+                      {piece && !lifted && (
+                        <motion.div
+                          initial={false}
+                          className="relative z-10"
+                        >
+                          <ChessPiece type={piece.type} color={piece.color} size={42} className="select-none" />
+                        </motion.div>
+                      )}
 
-                    {isTarget &&
-                      (piece ? (
-                        <span className="absolute inset-1 rounded-full ring-[3px] ring-black/30" />
-                      ) : (
-                        <span className="absolute h-[28%] w-[28%] rounded-full bg-black/25" />
-                      ))}
-                  </div>
-                );
-              })
-            )}
+                      {isTarget &&
+                        (piece ? (
+                          <span className="absolute inset-1 rounded-full ring-[3px] ring-black/30" />
+                        ) : (
+                          <span className="absolute h-[28%] w-[28%] rounded-full bg-black/25" />
+                        ))}
+                    </div>
+                  );
+                })
+              )}
 
-            {drag?.moved && (
-              <div
-                className="pointer-events-none absolute z-30"
-                style={{
-                  left: drag.lx,
-                  top: drag.ly,
-                  width: drag.cell,
-                  height: drag.cell,
-                  transform: "translate(-50%, -50%) scale(1.14)",
-                }}
-              >
-                <ChessPiece type={drag.type} color="w" size={drag.cell} />
-              </div>
-            )}
+              {drag?.moved && (
+                <div
+                  className="pointer-events-none absolute z-30"
+                  style={{
+                    left: drag.lx,
+                    top: drag.ly,
+                    width: drag.cell,
+                    height: drag.cell,
+                    transform: "translate(-50%, -50%) scale(1.14)",
+                  }}
+                >
+                  <ChessPiece type={drag.type} color="w" size={drag.cell} />
+                </div>
+              )}
+            </div>
           </div>
+
+          <AnimatePresence>
+            {promo && (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="absolute inset-0 z-40 grid place-items-center bg-void/70 backdrop-blur-sm"
+              >
+                <motion.div
+                  initial={{ scale: 0.85, y: 12 }}
+                  animate={{ scale: 1, y: 0 }}
+                  className="panel rounded-[20px] p-4 text-center"
+                >
+                  <p className="mb-3 text-sm font-semibold text-ink">Promote to</p>
+                  <div className="flex gap-2">
+                    {(["q", "r", "b", "n"] as PieceSymbol[]).map((t) => (
+                      <button
+                        key={t}
+                        onClick={() => {
+                          commit(promo.from, promo.to, t);
+                          setPromo(null);
+                        }}
+                        className="grid h-14 w-14 place-items-center rounded-xl bg-white/5 ring-1 ring-white/10 transition-colors hover:bg-white/10"
+                      >
+                        <ChessPiece type={t} color="w" size={40} />
+                      </button>
+                    ))}
+                  </div>
+                </motion.div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          <ResultOverlay result={result} onRematch={reset} />
         </div>
 
-        <AnimatePresence>
-          {promo && (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="absolute inset-0 z-40 grid place-items-center bg-void/70 backdrop-blur-sm"
-            >
-              <motion.div
-                initial={{ scale: 0.85, y: 12 }}
-                animate={{ scale: 1, y: 0 }}
-                className="rounded-2xl glass p-4 text-center shadow-card"
-              >
-                <p className="mb-3 text-sm font-semibold text-ink">Promote to</p>
-                <div className="flex gap-2">
-                  {(["q", "r", "b", "n"] as PieceSymbol[]).map((t) => (
-                    <button
-                      key={t}
-                      onClick={() => {
-                        commit(promo.from, promo.to, t);
-                        setPromo(null);
-                      }}
-                      className="grid h-14 w-14 place-items-center rounded-xl bg-white/5 ring-1 ring-white/10 transition-colors hover:bg-white/10"
-                    >
-                      <ChessPiece type={t} color="w" size={40} />
-                    </button>
-                  ))}
-                </div>
-              </motion.div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-
-        <ResultOverlay result={result} onRematch={reset} />
+        <p className={cn("mt-3 text-center text-[14px]", inCheck && !result ? "font-semibold text-rose" : "text-ink-dim")}>
+          {result ? "Game over" : inCheck ? "Check" : turn === "w" ? "Your move" : "Opponent is thinking"}
+        </p>
       </div>
 
-      {/* status strip */}
-      <p className="mt-3 text-center text-sm text-ink-dim">
-        {result ? "Game over" : turn === "w" ? "Your move" : "Opponent is thinking"}
-      </p>
-
       {/* you (bottom) */}
-      <div className="mt-3">
+      <div>
         <PlayerBar
           name={youName}
           pieceColor="w"

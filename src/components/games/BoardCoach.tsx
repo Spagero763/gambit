@@ -18,22 +18,22 @@ interface CoachStep {
 
 const STEPS: Record<string, CoachStep[]> = {
   blocks: [
-    { sel: '[data-coach="tray"]', text: "Press and drag a shape from here…" },
-    { sel: '[data-coach="board"]', text: "…onto the board. Fill a whole row or column to clear it and score." },
+    { sel: '[data-coach="tray"]', text: "Drag a piece from here..." },
+    { sel: '[data-coach="board"]', text: "...onto the board. Fill a whole row or column to clear it." },
   ],
   chess: [
-    { sel: '[data-coach="board"]', text: "Tap a center pawn, then tap two squares forward to make your first move. You're white." },
+    { sel: '[data-coach="board"]', text: "You play white. Tap a pawn, then the square you want it on." },
   ],
   whot: [
-    { sel: '[data-coach="pile"]', text: "This is the card to match — by shape or number." },
-    { sel: '[data-coach="hand"]', text: "Your cards. Tap a matching one to play it. No match? Draw from the market." },
+    { sel: '[data-coach="pile"]', text: "Match this card by shape or by number." },
+    { sel: '[data-coach="hand"]', text: "Your hand. Tap a card that matches. Nothing fits? Tap the market to draw." },
   ],
   snakes: [
-    { sel: '[data-coach="dice"]', text: "Tap here to roll the dice and move." },
-    { sel: '[data-coach="board"]', text: "Ladders shoot you up, snake heads slide you down. First to the top wins." },
+    { sel: '[data-coach="dice"]', text: "Roll here." },
+    { sel: '[data-coach="board"]', text: "Ladders lift you, snakes drop you. Land exactly on 100 to win." },
   ],
   "tic-tac-toe": [
-    { sel: '[data-coach="grid"]', text: "Tap the center square first, then build three in a row to win." },
+    { sel: '[data-coach="grid"]', text: "Tap a square. Three in a row wins." },
   ],
 };
 
@@ -66,8 +66,7 @@ export function BoardCoach({ slug }: { slug: string }) {
     };
   }, [i]);
 
-  // the target may not exist yet (game still loading, or a setup screen first) —
-  // poll until it appears, then render. Give up after 20s.
+  // the target may not exist yet (game still loading, or a setup screen first), // poll until it appears, then render. Give up after 20s.
   useEffect(() => {
     if (i < 0 || !steps) return;
     const sel = steps[i].sel;
@@ -119,7 +118,7 @@ export function BoardCoach({ slug }: { slug: string }) {
 
   return (
     <Portal>
-      <div className="fixed inset-0 z-[115]" style={{ background: rect ? "transparent" : "rgba(8,7,18,0.8)" }}>
+      <div className="fixed inset-0 z-[115]" style={{ background: rect ? "transparent" : "rgba(0,0,0,0.75)" }}>
         {rect && (
           <div
             className="pointer-events-none absolute rounded-xl"
@@ -128,48 +127,45 @@ export function BoardCoach({ slug }: { slug: string }) {
               top: rect.top - pad,
               width: rect.width + pad * 2,
               height: rect.height + pad * 2,
-              boxShadow: "0 0 0 9999px rgba(8,7,18,0.8)",
-              border: "2px solid rgba(62,207,142,0.9)",
+              boxShadow: "0 0 0 9999px rgba(3,6,10,0.78), 0 0 28px rgba(62,224,155,0.55)",
+              border: "2px solid rgba(123,245,193,0.9)",
             }}
           />
         )}
 
         {rect && (
           <motion.div
-            className="pointer-events-none absolute text-2xl"
+            className="pointer-events-none absolute text-won-bright"
             style={{
-              left: clamp(rect.left + rect.width / 2 - 12, 8, (typeof window !== "undefined" ? window.innerWidth : 390) - 32),
-              ...(below ? { top: rect.bottom + 2 } : { top: rect.top - 34 }),
+              left: clamp(rect.left + rect.width / 2 - 10, 8, (typeof window !== "undefined" ? window.innerWidth : 390) - 28),
+              ...(below ? { top: rect.bottom + 6 } : { top: rect.top - 26 }),
+              rotate: below ? 0 : 180,
             }}
-            animate={{ y: below ? [0, 7, 0] : [0, -7, 0] }}
-            transition={{ duration: 1, repeat: Infinity }}
+            animate={{ y: below ? [0, 5, 0] : [0, -5, 0] }}
+            transition={{ duration: 1.2, repeat: Infinity, ease: "easeInOut" }}
           >
-            {below ? "👆" : "👇"}
+            <svg width="20" height="16" viewBox="0 0 20 16" aria-hidden>
+              <path d="M10 1 19 15H1z" fill="currentColor" />
+            </svg>
           </motion.div>
         )}
 
-        <motion.div
-          key={i}
-          initial={{ opacity: 0, scale: 0.96 }}
-          animate={{ opacity: 1, scale: 1 }}
-          className="absolute rounded-2xl border border-line bg-void-800 p-4 shadow-pop"
-          style={cardStyle}
-        >
-          <p className="text-[13px] leading-snug text-ink">{s.text}</p>
+        <div key={i} className="enter panel absolute rounded-[20px] p-4" style={cardStyle}>
+          <p className="text-body text-ink">{s.text}</p>
           <div className="mt-3 flex items-center justify-between">
-            <button onClick={finish} className="text-[12px] font-medium text-ink-faint transition-colors hover:text-ink-dim">
+            <button onClick={finish} className="text-small font-semibold text-ink-soft">
               Skip
             </button>
             <div className="flex items-center gap-2">
-              <span className="text-[11px] text-ink-faint">
+              <span className="nums text-micro text-ink-faint">
                 {i + 1}/{steps.length}
               </span>
-              <button onClick={next} className="btn-primary rounded-xl px-4 py-2 text-[13px] shadow-glow">
+              <button onClick={next} className="btn-primary h-10 rounded-full px-5 text-small">
                 {i >= steps.length - 1 ? "Got it" : "Next"}
               </button>
             </div>
           </div>
-        </motion.div>
+        </div>
       </div>
     </Portal>
   );

@@ -3,16 +3,17 @@
 import { Shape } from "@/lib/games/whot";
 import { cn } from "@/lib/cn";
 
+// The classic Nigerian deck: every suit printed in one crimson on cream.
+const CRIMSON = "#a3162e";
 const SHAPE_COLOR: Record<Shape, string> = {
-  circle: "#8b7dff",
-  triangle: "#27e1a6",
-  cross: "#ffc15e",
-  square: "#ff6b9a",
-  star: "#a89bff",
-  whot: "#f3f1ff",
+  circle: CRIMSON,
+  triangle: CRIMSON,
+  cross: CRIMSON,
+  square: CRIMSON,
+  star: CRIMSON,
+  whot: CRIMSON,
 };
 
-/** A single Whot shape glyph. */
 export function WhotShape({
   shape,
   size = 24,
@@ -42,20 +43,20 @@ export function WhotShape({
       );
       break;
     case "square":
-      node = <rect x={12 - r * 0.85} y={12 - r * 0.85} width={r * 1.7} height={r * 1.7} rx="2" />;
+      node = <rect x={12 - r * 0.85} y={12 - r * 0.85} width={r * 1.7} height={r * 1.7} rx="1.2" />;
       break;
     case "star":
       node = <Star cx={12} cy={12} r={r} />;
       break;
     default:
       node = (
-        <text x="12" y="16" textAnchor="middle" fontSize="11" fontWeight="800" fill={c}>
-          WHOT
+        <text x="12" y="16" textAnchor="middle" fontSize="10" fontWeight="800" fill={c}>
+          W
         </text>
       );
   }
   return (
-    <svg width={size} height={size} viewBox="0 0 24 24" className={className} fill={c}>
+    <svg width={size} height={size} viewBox="0 0 24 24" className={className} fill={c} aria-hidden>
       {node}
     </svg>
   );
@@ -71,9 +72,8 @@ function Star({ cx, cy, r }: { cx: number; cy: number; r: number }) {
   return <polygon points={pts.join(" ")} />;
 }
 
-/** A full Whot card face — real card anatomy: vertical corner indices (number
- *  with the suit beneath it, mirrored bottom-right), a double frame, and a big
- *  centre suit with depth. Key info stays legible in a fanned hand. */
+/** A card face laid out like the printed deck: corner number and suit,
+ *  mirrored in the opposite corner, one big suit in the middle. */
 export function WhotCardFace({
   shape,
   num,
@@ -86,101 +86,60 @@ export function WhotCardFace({
   dim?: boolean;
 }) {
   const isWhot = shape === "whot";
-  const color = SHAPE_COLOR[shape];
+  const index = (
+    <>
+      <span className="display text-[15px] font-extrabold leading-none" style={{ color: CRIMSON }}>
+        {isWhot ? 20 : num}
+      </span>
+      {!isWhot && <WhotShape shape={shape} size={10} className="mt-[3px]" />}
+    </>
+  );
 
   return (
     <div
       className={cn(
-        "relative h-full w-full select-none overflow-hidden rounded-xl border",
-        dim ? "border-black/10 opacity-80" : "border-black/20",
+        "relative h-full w-full select-none overflow-hidden rounded-[10px] bg-whot-cream",
+        dim && "opacity-60",
         className
       )}
-      style={{
-        background: "linear-gradient(160deg, #fbf8f0 0%, #f3eee0 70%, #ece5d2 100%)",
-        boxShadow: dim
-          ? "none"
-          : "inset 0 1px 1px rgba(255,255,255,0.9), 0 6px 14px -6px rgba(0,0,0,0.6)",
-      }}
+      style={{ boxShadow: "inset 0 0 0 1px rgba(110,15,32,0.18), 0 8px 18px -10px rgba(0,0,0,0.75)" }}
     >
-      {/* inner frame in the suit colour */}
       <span
         aria-hidden
-        className="pointer-events-none absolute inset-[5%] rounded-[8px] border"
-        style={{ borderColor: `${color}55` }}
+        className="pointer-events-none absolute inset-[6%] rounded-[6px]"
+        style={{ boxShadow: `inset 0 0 0 1px ${CRIMSON}33` }}
       />
-
-      {/* top-left vertical index: number over suit, like a real deck */}
-      <div className="absolute left-[7%] top-[5%] flex flex-col items-center leading-none">
-        <span className="font-display text-[0.95em] text-sm font-extrabold" style={{ color: isWhot ? "#7a1f3d" : color }}>
-          {isWhot ? "W" : num}
-        </span>
-        {!isWhot && <WhotShape shape={shape} size={11} className="mt-[2px]" />}
-      </div>
-
-      {/* bottom-right vertical index, rotated 180° */}
-      <div className="absolute bottom-[5%] right-[7%] flex rotate-180 flex-col items-center leading-none">
-        <span className="font-display text-sm font-extrabold" style={{ color: isWhot ? "#7a1f3d" : color }}>
-          {isWhot ? "W" : num}
-        </span>
-        {!isWhot && <WhotShape shape={shape} size={11} className="mt-[2px]" />}
-      </div>
-
-      {/* centre */}
+      <div className="absolute left-[9%] top-[6%] flex flex-col items-center">{index}</div>
+      <div className="absolute bottom-[6%] right-[9%] flex rotate-180 flex-col items-center">{index}</div>
       <div className="absolute inset-0 grid place-items-center">
         {isWhot ? (
-          <div className="-rotate-12 text-center">
-            <p
-              className="font-display text-base font-black italic tracking-tight"
-              style={{ color: "#7a1f3d", textShadow: "0 1px 0 rgba(255,255,255,0.7)" }}
-            >
-              WHOT!
-            </p>
-            <p className="text-[8px] font-bold" style={{ color: "#7a1f3d99" }}>20</p>
-          </div>
-        ) : (
-          <span style={{ filter: "drop-shadow(0 2px 1.5px rgba(0,0,0,0.25))" }}>
-            <WhotShape shape={shape} size={34} />
+          <span className="display -rotate-[14deg] text-[17px] font-extrabold italic tracking-tight" style={{ color: CRIMSON }}>
+            WHOT
           </span>
+        ) : (
+          <WhotShape shape={shape} size={36} />
         )}
       </div>
     </div>
   );
 }
 
-/** Card back — the classic Whot look: deep crimson, double ring, tilted oval. */
+/** The crimson back with the tilted WHOT oval. */
 export function WhotCardBack({ className }: { className?: string }) {
   return (
     <div
-      className={cn("relative h-full w-full overflow-hidden rounded-xl border border-black/30", className)}
-      style={{
-        background: "linear-gradient(155deg, #8c2347 0%, #6d1a38 55%, #4a1226 100%)",
-        boxShadow: "inset 0 1px 1px rgba(255,255,255,0.18)",
-      }}
+      className={cn("relative h-full w-full overflow-hidden rounded-[10px] bg-whot-red", className)}
+      style={{ boxShadow: "inset 0 0 0 1px rgba(0,0,0,0.3), 0 8px 18px -10px rgba(0,0,0,0.75)" }}
     >
-      {/* double frame */}
-      <span className="pointer-events-none absolute inset-[5%] rounded-[8px] border border-white/25" />
-      <span className="pointer-events-none absolute inset-[10%] rounded-[6px] border border-white/12" />
-      {/* tilted oval wordmark — crisp at any size via SVG */}
+      <span className="pointer-events-none absolute inset-[6%] rounded-[6px] border border-white/25" />
       <svg viewBox="0 0 60 84" className="absolute inset-0 h-full w-full" preserveAspectRatio="xMidYMid meet" aria-hidden>
         <g transform="rotate(-18 30 42)">
-          <ellipse cx="30" cy="42" rx="21" ry="12.5" fill="#fdf6ec" stroke="rgba(0,0,0,0.25)" strokeWidth="0.8" />
-          <ellipse cx="30" cy="42" rx="18.5" ry="10.2" fill="none" stroke="#8c2347" strokeWidth="0.9" />
-          <text
-            x="30"
-            y="45.2"
-            textAnchor="middle"
-            fontSize="9.5"
-            fontStyle="italic"
-            fontWeight="900"
-            fill="#7a1f3d"
-            style={{ letterSpacing: "0.5px" }}
-          >
-            WHOT!
+          <ellipse cx="30" cy="42" rx="20" ry="12" fill="#f6efe1" />
+          <ellipse cx="30" cy="42" rx="17.5" ry="9.8" fill="none" stroke={CRIMSON} strokeWidth="0.8" />
+          <text x="30" y="45.4" textAnchor="middle" fontSize="9.5" fontStyle="italic" fontWeight="900" fill={CRIMSON}>
+            WHOT
           </text>
         </g>
-        {/* corner pips */}
-        <circle cx="8" cy="10" r="1.4" fill="rgba(255,255,255,0.35)" />
-        <circle cx="52" cy="74" r="1.4" fill="rgba(255,255,255,0.35)" />
       </svg>
     </div>
   );
