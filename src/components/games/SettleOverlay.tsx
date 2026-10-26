@@ -24,7 +24,7 @@ const EXPLORER: Record<number, string> = {
 
 /**
  * End-of-match result + on-chain payout state. While the pot is still settling
- * we do NOT offer "Back to lobby" — the winner's money must land first. We show
+ * we do NOT offer "Back to lobby", the winner's money must land first. We show
  * the real settle error and a Retry button so a stuck payout can be recovered.
  */
 export function SettleOverlay({
@@ -46,14 +46,14 @@ export function SettleOverlay({
   chainId?: number;
   matchId: bigint;
   shareAddress?: string;
-  stakeWei?: string | null; // per-player stake (wei) — to show the credited amount
+  stakeWei?: string | null; // per-player stake (wei), to show the credited amount
   decimals?: number;
   token?: string | null;
 }) {
   const settling = status === "settling";
   const symbol = symbolForToken(token);
   // amount credited to THIS player's wallet: a win takes both stakes minus fee;
-  // a draw refunds your own stake. (1v1 only — this overlay is per-match.)
+  // a draw refunds your own stake. (1v1 only, this overlay is per-match.)
   const stake = stakeWei ? Number(formatUnits(BigInt(stakeWei), decimals ?? 18)) : null;
   const payout = stake === null ? null : result === "win" ? stake * 2 * (1 - FEE) : result === "draw" ? stake : null;
   const [busy, setBusy] = useState(false);
@@ -78,8 +78,8 @@ export function SettleOverlay({
   return (
     <div className="text-center">
       {result === "win" && !settling && <Confetti className="fixed z-10" />}
-      <p className={cn("text-3xl font-black tracking-tight", result === "draw" ? "text-amber" : result === "win" ? "text-teal" : "text-rose")}>
-        {result === "draw" ? "Draw" : result === "win" ? "You win" : "You lose"}
+      <p className={cn("display text-[38px] font-extrabold leading-none", result === "draw" ? "text-amber" : result === "win" ? "text-glow" : "text-ink")}>
+        {result === "draw" ? "Draw" : result === "win" ? "You won" : "You lost"}
       </p>
 
       {settling ? (
@@ -95,7 +95,7 @@ export function SettleOverlay({
           <button
             onClick={retry}
             disabled={busy}
-            className="mt-3 inline-flex items-center gap-1.5 rounded-xl border border-line bg-void-700 px-4 py-2 text-sm font-semibold text-ink transition-colors hover:bg-void-600 disabled:opacity-60"
+            className="btn-glass mt-3 inline-flex h-11 items-center gap-1.5 rounded-full px-5 text-[14px] disabled:opacity-60"
           >
             {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <RotateCcw className="h-4 w-4" />}
             {busy ? "Settling…" : "Retry payout"}
@@ -121,9 +121,9 @@ export function SettleOverlay({
           {result === "lose" ? (
             <p className="text-sm text-ink-dim">Pot paid to opponent</p>
           ) : (
-            <div className="mx-auto mt-1 flex max-w-[18rem] items-center justify-center gap-2 rounded-2xl border border-teal/30 bg-teal/[0.08] px-4 py-2.5">
+            <div className="mx-auto mt-3 flex max-w-[19rem] items-center justify-center gap-2 rounded-full border border-teal/35 bg-teal/[0.1] px-4 py-2.5 shadow-[0_0_28px_-10px_rgba(62,224,155,0.7)]">
               <CheckCircle2 className="h-5 w-5 shrink-0 text-teal" />
-              <p className="text-left text-sm font-semibold text-teal">
+              <p className="nums text-left text-[14px] font-semibold text-teal">
                 {result === "draw" ? "Stake refunded to your wallet" : "Paid to your wallet"}
                 {payout ? (
                   <>
@@ -147,13 +147,13 @@ export function SettleOverlay({
               <ShareButton
                 text="Just won a staked match on Gambit and got paid on the spot. Who is next?"
                 url={inviteUrl(shareAddress)}
-                className="inline-flex items-center gap-1.5 rounded-xl border border-line bg-void-600 px-4 py-2.5 text-sm font-semibold text-ink transition-colors hover:border-line-strong"
+                className="btn-glass inline-flex h-12 items-center gap-1.5 rounded-full px-5 text-[15px]"
               >
                 <Share2 className="h-4 w-4" /> Share
               </ShareButton>
             )}
-            <Link href="/" className="btn-primary inline-block rounded-xl px-5 py-2.5 text-sm shadow-glow">
-              Back to lobby
+            <Link href="/" className="btn-primary pressable inline-flex h-12 items-center rounded-full px-6 text-[15px]">
+              Back to games
             </Link>
           </div>
         </div>

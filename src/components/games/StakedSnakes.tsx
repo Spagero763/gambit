@@ -1,9 +1,8 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { AnimatePresence, motion } from "framer-motion";
-import Link from "next/link";
-import { ArrowLeft, Loader2, ExternalLink, Dices } from "lucide-react";
+import { motion } from "framer-motion";
+import { Loader2, Dices } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { submitMove } from "@/lib/matchClient";
 import { SNAKES_LADDERS, centerFrac } from "@/lib/games/snakesLayout";
@@ -11,6 +10,10 @@ import { SettleOverlay } from "./SettleOverlay";
 import { ResignButton } from "./ResignButton";
 import { TimeoutClaim } from "./TimeoutClaim";
 import { MatchChat } from "./MatchChat";
+import { StakedHeader, MoneySeat, ResultLayer } from "./StakedChrome";
+
+const YOU_HEX = "#5aa9ff";
+const THEM_HEX = "#ffb547";
 import { useProfiles, displayName } from "@/lib/profiles";
 import { play } from "@/lib/sfx";
 import { cn } from "@/lib/cn";
@@ -135,35 +138,26 @@ export function StakedSnakes({ matchId, you, onExit }: { matchId: bigint; you: `
     : "Opponent's roll";
 
   return (
-    <div className="mx-auto flex min-h-[100dvh] w-full max-w-md flex-col px-4 py-4">
-      <div className="flex items-center justify-between">
-        {onExit ? (
-          <button onClick={onExit} className="inline-flex items-center gap-2 rounded-full border border-line bg-void-700 px-3 py-1.5 text-sm text-ink-dim transition-colors hover:text-ink">
-            <ArrowLeft className="h-4 w-4" /> Cup
-          </button>
-        ) : (
-          <Link href="/" className="inline-flex items-center gap-2 rounded-full border border-line bg-void-700 px-3 py-1.5 text-sm text-ink-dim transition-colors hover:text-ink">
-            <ArrowLeft className="h-4 w-4" /> Lobby
-          </Link>
-        )}
-        <span className="inline-flex items-center gap-2">
-          {match?.status === "active" && <ResignButton matchId={matchId} you={me} />}
-          <span className="rounded-full border border-line bg-void-700 px-3 py-1.5 text-xs font-semibold text-teal">
-            Staked · #{matchId.toString()}
-          </span>
-        </span>
-      </div>
+    <div className="mx-auto flex min-h-[100dvh] w-full max-w-md flex-col px-4 pb-[calc(16px+env(safe-area-inset-bottom))]">
+      <StakedHeader
+        title="Snakes & Ladders"
+        matchId={matchId}
+        stakeWei={match?.stake}
+        decimals={match?.decimals}
+        token={match?.token}
+        onExit={onExit}
+        right={match?.status === "active" ? <ResignButton matchId={matchId} you={me} /> : null}
+      />
 
-      <div className="mt-3 flex items-center justify-between gap-3">
-        <Tag label="You" pos={myPos} color="violet" active={!!myTurn} />
-        <span className="text-xs text-ink-faint">vs</span>
-        <Tag label={oppName} pos={oppPos} color="amber" active={match?.status === "active" && !myTurn} alignRight />
-      </div>
-
-      <p className="mt-3 text-center text-sm text-ink-dim">{status}</p>
+      <MoneySeat
+        role="them"
+        name={oppName}
+        detail={`On square ${oppPos}`}
+        active={match?.status === "active" && !myTurn}
+        icon={<span className="h-4 w-4 rounded-full ring-2 ring-white/40" style={{ background: THEM_HEX }} />}
+      />
 
       <TimeoutClaim matchId={matchId} me={me} turn={match?.state?.turn} updatedAt={match?.updated_at} status={match?.status} />
-      <MatchChat matchId={matchId} me={me} />
 
       <div className="relative mx-auto mt-3 w-full max-w-[360px]">
         <div
@@ -213,58 +207,64 @@ export function StakedSnakes({ matchId, you, onExit }: { matchId: bigint; you: `
 
           {/* tokens */}
           <div className="pointer-events-none absolute inset-2">
-            <Token pos={oppPos} color="#e3b341" offset={2.5} z={10} />
-            <Token pos={myPos} color="#8e8bf0" offset={-2.5} z={20} />
+            <Token pos={oppPos} color={THEM_HEX} offset={2.5} z={10} />
+            <Token pos={myPos} color={YOU_HEX} offset={-2.5} z={20} />
           </div>
         </div>
-
-        <AnimatePresence>
-          {finished && (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              className="absolute inset-0 z-30 grid place-items-center rounded-3xl bg-void/80 backdrop-blur-sm"
-            >
-              <SettleOverlay
-                result={iWon ? "win" : "lose"}
-                status={match?.status ?? "settling"}
-                settleTx={match?.settle_tx}
-                settleError={match?.settle_error}
-                chainId={match?.chain_id}
-                matchId={matchId}
-                shareAddress={me}
-                stakeWei={match?.stake}
-                decimals={match?.decimals}
-                token={match?.token}
-              />
-            </motion.div>
-          )}
-        </AnimatePresence>
       </div>
 
-      <div className="mt-5 flex items-center justify-center gap-4">
+      <div className="mt-4 flex items-center gap-4">
         <motion.div
           key={dice}
           initial={{ rotate: -12, scale: 0.9 }}
           animate={{ rotate: 0, scale: 1 }}
-          className="grid h-14 w-14 grid-cols-3 grid-rows-3 gap-0.5 rounded-2xl border border-line bg-void-700 p-2 shadow-card"
+          className="grid h-14 w-14 shrink-0 grid-cols-3 grid-rows-3 gap-0.5 rounded-2xl border border-black/20 p-2"
+          style={{
+            background: "linear-gradient(145deg, #fdfaf2, #ddd5c2)",
+            boxShadow: "inset 0 2px 3px rgba(255,255,255,0.9), inset 0 -3px 5px rgba(0,0,0,0.25), 0 10px 24px -10px rgba(0,0,0,0.7)",
+          }}
         >
           {Array.from({ length: 9 }).map((_, i) => {
             const pips: Record<number, number[]> = { 1: [4], 2: [0, 8], 3: [0, 4, 8], 4: [0, 2, 6, 8], 5: [0, 2, 4, 6, 8], 6: [0, 2, 3, 5, 6, 8] };
-            return <span key={i} className={cn("m-auto h-2 w-2 rounded-full", pips[dice]?.includes(i) ? "bg-ink" : "bg-transparent")} />;
+            return <span key={i} className={cn("m-auto h-2 w-2 rounded-full", pips[dice]?.includes(i) ? "bg-[#16131d]" : "bg-transparent")} />;
           })}
         </motion.div>
         <button
           onClick={roll}
           disabled={!myTurn || busy || finished}
-          className={cn("btn-primary inline-flex items-center gap-2 rounded-2xl px-6 py-3 text-sm shadow-glow transition-opacity", (!myTurn || busy || finished) && "opacity-40")}
+          className="btn-primary pressable inline-flex h-14 flex-1 items-center justify-center gap-2 rounded-full text-[17px]"
         >
-          {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Dices className="h-4 w-4" />} Roll
+          {busy ? <Loader2 className="h-5 w-5 animate-spin" /> : <Dices className="h-5 w-5" />} Roll
         </button>
       </div>
-      <p className="mt-3 text-center text-[11px] text-ink-faint">Roll exactly onto 100 to win. Overshoot and you hold.</p>
+      <p className="mt-2 text-center text-[14px] text-ink-dim">{status}</p>
+      {err && <p className="mt-1 text-center text-[12px] text-rose">{err}</p>}
 
-      {err && <p className="mt-2 text-center text-[11px] text-rose">{err}</p>}
+      <div className="mt-auto pt-3">
+        <MoneySeat
+          role="you"
+          name="You"
+          detail={`On square ${myPos}`}
+          active={!!myTurn}
+          icon={<span className="h-4 w-4 rounded-full ring-2 ring-white/40" style={{ background: YOU_HEX }} />}
+        />
+      </div>
+      <MatchChat matchId={matchId} me={me} />
+
+      <ResultLayer open={finished}>
+        <SettleOverlay
+          result={iWon ? "win" : "lose"}
+          status={match?.status ?? "settling"}
+          settleTx={match?.settle_tx}
+          settleError={match?.settle_error}
+          chainId={match?.chain_id}
+          matchId={matchId}
+          shareAddress={me}
+          stakeWei={match?.stake}
+          decimals={match?.decimals}
+          token={match?.token}
+        />
+      </ResultLayer>
     </div>
   );
 }
@@ -284,21 +284,6 @@ function Token({ pos, color, offset, z }: { pos: number; color: string; offset: 
         </svg>
       </div>
     </motion.div>
-  );
-}
-
-function Tag({ label, pos, color, active, alignRight }: { label: string; pos: number; color: "violet" | "amber"; active?: boolean; alignRight?: boolean }) {
-  const hex = color === "violet" ? "#8e8bf0" : "#e3b341";
-  return (
-    <div className={cn("flex flex-1 items-center gap-2 rounded-2xl border px-3 py-2.5 transition-all", active ? "border-line-strong bg-void-700" : "border-line bg-void-800", alignRight && "flex-row-reverse text-right")}>
-      <span className="grid h-8 w-8 place-items-center rounded-lg bg-void-600">
-        <span className="h-3.5 w-3.5 rounded-full ring-2 ring-white/40" style={{ background: hex }} />
-      </span>
-      <div className="leading-tight">
-        <p className="text-sm font-semibold text-ink">{label}</p>
-        <p className="nums text-[10px] text-ink-faint">square {pos}</p>
-      </div>
-    </div>
   );
 }
 

@@ -3,7 +3,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import Link from "next/link";
-import { ArrowLeft, Loader2, ExternalLink } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { fetchWhot, whotAction, WhotView } from "@/lib/matchClient";
 import { Card, Shape, SHAPE_LABEL, isLegal } from "@/lib/games/whot";
@@ -12,6 +11,9 @@ import { SettleOverlay } from "./SettleOverlay";
 import { ResignButton } from "./ResignButton";
 import { TimeoutClaim } from "./TimeoutClaim";
 import { MatchChat } from "./MatchChat";
+import { StakedHeader, MoneySeat, ResultLayer } from "./StakedChrome";
+import { Felt } from "@/components/art/Felt";
+import { sheetEase } from "@/lib/motion";
 import { play } from "@/lib/sfx";
 import { useProfiles, displayName, avatarHex } from "@/lib/profiles";
 import { Avatar } from "@/components/Avatar";
@@ -134,28 +136,17 @@ export function StakedWhot({ matchId, you, onExit }: { matchId: bigint; you: `0x
   };
 
   return (
-    <div className="mx-auto flex min-h-[100dvh] w-full max-w-md flex-col overflow-x-hidden px-4 py-4">
-      <div className="flex items-center justify-between">
-        {onExit ? (
-          <button onClick={onExit} className="inline-flex items-center gap-2 rounded-full border border-line bg-void-700 px-3 py-1.5 text-sm text-ink-dim transition-colors hover:text-ink">
-            <ArrowLeft className="h-4 w-4" /> Cup
-          </button>
-        ) : (
-          <Link href="/" className="inline-flex items-center gap-2 rounded-full border border-line bg-void-700 px-3 py-1.5 text-sm text-ink-dim transition-colors hover:text-ink">
-            <ArrowLeft className="h-4 w-4" /> Lobby
-          </Link>
-        )}
-        <span className="inline-flex items-center gap-2">
-          {view?.status === "active" && <ResignButton matchId={matchId} you={me} />}
-          <span className="rounded-full border border-line bg-void-700 px-3 py-1.5 text-xs font-semibold text-teal">
-            Staked · #{matchId.toString()}
-          </span>
-        </span>
-      </div>
+    <div className="mx-auto flex min-h-[100dvh] w-full max-w-md flex-col overflow-x-hidden px-4 pb-[calc(12px+env(safe-area-inset-bottom))]">
+      <StakedHeader
+        title="Naija Whot"
+        matchId={matchId}
+        onExit={onExit}
+        right={view?.status === "active" ? <ResignButton matchId={matchId} you={me} /> : null}
+      />
 
-      {/* opponents — single fan for 1v1, seat chips around the table for 3+ */}
+      {/* opponents: one seat for 1v1, seat chips around the table for 3+ */}
       {multi ? (
-        <div className="mt-4 flex flex-wrap items-center justify-center gap-2">
+        <div className="flex flex-wrap items-center justify-center gap-2">
           {others.map((a) => {
             const p = otherProfiles[a.toLowerCase()];
             const placeI = placements.indexOf(a);
@@ -163,11 +154,8 @@ export function StakedWhot({ matchId, you, onExit }: { matchId: bigint; you: `0x
             return (
               <div
                 key={a}
-                className={cn(
-                  "flex items-center gap-1.5 rounded-2xl border px-2.5 py-1.5",
-                  theirTurn ? "border-teal/50 bg-teal/[0.08]" : "border-line bg-void-800",
-                  placeI >= 0 && "opacity-60"
-                )}
+                data-on={theirTurn ? "them" : undefined}
+                className={cn("seat flex items-center gap-1.5 rounded-full px-2.5 py-1.5", placeI >= 0 && "opacity-60")}
               >
                 <Avatar image={p?.avatar_image || undefined} color={avatarHex(p)} name={displayName(a, p)} size={20} rounded="rounded-md" />
                 <span className="max-w-[72px] truncate text-[11px] font-semibold text-ink">{displayName(a, p)}</span>
@@ -180,32 +168,34 @@ export function StakedWhot({ matchId, you, onExit }: { matchId: bigint; you: `0x
           })}
         </div>
       ) : (
-        <div className="mt-4 flex flex-col items-center gap-1">
-          <div className={cn("flex items-center gap-2 rounded-2xl border px-3 py-1.5", view?.status === "active" && !myTurn ? "border-teal/40 bg-void-700" : "border-line bg-void-800")}>
-            <span className="text-[11px] font-semibold text-ink">{oppName}</span>
-            <span className="text-[9px] text-ink-faint">{oppCount} cards</span>
-          </div>
-          <div className="flex -space-x-3.5">
-            {Array.from({ length: Math.min(8, oppCount) }).map((_, i) => (
-              <div key={i} className="h-8 w-[22px]" style={{ transform: `rotate(${(i - Math.min(8, oppCount) / 2) * 5}deg)` }}>
-                <WhotCardBack />
-              </div>
-            ))}
-          </div>
-        </div>
+        <MoneySeat role="them" name={oppName} detail={`${oppCount} ${oppCount === 1 ? "card" : "cards"}`} active={view?.status === "active" && !myTurn} />
       )}
 
       {/* your locked placement while the table plays on */}
       {multi && myPlace >= 0 && !finished && (
         <p className="mt-2 text-center text-[12px] font-semibold text-teal">
-          {MEDALS[myPlace] ?? "✔"} You finished {["1st", "2nd", "3rd"][myPlace] ?? `${myPlace + 1}th`} — the table plays on.
+          {MEDALS[myPlace] ?? "✔"} You finished {["1st", "2nd", "3rd"][myPlace] ?? `${myPlace + 1}th`}. The table plays on.
         </p>
       )}
 
       {/* table */}
-      <div className="mt-4 flex flex-1 items-center justify-center gap-6">
-        <button onClick={() => act({ type: "draw" })} disabled={!myTurn || busy || !!calling} className="flex flex-col items-center gap-1.5 disabled:opacity-50">
-          <div className="relative h-24 w-16">
+      <div className="relative my-3 flex flex-1 items-center justify-center gap-10 rounded-[36px] py-6 shadow-[0_30px_60px_-30px_rgba(0,0,0,0.9)]">
+        <Felt />
+        {!multi && oppCount > 0 && (
+          <div aria-hidden className="absolute inset-x-0 top-5 flex justify-center -space-x-5">
+            {Array.from({ length: Math.min(10, oppCount) }).map((_, i, arr) => (
+              <div
+                key={i}
+                className="h-[52px] w-[36px]"
+                style={{ transformOrigin: "50% 0%", transform: `rotate(${((arr.length - 1) / 2 - i) * 5}deg) translateY(${-Math.abs(i - (arr.length - 1) / 2) * 2}px)` }}
+              >
+                <WhotCardBack />
+              </div>
+            ))}
+          </div>
+        )}
+        <button onClick={() => act({ type: "draw" })} disabled={!myTurn || busy || !!calling} className="pressable relative flex flex-col items-center gap-2 disabled:opacity-60">
+          <div className="relative h-[112px] w-[78px]">
             <div className="absolute inset-0 translate-x-1 translate-y-1">
               <WhotCardBack />
             </div>
@@ -213,42 +203,42 @@ export function StakedWhot({ matchId, you, onExit }: { matchId: bigint; you: `0x
               <WhotCardBack />
             </div>
           </div>
-          <span className="text-[10px] font-semibold text-ink-dim">Market</span>
+          <span className="text-[12px] font-semibold text-white/75">{pending ? `Pick ${pending.amount}` : "Market"}</span>
         </button>
 
-        <div className="flex flex-col items-center gap-1.5">
-          <div className="relative h-24 w-16">
+        <div className="relative flex flex-col items-center gap-2">
+          <div className="relative h-[112px] w-[78px] drop-shadow-[0_14px_18px_rgba(0,0,0,0.45)]">
             <AnimatePresence mode="popLayout">
               {top && (
-                <motion.div key={top.id} initial={{ scale: 0.6, opacity: 0, rotate: -12 }} animate={{ scale: 1, opacity: 1, rotate: 0 }} exit={{ opacity: 0 }} transition={{ type: "spring", stiffness: 300, damping: 22 }} className="absolute inset-0">
+                <motion.div key={top.id} initial={{ y: -40, rotate: -10, opacity: 0 }} animate={{ y: 0, rotate: 0, opacity: 1 }} exit={{ opacity: 0 }} transition={{ type: "spring", stiffness: 300, damping: 24 }} className="absolute inset-0">
                   <WhotCardFace shape={top.shape} num={top.num} />
                 </motion.div>
               )}
             </AnimatePresence>
           </div>
           {active && (
-            <span className="flex items-center gap-1 text-[10px] font-semibold text-ink-dim">
-              <WhotShape shape={active} size={12} /> {SHAPE_LABEL[active]}
+            <span className="flex items-center gap-1.5 text-[12px] font-semibold text-white/75">
+              <WhotShape shape={active} size={13} color="#f6efe1" /> {SHAPE_LABEL[active]}
             </span>
           )}
         </div>
       </div>
 
       {/* status */}
-      <div className="mb-2 text-center">
+      <div className="mb-2 flex min-h-8 flex-col items-center justify-center text-center">
         {pending ? (
-          <span className="rounded-full bg-rose/15 px-3 py-1 text-xs font-bold text-rose">{status}</span>
+          <span className="rounded-full bg-rose/15 px-4 py-1.5 text-[13px] font-semibold text-rose">{status}</span>
         ) : (
-          <span className={cn("text-sm", myTurn ? "text-teal" : "text-ink-dim")}>{status}</span>
+          <span className={cn("text-[14px]", myTurn ? "font-semibold text-you" : "text-ink-dim")}>{status}</span>
         )}
+        {!multi && <TimeoutClaim matchId={matchId} me={me} turn={view?.turn} updatedAt={view?.updatedAt} status={view?.status} />}
       </div>
 
-      {!multi && <TimeoutClaim matchId={matchId} me={me} turn={view?.turn} updatedAt={view?.updatedAt} status={view?.status} />}
+      {!multi && <MoneySeat role="you" name="You" detail={`${hand.length} ${hand.length === 1 ? "card" : "cards"}`} active={myTurn} />}
       <MatchChat matchId={matchId} me={me} />
 
-
       {/* your hand */}
-      <div className="relative flex h-32 items-end justify-center">
+      <div className="relative mt-2 flex h-[132px] items-end justify-center">
         {hand.map((c, i) => {
           const { rot, y } = fan(i, hand.length);
           const legal = myTurn && legalId(c);
@@ -257,13 +247,17 @@ export function StakedWhot({ matchId, you, onExit }: { matchId: bigint; you: `0x
               key={c.id}
               onClick={() => playCard(c)}
               initial={{ y: 60, opacity: 0 }}
-              animate={{ y, opacity: 1, rotate: rot }}
-              whileHover={legal ? { y: y - 18, scale: 1.05 } : {}}
+              animate={{ y: y - (legal ? 14 : 0), opacity: 1, rotate: rot }}
               transition={{ type: "spring", stiffness: 300, damping: 24 }}
-              style={{ transformOrigin: "bottom center", marginLeft: i === 0 ? 0 : -20, zIndex: legal ? 20 + i : i }}
-              className={cn("h-28 w-[64px] shrink-0", myTurn && !legal && "opacity-55")}
+              style={{
+                transformOrigin: "50% 110%",
+                marginLeft: i === 0 ? 0 : hand.length > 7 ? -38 : hand.length > 5 ? -30 : -22,
+                zIndex: i,
+              }}
+              aria-label={`${c.shape === "whot" ? "Whot 20" : `${SHAPE_LABEL[c.shape]} ${c.num}`}${legal ? ", playable" : ""}`}
+              className={cn("h-[112px] w-[78px] shrink-0", myTurn && !legal && "opacity-50")}
             >
-              <div className={cn("h-full w-full rounded-xl", legal && "ring-2 ring-teal/80")}>
+              <div className={cn("h-full w-full rounded-[10px]", legal && "shadow-[0_0_0_2px_rgba(62,224,155,0.85),0_10px_24px_-8px_rgba(62,224,155,0.6)]")}>
                 <WhotCardFace shape={c.shape} num={c.num} />
               </div>
             </motion.button>
@@ -271,15 +265,20 @@ export function StakedWhot({ matchId, you, onExit }: { matchId: bigint; you: `0x
         })}
       </div>
 
-      {err && <p className="mt-2 text-center text-[11px] text-rose">{err}</p>}
+      {err && <p className="mt-2 text-center text-[12px] text-rose">{err}</p>}
 
       {/* call shape */}
       <AnimatePresence>
         {calling && (
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-50 grid place-items-center bg-void/75 backdrop-blur-sm">
-            <motion.div initial={{ scale: 0.85, y: 14 }} animate={{ scale: 1, y: 0 }} className="w-[86%] max-w-xs rounded-3xl border border-line bg-void-700 p-5 text-center shadow-pop">
-              <p className="mb-4 text-sm font-semibold text-ink">Call a shape</p>
-              <div className="grid grid-cols-2 gap-3">
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-50 flex items-end bg-black/60">
+            <motion.div
+              initial={{ y: "100%" }}
+              animate={{ y: 0 }}
+              transition={{ duration: 0.32, ease: sheetEase }}
+              className="sheet mx-auto w-full max-w-md rounded-t-[30px] px-5 pb-[calc(24px+env(safe-area-inset-bottom))] pt-6"
+            >
+              <p className="display text-[24px] font-extrabold text-ink">I need...</p>
+              <div className="mt-4 grid grid-cols-5 gap-2">
                 {(["circle", "triangle", "cross", "square", "star"] as Shape[]).map((sh) => (
                   <button
                     key={sh}
@@ -288,10 +287,10 @@ export function StakedWhot({ matchId, you, onExit }: { matchId: bigint; you: `0x
                       setCalling(null);
                       if (card) act({ type: "play", cardId: card.id, called: sh });
                     }}
-                    className="flex items-center justify-center gap-2 rounded-2xl border border-line bg-void-800 py-4 transition-colors hover:bg-void-600"
+                    aria-label={SHAPE_LABEL[sh]}
+                    className="pressable grid aspect-square place-items-center rounded-[14px] bg-whot-cream"
                   >
-                    <WhotShape shape={sh} size={22} />
-                    <span className="text-sm font-semibold text-ink">{SHAPE_LABEL[sh]}</span>
+                    <WhotShape shape={sh} size={30} />
                   </button>
                 ))}
               </div>
@@ -300,40 +299,38 @@ export function StakedWhot({ matchId, you, onExit }: { matchId: bigint; you: `0x
         )}
       </AnimatePresence>
 
-      {/* result — table games show your placement; 1v1 shows the payout flow */}
+      {/* result, table games show your placement; 1v1 shows the payout flow */}
       <AnimatePresence>
         {finished && multi && (
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="fixed inset-0 z-40 grid place-items-center bg-void/80 backdrop-blur-sm">
-            <div className="w-[min(86%,20rem)] rounded-3xl border border-line bg-void-700 p-6 text-center shadow-pop">
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="fixed inset-0 z-40 grid place-items-center bg-black/65 px-5">
+            <div className="panel w-full max-w-sm rounded-[28px] p-6 text-center">
               <p className="text-3xl">{myPlace >= 0 && myPlace < 3 ? MEDALS[myPlace] : "🃏"}</p>
-              <p className="mt-1 text-2xl font-black tracking-tight text-ink">
+              <p className="display mt-1 text-[28px] font-extrabold text-ink">
                 {myPlace === 0 ? "Champion!" : myPlace > 0 ? `You placed ${["1st", "2nd", "3rd"][myPlace] ?? `${myPlace + 1}th`}` : "Table over"}
               </p>
               <p className="mt-1 text-sm text-ink-dim">
-                {myPlace >= 0 && myPlace < 3 ? "Your prize is paid from the cup escrow." : "No prize this time — run it back."}
+                {myPlace >= 0 && myPlace < 3 ? "Your prize is paid from the cup escrow." : "No prize this time. Run it back."}
               </p>
               {tournamentId !== null && (
-                <Link href={`/tournament/${tournamentId}`} className="btn-primary mt-5 inline-block w-full rounded-2xl py-3 text-sm shadow-glow">
+                <Link href={`/tournament/${tournamentId}`} className="btn-primary pressable mt-5 flex h-12 w-full items-center justify-center rounded-full text-[15px]">
                   Back to the cup
                 </Link>
               )}
             </div>
           </motion.div>
         )}
-        {finished && !multi && (
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="fixed inset-0 z-40 grid place-items-center bg-void/80 backdrop-blur-sm">
-            <SettleOverlay
-              result={iWon ? "win" : "lose"}
-              status={view?.status ?? "settling"}
-              settleTx={view?.settleTx}
-              settleError={view?.settleError}
-              chainId={view?.chainId}
-              matchId={matchId}
-              shareAddress={me}
-            />
-          </motion.div>
-        )}
       </AnimatePresence>
+      <ResultLayer open={finished && !multi}>
+        <SettleOverlay
+          result={iWon ? "win" : "lose"}
+          status={view?.status ?? "settling"}
+          settleTx={view?.settleTx}
+          settleError={view?.settleError}
+          chainId={view?.chainId}
+          matchId={matchId}
+          shareAddress={me}
+        />
+      </ResultLayer>
     </div>
   );
 }

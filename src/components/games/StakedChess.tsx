@@ -3,8 +3,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Chess, Move, PieceSymbol, Square } from "chess.js";
 import { AnimatePresence, motion } from "framer-motion";
-import Link from "next/link";
-import { ArrowLeft, Loader2, ExternalLink } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { submitMove } from "@/lib/matchClient";
 import { ChessPiece } from "./chess/ChessPiece";
@@ -12,6 +10,8 @@ import { SettleOverlay } from "./SettleOverlay";
 import { ResignButton } from "./ResignButton";
 import { TimeoutClaim } from "./TimeoutClaim";
 import { MatchChat } from "./MatchChat";
+import { StakedHeader, ResultLayer } from "./StakedChrome";
+import { TurnDot } from "./TurnDot";
 import { useProfiles, displayName } from "@/lib/profiles";
 import { play } from "@/lib/sfx";
 import { cn } from "@/lib/cn";
@@ -177,24 +177,16 @@ export function StakedChess({ matchId, you, onExit }: { matchId: bigint; you: `0
   }, [chess]);
 
   return (
-    <div className="mx-auto flex min-h-[100dvh] w-full max-w-md flex-col px-4 py-4">
-      <div className="flex items-center justify-between">
-        {onExit ? (
-          <button onClick={onExit} className="inline-flex items-center gap-2 rounded-full border border-line bg-void-700 px-3 py-1.5 text-sm text-ink-dim transition-colors hover:text-ink">
-            <ArrowLeft className="h-4 w-4" /> Cup
-          </button>
-        ) : (
-          <Link href="/" className="inline-flex items-center gap-2 rounded-full border border-line bg-void-700 px-3 py-1.5 text-sm text-ink-dim transition-colors hover:text-ink">
-            <ArrowLeft className="h-4 w-4" /> Lobby
-          </Link>
-        )}
-        <span className="inline-flex items-center gap-2">
-          {match?.status === "active" && <ResignButton matchId={matchId} you={me} />}
-          <span className="rounded-full border border-line bg-void-700 px-3 py-1.5 text-xs font-semibold text-teal">
-            Staked · #{matchId.toString()}
-          </span>
-        </span>
-      </div>
+    <div className="mx-auto flex min-h-[100dvh] w-full max-w-md flex-col px-4 pb-[calc(16px+env(safe-area-inset-bottom))]">
+      <StakedHeader
+        title="Chess"
+        matchId={matchId}
+        stakeWei={match?.stake}
+        decimals={match?.decimals}
+        token={match?.token}
+        onExit={onExit}
+        right={match?.status === "active" ? <ResignButton matchId={matchId} you={me} /> : null}
+      />
 
       <PlayerStrip
         label={oppName}
@@ -203,17 +195,14 @@ export function StakedChess({ matchId, you, onExit }: { matchId: bigint; you: `0
         deadlineMs={match?.status === "active" && match?.updated_at ? new Date(match.updated_at).getTime() + 120_000 : null}
       />
 
-      <p className="mt-3 text-center text-sm text-ink-dim">{status}</p>
-
       <TimeoutClaim matchId={matchId} me={me} turn={match?.state?.turn} updatedAt={match?.updated_at} status={match?.status} />
-      <MatchChat matchId={matchId} me={me} />
 
       <div className="relative mt-3">
         <div
           className="rounded-[20px] p-2.5"
           style={{
             background: "linear-gradient(160deg, #2b2620, #1a1611)",
-            boxShadow: "inset 0 1px 0 rgba(255,255,255,0.1), inset 0 -4px 10px rgba(0,0,0,0.5), 0 26px 60px -26px rgba(0,0,0,0.95)",
+            boxShadow: "inset 0 1px 0 rgba(255,255,255,0.1), inset 0 -4px 10px rgba(0,0,0,0.5), 0 26px 60px -26px rgba(0,0,0,0.95), 0 0 70px -24px rgba(255,200,120,0.3)",
           }}
         >
           <div className="grid aspect-square grid-cols-8 grid-rows-8 overflow-hidden rounded-md ring-1 ring-black/40">
@@ -263,7 +252,7 @@ export function StakedChess({ matchId, you, onExit }: { matchId: bigint; you: `0
               exit={{ opacity: 0 }}
               className="absolute inset-0 z-40 grid place-items-center bg-void/70 backdrop-blur-sm"
             >
-              <div className="rounded-2xl border border-line bg-void-700 p-4 text-center shadow-pop">
+              <div className="panel rounded-[20px] p-4 text-center">
                 <p className="mb-3 text-sm font-semibold text-ink">Promote to</p>
                 <div className="flex gap-2">
                   {(["q", "r", "b", "n"] as PieceSymbol[]).map((t) => (
@@ -273,7 +262,7 @@ export function StakedChess({ matchId, you, onExit }: { matchId: bigint; you: `0
                         doMove(promo.from, promo.to, t);
                         setPromo(null);
                       }}
-                      className="grid h-14 w-14 place-items-center rounded-xl bg-void-800 ring-1 ring-line transition-colors hover:bg-void-600"
+                      className="pressable grid h-14 w-14 place-items-center rounded-[14px] surface-2"
                     >
                       <ChessPiece type={t} color={myColor ?? "w"} size={40} />
                     </button>
@@ -284,29 +273,10 @@ export function StakedChess({ matchId, you, onExit }: { matchId: bigint; you: `0
           )}
         </AnimatePresence>
 
-        <AnimatePresence>
-          {finished && (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              className="absolute inset-0 z-30 grid place-items-center rounded-[20px] bg-void/80 backdrop-blur-sm"
-            >
-              <SettleOverlay
-                result={draw ? "draw" : iWon ? "win" : "lose"}
-                status={match?.status ?? "settling"}
-                settleTx={match?.settle_tx}
-                settleError={match?.settle_error}
-                chainId={match?.chain_id}
-                matchId={matchId}
-                shareAddress={me}
-                stakeWei={match?.stake}
-                decimals={match?.decimals}
-                token={match?.token}
-              />
-            </motion.div>
-          )}
-        </AnimatePresence>
       </div>
+
+      <p className="mt-3 text-center text-[14px] text-ink-dim">{status}</p>
+      {err && <p className="mt-1 text-center text-[12px] text-rose">{err}</p>}
 
       <PlayerStrip
         label="You"
@@ -315,8 +285,22 @@ export function StakedChess({ matchId, you, onExit }: { matchId: bigint; you: `0
         you
         deadlineMs={match?.status === "active" && match?.updated_at ? new Date(match.updated_at).getTime() + 120_000 : null}
       />
+      <MatchChat matchId={matchId} me={me} />
 
-      {err && <p className="mt-3 text-center text-[11px] text-rose">{err}</p>}
+      <ResultLayer open={finished}>
+        <SettleOverlay
+          result={draw ? "draw" : iWon ? "win" : "lose"}
+          status={match?.status ?? "settling"}
+          settleTx={match?.settle_tx}
+          settleError={match?.settle_error}
+          chainId={match?.chain_id}
+          matchId={matchId}
+          shareAddress={me}
+          stakeWei={match?.stake}
+          decimals={match?.decimals}
+          token={match?.token}
+        />
+      </ResultLayer>
     </div>
   );
 }
@@ -346,30 +330,21 @@ function PlayerStrip({
   const ss = left !== null ? Math.floor((left % 60000) / 1000) : 0;
 
   return (
-    <div
-      className={cn(
-        "mt-3 flex items-center gap-2.5 rounded-2xl border px-3 py-2.5 transition-all",
-        active ? "border-line-strong bg-void-700" : "border-line bg-void-800"
-      )}
-    >
-      <span className="grid h-8 w-8 place-items-center rounded-lg bg-void-600">
-        <span className={cn("h-4 w-4 rounded-full ring-1", color === "w" ? "bg-[#f5f0e6] ring-black/20" : "bg-[#2b2836] ring-white/20")} />
+    <div data-on={active ? (you ? "you" : "them") : undefined} className="seat mt-3 flex items-center gap-3 rounded-[18px] px-3 py-2.5">
+      <span className="grid h-10 w-10 place-items-center rounded-xl bg-white/[0.06]">
+        <span className={cn("h-5 w-5 rounded-full ring-1", color === "w" ? "bg-[#f5f0e6] ring-black/20" : "bg-[#2b2836] ring-white/20")} />
       </span>
-      <div className="leading-tight">
-        <p className="text-sm font-semibold text-ink">{you ? "You" : label}</p>
-        <p className="text-[10px] text-ink-faint">{color === "w" ? "White" : "Black"}</p>
+      <div className="min-w-0 flex-1 leading-tight">
+        <p className="truncate text-[15px] font-semibold text-ink">{you ? "You" : label}</p>
+        <p className={cn("flex items-center gap-1.5 text-[12px]", active ? (you ? "text-you" : "text-them") : "text-ink-faint")}>
+          {active && <TurnDot />}
+          {active ? (you ? "Your turn" : "Their turn") : color === "w" ? "White" : "Black"}
+        </p>
       </div>
-      {left !== null ? (
-        <span
-          className={cn(
-            "nums ml-auto rounded-lg px-2.5 py-1 font-mono text-sm font-bold",
-            left <= 30_000 ? "bg-rose/15 text-rose" : "bg-void-600 text-ink"
-          )}
-        >
+      {left !== null && (
+        <span className={cn("display nums text-[20px] font-bold", left <= 30_000 ? "text-rose" : "text-ink")}>
           {mm}:{ss.toString().padStart(2, "0")}
         </span>
-      ) : (
-        active && <span className="ml-auto h-2 w-2 rounded-full bg-teal" />
       )}
     </div>
   );

@@ -1,19 +1,21 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { AnimatePresence, motion } from "framer-motion";
-import Link from "next/link";
-import { ArrowLeft, Loader2, ExternalLink } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { submitMove } from "@/lib/matchClient";
+import { evaluate } from "@/lib/games/tictactoe";
 import { Mark } from "./xo/Mark";
+import { XOBoard } from "./xo/XOBoard";
 import { SettleOverlay } from "./SettleOverlay";
 import { ResignButton } from "./ResignButton";
 import { TimeoutClaim } from "./TimeoutClaim";
 import { MatchChat } from "./MatchChat";
+import { StakedHeader, MoneySeat, ResultLayer } from "./StakedChrome";
 import { useProfiles, displayName } from "@/lib/profiles";
 import { play as playSfx } from "@/lib/sfx";
-import { cn } from "@/lib/cn";
+
+const YOU = "#5aa9ff";
+const THEM = "#ffb547";
 
 interface MatchRow {
   id: number;
@@ -123,133 +125,63 @@ export function StakedTicTacToe({ matchId, you, onExit }: { matchId: bigint; you
     : "Opponent's move";
 
   return (
-    <div className="mx-auto flex min-h-[100dvh] w-full max-w-md flex-col px-5 py-5">
-      <div className="flex items-center justify-between">
-        {onExit ? (
-          <button onClick={onExit} className="inline-flex items-center gap-2 rounded-full glass px-3 py-1.5 text-sm text-ink-dim">
-            <ArrowLeft className="h-4 w-4" /> Cup
-          </button>
-        ) : (
-          <Link href="/" className="inline-flex items-center gap-2 rounded-full glass px-3 py-1.5 text-sm text-ink-dim">
-            <ArrowLeft className="h-4 w-4" /> Lobby
-          </Link>
-        )}
-        <span className="inline-flex items-center gap-2">
-          {match?.status === "active" && <ResignButton matchId={matchId} you={me} />}
-          <span className="rounded-full glass px-3 py-1.5 text-xs font-semibold text-teal">
-            Staked · #{matchId.toString()}
-          </span>
-        </span>
+    <div className="mx-auto flex min-h-[100dvh] w-full max-w-md flex-col px-4 pb-[calc(16px+env(safe-area-inset-bottom))]">
+      <StakedHeader
+        title="Tic-Tac-Toe"
+        matchId={matchId}
+        stakeWei={match?.stake}
+        decimals={match?.decimals}
+        token={match?.token}
+        onExit={onExit}
+        right={match?.status === "active" ? <ResignButton matchId={matchId} you={me} /> : null}
+      />
+
+      <MoneySeat
+        role="them"
+        name={oppName}
+        detail={`Plays ${myMark === "X" ? "O" : "X"}`}
+        active={match?.status === "active" && !myTurn}
+        icon={<span className="h-8 w-8"><Mark kind={myMark === "X" ? "O" : "X"} color={THEM} /></span>}
+      />
+
+      <div className="flex flex-1 flex-col items-center justify-center py-3">
+        <TimeoutClaim matchId={matchId} me={me} turn={match?.state?.turn} updatedAt={match?.updated_at} status={match?.status} />
+        <div className="mt-3 w-full max-w-[340px]">
+          <XOBoard
+            board={board as ("X" | "O" | null)[]}
+            onCell={play}
+            canPlay={(i) => myTurn && !board[i] && !busy}
+            colorOf={(c) => (c === myMark ? YOU : THEM)}
+            winLine={evaluate(board as ("X" | "O" | null)[]).line}
+          />
+        </div>
+        <p className="mt-3 text-center text-[14px] text-ink-dim">{status}</p>
+        {err && <p className="mt-1 text-center text-[12px] text-rose">{err}</p>}
       </div>
 
-      <h1 className="mt-5 font-display text-2xl font-bold">Tic-Tac-Toe</h1>
-
-      {/* players */}
-      <div className="mt-3 flex items-center justify-between gap-3">
-        <PlayerTag label="You" mark={myMark} active={myTurn} accent="text-violet-bright" />
-        <span className="text-xs text-ink-faint">vs</span>
-        <PlayerTag
-          label={oppName}
-          mark={myMark === "X" ? "O" : "X"}
-          active={match?.status === "active" && !myTurn}
-          accent="text-teal"
-          alignRight
-        />
-      </div>
-
-      <p className="mt-3 text-center text-sm text-ink-dim">{status}</p>
-
-      <TimeoutClaim matchId={matchId} me={me} turn={match?.state?.turn} updatedAt={match?.updated_at} status={match?.status} />
+      <MoneySeat
+        role="you"
+        name="You"
+        detail={myMark ? `Plays ${myMark}` : undefined}
+        active={myTurn}
+        icon={myMark ? <span className="h-8 w-8"><Mark kind={myMark} color={YOU} /></span> : undefined}
+      />
       <MatchChat matchId={matchId} me={me} />
 
-      {/* board */}
-      <div className="relative mx-auto mt-4 aspect-square w-full max-w-[330px] rounded-3xl glass p-3 shadow-card">
-        <div className="grid h-full w-full grid-cols-3 grid-rows-3">
-          {board.map((cell, i) => {
-            const col = i % 3;
-            const row = Math.floor(i / 3);
-            return (
-              <button
-                key={i}
-                onClick={() => play(i)}
-                disabled={!myTurn || !!cell || busy}
-                className={cn(
-                  "relative grid place-items-center transition-colors",
-                  col < 2 && "border-r-2 border-white/10",
-                  row < 2 && "border-b-2 border-white/10",
-                  myTurn && !cell && "hover:bg-white/[0.04]"
-                )}
-              >
-                <div className="pointer-events-none h-full w-full">
-                  <AnimatePresence>{cell && <Mark key={cell} kind={cell as "X" | "O"} />}</AnimatePresence>
-                </div>
-              </button>
-            );
-          })}
-        </div>
-
-        {/* result overlay */}
-        <AnimatePresence>
-          {finished && (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              className="absolute inset-0 grid place-items-center rounded-3xl bg-void/75 backdrop-blur-sm"
-            >
-              <SettleOverlay
-                result={draw ? "draw" : iWon ? "win" : "lose"}
-                status={match?.status ?? "settling"}
-                settleTx={match?.settle_tx}
-                settleError={match?.settle_error}
-                chainId={match?.chain_id}
-                matchId={matchId}
-                shareAddress={me}
-                stakeWei={match?.stake}
-                decimals={match?.decimals}
-                token={match?.token}
-              />
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </div>
-
-      {err && <p className="mt-3 text-center text-[11px] text-rose">{err}</p>}
-    </div>
-  );
-}
-
-function PlayerTag({
-  label,
-  mark,
-  active,
-  accent,
-  alignRight,
-}: {
-  label: string;
-  mark?: "X" | "O";
-  active?: boolean;
-  accent: string;
-  alignRight?: boolean;
-}) {
-  return (
-    <div
-      className={cn(
-        "flex flex-1 items-center gap-2 rounded-2xl px-3 py-2.5 transition-all",
-        active ? "glass ring-1 ring-white/15" : "bg-white/[0.03]",
-        alignRight && "flex-row-reverse text-right"
-      )}
-    >
-      <span className={cn("grid h-8 w-8 place-items-center rounded-lg bg-white/5", accent)}>
-        {mark && (
-          <span className="h-7 w-7">
-            <Mark kind={mark} />
-          </span>
-        )}
-      </span>
-      <div className={cn("leading-tight", alignRight && "items-end")}>
-        <p className="text-sm font-semibold text-ink">{label}</p>
-        <p className="text-[10px] text-ink-faint">{active ? "to move" : "waiting"}</p>
-      </div>
+      <ResultLayer open={finished}>
+        <SettleOverlay
+          result={draw ? "draw" : iWon ? "win" : "lose"}
+          status={match?.status ?? "settling"}
+          settleTx={match?.settle_tx}
+          settleError={match?.settle_error}
+          chainId={match?.chain_id}
+          matchId={matchId}
+          shareAddress={me}
+          stakeWei={match?.stake}
+          decimals={match?.decimals}
+          token={match?.token}
+        />
+      </ResultLayer>
     </div>
   );
 }

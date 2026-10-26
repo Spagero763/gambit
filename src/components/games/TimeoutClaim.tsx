@@ -32,13 +32,13 @@ export function TimeoutClaim({
   }, []);
 
   if (status !== "active" || !turn || !updatedAt) return null;
-  if (turn.toLowerCase() === me.toLowerCase()) return null; // your move — no claim
+  if (turn.toLowerCase() === me.toLowerCase()) return null; // your move, no claim
 
   const remaining = Math.max(0, TURN_TIMEOUT_MS - (now - new Date(updatedAt).getTime()));
   const canClaim = remaining <= 0;
 
   return (
-    <div className="mx-auto mt-3 flex w-fit items-center gap-2 rounded-xl border border-line bg-void-800 px-3 py-2 text-[12px]">
+    <div className="glass mx-auto mt-3 flex w-fit items-center gap-2 rounded-full px-3.5 py-2 text-[12px]">
       <AlarmClock className="h-3.5 w-3.5 text-ink-faint" />
       {canClaim ? (
         <>
@@ -52,7 +52,7 @@ export function TimeoutClaim({
               if (!r.ok && r.error) setErr(r.error);
               setBusy(false);
             }}
-            className="btn-primary rounded-lg px-3 py-1 text-[12px] disabled:opacity-60"
+            className="btn-primary rounded-full px-3.5 py-1 text-[12px] disabled:opacity-60"
           >
             {busy ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : "Claim win"}
           </button>
