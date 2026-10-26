@@ -516,9 +516,9 @@ export function MatchSetup({
                     }}
                     inputMode="decimal"
                     placeholder="0.00"
-                    className="nums flex-1 bg-transparent text-right text-[15px] font-bold text-ink outline-none placeholder:text-ink-faint"
+                    className="nums min-w-0 flex-1 bg-transparent text-right text-[15px] font-bold text-ink outline-none placeholder:text-ink-faint"
                   />
-                  <span className="text-[13px] text-ink-faint">{token.symbol}</span>
+                  <span className="shrink-0 text-[13px] text-ink-faint">{token.symbol}</span>
                 </div>
                 {custom && !validStake && (
                   <p className="mt-1.5 text-[12px] text-rose">
