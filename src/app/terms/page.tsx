@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { BackLink } from "@/components/BackLink";
-import { Backdrop } from "@/components/Backdrop";
 
 export const metadata: Metadata = {
   title: "Terms of Service | Gambit",
@@ -12,7 +11,6 @@ export const metadata: Metadata = {
 export default function TermsPage() {
   return (
     <main className="mx-auto w-full max-w-2xl px-5 pb-28" style={{ paddingTop: "calc(1.5rem + env(safe-area-inset-top))" }}>
-      <Backdrop />
       <BackLink />
       <h1 className="mt-4 font-display text-2xl font-bold">Terms of Service</h1>
       <p className="mt-1 text-xs text-ink-faint">Last updated: July 2026</p>

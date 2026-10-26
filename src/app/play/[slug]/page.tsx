@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { GAMES } from "@/lib/games";
-import { Backdrop } from "@/components/Backdrop";
 import { PlayFlow } from "@/components/games/PlayFlow";
 
 export function generateStaticParams() {
@@ -31,7 +30,6 @@ export default function PlayPage({ params }: { params: { slug: string } }) {
 
   return (
     <main className="relative min-h-[100dvh]">
-      <Backdrop />
       <PlayFlow game={game!} />
     </main>
   );

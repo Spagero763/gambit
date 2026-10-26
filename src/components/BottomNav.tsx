@@ -17,6 +17,9 @@ const TABS = [
 
 export function BottomNav() {
   const pathname = usePathname();
+  const isOn = (t: (typeof TABS)[number]) =>
+    t.href === "/" ? pathname === "/" : pathname.startsWith((t as { match?: string }).match ?? t.href);
+  const current = TABS.findIndex(isOn);
 
   return (
     <>
@@ -39,15 +42,15 @@ export function BottomNav() {
           boxShadow: "inset 0 1px 0 rgba(255,255,255,0.1), 0 24px 48px -12px rgba(0,0,0,0.85)",
         }}
       >
-        {TABS.map((t) => {
+        {TABS.map((t, i) => {
           const Icon = t.icon;
-          const isActive =
-            t.href === "/" ? pathname === "/" : pathname.startsWith((t as { match?: string }).match ?? t.href);
+          const isActive = i === current;
           return (
             <Link
               key={t.href}
               href={t.href}
               data-tour={t.tour}
+              data-nav={i > current ? "fwd" : "back"}
               className="relative flex flex-1 flex-col items-center gap-1 rounded-[20px] py-2"
             >
               {isActive && (

@@ -195,8 +195,9 @@ body {
 }
 
 /* Entrances paint from CSS alone, so the first screen never waits on the
-   wallet SDK to hydrate. Each ends on `none`: a leftover zero transform still
-   opens a stacking context and traps fixed children. */
+   wallet SDK to hydrate. They fill backwards only: an animation still holding
+   its last frame keeps the wrapper a containing block, and any fixed overlay
+   inside it gets trapped to the wrapper's box instead of the screen. */
 @keyframes enter {
   from {
     opacity: 0;
@@ -210,7 +211,53 @@ body {
 .enter,
 .hero-in,
 .page-in {
-  animation: enter 300ms cubic-bezier(0.23, 1, 0.32, 1) both;
+  animation: enter 300ms cubic-bezier(0.23, 1, 0.32, 1) backwards;
+}
+
+/* tabs slide the way you're heading; back slides the other way */
+@keyframes page-fwd {
+  from {
+    opacity: 0;
+    transform: translateX(28px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes page-back {
+  from {
+    opacity: 0;
+    transform: translateX(-28px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+/* data-in marks a page that has finished arriving, so the one being left
+   doesn't replay its entrance when the direction is set */
+.page-in[data-in] {
+  animation: none;
+}
+html[data-nav="fwd"] .page-in:not([data-in]) {
+  animation-name: page-fwd;
+  animation-duration: 340ms;
+}
+html[data-nav="back"] .page-in:not([data-in]) {
+  animation-name: page-back;
+  animation-duration: 340ms;
+}
+
+/* a piece travels from the square it left; --gx/--gy are in squares */
+@keyframes glide {
+  from {
+    transform: translate(var(--gx, 0), var(--gy, 0));
+  }
+}
+[data-glide] {
+  z-index: 20;
+  animation: glide 260ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 @keyframes deal {

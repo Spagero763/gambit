@@ -3,7 +3,6 @@
 import { useEffect } from "react";
 import Link from "next/link";
 import { RotateCcw, Home } from "lucide-react";
-import { Backdrop } from "@/components/Backdrop";
 
 /** Route-level error boundary, a friendly recovery screen instead of a crash. */
 export default function Error({ error, reset }: { error: Error & { digest?: string }; reset: () => void }) {
@@ -14,7 +13,6 @@ export default function Error({ error, reset }: { error: Error & { digest?: stri
 
   return (
     <main className="relative grid min-h-[100dvh] place-items-center px-6 text-center">
-      <Backdrop />
       <div className="w-full max-w-sm">
         <p className="font-display text-2xl font-bold text-ink">Something hiccuped</p>
         <p className="mt-2 text-sm text-ink-dim">

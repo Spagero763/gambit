@@ -4,10 +4,12 @@ import { ReactNode, useState } from "react";
 import { PrivyProvider } from "@privy-io/react-auth";
 import { WagmiProvider } from "@privy-io/wagmi";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { MotionConfig } from "framer-motion";
 import { celo, celoSepolia } from "viem/chains";
 import { config, ACTIVE_CHAIN_ID } from "@/lib/wagmi";
 import { inMiniPay } from "@/lib/minipay";
 import { MiniPayConnect } from "@/components/MiniPayConnect";
+import { useNavDirection } from "@/lib/navDirection";
 
 // Public Privy app id (safe in the client). Override via env if it ever rotates.
 const PRIVY_APP_ID = process.env.NEXT_PUBLIC_PRIVY_APP_ID ?? "cmqkrw0fi000l0dldcurqz6nt";
@@ -20,6 +22,7 @@ export function Providers({ children }: { children: ReactNode }) {
   // load, so email and social sign-in are removed entirely (MiniPay review item
   // 2: users land signed in, no other sign-in options).
   const [miniPay] = useState(() => inMiniPay());
+  useNavDirection();
 
   return (
     <PrivyProvider
@@ -44,7 +47,8 @@ export function Providers({ children }: { children: ReactNode }) {
       <QueryClientProvider client={queryClient}>
         <WagmiProvider config={config}>
           <MiniPayConnect />
-          {children}
+          {/* framer animations follow the phone's reduce-motion setting, like the CSS ones */}
+          <MotionConfig reducedMotion="user">{children}</MotionConfig>
         </WagmiProvider>
       </QueryClientProvider>
     </PrivyProvider>

@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Inter, JetBrains_Mono, Bricolage_Grotesque } from "next/font/google";
 import { Providers } from "./providers";
 import { LayoutExtras } from "@/components/LayoutExtras";
+import { Backdrop } from "@/components/Backdrop";
 import "./globals.css";
 
 // Inter for reading, Bricolage for the big moments (titles, scores, prizes),
@@ -105,6 +106,8 @@ export default function RootLayout({
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(STRUCTURED) }} />
       </head>
       <body className="min-h-screen font-sans antialiased">
+        {/* outside the page wrapper, so the room stays lit while pages change */}
+        <Backdrop />
         <Providers>
           {children}
           <LayoutExtras />

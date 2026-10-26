@@ -100,7 +100,7 @@ export function WhotGame() {
   return (
     <div className="mx-auto flex min-h-[100dvh] w-full max-w-md flex-col px-4 pb-[calc(24px+env(safe-area-inset-bottom))]">
       <div className="flex items-center gap-3 pb-2 pt-[calc(12px+env(safe-area-inset-top))]">
-        <Link href="/" aria-label="Back to games" className="glass pressable grid h-11 w-11 shrink-0 place-items-center rounded-full text-ink">
+        <Link href="/" data-nav="back" aria-label="Back to games" className="glass pressable grid h-11 w-11 shrink-0 place-items-center rounded-full text-ink">
           <ArrowLeft className="h-5 w-5" />
         </Link>
         <div className="min-w-0">

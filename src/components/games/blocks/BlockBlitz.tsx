@@ -225,7 +225,7 @@ export function BlockBlitz({
             <ArrowLeft className="h-5 w-5" />
           </button>
         ) : (
-          <Link href="/" aria-label="Back to games" className="glass pressable grid h-11 w-11 shrink-0 place-items-center rounded-full text-ink">
+          <Link href="/" data-nav="back" aria-label="Back to games" className="glass pressable grid h-11 w-11 shrink-0 place-items-center rounded-full text-ink">
             <ArrowLeft className="h-5 w-5" />
           </Link>
         )}

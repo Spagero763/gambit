@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { ShieldCheck, Coins, Cpu, Users } from "lucide-react";
 import { BackLink } from "@/components/BackLink";
-import { Backdrop } from "@/components/Backdrop";
 
 export const metadata: Metadata = {
   title: "About Gambit",
@@ -35,7 +34,6 @@ const FACTS = [
 export default function AboutPage() {
   return (
     <main className="mx-auto w-full max-w-2xl px-5 pb-28" style={{ paddingTop: "calc(1.5rem + env(safe-area-inset-top))" }}>
-      <Backdrop />
       <BackLink />
       <h1 className="mt-4 font-display text-2xl font-bold">About Gambit</h1>
       <p className="mt-2 text-sm leading-relaxed text-ink-dim">

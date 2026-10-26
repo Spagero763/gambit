@@ -1,11 +1,9 @@
-import { Backdrop } from "@/components/Backdrop";
 import Link from "next/link";
 import { Home, Gamepad2 } from "lucide-react";
 
 export default function NotFound() {
   return (
     <main className="relative grid min-h-[100dvh] place-items-center px-6 text-center">
-      <Backdrop />
       <div className="w-full max-w-sm">
         <p className="font-display text-5xl font-black tracking-tight text-teal">404</p>
         <p className="mt-3 font-display text-xl font-bold text-ink">This page took a wrong turn</p>

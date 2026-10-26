@@ -38,7 +38,7 @@ export function StakedHeader({
           <ArrowLeft className="h-5 w-5" />
         </button>
       ) : (
-        <Link href="/" aria-label="Back to games" className={back}>
+        <Link href="/" data-nav="back" aria-label="Back to games" className={back}>
           <ArrowLeft className="h-5 w-5" />
         </Link>
       )}
