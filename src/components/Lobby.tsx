@@ -1,181 +1,118 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
-import { motion } from "framer-motion";
 import { formatUnits } from "viem";
-import { RefreshCw, Plus, Swords, Coins } from "lucide-react";
 import { useAccount } from "wagmi";
-import { supabase } from "@/lib/supabase";
+import { RefreshCw, ShieldCheck, Share2 } from "lucide-react";
 import { GAMES } from "@/lib/games";
-import { GameCover } from "@/components/art/GameCover";
+import { GameArt } from "@/components/art/TileArt";
+import { useOpenRooms, secondsLeft } from "@/hooks/useOpenRooms";
+import { roomHref } from "@/components/LiveNow";
 import { useProfiles, displayName } from "@/lib/profiles";
 import { SkeletonList } from "@/components/Skeleton";
 import { symbolForToken } from "@/lib/tokens";
+import { buttonClass } from "@/components/ui/Button";
 import { cn } from "@/lib/cn";
 
-const ease = [0.22, 1, 0.36, 1] as const;
+const MONEY_GAMES = GAMES.filter((g) => g.mode === "1v1" && g.status === "live");
+const NAME = Object.fromEntries(GAMES.map((g) => [g.slug, g.name]));
 
-const GAME = Object.fromEntries(GAMES.map((g) => [g.slug, g]));
-
-interface Room {
-  id: number;
-  game: string;
-  stake: string;
-  creator: string;
-  chain_id: number;
-  created_at: string;
-  token: string | null;
-  decimals: number | null;
-}
-
-
-// Mirrors joinWindow() on the escrow (600s). A room older than this cannot be
-// joined by anyone, so it has no business in a list of rooms to join.
-const JOIN_WINDOW_MS = 600 * 1000;
-
-// The lobby re-reads every few seconds; the refund sweep does not need to run
-// that often. Once every few minutes clears the backlog just as well.
-let lastSweep = 0;
-function askForRefunds() {
-  if (Date.now() - lastSweep < 3 * 60 * 1000) return;
-  lastSweep = Date.now();
-  void fetch("/api/match/sweep").catch(() => {});
-}
-
-function relTime(iso: string) {
-  const d = (Date.now() - new Date(iso).getTime()) / 1000;
-  if (d < 60) return "just now";
-  if (d < 3600) return `${Math.floor(d / 60)}m ago`;
-  if (d < 86400) return `${Math.floor(d / 3600)}h ago`;
-  return `${Math.floor(d / 86400)}d ago`;
-}
-
+/**
+ * Where money matches start: everyone waiting for an opponent right now, and
+ * a room of your own in any game. Rooms only stay open for ten minutes, so the
+ * list leads and the way to open one sits right under it.
+ */
 export function Lobby() {
-  const [rooms, setRooms] = useState<Room[] | null>(null);
+  const { rooms, refresh, refreshing } = useOpenRooms("lobby-rooms");
   const profiles = useProfiles((rooms ?? []).map((r) => r.creator));
-  const [refreshing, setRefreshing] = useState(false);
   const { address } = useAccount();
   const me = address?.toLowerCase();
 
-  const refresh = useCallback(async () => {
-    if (!supabase) {
-      setRooms([]);
-      return;
-    }
-    setRefreshing(true);
-    const { data } = await supabase
-      .from("matches")
-      .select("id,game,stake,creator,chain_id,created_at,token,decimals")
-      .eq("status", "open")
-      .order("created_at", { ascending: false })
-      .limit(50);
-
-    // A room dies 10 minutes after it opens: the contract refuses further joins,
-    // but the row stays "open" until something refunds it. Listing those was a
-    // trap — you tapped a room that looked live and got "the join window has
-    // closed". Hide them, and ask the server to hand the stake back.
-    const rows = (data as Room[]) ?? [];
-    const live = rows.filter((r) => Date.now() - new Date(r.created_at).getTime() < JOIN_WINDOW_MS);
-    setRooms(live);
-    if (live.length !== rows.length) askForRefunds();
-    setRefreshing(false);
-  }, []);
-
-  useEffect(() => {
-    refresh();
-    // realtime: any change to matches (a room opening, filling, settling)
-    // refreshes the list instantly; the poll is just a slow safety net
-    const channel = supabase
-      ?.channel("lobby-rooms")
-      .on("postgres_changes", { event: "*", schema: "public", table: "matches" }, () => refresh())
-      .subscribe();
-    const t = setInterval(refresh, 20000);
-    return () => {
-      if (channel) supabase?.removeChannel(channel);
-      clearInterval(t);
-    };
-  }, [refresh]);
-
   return (
     <section className="mx-auto w-full max-w-2xl px-5 pb-28 pt-2 lg:max-w-3xl">
-      <div className="flex items-center justify-between">
+      <div className="flex items-start justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight">Live games</h1>
-          <p className="mt-1 text-sm text-ink-dim">Open staked rooms waiting for an opponent.</p>
+          <h1 className="display text-[34px] font-extrabold leading-none text-ink">Play for money</h1>
+          <p className="mt-2 text-[14px] text-ink-dim">Real people, one pot. Winner takes 95%, paid in seconds.</p>
         </div>
-        <button
-          onClick={refresh}
-          aria-label="Refresh"
-          className="grid h-10 w-10 place-items-center rounded-xl border border-line bg-void-700 text-ink-dim transition-colors hover:text-ink"
-        >
+        <button onClick={refresh} aria-label="Refresh" className="glass pressable grid h-11 w-11 shrink-0 place-items-center rounded-full text-ink-dim">
           <RefreshCw className={cn("h-4 w-4", refreshing && "animate-spin")} />
         </button>
       </div>
 
-      <Link
-        href="/play/tic-tac-toe"
-        className="mt-5 flex items-center gap-3 rounded-2xl border border-dashed border-line bg-void-800 px-4 py-3.5 transition-colors hover:border-line-strong"
-      >
-        <span className="grid h-9 w-9 place-items-center rounded-xl bg-void-600 text-teal">
-          <Plus className="h-5 w-5" />
+      <h2 className="mb-2.5 mt-7 flex items-center gap-2 text-[12px] font-bold uppercase tracking-[0.08em] text-ink-dim">
+        <span className="relative inline-flex h-2 w-2">
+          <span className="absolute inset-0 rounded-full bg-teal" style={{ animation: "ring 1.6s cubic-bezier(0.23,1,0.32,1) infinite" }} />
+          <span className="relative h-2 w-2 rounded-full bg-teal" />
         </span>
-        <div>
-          <p className="text-sm font-semibold text-ink">Create a staked room</p>
-          <p className="text-[12px] text-ink-faint">Set your stake and share, or wait for a challenger.</p>
-        </div>
-      </Link>
+        Waiting for an opponent
+        {rooms && rooms.length > 0 && <span className="nums normal-case tracking-normal text-ink-faint">· {rooms.length}</span>}
+      </h2>
 
       {rooms === null ? (
-        <div className="mt-4"><SkeletonList rows={3} /></div>
+        <SkeletonList rows={3} />
       ) : rooms.length === 0 ? (
-        <div className="mt-4 rounded-2xl border border-line bg-void-700 px-4 py-10 text-center">
-          <span className="mx-auto grid h-12 w-12 place-items-center rounded-xl bg-void-600 text-teal">
-            <Swords className="h-5 w-5" />
-          </span>
-          <p className="mt-4 text-sm text-ink-dim">No open rooms right now.</p>
-          <p className="mt-1 text-[12px] text-ink-faint">Be the first — create one above and a challenger can join.</p>
+        <div className="glass rounded-tile px-5 py-6 text-center">
+          <p className="text-[15px] font-semibold text-ink">Nobody&apos;s waiting right now</p>
+          <p className="mx-auto mt-1 max-w-xs text-[13px] leading-snug text-ink-faint">
+            Open a room below and share the link. The first person to join plays you.
+          </p>
         </div>
       ) : (
-        <ul className="mt-4 space-y-2.5">
-          {rooms.map((r) => {
-            const g = GAME[r.game];
+        <ul className="space-y-2">
+          {rooms.map((r, i) => {
             const stake = Number(formatUnits(BigInt(r.stake || "0"), r.decimals ?? 18));
-            const sym = symbolForToken(r.token);
             const mine = r.creator?.toLowerCase() === me;
+            const mins = Math.max(1, Math.ceil(secondsLeft(r) / 60));
             return (
-              <motion.li
-                key={r.id}
-                initial={{ opacity: 0, y: 14, filter: "blur(4px)" }}
-                animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
-                transition={{ duration: 0.4, ease, delay: Math.min(rooms.indexOf(r) * 0.05, 0.4) }}
-              >
-                <Link
-                  href={`/play/${r.game}?room=${r.id}&stake=${stake}&token=${r.token ?? ""}`}
-                  className="group flex items-center gap-3 rounded-2xl border border-line bg-void-700 p-3 shadow-card transition-all duration-200 hover:-translate-y-0.5 hover:border-line-strong hover:shadow-pop"
-                >
-                  <span className="h-12 w-16 shrink-0 overflow-hidden rounded-lg border border-line">
-                    {g ? <GameCover art={g.art} className="h-full w-full" /> : null}
+              <li key={r.id} className="enter" style={{ animationDelay: `${Math.min(i * 40, 240)}ms` }}>
+                <Link href={roomHref(r)} className="glass pressable flex items-center gap-3 rounded-tile p-2.5 pr-3">
+                  <span className="relative h-12 w-16 shrink-0 overflow-hidden rounded-[14px] border border-white/10">
+                    <GameArt slug={r.game} className="h-full w-full" />
                   </span>
                   <div className="min-w-0 flex-1">
-                    <p className="text-sm font-semibold text-ink">{g?.name ?? r.game}</p>
-                    <p className="truncate text-[11px] text-ink-faint">
-                      {mine ? "Your room" : displayName(r.creator, profiles[r.creator.toLowerCase()])} · #{r.id} · {relTime(r.created_at)}
+                    <p className="truncate text-[14px] font-semibold text-ink">
+                      {NAME[r.game] ?? r.game}
+                      <span className="nums ml-1.5 text-teal">
+                        {stake.toFixed(2)} {symbolForToken(r.token)}
+                      </span>
+                    </p>
+                    <p className="truncate text-[12px] text-ink-faint">
+                      {mine ? "Your room" : displayName(r.creator, profiles[r.creator.toLowerCase()])} · #{r.id} · {mins} min left
                     </p>
                   </div>
-                  <div className="text-right">
-                    <p className="nums flex items-center gap-1 text-sm font-semibold text-teal">
-                      <Coins className="h-3.5 w-3.5" />
-                      {stake.toFixed(2)} <span className="text-[10px] text-ink-faint">{sym}</span>
-                    </p>
-                    <span className="text-[10px] text-ink-faint transition-colors group-hover:text-teal">{mine ? "open" : "join →"}</span>
-                  </div>
+                  <span className={buttonClass(mine ? "secondary" : "primary", "sm", "shrink-0 px-3.5")}>{mine ? "Open" : "Join"}</span>
                 </Link>
-              </motion.li>
+              </li>
             );
           })}
         </ul>
       )}
+
+      <h2 className="mb-2.5 mt-8 text-[12px] font-bold uppercase tracking-[0.08em] text-ink-dim">Open a room</h2>
+      <div className="grid grid-cols-2 gap-3">
+        {MONEY_GAMES.map((g) => (
+          <Link key={g.slug} href={`/play/${g.slug}?mode=staked`} className="glass pressable relative block overflow-hidden rounded-tile">
+            <div className="relative aspect-[16/10] overflow-hidden">
+              <GameArt slug={g.slug} className="h-full w-full" />
+            </div>
+            <p className="display px-3.5 pb-3 pt-2 text-[16px] font-extrabold leading-tight text-ink">{g.name}</p>
+          </Link>
+        ))}
+      </div>
+
+      <div className="glass mt-6 flex items-start gap-3 rounded-tile p-4">
+        <span className="grid h-10 w-10 shrink-0 place-items-center rounded-2xl bg-teal/15 text-teal">
+          <Share2 className="h-[18px] w-[18px]" />
+        </span>
+        <p className="text-[13px] leading-snug text-ink-dim">
+          <span className="font-semibold text-ink">Fastest way to a match:</span> open a room, then tap Challenge a friend and send the link on WhatsApp.
+        </p>
+      </div>
+
+      <p className="mt-5 flex items-center justify-center gap-1.5 text-center text-[12px] text-ink-faint">
+        <ShieldCheck className="h-3.5 w-3.5" /> Both entries are locked in a contract until the game ends.
+      </p>
     </section>
   );
 }

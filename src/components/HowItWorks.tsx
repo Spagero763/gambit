@@ -39,7 +39,7 @@ const LAST_WEB = {
   body: "Your money is yours. Withdraw your winnings to any wallet from your profile whenever you like.",
 };
 
-/** "How it works" button + modal. Manual only — the first-run tour is Onboarding. */
+/** "How it works" button + modal. Manual only, the first-run tour is Onboarding. */
 export function HowItWorks() {
   const [open, setOpen] = useState(false);
   const miniPay = useInMiniPay();
@@ -51,7 +51,7 @@ export function HowItWorks() {
     <>
       <button
         onClick={() => setOpen(true)}
-        className="inline-flex items-center gap-1.5 rounded-lg border border-line bg-void-800 px-2.5 py-1.5 text-[12px] text-ink-dim transition-colors hover:text-ink"
+        className="inline-flex items-center gap-1 text-[12px] font-semibold text-teal transition-opacity hover:opacity-80"
       >
         <HelpCircle className="h-3.5 w-3.5" /> How it works
       </button>

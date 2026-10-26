@@ -1,49 +1,42 @@
 "use client";
 
 import Link from "next/link";
-import { motion } from "framer-motion";
 import { Swords, BarChart3, Trophy } from "lucide-react";
 import { GAMES } from "@/lib/games";
-import { stagger } from "@/lib/motion";
-import { GameCard } from "./GameCard";
+import { GameTile, WhotHero } from "@/components/home/GameTile";
 
 export function GameGrid() {
-  const [featured, ...rest] = GAMES;
-  const live = GAMES.filter((g) => g.status === "live").length;
+  const rest = GAMES.filter((g) => g.slug !== "whot");
 
   return (
-    <section id="games" data-tour="games" className="mx-auto w-full max-w-2xl px-5 pb-28 pt-7 lg:max-w-6xl scroll-mt-4">
+    <section id="games" data-tour="games" className="mx-auto w-full max-w-2xl scroll-mt-4 px-5 pb-6 pt-8 lg:max-w-6xl">
       <div className="mb-3.5 flex items-end justify-between">
-        <div className="flex items-center gap-2">
-          <h2 className="text-[15px] font-semibold tracking-tight text-ink">Games</h2>
-          <span className="text-[12px] text-ink-faint">{live} live</span>
-        </div>
-        <div className="flex items-center gap-3">
-          <Link href="/stats" className="flex items-center gap-1 text-[12px] font-medium text-ink-dim transition-colors hover:text-ink">
+        <h2 className="display text-[22px] font-extrabold text-ink">Games</h2>
+        <div className="flex items-center gap-3.5">
+          <Link href="/stats" className="flex items-center gap-1 text-[12px] font-semibold text-ink-dim transition-colors hover:text-ink">
             <BarChart3 className="h-3.5 w-3.5" /> Stats
           </Link>
-          <Link href="/tournaments" className="flex items-center gap-1 text-[12px] font-medium text-amber transition-opacity hover:opacity-80">
+          <Link href="/tournaments" className="flex items-center gap-1 text-[12px] font-semibold text-amber">
             <Trophy className="h-3.5 w-3.5" /> Cups
           </Link>
-          <Link href="/lobby" className="flex items-center gap-1 text-[12px] font-medium text-teal transition-opacity hover:opacity-80">
+          <Link href="/lobby" className="flex items-center gap-1 text-[12px] font-semibold text-teal">
             <Swords className="h-3.5 w-3.5" /> Live rooms
           </Link>
         </div>
       </div>
 
-      {/* the grid assembles itself: the container leads, cards follow in order */}
-      <motion.div
-        variants={stagger()}
-        initial="hidden"
-        whileInView="show"
-        viewport={{ once: true, margin: "-60px" }}
-        className="grid grid-cols-2 gap-3 lg:grid-cols-3 lg:gap-4"
-      >
-        <GameCard game={featured} index={0} featured />
-        {rest.map((game, i) => (
-          <GameCard key={game.slug} game={game} index={i + 1} />
-        ))}
-      </motion.div>
+      <div className="grid gap-3 lg:grid-cols-[1.4fr_1fr] lg:gap-4">
+        <div className="enter">
+          <WhotHero />
+        </div>
+        <div className="grid grid-cols-2 gap-3 lg:gap-4">
+          {rest.map((game, i) => (
+            <div key={game.slug} className="enter" style={{ animationDelay: `${80 + i * 60}ms` }}>
+              <GameTile game={game} />
+            </div>
+          ))}
+        </div>
+      </div>
     </section>
   );
 }

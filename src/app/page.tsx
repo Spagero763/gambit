@@ -6,6 +6,7 @@ import { DailyChallengeCard } from "@/components/DailyChallengeCard";
 import { GameGrid } from "@/components/GameGrid";
 import { TrustStrip } from "@/components/TrustStrip";
 import { BottomNav } from "@/components/BottomNav";
+import { LiveNow } from "@/components/LiveNow";
 import {
   LazyActiveGames,
   LazyDailyStrip,
@@ -18,10 +19,12 @@ export default function Home() {
     <main className="relative min-h-[100dvh]">
       <Backdrop />
       <Header />
-      {/* desktop: hero sits beside the daily column; mobile stacks unchanged */}
-      <div className="mx-auto w-full lg:grid lg:max-w-6xl lg:grid-cols-2 lg:items-center lg:gap-8 lg:px-5 lg:pt-6">
-        <Hero />
-        <div className="px-5 lg:px-0">
+      <div className="mx-auto w-full lg:grid lg:max-w-6xl lg:grid-cols-2 lg:items-start lg:gap-8 lg:px-5 lg:pt-6">
+        <div>
+          <Hero />
+          <LiveNow />
+        </div>
+        <div className="px-5 pt-6 lg:px-0 lg:pt-0">
           <DailyReward />
           <DailyChallengeCard />
           <LazySaveProgressPrompt />
@@ -29,8 +32,8 @@ export default function Home() {
           <LazyDailyStrip />
         </div>
       </div>
-      <LazyGameShowcase />
       <GameGrid />
+      <LazyGameShowcase />
       <TrustStrip />
       <BottomNav />
     </main>
