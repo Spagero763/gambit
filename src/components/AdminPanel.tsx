@@ -8,6 +8,7 @@ import { hasToken, signIn, getToken } from "@/lib/profile";
 import { ExternalA } from "@/components/ExternalA";
 import { AdminVaultActions } from "@/components/AdminVaultActions";
 import { AdminTokenAllowlist } from "@/components/AdminTokenAllowlist";
+import { AdminSettleWindow } from "@/components/AdminSettleWindow";
 import { OWNER_ADDRESS as OWNER } from "@/lib/owner";
 import { cn } from "@/lib/cn";
 
@@ -116,14 +117,14 @@ export function AdminPanel() {
           <p className="text-sm font-semibold text-ink">Relayer gas {data?.relayer ? <span className="nums">· {data.relayer.balanceCELO} CELO</span> : ""}</p>
           <p className="truncate text-[11px] text-ink-faint">{data?.relayer?.address ?? "…"}</p>
         </div>
-        {data?.relayer?.lowGas && <span className="rounded-full bg-rose/15 px-2 py-1 text-[10px] font-bold text-rose">LOW — TOP UP</span>}
+        {data?.relayer?.lowGas && <span className="rounded-full bg-rose/15 px-2 py-1 text-[10px] font-bold text-rose">LOW, TOP UP</span>}
       </div>
 
       {/* prize vaults: balances + low warnings + one-tap cup settle */}
       {data?.vaults && (
         <>
           <div className="mt-3 grid grid-cols-2 gap-2">
-            {/* unit comes from the vault's own token — the referral vault pays
+            {/* unit comes from the vault's own token, the referral vault pays
                 USDT now, and a card that says USDm while holding USDT is how a
                 funded vault gets mistaken for an empty one */}
             <VaultCard label="Cup" unit={data.vaults.cup?.symbol ?? "USDm"} v={data.vaults.cup} />
@@ -132,6 +133,7 @@ export function AdminPanel() {
           <div className="mt-2">
             <AdminVaultActions vaults={data.vaults} owner={OWNER} onDone={load} />
             <AdminTokenAllowlist owner={OWNER} />
+            <AdminSettleWindow owner={OWNER} />
           </div>
         </>
       )}
@@ -254,7 +256,7 @@ function Btn({ children, onClick, busy, tone }: { children: React.ReactNode; onC
   );
 }
 function Empty() {
-  return <p className="rounded-2xl border border-dashed border-line px-4 py-4 text-center text-[12px] text-ink-faint">Nothing — all clear ✓</p>;
+  return <p className="rounded-2xl border border-dashed border-line px-4 py-4 text-center text-[12px] text-ink-faint">Nothing, all clear ✓</p>;
 }
 function VaultCard({ label, unit, v }: { label: string; unit: string; v: Vault | null }) {
   if (!v) {

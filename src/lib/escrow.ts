@@ -104,6 +104,22 @@ export const ESCROW_ABI = [
     outputs: [],
   },
   {
+    // How long after a match starts anyone may refund it with reclaimStalled.
+    type: "function",
+    name: "settleWindow",
+    stateMutability: "view",
+    inputs: [],
+    outputs: [{ name: "", type: "uint64" }],
+  },
+  {
+    // Owner-only, signed by the owner wallet in the browser like setTokenAllowed.
+    type: "function",
+    name: "setSettleWindow",
+    stateMutability: "nonpayable",
+    inputs: [{ name: "w", type: "uint64" }],
+    outputs: [],
+  },
+  {
     // The id the next createMatch will take, so a server sweep can walk the
     // recent range without depending on a database row existing for every match.
     type: "function",
