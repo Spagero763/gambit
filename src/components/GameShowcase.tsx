@@ -90,7 +90,7 @@ export function GameShowcase() {
                       transition={{ duration: 0.3 }}
                     >
                       <h3 className="text-lg font-semibold tracking-tight text-white">{active.name}</h3>
-                      <p className="text-[13px] text-white/65">{active.tagline}</p>
+                      <p className="text-[14px] text-white/65">{active.tagline}</p>
                     </motion.div>
                   </AnimatePresence>
                 </div>
@@ -106,7 +106,7 @@ export function GameShowcase() {
                   <motion.span
                     whileHover={{ scale: 1.06 }}
                     whileTap={{ scale: 0.95 }}
-                    className="relative inline-flex items-center gap-1.5 rounded-full px-3.5 py-2 text-[13px] font-semibold text-void shadow-glow"
+                    className="relative inline-flex items-center gap-1.5 rounded-full px-3.5 py-2 text-[14px] font-semibold text-void shadow-glow"
                     style={{ background: active.accent }}
                   >
                     <Play className="h-3.5 w-3.5 fill-void" />
@@ -119,25 +119,23 @@ export function GameShowcase() {
         </Link>
 
         {/* segmented progress / tabs */}
-        <div className="flex gap-1.5 px-4 pb-4">
+        {/* the bar is 4px; the button around it is a full thumb tall */}
+        <div className="flex gap-1.5 px-4">
           {SHOW.map((s, idx) => (
-            <button
-              key={s.slug}
-              onClick={() => setI(idx)}
-              className="group relative h-1 flex-1 overflow-hidden rounded-full bg-white/10"
-              aria-label={`Show ${s.name}`}
-            >
-              {idx < i && <span className="absolute inset-0 bg-white/40" />}
-              {idx === i && (
-                <motion.span
-                  key={`fill-${i}-${paused}`}
-                  className="absolute inset-y-0 left-0"
-                  style={{ background: s.accent }}
-                  initial={{ width: "0%" }}
-                  animate={{ width: paused ? "30%" : "100%" }}
-                  transition={{ duration: paused ? 0.3 : DURATION / 1000, ease: "linear" }}
-                />
-              )}
+            <button key={s.slug} onClick={() => setI(idx)} className="group flex h-11 flex-1 items-center" aria-label={`Show ${s.name}`}>
+              <span className="relative h-1 w-full overflow-hidden rounded-full bg-white/10">
+                {idx < i && <span className="absolute inset-0 bg-white/40" />}
+                {idx === i && (
+                  <motion.span
+                    key={`fill-${i}-${paused}`}
+                    className="absolute inset-y-0 left-0"
+                    style={{ background: s.accent }}
+                    initial={{ width: "0%" }}
+                    animate={{ width: paused ? "30%" : "100%" }}
+                    transition={{ duration: paused ? 0.3 : DURATION / 1000, ease: "linear" }}
+                  />
+                )}
+              </span>
             </button>
           ))}
         </div>

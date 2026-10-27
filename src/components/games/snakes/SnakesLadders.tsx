@@ -180,7 +180,7 @@ export function SnakesLadders({ difficulty = "normal" }: { difficulty?: Difficul
               key={t.id}
               onClick={() => setTheme(t)}
               className={cn(
-                "pressable rounded-full px-3.5 py-1.5 text-[12px] font-semibold",
+                "pressable rounded-full px-3.5 py-1.5 text-[14px] font-semibold",
                 theme.id === t.id ? "border border-teal/40 bg-teal/[0.12] text-ink" : "text-ink-faint hover:text-ink-dim"
               )}
             >
@@ -201,7 +201,7 @@ export function SnakesLadders({ difficulty = "normal" }: { difficulty?: Difficul
             <Dices className="h-5 w-5" /> Roll
           </button>
         </div>
-        <p className="mt-3 text-center text-[12px] text-ink-faint">
+        <p className="mt-3 text-center text-[14px] text-ink-faint">
           Roll exactly onto 100 to win. Overshoot and you hold.
         </p>
       </div>
@@ -267,6 +267,7 @@ function Board({
           return (
             <div
               key={i}
+              aria-hidden
               className={cn(
                 "relative flex items-start justify-start rounded-[3px] text-[7px] leading-none",
                 isLadder && theme.ladderCell,

@@ -5,7 +5,8 @@ import type { Config } from "tailwindcss";
 const table = { DEFAULT: "#05070c", 2: "#0a0f18" };
 const card = { DEFAULT: "#0e131c", 2: "#141a25", 3: "#1c2330" };
 const rule = { DEFAULT: "rgba(255,255,255,0.08)", strong: "rgba(255,255,255,0.14)" };
-const ink = { DEFAULT: "#f2f5f8", soft: "#9ba5b4", faint: "#5f6878" };
+// faint still clears WCAG AA (4.5:1) on the lightest panel, #182131
+const ink = { DEFAULT: "#f2f5f8", soft: "#a9b2c0", faint: "#8590a0" };
 const you = { DEFAULT: "#5aa9ff", bright: "#9cc9ff", deep: "#2d6fd1" };
 const them = { DEFAULT: "#ffb547", deep: "#c47d14" };
 const won = { DEFAULT: "#3ee09b", bright: "#7bf5c1", deep: "#139a62" };
@@ -42,7 +43,7 @@ const config: Config = {
         mono: ["var(--font-mono)", "ui-monospace", "SFMono-Regular", "Menlo", "monospace"],
       },
       fontSize: {
-        micro: ["13px", "18px"],
+        micro: ["14px", "20px"],
         small: ["14px", "20px"],
         body: ["16px", "24px"],
       },

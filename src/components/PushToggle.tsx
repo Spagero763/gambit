@@ -24,7 +24,7 @@ export function PushToggle() {
 
   if (!supported) {
     return (
-      <p className="py-1 text-[12px] text-ink-faint">
+      <p className="py-1 text-[14px] text-ink-faint">
         This browser doesn&apos;t support notifications. On iPhone, add Gambit to your Home Screen first.
       </p>
     );
@@ -57,7 +57,7 @@ export function PushToggle() {
       >
         <span>
           <span className="block text-sm font-medium text-ink">Match alerts</span>
-          <span className="block text-[11px] text-ink-faint">
+          <span className="block text-[14px] text-ink-faint">
             Your turn · opponent joined · cup started · you got paid
           </span>
         </span>
@@ -70,7 +70,7 @@ export function PushToggle() {
         )}
       </button>
       {disabled && (
-        <p className="mt-1 text-[11px] text-ink-faint">
+        <p className="mt-1 text-[14px] text-ink-faint">
           {miniPay ? "Alerts switch on after your first money match." : "Sign in first. Alerts are tied to your account."}
         </p>
       )}

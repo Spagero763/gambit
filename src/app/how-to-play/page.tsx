@@ -54,7 +54,7 @@ export default function HowToPlayPage() {
             </span>
             <div className="min-w-0">
               <h3 className="text-sm font-semibold text-ink">{j.title}</h3>
-              <p className="mt-1 text-[13px] leading-relaxed text-ink-dim">{j.body}</p>
+              <p className="mt-1 text-[16px] leading-relaxed text-ink-dim">{j.body}</p>
             </div>
           </section>
         ))}
@@ -65,7 +65,7 @@ export default function HowToPlayPage() {
         {GAMES.map((g) => (
           <section key={g.slug} className="rounded-2xl border border-line bg-void-800 p-4">
             <h3 className="text-sm font-semibold text-ink">{g.name}</h3>
-            <p className="mt-1 text-[13px] leading-relaxed text-ink-dim">{g.description}</p>
+            <p className="mt-1 text-[16px] leading-relaxed text-ink-dim">{g.description}</p>
           </section>
         ))}
       </div>
@@ -75,12 +75,12 @@ export default function HowToPlayPage() {
         {TERMS.map((t, i) => (
           <li key={i} className="flex gap-2.5 rounded-2xl border border-line bg-void-800 p-4">
             <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-teal" />
-            <span className="text-[13px] leading-relaxed text-ink-dim">{t}</span>
+            <span className="text-[16px] leading-relaxed text-ink-dim">{t}</span>
           </li>
         ))}
       </ul>
 
-      <p className="mt-6 text-[13px] text-ink-faint">
+      <p className="mt-6 text-[14px] text-ink-faint">
         Need a hand? Message us on{" "}
         <ExternalA
           className="text-teal underline decoration-teal/40 underline-offset-2"

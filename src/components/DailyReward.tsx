@@ -53,13 +53,13 @@ export function DailyReward() {
           </motion.span>
           <span className="min-w-0 flex-1">
             <span className="block text-sm font-bold text-ink">Daily reward ready 🎁</span>
-            <span className="block text-[12px] text-ink-dim">
+            <span className="block text-[14px] text-ink-dim">
               {p.streak > 0
                 ? `Day ${p.streak + (p.lastPlayed === today() ? 0 : 1)}. Tap to claim your XP`
                 : "Tap to claim free XP and start a streak"}
             </span>
           </span>
-          <span className="rounded-full bg-amber px-3 py-1.5 text-[12px] font-bold text-void">Claim</span>
+          <span className="rounded-full bg-amber px-3 py-1.5 text-[14px] font-bold text-void">Claim</span>
         </motion.button>
         </div>
       ) : (
@@ -68,8 +68,8 @@ export function DailyReward() {
             <Gift className="h-4 w-4" />
           </span>
           <span className="min-w-0 flex-1">
-            <span className="block text-[13px] font-semibold text-ink">Reward claimed. Back tomorrow</span>
-            <span className="flex items-center gap-2 text-[11px] text-ink-faint">
+            <span className="block text-[14px] font-semibold text-ink">Reward claimed. Back tomorrow</span>
+            <span className="flex items-center gap-2 text-[14px] text-ink-faint">
               <span className="inline-flex items-center gap-1 text-amber"><Flame className="h-3 w-3" /> {p.streak} day streak</span>
               <span>·</span>
               <span className="text-teal">Lv {lvl.level}</span>
@@ -97,7 +97,7 @@ export function DailyReward() {
               onClick={(e) => e.stopPropagation()}
               className="relative w-[min(88%,22rem)] rounded-3xl border border-amber/40 bg-void-700 p-7 text-center shadow-pop"
             >
-              <button onClick={() => setReveal(null)} aria-label="Close" className="absolute right-3 top-3 text-ink-faint hover:text-ink">
+              <button onClick={() => setReveal(null)} aria-label="Close" className="absolute right-1 top-1 grid h-11 w-11 place-items-center text-ink-faint hover:text-ink">
                 <X className="h-4 w-4" />
               </button>
               <motion.div

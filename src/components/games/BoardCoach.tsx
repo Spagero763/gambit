@@ -157,10 +157,10 @@ export function BoardCoach({ slug }: { slug: string }) {
               Skip
             </button>
             <div className="flex items-center gap-2">
-              <span className="nums text-micro text-ink-faint">
+              <span className="nums text-sm text-ink-faint">
                 {i + 1}/{steps.length}
               </span>
-              <button onClick={next} className="btn-primary h-10 rounded-full px-5 text-small">
+              <button onClick={next} className="btn-primary h-11 rounded-full px-5 text-small">
                 {i >= steps.length - 1 ? "Got it" : "Next"}
               </button>
             </div>

@@ -91,9 +91,9 @@ export function SendFunds({ address, onClose }: { address: `0x${string}`; onClos
               <Check className="h-6 w-6" />
             </span>
             <p className="mt-4 text-sm font-medium text-ink">Sent {amount} {asset.symbol}</p>
-            <p className="mt-1 text-xs text-ink-faint">to {to.slice(0, 6)}…{to.slice(-4)}</p>
+            <p className="mt-1 text-sm text-ink-faint">to {to.slice(0, 6)}…{to.slice(-4)}</p>
             {txHash && (
-              <ExternalA href={`${explorer}${txHash}`} className="mt-3 inline-flex items-center gap-1.5 text-xs text-teal hover:underline">
+              <ExternalA href={`${explorer}${txHash}`} className="mt-3 inline-flex items-center gap-1.5 text-sm text-teal hover:underline">
                 View on explorer <ExternalLink className="h-3 w-3" />
               </ExternalA>
             )}
@@ -124,7 +124,7 @@ export function SendFunds({ address, onClose }: { address: `0x${string}`; onClos
             </div>
 
             {/* recipient */}
-            <label className="mt-4 block text-xs font-medium text-ink-faint">Recipient address</label>
+            <label className="mt-4 block text-sm font-medium text-ink-faint">Recipient address</label>
             <input
               value={to}
               onChange={(e) => { setTo(e.target.value); reset(); }}
@@ -135,8 +135,8 @@ export function SendFunds({ address, onClose }: { address: `0x${string}`; onClos
 
             {/* amount */}
             <div className="mt-4 flex items-center justify-between">
-              <label className="text-xs font-medium text-ink-faint">Amount</label>
-              <span className="text-[11px] text-ink-faint">Balance: <span className="nums">{balance.toFixed(4)}</span> {asset.symbol}</span>
+              <label className="text-sm font-medium text-ink-faint">Amount</label>
+              <span className="text-[14px] text-ink-faint">Balance: <span className="nums">{balance.toFixed(4)}</span> {asset.symbol}</span>
             </div>
             <div className="mt-1.5 flex items-center gap-2 rounded-xl border border-line bg-void-700 px-3 py-2.5 focus-within:border-teal/50">
               <input
@@ -146,15 +146,15 @@ export function SendFunds({ address, onClose }: { address: `0x${string}`; onClos
                 inputMode="decimal"
                 className="nums min-w-0 flex-1 bg-transparent text-sm text-ink outline-none"
               />
-              <button onClick={setMax} className="shrink-0 rounded-lg bg-void-600 px-2 py-1 text-[11px] font-semibold text-teal hover:bg-void-500">MAX</button>
+              <button onClick={setMax} className="h-11 shrink-0 rounded-lg bg-void-600 px-3 text-[14px] font-semibold text-teal hover:bg-void-500">MAX</button>
             </div>
 
             {asset.kind === "erc20" && (
-              <p className="mt-2 text-[11px] text-ink-faint">You also need a little CELO in this wallet for the network fee.</p>
+              <p className="mt-2 text-[14px] text-ink-faint">You also need a little CELO in this wallet for the network fee.</p>
             )}
 
             {error && (
-              <p className="mt-3 flex items-start gap-1.5 rounded-xl border border-rose/30 bg-rose/[0.06] px-3 py-2 text-[12px] text-rose">
+              <p className="mt-3 flex items-start gap-1.5 rounded-xl border border-rose/30 bg-rose/[0.06] px-3 py-2 text-[14px] text-rose">
                 <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0" /> {error}
               </p>
             )}
@@ -167,7 +167,7 @@ export function SendFunds({ address, onClose }: { address: `0x${string}`; onClos
               {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
               {step === "sending" ? "Confirm in wallet…" : step === "confirming" ? "Sending…" : `Send ${asset.symbol}`}
             </button>
-            <p className="mt-2 text-center text-[11px] text-ink-faint">Sends on the Celo network. Double check the address, transfers cannot be undone.</p>
+            <p className="mt-2 text-center text-[14px] text-ink-faint">Sends on the Celo network. Double check the address, transfers cannot be undone.</p>
           </>
         )}
       </motion.div>

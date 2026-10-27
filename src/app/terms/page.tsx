@@ -13,9 +13,9 @@ export default function TermsPage() {
     <main className="mx-auto w-full max-w-2xl px-5 pb-28" style={{ paddingTop: "calc(1.5rem + env(safe-area-inset-top))" }}>
       <BackLink />
       <h1 className="mt-4 font-display text-2xl font-bold">Terms of Service</h1>
-      <p className="mt-1 text-xs text-ink-faint">Last updated: July 2026</p>
+      <p className="mt-1 text-sm text-ink-faint">Last updated: July 2026</p>
 
-      <div className="mt-6 space-y-5 text-sm leading-relaxed text-ink-dim">
+      <div className="mt-6 space-y-5 text-[16px] leading-relaxed text-ink-dim">
         <section>
           <h2 className="mb-1 font-semibold text-ink">What Gambit is</h2>
           <p>

@@ -38,7 +38,7 @@ export function TimeoutClaim({
   const canClaim = remaining <= 0;
 
   return (
-    <div className="glass mx-auto mt-3 flex w-fit items-center gap-2 rounded-full px-3.5 py-2 text-[12px]">
+    <div className="glass mx-auto mt-3 flex w-fit items-center gap-2 rounded-full px-3.5 py-2 text-[14px]">
       <AlarmClock className="h-3.5 w-3.5 text-ink-faint" />
       {canClaim ? (
         <>
@@ -52,7 +52,7 @@ export function TimeoutClaim({
               if (!r.ok && r.error) setErr(r.error);
               setBusy(false);
             }}
-            className="btn-primary rounded-full px-3.5 py-1 text-[12px] disabled:opacity-60"
+            className="btn-primary rounded-full px-3.5 py-1 text-[14px] disabled:opacity-60"
           >
             {busy ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : "Claim win"}
           </button>

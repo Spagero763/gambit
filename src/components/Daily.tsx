@@ -29,7 +29,7 @@ export function ProgressCard() {
         <div className="min-w-0 flex-1">
           <div className="flex items-center justify-between">
             <p className="text-sm font-semibold text-ink">Level {lvl.level}</p>
-            <p className="nums text-[11px] text-ink-faint">
+            <p className="nums text-[14px] text-ink-faint">
               {lvl.into}/{lvl.span} XP
             </p>
           </div>
@@ -47,13 +47,13 @@ export function ProgressCard() {
             <Flame className="h-4 w-4" />
             <span className="nums text-base font-bold">{p.streak}</span>
           </span>
-          <span className="text-[9px] text-ink-faint">day streak</span>
+          <span className="text-[14px] text-ink-faint">day streak</span>
         </div>
       </div>
 
       <div className="mt-4 mb-2 flex items-center gap-2">
         <Gift className="h-3.5 w-3.5 text-ink-dim" />
-        <p className="text-xs font-semibold text-ink-dim">Daily quests</p>
+        <p className="text-sm font-semibold text-ink-dim">Daily quests</p>
         {claimable && <span className="h-1.5 w-1.5 animate-pulse-soft rounded-full bg-teal" />}
       </div>
 
@@ -65,15 +65,15 @@ export function ProgressCard() {
             <li key={q.id} className="rounded-xl border border-line bg-void-800 px-3.5 py-2.5">
               <div className="flex items-center justify-between gap-3">
                 <div className="min-w-0">
-                  <p className={cn("truncate text-[13px] font-medium", q.claimed ? "text-ink-faint line-through" : "text-ink")}>
+                  <p className={cn("truncate text-[14px] font-medium", q.claimed ? "text-ink-faint line-through" : "text-ink")}>
                     {q.label}
                   </p>
-                  <p className="nums mt-0.5 text-[10px] text-ink-faint">
+                  <p className="nums mt-0.5 text-[14px] text-ink-faint">
                     {Math.min(q.progress, q.goal)}/{q.goal} · +{q.xp} XP
                   </p>
                 </div>
                 {q.claimed ? (
-                  <span className="flex items-center gap-1 text-[11px] font-medium text-teal">
+                  <span className="flex items-center gap-1 text-[14px] font-medium text-teal">
                     <Check className="h-3.5 w-3.5" /> Done
                   </span>
                 ) : done ? (
@@ -83,12 +83,12 @@ export function ProgressCard() {
                       play("win");
                       setReveal({ xp: q.xp, label: q.label });
                     }}
-                    className="btn-primary rounded-lg px-3 py-1.5 text-[12px]"
+                    className="btn-primary rounded-lg px-3 py-1.5 text-[14px]"
                   >
                     Claim
                   </button>
                 ) : (
-                  <span className="nums text-[11px] text-ink-faint">{pct}%</span>
+                  <span className="nums text-[14px] text-ink-faint">{pct}%</span>
                 )}
               </div>
               {!q.claimed && !done && (
@@ -121,7 +121,7 @@ export function ProgressCard() {
             onClick={(e) => e.stopPropagation()}
             className="relative w-[min(88%,22rem)] rounded-3xl border border-teal/40 bg-void-700 p-7 text-center shadow-pop"
           >
-            <button onClick={() => setReveal(null)} aria-label="Close" className="absolute right-3 top-3 text-ink-faint hover:text-ink">
+            <button onClick={() => setReveal(null)} aria-label="Close" className="absolute right-1 top-1 grid h-11 w-11 place-items-center text-ink-faint hover:text-ink">
               <X className="h-4 w-4" />
             </button>
             <motion.div
@@ -183,7 +183,7 @@ export function DailyStrip() {
         <span className="text-sm font-semibold">Lv {lvl.level}</span>
       </div>
       <div className="ml-auto flex items-center gap-2">
-        <span className={cn("text-[12px]", claimable ? "font-semibold text-teal" : "text-ink-dim")}>
+        <span className={cn("text-[14px]", claimable ? "font-semibold text-teal" : "text-ink-dim")}>
           {claimable ? "Rewards ready" : `Quests ${claimed}/${p.quests.length}`}
         </span>
         {claimable && <span className="h-2 w-2 animate-pulse-soft rounded-full bg-teal" />}

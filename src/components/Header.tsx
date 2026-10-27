@@ -34,7 +34,7 @@ export function Header() {
         style={{ paddingTop: padY, paddingBottom: padY }}
         className="relative mx-auto flex w-full max-w-2xl items-center gap-2 px-4 min-[380px]:px-5 lg:max-w-6xl"
       >
-        <Link href="/" aria-label="Home" className="min-w-0 shrink">
+        <Link href="/" aria-label="Home" className="flex h-11 min-w-0 shrink items-center">
           <motion.div style={{ scale: logoScale, transformOrigin: "left center" }} whileTap={{ scale: 0.94 }}>
             <Logo />
           </motion.div>
@@ -44,7 +44,7 @@ export function Header() {
           <Link
             href="/settings"
             aria-label="Settings"
-            className="glass pressable group grid h-10 w-10 shrink-0 place-items-center rounded-full text-ink-dim transition-colors hover:text-ink"
+            className="glass pressable group grid h-11 w-11 shrink-0 place-items-center rounded-full text-ink-dim transition-colors hover:text-ink"
           >
             <SettingsIcon className="h-[17px] w-[17px] transition-transform duration-500 ease-out group-hover:rotate-90" />
           </Link>
@@ -72,7 +72,7 @@ function MuteButton() {
       // start, so turning it on here also starts the music (that is why it stayed
       // silent before, nothing switched music on)
       onClick={() => update(muted ? { volume: 0.5, musicOn: true } : { volume: 0, musicOn: false })}
-      className="glass pressable grid h-10 w-10 shrink-0 place-items-center rounded-full text-ink-dim transition-colors hover:text-ink"
+      className="glass pressable grid h-11 w-11 shrink-0 place-items-center rounded-full text-ink-dim transition-colors hover:text-ink"
     >
       {muted ? <VolumeX className="h-[17px] w-[17px]" /> : <Volume2 className="h-[17px] w-[17px]" />}
     </button>

@@ -36,7 +36,7 @@ export function MatchShell({
           <ArrowLeft className="h-5 w-5" />
         </Link>
         <h1 className="display min-w-0 flex-1 truncate text-[24px] font-extrabold text-ink">{title}</h1>
-        <span className="glass rounded-full px-3 py-1.5 text-[12px] font-semibold text-ink-dim">Practice</span>
+        <span className="glass rounded-full px-3 py-1.5 text-[14px] font-semibold text-ink-dim">Practice</span>
       </div>
 
       <Seat p={them} role="them" />
@@ -55,7 +55,7 @@ function Seat({ p, role }: { p: PlayerInfo; role: "you" | "them" }) {
       <span className="block h-10 w-10 shrink-0 overflow-hidden rounded-xl">{p.avatar ?? p.mark}</span>
       <div className="min-w-0 flex-1">
         <p className="truncate text-[15px] font-semibold leading-tight text-ink">{p.name}</p>
-        <p className={cn("flex items-center gap-1.5 truncate text-[12px]", p.active ? (role === "you" ? "text-you" : "text-them") : "text-ink-faint")}>
+        <p className={cn("flex items-center gap-1.5 truncate text-[14px]", p.active ? (role === "you" ? "text-you" : "text-them") : "text-ink-faint")}>
           {p.active && <TurnDot />}
           {p.active ? (role === "you" ? "Your turn" : "Thinking") : p.detail ?? (role === "them" ? "Computer" : "Waiting")}
         </p>

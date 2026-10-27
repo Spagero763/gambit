@@ -183,7 +183,7 @@ export function ChatBubble() {
               <GambitMark size={34} />
               <div className="min-w-0 flex-1">
                 <p className="text-sm font-bold text-ink">Ask Gambit</p>
-                <p className="flex items-center gap-1.5 text-[11px] text-ink-faint">
+                <p className="flex items-center gap-1.5 text-[14px] text-ink-faint">
                   <span className="relative flex h-2 w-2">
                     <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-teal/70" />
                     <span className="relative inline-flex h-2 w-2 rounded-full bg-teal" />
@@ -191,7 +191,7 @@ export function ChatBubble() {
                   Online, replies instantly
                 </p>
               </div>
-              <button onClick={() => setOpen(false)} aria-label="Close" className="text-ink-faint hover:text-ink">
+              <button onClick={() => setOpen(false)} aria-label="Close" className="-mr-3 grid h-11 w-11 place-items-center text-ink-faint hover:text-ink">
                 <X className="h-4 w-4" />
               </button>
             </div>
@@ -208,7 +208,7 @@ export function ChatBubble() {
                     )}
                     <p
                       className={cn(
-                        "rounded-2xl px-3.5 py-2.5 text-[13px] leading-snug",
+                        "rounded-2xl px-3.5 py-2.5 text-[14px] leading-snug",
                         m.from === "me" ? "rounded-br-md bg-violet-bright text-white" : "rounded-bl-md bg-void-600 text-ink"
                       )}
                     >
@@ -222,7 +222,7 @@ export function ChatBubble() {
                         <button
                           key={s}
                           onClick={() => send(s)}
-                          className="rounded-full border border-line bg-void-700 px-3 py-1.5 text-[11px] font-medium text-ink-dim transition-colors hover:border-teal/50 hover:text-ink"
+                          className="rounded-full border border-line bg-void-700 px-3 py-1.5 text-[14px] font-medium text-ink-dim transition-colors hover:border-teal/50 hover:text-ink"
                         >
                           {s}
                         </button>
@@ -253,7 +253,7 @@ export function ChatBubble() {
                     <button
                       key={s}
                       onClick={() => send(s)}
-                      className="rounded-full border border-line bg-void-700 px-3 py-1.5 text-[11px] font-medium text-ink-dim transition-colors hover:border-teal/50 hover:text-ink"
+                      className="rounded-full border border-line bg-void-700 px-3 py-1.5 text-[14px] font-medium text-ink-dim transition-colors hover:border-teal/50 hover:text-ink"
                     >
                       {s}
                     </button>
@@ -274,7 +274,7 @@ export function ChatBubble() {
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 placeholder="Ask a question…"
-                className="min-w-0 flex-1 bg-transparent px-1 text-[13px] text-ink outline-none placeholder:text-ink-faint"
+                className="min-w-0 flex-1 bg-transparent px-1 text-[14px] text-ink outline-none placeholder:text-ink-faint"
               />
               <button
                 type="submit"

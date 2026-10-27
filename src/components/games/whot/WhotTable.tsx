@@ -358,13 +358,13 @@ export function WhotTable({
               {persona ? (
                 <BotFace bot={persona} size={30} rounded="rounded-lg" />
               ) : (
-                <span className="grid h-[30px] w-[30px] place-items-center rounded-lg text-[12px] font-semibold text-void" style={{ background: AVATAR_BG[pi % AVATAR_BG.length] }}>
+                <span className="grid h-[30px] w-[30px] place-items-center rounded-lg text-[14px] font-semibold text-void" style={{ background: AVATAR_BG[pi % AVATAR_BG.length] }}>
                   {op.name.slice(0, 1)}
                 </span>
               )}
               <div className="min-w-0 leading-tight">
-                <p className="truncate text-[13px] font-semibold text-ink">{op.name}</p>
-                <p className={cn("nums flex items-center gap-1.5 text-[12px]", isActive ? "text-them" : "text-ink-faint")}>
+                <p className="truncate text-[14px] font-semibold text-ink">{op.name}</p>
+                <p className={cn("nums flex items-center gap-1.5 text-[14px]", isActive ? "text-them" : "text-ink-faint")}>
                   {isActive && <TurnDot />}
                   {isActive ? "Thinking" : `${hand.length} ${hand.length === 1 ? "card" : "cards"}`}
                 </p>
@@ -405,7 +405,7 @@ export function WhotTable({
               <div className="absolute inset-0"><WhotCardBack /></div>
             )}
           </div>
-          <span className="nums text-[12px] font-semibold text-white/75">Market {market.current.length}</span>
+          <span className="nums text-[14px] font-semibold text-white/75">Market {market.current.length}</span>
         </button>
 
         <div className="relative flex flex-col items-center gap-2">
@@ -426,7 +426,7 @@ export function WhotTable({
               )}
             </AnimatePresence>
           </div>
-          <span className="flex items-center gap-1.5 text-[12px] font-semibold text-white/75">
+          <span className="flex items-center gap-1.5 text-[14px] font-semibold text-white/75">
             <WhotShape shape={active.current} size={13} color="#f6efe1" /> {SHAPE_LABEL[active.current]}
           </span>
         </div>
@@ -435,7 +435,7 @@ export function WhotTable({
       {/* status */}
       <div className="mb-2 flex h-8 items-center justify-center text-center">
         {pending ? (
-          <span className="rounded-full bg-rose/15 px-4 py-1.5 text-[13px] font-semibold text-rose">Pick {pending.amount}, or answer with a {pending.num}</span>
+          <span className="rounded-full bg-rose/15 px-4 py-1.5 text-[14px] font-semibold text-rose">Pick {pending.amount}, or answer with a {pending.num}</span>
         ) : (
           <span className={cn("text-[14px]", turn === 0 && winner === null ? "font-semibold text-you" : "text-ink-dim")}>
             {turn === 0 ? "Your turn" : `${seats[turn]?.name} is playing`}
@@ -453,7 +453,7 @@ export function WhotTable({
           rounded="rounded-lg"
         />
         <span className="flex-1 truncate text-[14px] font-semibold text-ink">{youName}</span>
-        <span className="nums text-[12px] text-ink-faint">
+        <span className="nums text-[14px] text-ink-faint">
           {youHand.length} {youHand.length === 1 ? "card" : "cards"}
         </span>
       </div>
@@ -492,7 +492,7 @@ export function WhotTable({
       <div className="mt-3 h-6 overflow-hidden text-center">
         <AnimatePresence mode="popLayout">
           {log[0] && (
-            <motion.p key={log[0].text} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} className="text-[12px] text-ink-faint">
+            <motion.p key={log[0].text} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} className="text-[14px] text-ink-faint">
               {log[0].text}
             </motion.p>
           )}

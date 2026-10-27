@@ -55,7 +55,7 @@ export function TournamentPodium({
       <button
         onClick={onClose}
         aria-label="Close"
-        className="absolute right-4 top-4 grid h-10 w-10 place-items-center rounded-xl border border-line bg-void-700 text-ink-dim transition-colors hover:text-ink"
+        className="absolute right-4 top-4 grid h-11 w-11 place-items-center rounded-xl border border-line bg-void-700 text-ink-dim transition-colors hover:text-ink"
       >
         <X className="h-4 w-4" />
       </button>
@@ -116,7 +116,7 @@ export function TournamentPodium({
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ delay: 0.7 + rank * 0.25 }}
-                className="max-w-full truncate text-center text-[13px] font-semibold text-ink"
+                className="max-w-full truncate text-center text-[14px] font-semibold text-ink"
               >
                 {displayName(addr ?? "", p)}
                 {isMe ? <span className="text-teal"> (you)</span> : null}
@@ -125,7 +125,7 @@ export function TournamentPodium({
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ delay: 0.85 + rank * 0.25 }}
-                className="nums text-[12px] font-bold text-teal"
+                className="nums text-[14px] font-bold text-teal"
               >
                 +{prize.toFixed(2)} {sym}
               </motion.p>
@@ -161,7 +161,7 @@ export function TournamentPodium({
         {settleTx && explorer && (
           <ExternalA
             href={`${explorer}${settleTx}`}
-            className="inline-flex items-center gap-1.5 rounded-full bg-white/10 px-4 py-2 text-xs font-semibold text-ink"
+            className="inline-flex items-center gap-1.5 rounded-full bg-white/10 px-4 py-2 text-sm font-semibold text-ink"
           >
             View payout on Celoscan <ExternalLink className="h-3 w-3" />
           </ExternalA>

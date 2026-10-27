@@ -33,7 +33,7 @@ export function LiveNow() {
   return (
     <section className="mx-auto mt-6 w-full max-w-2xl px-5">
       <div className="mb-2.5 flex items-center justify-between">
-        <h2 className="flex items-center gap-2 text-[13px] font-bold uppercase tracking-[0.08em] text-ink-dim">
+        <h2 className="flex items-center gap-2 text-[14px] font-bold uppercase tracking-[0.08em] text-ink-dim">
           <span className="relative inline-flex h-2 w-2">
             <span className="absolute inset-0 rounded-full bg-teal" style={{ animation: "ring 1.6s cubic-bezier(0.23,1,0.32,1) infinite" }} />
             <span className="relative h-2 w-2 rounded-full bg-teal" />
@@ -41,7 +41,7 @@ export function LiveNow() {
           Live now
           {rooms.length > 0 && <span className="nums normal-case tracking-normal text-ink-faint">· {rooms.length} waiting</span>}
         </h2>
-        <Link href="/lobby" className="flex items-center text-[12px] font-semibold text-teal">
+        <Link href="/lobby" className="flex min-h-11 items-center pl-3 text-[14px] font-semibold text-teal">
           All rooms <ChevronRight className="h-3.5 w-3.5" />
         </Link>
       </div>
@@ -53,7 +53,7 @@ export function LiveNow() {
           </span>
           <div className="min-w-0 flex-1">
             <p className="text-[14px] font-semibold text-ink">Nobody&apos;s waiting right now</p>
-            <p className="text-[12px] leading-snug text-ink-faint">Open a room. The first person to join plays you.</p>
+            <p className="text-[16px] leading-snug text-ink-faint">Open a room. The first person to join plays you.</p>
           </div>
           <Link href="/lobby" className={buttonClass("primary", "sm", "shrink-0")}>
             Open
@@ -78,7 +78,7 @@ export function LiveNow() {
                         {stake.toFixed(2)} {symbolForToken(r.token)}
                       </span>
                     </p>
-                    <p className="truncate text-[12px] text-ink-faint">
+                    <p className="truncate text-[14px] text-ink-faint">
                       {mine ? "Your room" : displayName(r.creator, profiles[r.creator.toLowerCase()])} · {mins} min left
                     </p>
                   </div>

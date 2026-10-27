@@ -54,12 +54,12 @@ export function WalletSheet({ address, onClose }: { address: `0x${string}`; onCl
             />
             <div className="min-w-0">
               <p className="truncate text-sm font-semibold text-ink">{name}</p>
-              <p className="text-[11px] text-ink-faint">Celo wallet</p>
+              <p className="text-[14px] text-ink-faint">Celo wallet</p>
             </div>
           </div>
 
           {/* balances, all stablecoins; CELO is never surfaced */}
-          <p className="mb-2 mt-5 text-xs font-medium text-ink-faint">Balances</p>
+          <p className="mb-2 mt-5 text-sm font-medium text-ink-faint">Balances</p>
           <div className="space-y-2">
             {balances.map((b) => (
               <div key={b.token.address} className="flex items-center justify-between rounded-xl border border-line bg-void-800 px-3.5 py-2.5">
@@ -85,19 +85,19 @@ export function WalletSheet({ address, onClose }: { address: `0x${string}`; onCl
               Add cash
             </a>
           )}
-          <p className="mt-2 text-center text-[11px] text-ink-faint">
+          <p className="mt-2 text-center text-[14px] text-ink-faint">
             {miniPay
               ? "Add cash in USDT, USDC or USDm. The small network fee comes out of your balance, so there is nothing else to get."
               : "Your wallet on Celo. Deposit a stablecoin or play a free game."}
           </p>
 
           <div className="mt-4 flex items-center justify-between border-t border-line pt-3">
-            <Link href="/profile" onClick={onClose} className="inline-flex items-center gap-1.5 text-[13px] font-medium text-ink-dim hover:text-ink">
+            <Link href="/profile" onClick={onClose} className="inline-flex items-center gap-1.5 text-[14px] font-medium text-ink-dim hover:text-ink">
               <UserIcon className="h-3.5 w-3.5" /> Profile
             </Link>
             {/* nothing to sign out of in MiniPay, the wallet is the app */}
             {!miniPay && (
-              <button onClick={() => logout()} className="inline-flex items-center gap-1.5 text-[13px] font-medium text-ink-faint transition-colors hover:text-rose">
+              <button onClick={() => logout()} className="inline-flex items-center gap-1.5 text-[14px] font-medium text-ink-faint transition-colors hover:text-rose">
                 <LogOut className="h-3.5 w-3.5" /> Sign out
               </button>
             )}

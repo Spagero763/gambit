@@ -248,13 +248,13 @@ export function BlockBlitz({
       {/* stat bar */}
       <div className="grid grid-cols-2 gap-3">
         <div className="glass rounded-[18px] px-4 py-3">
-          <p className="text-[12px] font-semibold text-ink-faint">Score</p>
+          <p className="text-[14px] font-semibold text-ink-faint">Score</p>
           <motion.p key={score} initial={{ scale: 1.15 }} animate={{ scale: 1 }} className="display nums text-[28px] font-extrabold leading-tight text-ink">
             {score.toLocaleString()}
           </motion.p>
         </div>
         <div className="glass rounded-[18px] px-4 py-3">
-          <p className="text-[12px] font-semibold text-ink-faint">Best</p>
+          <p className="text-[14px] font-semibold text-ink-faint">Best</p>
           <p className="display nums text-glow text-[28px] font-extrabold leading-tight">{Math.max(best, score).toLocaleString()}</p>
         </div>
       </div>
@@ -370,7 +370,7 @@ export function BlockBlitz({
           })}
         </div>
 
-        <p className="mt-3 text-center text-[12px] text-ink-faint">
+        <p className="mt-3 text-center text-[14px] text-ink-faint">
           Drag a shape onto the board, or tap a shape and then a square.
         </p>
 
@@ -409,9 +409,9 @@ export function BlockBlitz({
               >
                 <p className="display text-[26px] font-extrabold text-ink">No room left</p>
                 <p className="display nums mt-1 text-[40px] font-extrabold leading-none text-ink">{score.toLocaleString()}</p>
-                <p className="mt-1 text-[13px] text-ink-dim">{score >= best && score > 0 ? "New best" : `Best ${Math.max(best, score).toLocaleString()}`}</p>
+                <p className="mt-1 text-[14px] text-ink-dim">{score >= best && score > 0 ? "New best" : `Best ${Math.max(best, score).toLocaleString()}`}</p>
                 {tournament && (
-                  <p className="mt-2 text-[11px] text-teal">Run submitted. Your best score counts. Same board, try to beat it.</p>
+                  <p className="mt-2 text-[14px] text-teal">Run submitted. Your best score counts. Same board, try to beat it.</p>
                 )}
                 <button
                   onClick={reset}

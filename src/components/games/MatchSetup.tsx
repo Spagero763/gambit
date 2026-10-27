@@ -257,7 +257,7 @@ export function MatchSetup({
             <ArrowLeft className="h-5 w-5" />
           </Link>
           {resuming && (
-            <span className="glass inline-flex items-center gap-1.5 rounded-full px-3 py-2 text-[12px] font-semibold text-teal">
+            <span className="glass inline-flex items-center gap-1.5 rounded-full px-3 py-2 text-[14px] font-semibold text-teal">
               <Loader2 className="h-3.5 w-3.5 animate-spin" /> Resuming your match
             </span>
           )}
@@ -298,7 +298,7 @@ export function MatchSetup({
 
         {mode === "free" ? (
           <div key="free" className="enter mt-5">
-            <p className="text-[14px] leading-relaxed text-ink-dim">Against the computer. No wallet, no money, just the game.</p>
+            <p className="text-[16px] leading-relaxed text-ink-dim">Against the computer. No wallet, no money, just the game.</p>
 
             {hasDifficulty && (
               <div className="mt-4 grid grid-cols-3 gap-2.5">
@@ -319,7 +319,7 @@ export function MatchSetup({
                           <span key={p} className={cn("h-1.5 w-4 rounded-full", p <= i ? (active ? "bg-teal" : "bg-ink-faint") : "bg-white/10")} />
                         ))}
                       </span>
-                      <p className="mt-2 text-[11px] leading-tight text-ink-faint">{d.blurb}</p>
+                      <p className="mt-2 text-[14px] leading-tight text-ink-faint">{d.blurb}</p>
                     </button>
                   );
                 })}
@@ -347,11 +347,11 @@ export function MatchSetup({
                   </>
                 ) : (
                   <>
-                    <p className="text-[12px] font-bold uppercase tracking-[0.08em] text-ink-faint">Your room is open</p>
+                    <p className="text-[14px] font-bold uppercase tracking-[0.08em] text-ink-faint">Your room is open</p>
                     <p className="nums display mt-1 text-[34px] font-extrabold text-ink">
                       {stake.toFixed(2)} <span className="text-[18px] text-ink-dim">{token.symbol}</span>
                     </p>
-                    <p className="text-[13px] text-ink-dim">
+                    <p className="text-[14px] text-ink-dim">
                       Winner takes <span className="text-glow font-bold">{payout.toFixed(2)} {token.symbol}</span>
                     </p>
                     {joinDeadline > 0 && <Countdown until={joinDeadline} />}
@@ -368,12 +368,12 @@ export function MatchSetup({
                         setCopied(true);
                         setTimeout(() => setCopied(false), 1500);
                       }}
-                      className="nums mx-auto mt-3 flex items-center gap-2 rounded-full px-3 py-1.5 font-mono text-[14px] font-semibold text-ink-dim"
+                      className="nums mx-auto mt-3 flex min-h-11 items-center gap-2 rounded-full px-4 font-mono text-[14px] font-semibold text-ink-dim"
                     >
                       Room #{matchId.toString()}
                       {copied ? <Check className="h-4 w-4 text-teal" /> : <Copy className="h-4 w-4 text-ink-faint" />}
                     </button>
-                    <p className="mt-1 flex items-center justify-center gap-1.5 text-[12px] text-ink-faint">
+                    <p className="mt-1 flex items-center justify-center gap-1.5 text-[14px] text-ink-faint">
                       <Loader2 className="h-3.5 w-3.5 animate-spin" /> Waiting for someone to join
                     </p>
                     <button
@@ -385,7 +385,7 @@ export function MatchSetup({
                         if (ok) reset();
                       }}
                       disabled={cancelling}
-                      className="mx-auto mt-4 flex items-center justify-center gap-1.5 text-[13px] font-semibold text-ink-faint transition-colors hover:text-rose disabled:opacity-60"
+                      className="mx-auto mt-2 flex min-h-11 items-center justify-center gap-1.5 px-3 text-[14px] font-semibold text-ink-faint transition-colors hover:text-rose disabled:opacity-60"
                     >
                       {cancelling ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : null}
                       Cancel room and refund my stake
@@ -396,18 +396,18 @@ export function MatchSetup({
             ) : joinId && room && room.status === 1 ? (
               // joining a specific room, priced by the escrow
               <div className="panel rounded-[28px] p-5">
-                <p className="text-[12px] font-bold uppercase tracking-[0.08em] text-ink-faint">
+                <p className="text-[14px] font-bold uppercase tracking-[0.08em] text-ink-faint">
                   Room #{joinId} · {displayName(room.creator, profiles[room.creator])}
                 </p>
                 <div className="mt-2 flex items-end justify-between">
                   <div>
-                    <p className="text-[13px] text-ink-dim">Entry</p>
+                    <p className="text-[14px] text-ink-dim">Entry</p>
                     <p className="nums display text-[30px] font-extrabold leading-none text-ink">
                       {room.entry.toFixed(2)} <span className="text-[16px] text-ink-dim">{room.tok?.symbol}</span>
                     </p>
                   </div>
                   <div className="text-right">
-                    <p className="text-[13px] text-ink-dim">Winner takes</p>
+                    <p className="text-[14px] text-ink-dim">Winner takes</p>
                     <p className="nums display text-glow text-[30px] font-extrabold leading-none">{(room.entry * 2 * (1 - FEE)).toFixed(2)}</p>
                   </div>
                 </div>
@@ -420,7 +420,7 @@ export function MatchSetup({
                     </button>
                   )}
                 </div>
-                <button onClick={() => setJoinId("")} className="mx-auto mt-3 block text-[13px] font-semibold text-ink-faint">
+                <button onClick={() => setJoinId("")} className="mx-auto mt-1 flex min-h-11 items-center px-3 text-[14px] font-semibold text-ink-faint">
                   Open my own room instead
                 </button>
               </div>
@@ -428,7 +428,7 @@ export function MatchSetup({
               <>
                 {waiting.length > 0 && (
                   <div className="mb-5">
-                    <p className="mb-2 flex items-center gap-2 text-[12px] font-bold uppercase tracking-[0.08em] text-ink-dim">
+                    <p className="mb-2 flex items-center gap-2 text-[14px] font-bold uppercase tracking-[0.08em] text-ink-dim">
                       <span className="h-2 w-2 rounded-full bg-teal shadow-[0_0_10px_rgba(62,224,155,0.9)]" /> Waiting for an opponent
                     </p>
                     <ul className="space-y-2">
@@ -439,7 +439,7 @@ export function MatchSetup({
                             <button onClick={() => setJoinId(String(r.id))} className="glass pressable flex w-full items-center gap-3 rounded-[20px] px-4 py-3 text-left">
                               <div className="min-w-0 flex-1">
                                 <p className="truncate text-[14px] font-semibold text-ink">{displayName(r.creator, profiles[r.creator.toLowerCase()])}</p>
-                                <p className="text-[12px] text-ink-faint">Room #{r.id}</p>
+                                <p className="text-[14px] text-ink-faint">Room #{r.id}</p>
                               </div>
                               <span className="nums text-[15px] font-bold text-teal">
                                 {v.toFixed(2)} {symbolForToken(r.token)}
@@ -450,7 +450,7 @@ export function MatchSetup({
                         );
                       })}
                     </ul>
-                    <p className="mt-4 text-[12px] font-bold uppercase tracking-[0.08em] text-ink-dim">Or open your own room</p>
+                    <p className="mt-4 text-[14px] font-bold uppercase tracking-[0.08em] text-ink-dim">Or open your own room</p>
                   </div>
                 )}
 
@@ -468,7 +468,7 @@ export function MatchSetup({
                           <span className={cn("block text-[15px] font-bold", on ? "text-ink" : "text-ink-dim")}>{t.symbol}</span>
                           {/* what they hold, so picking a token they have no money
                               in is an obvious mistake rather than a silent one */}
-                          <span className="nums mt-0.5 block text-[11px] font-medium text-ink-faint">{held.toFixed(2)}</span>
+                          <span className="nums mt-0.5 block text-[14px] font-medium text-ink-faint">{held.toFixed(2)}</span>
                         </button>
                       );
                     })}
@@ -476,11 +476,11 @@ export function MatchSetup({
                 )}
 
                 <div className="mb-2 flex items-center justify-between">
-                  <p className="text-[12px] font-bold uppercase tracking-[0.08em] text-ink-dim">
+                  <p className="text-[14px] font-bold uppercase tracking-[0.08em] text-ink-dim">
                     Your entry
                     {tokenBal ? <span className="ml-1.5 normal-case tracking-normal text-ink-faint">· you have {Number(tokenBal.formatted).toFixed(2)} {token.symbol}</span> : null}
                   </p>
-                  <button onClick={() => setRulesOpen(true)} className="inline-flex items-center gap-1 text-[12px] font-semibold text-teal">
+                  <button onClick={() => setRulesOpen(true)} className="-mr-1 inline-flex min-h-11 items-center gap-1 px-1 text-[14px] font-semibold text-teal">
                     <HelpCircle className="h-3.5 w-3.5" /> Rules
                   </button>
                 </div>
@@ -502,8 +502,8 @@ export function MatchSetup({
                   })}
                 </div>
 
-                <div className={cn("glass mt-2 flex items-center gap-2 rounded-[16px] px-4 py-3", custom && "border-teal/50")}>
-                  <span className="whitespace-nowrap text-[13px] text-ink-faint">Other amount</span>
+                <label className={cn("glass mt-2 flex min-h-12 cursor-text items-center gap-2 rounded-[16px] px-4", custom && "border-teal/50")}>
+                  <span className="whitespace-nowrap text-[14px] text-ink-faint">Other amount</span>
                   <input
                     value={custom}
                     onChange={(e) => {
@@ -514,12 +514,12 @@ export function MatchSetup({
                     }}
                     inputMode="decimal"
                     placeholder="0.00"
-                    className="nums min-w-0 flex-1 bg-transparent text-right text-[15px] font-bold text-ink outline-none placeholder:text-ink-faint"
+                    className="nums h-11 min-w-0 flex-1 bg-transparent text-right text-[16px] font-bold text-ink outline-none placeholder:text-ink-faint"
                   />
-                  <span className="shrink-0 text-[13px] text-ink-faint">{token.symbol}</span>
-                </div>
+                  <span className="shrink-0 text-[14px] text-ink-faint">{token.symbol}</span>
+                </label>
                 {custom && !validStake && (
-                  <p className="mt-1.5 text-[12px] text-rose">
+                  <p className="mt-1.5 text-[14px] text-rose">
                     The smallest entry is {game.minStake.toFixed(2)} {token.symbol}.
                   </p>
                 )}
@@ -562,13 +562,13 @@ export function MatchSetup({
             )}
 
             {joinId && room && room.status !== 1 && (
-              <p className="mt-3 text-center text-[13px] text-rose">
+              <p className="mt-3 text-center text-[14px] text-rose">
                 {room.status === 0 ? "There's no room with that number." : "That room already started or closed."}
               </p>
             )}
-            {error && <p role="alert" className="mt-3 text-center text-[13px] text-rose">{error}</p>}
+            {error && <p role="alert" className="mt-3 text-center text-[14px] text-rose">{error}</p>}
 
-            <p className="mt-4 flex items-center justify-center gap-1.5 text-center text-[12px] text-ink-faint">
+            <p className="mt-4 flex items-center justify-center gap-1.5 text-center text-[14px] text-ink-faint">
               <ShieldCheck className="h-3.5 w-3.5" />
               Both entries are locked in a contract and paid out the moment the game ends.
             </p>
@@ -590,7 +590,7 @@ function Countdown({ until }: { until: number }) {
   const m = Math.floor(left / 60000);
   const s = Math.floor((left % 60000) / 1000);
   return (
-    <p className={cn("nums mt-3 flex items-center justify-center gap-1.5 text-[13px] font-semibold", left < 60_000 ? "text-rose" : "text-ink-dim")}>
+    <p className={cn("nums mt-3 flex items-center justify-center gap-1.5 text-[14px] font-semibold", left < 60_000 ? "text-rose" : "text-ink-dim")}>
       <Clock className="h-3.5 w-3.5" />
       {left > 0 ? `Open for ${m}:${String(s).padStart(2, "0")}` : "Join window closed"}
     </p>

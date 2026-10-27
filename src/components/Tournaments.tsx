@@ -82,23 +82,23 @@ export function Tournaments() {
             tournament in this release, so an empty list is the normal state and
             "Join a tournament" above nothing reads as something being broken. */}
         {rows !== null && rows.length > 0 && (
-          <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-ink-faint">Join a tournament</p>
+          <p className="mb-3 text-sm font-semibold uppercase tracking-wide text-ink-faint">Join a tournament</p>
         )}
         {rows === null ? (
           <SkeletonList rows={3} />
         ) : rows.length === 0 ? (
           <div className="rounded-3xl border border-line bg-void-800 px-5 py-8 text-center">
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-amber/15 px-3 py-1 text-[11px] font-semibold uppercase tracking-wide text-amber">
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-amber/15 px-3 py-1 text-[14px] font-semibold uppercase tracking-wide text-amber">
               <Hourglass className="h-3 w-3" /> Coming soon
             </span>
             <p className="mt-3 text-sm font-semibold text-ink">Tournaments are on the way</p>
-            <p className="mx-auto mt-1 max-w-xs text-[13px] leading-snug text-ink-dim">
+            <p className="mx-auto mt-1 max-w-xs text-[16px] leading-snug text-ink-dim">
               Knockout brackets with a real pot are next up. Staked 1v1 is live already and pays the same way, so you
               can put money on a game today.
             </p>
             <Link
               href="/"
-              className="mt-4 inline-flex items-center justify-center gap-1.5 text-[13px] font-semibold text-teal underline decoration-teal/40 underline-offset-4"
+              className="mt-4 inline-flex items-center justify-center gap-1.5 text-[14px] font-semibold text-teal underline decoration-teal/40 underline-offset-4"
             >
               Play a staked 1v1 <ArrowRight className="h-3.5 w-3.5" />
             </Link>
@@ -129,14 +129,14 @@ function Card({ row }: { row: TournamentRow }) {
               {CUP_GAMES.find((g) => g.slug === row.game)?.name ?? row.game}
             </span>
             {row.format === "bracket" && (
-              <span className="rounded-full bg-violet/15 px-2 py-0.5 text-[10px] font-bold uppercase text-violet-bright">Knockout</span>
+              <span className="rounded-full bg-violet/15 px-2 py-0.5 text-[14px] font-bold uppercase text-violet-bright">Knockout</span>
             )}
             {row.format === "table" && (
-              <span className="rounded-full bg-violet/15 px-2 py-0.5 text-[10px] font-bold uppercase text-violet-bright">Table</span>
+              <span className="rounded-full bg-violet/15 px-2 py-0.5 text-[14px] font-bold uppercase text-violet-bright">Table</span>
             )}
-            <span className={cn("rounded-full px-2 py-0.5 text-[10px] font-bold uppercase", STATUS_STYLE[row.status] ?? "bg-white/10 text-ink-dim")}>{row.status}</span>
+            <span className={cn("rounded-full px-2 py-0.5 text-[14px] font-bold uppercase", STATUS_STYLE[row.status] ?? "bg-white/10 text-ink-dim")}>{row.status}</span>
           </div>
-          <p className="mt-0.5 flex flex-wrap items-center gap-x-2 text-[12px] text-ink-faint">
+          <p className="mt-0.5 flex flex-wrap items-center gap-x-2 text-[14px] text-ink-faint">
             <span className="nums">{stake.toFixed(2)} {sym} entry</span>
             <span>·</span>
             <span className="nums inline-flex items-center gap-1"><Users className="h-3 w-3" /> {row.capacity} max</span>

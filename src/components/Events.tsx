@@ -81,15 +81,15 @@ export function Events() {
       <div className="mt-5 overflow-hidden rounded-3xl border border-line bg-void-700 shadow-card">
         <div className="bg-gradient-to-br from-rose/15 to-transparent p-5">
           <div className="flex items-center justify-between">
-            <span className="rounded-full border border-rose/40 bg-rose/10 px-2.5 py-1 text-[11px] font-semibold text-rose">
+            <span className="rounded-full border border-rose/40 bg-rose/10 px-2.5 py-1 text-[14px] font-semibold text-rose">
               This week
             </span>
-            <span className="inline-flex items-center gap-1.5 text-[12px] text-ink-dim">
+            <span className="inline-flex items-center gap-1.5 text-[14px] text-ink-dim">
               <Timer className="h-3.5 w-3.5" /> resets in {left}
             </span>
           </div>
           <h2 className="mt-3 text-xl font-semibold tracking-tight text-ink">Block Blitz · Weekly Showdown</h2>
-          <p className="mt-1 text-[13px] leading-relaxed text-ink-dim">
+          <p className="mt-1 text-[16px] leading-relaxed text-ink-dim">
             Highest single-game score wins the week. Free to enter. Connect your wallet to put your score on the board.
           </p>
           <div className="mt-4 flex items-center gap-3">
@@ -97,7 +97,7 @@ export function Events() {
               <Play className="h-4 w-4 fill-void" /> Play now
             </Link>
             {me && (
-              <span className="text-[13px] text-ink-dim">
+              <span className="text-[14px] text-ink-dim">
                 Your best: <span className="nums font-semibold text-ink">{myBest.toLocaleString()}</span>
                 {myRank >= 0 && <span className="text-ink-faint"> · rank #{myRank + 1}</span>}
               </span>
@@ -115,7 +115,7 @@ export function Events() {
             <Trophy className="h-5 w-5" />
           </span>
           <p className="mt-4 text-sm text-ink-dim">No scores yet this week.</p>
-          <p className="mt-1 text-[12px] text-ink-faint">Be the first. Play Block Blitz to claim the top spot.</p>
+          <p className="mt-1 text-[14px] text-ink-faint">Be the first. Play Block Blitz to claim the top spot.</p>
         </div>
       ) : (
         <ul className="space-y-2">
@@ -133,10 +133,10 @@ export function Events() {
                 <div className="grid w-6 place-items-center">
                   <span className={cn("nums font-mono text-sm font-semibold", i < 3 ? medal : "text-ink-faint")}>{i + 1}</span>
                 </div>
-                <span className="grid h-9 w-9 place-items-center rounded-lg bg-void-600 text-[11px] font-semibold text-ink-dim">
+                <span className="grid h-9 w-9 place-items-center rounded-lg bg-void-600 text-[14px] font-semibold text-ink-dim">
                   {s.address.slice(2, 4).toUpperCase()}
                 </span>
-                <p className="min-w-0 flex-1 truncate text-[13px] font-medium text-ink">
+                <p className="min-w-0 flex-1 truncate text-[14px] font-medium text-ink">
                   {displayName(s.address, profiles[s.address.toLowerCase()])} {isMe && <span className="text-teal">· you</span>}
                 </p>
                 <p className="nums text-sm font-semibold text-ink">{s.score.toLocaleString()}</p>
@@ -151,7 +151,7 @@ export function Events() {
         <Swords className="mt-0.5 h-5 w-5 shrink-0 text-ink-faint" />
         <div>
           <p className="text-sm font-semibold text-ink">More formats coming</p>
-          <p className="mt-0.5 text-[12px] text-ink-dim">Staked knockout brackets and per-game weekly ladders are on the way.</p>
+          <p className="mt-0.5 text-[14px] text-ink-dim">Staked knockout brackets and per-game weekly ladders are on the way.</p>
         </div>
       </div>
     </section>

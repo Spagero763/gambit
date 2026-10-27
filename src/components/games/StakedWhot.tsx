@@ -174,8 +174,8 @@ export function StakedWhot({ matchId, you, onExit }: { matchId: bigint; you: `0x
                 className={cn("seat flex items-center gap-1.5 rounded-full px-2.5 py-1.5", placeI >= 0 && "opacity-60")}
               >
                 <Avatar image={p?.avatar_image || undefined} color={avatarHex(p)} name={displayName(a, p)} size={20} rounded="rounded-md" />
-                <span className="max-w-[72px] truncate text-[11px] font-semibold text-ink">{displayName(a, p)}</span>
-                <span className="nums text-[9px] text-ink-faint">
+                <span className="max-w-[72px] truncate text-[14px] font-semibold text-ink">{displayName(a, p)}</span>
+                <span className="nums text-[14px] text-ink-faint">
                   {placeI >= 0 ? MEDALS[placeI] ?? "✔" : `${view?.counts?.[a] ?? 0}🂠`}
                 </span>
                 {theirTurn && <span className="h-1.5 w-1.5 rounded-full bg-teal" />}
@@ -189,7 +189,7 @@ export function StakedWhot({ matchId, you, onExit }: { matchId: bigint; you: `0x
 
       {/* your locked placement while the table plays on */}
       {multi && myPlace >= 0 && !finished && (
-        <p className="mt-2 text-center text-[12px] font-semibold text-teal">
+        <p className="mt-2 text-center text-[14px] font-semibold text-teal">
           {MEDALS[myPlace] ?? "✔"} You finished {["1st", "2nd", "3rd"][myPlace] ?? `${myPlace + 1}th`}. The table plays on.
         </p>
       )}
@@ -219,7 +219,7 @@ export function StakedWhot({ matchId, you, onExit }: { matchId: bigint; you: `0x
               <WhotCardBack />
             </div>
           </div>
-          <span className="text-[12px] font-semibold text-white/75">{pending ? `Pick ${pending.amount}` : "Market"}</span>
+          <span className="text-[14px] font-semibold text-white/75">{pending ? `Pick ${pending.amount}` : "Market"}</span>
         </button>
 
         <div className="relative flex flex-col items-center gap-2">
@@ -241,7 +241,7 @@ export function StakedWhot({ matchId, you, onExit }: { matchId: bigint; you: `0x
             </AnimatePresence>
           </div>
           {active && (
-            <span className="flex items-center gap-1.5 text-[12px] font-semibold text-white/75">
+            <span className="flex items-center gap-1.5 text-[14px] font-semibold text-white/75">
               <WhotShape shape={active} size={13} color="#f6efe1" /> {SHAPE_LABEL[active]}
             </span>
           )}
@@ -251,7 +251,7 @@ export function StakedWhot({ matchId, you, onExit }: { matchId: bigint; you: `0x
       {/* status */}
       <div className="mb-2 flex min-h-8 flex-col items-center justify-center text-center">
         {pending ? (
-          <span className="rounded-full bg-rose/15 px-4 py-1.5 text-[13px] font-semibold text-rose">{status}</span>
+          <span className="rounded-full bg-rose/15 px-4 py-1.5 text-[14px] font-semibold text-rose">{status}</span>
         ) : (
           <span className={cn("text-[14px]", myTurn ? "font-semibold text-you" : "text-ink-dim")}>{status}</span>
         )}
@@ -291,7 +291,7 @@ export function StakedWhot({ matchId, you, onExit }: { matchId: bigint; you: `0x
         })}
       </div>
 
-      {err && <p role="alert" className="mt-2 text-center text-[12px] text-rose">{err}</p>}
+      {err && <p role="alert" className="mt-2 text-center text-[14px] text-rose">{err}</p>}
 
       {/* call shape */}
       <AnimatePresence>

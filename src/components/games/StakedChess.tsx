@@ -277,7 +277,7 @@ export function StakedChess({ matchId, you, onExit }: { matchId: bigint; you: `0
       </div>
 
       <p className="mt-3 text-center text-[14px] text-ink-dim">{status}</p>
-      {err && <p role="alert" className="mt-1 text-center text-[12px] text-rose">{err}</p>}
+      {err && <p role="alert" className="mt-1 text-center text-[14px] text-rose">{err}</p>}
 
       <PlayerStrip
         label="You"
@@ -337,7 +337,7 @@ function PlayerStrip({
       </span>
       <div className="min-w-0 flex-1 leading-tight">
         <p className="truncate text-[15px] font-semibold text-ink">{you ? "You" : label}</p>
-        <p className={cn("flex items-center gap-1.5 text-[12px]", active ? (you ? "text-you" : "text-them") : "text-ink-faint")}>
+        <p className={cn("flex items-center gap-1.5 text-[14px]", active ? (you ? "text-you" : "text-them") : "text-ink-faint")}>
           {active && <TurnDot />}
           {active ? (you ? "Your turn" : "Their turn") : color === "w" ? "White" : "Black"}
         </p>

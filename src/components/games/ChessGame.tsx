@@ -245,7 +245,7 @@ export function ChessGame({ difficulty = "normal" }: { difficulty?: Difficulty }
         <h1 className="display min-w-0 flex-1 truncate text-[24px] font-extrabold text-ink">Chess</h1>
         <span
           className={cn(
-            "rounded-full px-3 py-1.5 text-[12px] font-semibold",
+            "rounded-full px-3 py-1.5 text-[14px] font-semibold",
             inCheck && !result ? "border border-rose/40 bg-rose/15 text-rose" : "glass text-ink-dim"
           )}
         >
@@ -309,27 +309,6 @@ export function ChessGame({ difficulty = "normal" }: { difficulty?: Difficulty }
                       {isSel && <span className="absolute inset-0 bg-[#f6d66b]/55" />}
                       {isCheckSq && (
                         <span className="absolute inset-0 bg-[radial-gradient(circle,rgba(224,108,139,0.95),transparent_72%)]" />
-                      )}
-
-                      {f === 0 && (
-                        <span
-                          className={cn(
-                            "absolute left-0.5 top-0.5 text-[8px] font-bold",
-                            lightSq ? "text-[#769656]" : "text-[#eeeed2]"
-                          )}
-                        >
-                          {8 - r}
-                        </span>
-                      )}
-                      {r === 7 && (
-                        <span
-                          className={cn(
-                            "absolute bottom-0 right-0.5 text-[8px] font-bold",
-                            lightSq ? "text-[#769656]" : "text-[#eeeed2]"
-                          )}
-                        >
-                          {FILES[f]}
-                        </span>
                       )}
 
                       {piece && !lifted && (() => {

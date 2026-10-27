@@ -70,7 +70,7 @@ export function Settings() {
             rounded="rounded-2xl"
           />
           <div className="flex flex-col gap-1.5">
-            <label className="inline-flex w-fit cursor-pointer items-center gap-1.5 rounded-lg border border-line bg-void-800 px-3 py-1.5 text-xs font-medium text-ink transition-colors hover:bg-void-600">
+            <label className="inline-flex w-fit cursor-pointer items-center gap-1.5 rounded-lg border border-line bg-void-800 px-3 py-1.5 text-sm font-medium text-ink transition-colors hover:bg-void-600">
               <Camera className="h-3.5 w-3.5" />
               {s.avatarImage ? "Change photo" : "Upload photo"}
               <input
@@ -94,7 +94,7 @@ export function Settings() {
             {s.avatarImage && (
               <button
                 onClick={() => update({ avatarImage: "" })}
-                className="inline-flex w-fit items-center gap-1.5 text-[11px] text-ink-faint transition-colors hover:text-rose"
+                className="inline-flex w-fit items-center gap-1.5 text-[14px] text-ink-faint transition-colors hover:text-rose"
               >
                 <Trash2 className="h-3 w-3" /> Remove photo
               </button>
@@ -102,15 +102,15 @@ export function Settings() {
           </div>
         </div>
 
-        <label className="mb-1.5 block text-xs text-ink-faint">Display name</label>
+        <label className="mb-1.5 block text-sm text-ink-faint">Display name</label>
         <input
           value={s.name}
           onChange={(e) => update({ name: e.target.value.slice(0, 20) })}
           placeholder="Pick a name"
-          className="mb-4 w-full rounded-xl border border-line bg-void-800 px-4 py-2.5 text-sm text-ink outline-none transition-colors placeholder:text-ink-faint focus:border-teal/50"
+          className="mb-4 h-11 w-full rounded-xl border border-line bg-void-800 px-4 text-[16px] text-ink outline-none transition-colors placeholder:text-ink-faint focus:border-teal/50"
         />
 
-        <p className="mb-2 text-xs text-ink-faint">Avatar colour {s.avatarImage && "(shown when no photo)"}</p>
+        <p className="mb-2 text-sm text-ink-faint">Avatar colour {s.avatarImage && "(shown when no photo)"}</p>
         <div className="flex flex-wrap gap-2.5">
           {AVATARS.map((a) => (
             <button
@@ -142,7 +142,7 @@ export function Settings() {
             canSignIn ? (
               <button
                 onClick={signInWallet}
-                className="flex w-full items-center justify-center gap-2 rounded-xl border border-line bg-void-800 py-2.5 text-sm font-medium text-ink-dim transition-colors hover:text-ink"
+                className="flex h-11 w-full items-center justify-center gap-2 rounded-xl border border-line bg-void-800 text-sm font-medium text-ink-dim transition-colors hover:text-ink"
               >
                 <Wallet className="h-4 w-4" /> Sign in to save your profile
               </button>
@@ -152,7 +152,7 @@ export function Settings() {
           ) : saveProfile ? (
             <SaveProfileButton hasProfile={hasProfile} signs={saveMode === "sign"} onSave={saveProfile} />
           ) : null}
-          <p className="mt-2 text-[11px] text-ink-faint">
+          <p className="mt-2 text-[14px] text-ink-faint">
             {saveMode === "later"
               ? "Kept on this phone. Your name, photo and streak save to your account after your first money match."
               : saveMode === "sign"
@@ -162,7 +162,7 @@ export function Settings() {
           {authenticated && canSignIn && (
             <button
               onClick={() => logout()}
-              className="mt-3 text-[12px] font-medium text-ink-faint underline-offset-2 transition-colors hover:text-rose hover:underline"
+              className="mt-3 text-[14px] font-medium text-ink-faint underline-offset-2 transition-colors hover:text-rose hover:underline"
             >
               Sign out
             </button>
@@ -202,7 +202,7 @@ export function Settings() {
         />
 
         <div className="mt-4">
-          <p className="mb-1.5 flex items-center justify-between text-xs text-ink-faint">
+          <p className="mb-1.5 flex items-center justify-between text-sm text-ink-faint">
             <span>Game sounds</span>
             <span className="nums text-ink-dim">{Math.round(s.volume * 100)}%</span>
           </p>
@@ -212,13 +212,13 @@ export function Settings() {
             max={100}
             value={Math.round(s.volume * 100)}
             onChange={(e) => update({ volume: Number(e.target.value) / 100 })}
-            className="w-full accent-teal"
+            className="h-11 w-full accent-teal"
           />
         </div>
 
         {s.musicOn && (
           <div className="mt-3">
-            <p className="mb-1.5 flex items-center justify-between text-xs text-ink-faint">
+            <p className="mb-1.5 flex items-center justify-between text-sm text-ink-faint">
               <span>Music</span>
               <span className="nums text-ink-dim">{Math.round((s.musicVolume ?? 0.3) * 100)}%</span>
             </p>
@@ -228,15 +228,15 @@ export function Settings() {
               max={100}
               value={Math.round((s.musicVolume ?? 0.3) * 100)}
               onChange={(e) => update({ musicVolume: Number(e.target.value) / 100 })}
-              className="w-full accent-violet-bright"
+              className="h-11 w-full accent-violet-bright"
             />
           </div>
         )}
 
-        <p className="mt-4 flex items-center gap-1.5 text-[11px] text-ink-faint">
+        <p className="mt-4 flex items-center gap-1.5 text-[14px] text-ink-faint">
           <Music className="h-3.5 w-3.5" /> The music changes to match the game you&apos;re playing. It uses mobile data, so it streams only while it&apos;s on.
         </p>
-        <p className="mt-1 text-[10px] text-ink-faint">Music by Kevin MacLeod (incompetech.com) · CC BY 4.0</p>
+        <p className="mt-1 text-[14px] text-ink-faint">Music by Kevin MacLeod (incompetech.com) · CC BY 4.0</p>
       </div>
 
       {/* support, a real human answers on WhatsApp; required to be reachable in-app */}
@@ -249,7 +249,7 @@ export function Settings() {
         </span>
         <span className="min-w-0">
           <span className="block text-sm font-medium text-ink">Need help? Message us on WhatsApp</span>
-          <span className="block text-[11px] text-ink-faint">Payment issues, stuck games, anything. A real person replies fast.</span>
+          <span className="block text-[14px] text-ink-faint">Payment issues, stuck games, anything. A real person replies fast.</span>
         </span>
       </ExternalA>
 
@@ -257,10 +257,10 @@ export function Settings() {
       <ExportWallet />
 
       {/* legal, required to be reachable in-app (MiniPay listing rule) */}
-      <div className="mt-4 flex items-center justify-center gap-4 text-[11px] text-ink-faint">
-        <Link href="/terms" className="transition-colors hover:text-ink">Terms of Service</Link>
+      <div className="mt-2 flex items-center justify-center gap-2 text-[14px] text-ink-faint">
+        <Link href="/terms" className="inline-flex min-h-11 items-center px-2 transition-colors hover:text-ink">Terms of Service</Link>
         <span>·</span>
-        <Link href="/privacy" className="transition-colors hover:text-ink">Privacy Policy</Link>
+        <Link href="/privacy" className="inline-flex min-h-11 items-center px-2 transition-colors hover:text-ink">Privacy Policy</Link>
       </div>
     </section>
   );
@@ -295,7 +295,7 @@ function ExportWallet() {
         </span>
         <div className="min-w-0">
           <p className="text-sm font-medium text-ink">Export your wallet</p>
-          <p className="text-[11px] text-ink-faint">
+          <p className="text-[14px] text-ink-faint">
             This wallet is yours. Take the key and use it in any wallet app you like.
           </p>
         </div>
@@ -304,21 +304,21 @@ function ExportWallet() {
       {!confirming ? (
         <button
           onClick={() => setConfirming(true)}
-          className="mt-3 w-full rounded-xl border border-line bg-void-700 py-2.5 text-[13px] font-semibold text-ink transition-colors hover:border-amber/40"
+          className="mt-3 w-full rounded-xl border border-line bg-void-700 py-2.5 text-[14px] font-semibold text-ink transition-colors hover:border-amber/40"
         >
           Show my private key
         </button>
       ) : (
         <div className="mt-3 rounded-xl border border-rose/40 bg-rose/[0.07] p-3">
-          <p className="text-[12px] font-semibold text-rose">Read this first</p>
-          <p className="mt-1 text-[11px] leading-snug text-ink-dim">
+          <p className="text-[14px] font-semibold text-rose">Read this first</p>
+          <p className="mt-1 text-[14px] leading-snug text-ink-dim">
             Anyone who has this key can take everything in your wallet. Never share it, never paste it into any website,
             and never send it to anyone, including us. If you lose it, nobody can recover it for you.
           </p>
           <div className="mt-3 flex gap-2">
             <button
               onClick={() => setConfirming(false)}
-              className="flex-1 rounded-xl border border-line bg-void-700 py-2.5 text-[12px] font-semibold text-ink-dim transition-colors hover:text-ink"
+              className="flex-1 rounded-xl border border-line bg-void-700 py-2.5 text-[14px] font-semibold text-ink-dim transition-colors hover:text-ink"
             >
               Cancel
             </button>
@@ -335,7 +335,7 @@ function ExportWallet() {
                 }
               }}
               disabled={busy}
-              className="flex-1 inline-flex items-center justify-center gap-1.5 rounded-xl bg-rose py-2.5 text-[12px] font-bold text-white disabled:opacity-60"
+              className="flex-1 inline-flex items-center justify-center gap-1.5 rounded-xl bg-rose py-2.5 text-[14px] font-bold text-white disabled:opacity-60"
             >
               {busy ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : null}
               I understand, show it
@@ -374,7 +374,7 @@ function SaveProfileButton({ hasProfile, signs, onSave }: { hasProfile: boolean;
         {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : saved ? <Check className="h-4 w-4" /> : <ShieldCheck className="h-4 w-4" />}
         {busy ? (signs ? "Check your wallet…" : "Saving…") : saved ? "Saved" : hasProfile ? "Update profile" : signs ? "Sign & save profile" : "Save profile"}
       </button>
-      {err && <p role="alert" className="mt-1.5 text-[11px] text-rose">{err}</p>}
+      {err && <p role="alert" className="mt-1.5 text-[14px] text-rose">{err}</p>}
     </div>
   );
 }
@@ -384,7 +384,7 @@ function Toggle({ label, sub, on, onChange }: { label: string; sub: string; on: 
     <button onClick={() => onChange(!on)} className="flex w-full items-center justify-between py-2.5 text-left">
       <span>
         <span className="block text-sm font-medium text-ink">{label}</span>
-        <span className="block text-[11px] text-ink-faint">{sub}</span>
+        <span className="block text-[14px] text-ink-faint">{sub}</span>
       </span>
       <span className={cn("relative h-6 w-11 rounded-full transition-colors", on ? "bg-teal" : "bg-void-600")}>
         <span className={cn("absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-all", on ? "left-[1.375rem]" : "left-0.5")} />

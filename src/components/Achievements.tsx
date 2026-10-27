@@ -18,7 +18,7 @@ export function Achievements() {
         <h2 className="flex items-center gap-2 text-[15px] font-semibold tracking-tight">
           <Award className="h-4 w-4 text-amber" /> Achievements
         </h2>
-        <span className="nums text-[12px] text-ink-faint">
+        <span className="nums text-[14px] text-ink-faint">
           {unlockedCount}/{ACHIEVEMENTS.length}
         </span>
       </div>
@@ -47,14 +47,14 @@ export function Achievements() {
               >
                 {a.icon}
               </span>
-              <span className={cn("mt-1.5 text-[11px] font-semibold leading-tight", done ? "text-ink" : "text-ink-faint")}>{a.name}</span>
+              <span className={cn("mt-1.5 text-[14px] font-semibold leading-tight", done ? "text-ink" : "text-ink-faint")}>{a.name}</span>
               {done ? (
-                <span className="mt-0.5 text-[9px] font-bold uppercase tracking-wide" style={{ color: TIER_COLOR[a.tier] }}>
+                <span className="mt-0.5 text-[14px] font-bold uppercase tracking-wide" style={{ color: TIER_COLOR[a.tier] }}>
                   {a.tier}
                 </span>
               ) : (
                 <>
-                  <span className="nums mt-0.5 text-[9px] text-ink-faint">{value}/{goal}</span>
+                  <span className="nums mt-0.5 text-[14px] text-ink-faint">{value}/{goal}</span>
                   <div className="mt-1 h-1 w-full overflow-hidden rounded-full bg-void-600">
                     <div className="h-full rounded-full bg-ink-faint" style={{ width: `${pct}%` }} />
                   </div>
@@ -97,11 +97,11 @@ export function AchievementToast() {
             {current.icon}
           </motion.span>
           <span className="min-w-0">
-            <span className="block text-[10px] font-bold uppercase tracking-wide" style={{ color: TIER_COLOR[current.tier] }}>
+            <span className="block text-[14px] font-bold uppercase tracking-wide" style={{ color: TIER_COLOR[current.tier] }}>
               Achievement unlocked
             </span>
             <span className="block truncate text-sm font-bold text-ink">{current.name}</span>
-            <span className="block truncate text-[11px] text-ink-dim">{current.desc}</span>
+            <span className="block truncate text-[14px] text-ink-dim">{current.desc}</span>
           </span>
         </motion.button>
       )}

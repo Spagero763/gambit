@@ -23,7 +23,7 @@ export function GameTile({ game }: { game: Game }) {
         </div>
         <div className="px-3.5 pb-3 pt-2">
           <p className="display text-[18px] font-extrabold leading-tight text-ink">{game.name}</p>
-          <p className="text-[12px] font-semibold text-ink-soft">{META[game.slug]}</p>
+          <p className="text-[14px] font-semibold text-ink-soft">{META[game.slug]}</p>
         </div>
       </Link>
     </Tilt>
@@ -38,7 +38,7 @@ export function WhotHero() {
           <WhotTableArt card={84} className="absolute inset-0" />
           <div className="absolute left-5 top-5">
             <p className="display text-[30px] font-extrabold leading-none text-white drop-shadow-[0_3px_12px_rgba(0,0,0,0.6)]">Naija Whot</p>
-            <p className="mt-1.5 text-[13px] font-semibold text-white/75">1v1 · the deck you know</p>
+            <p className="mt-1.5 text-[14px] font-semibold text-white/75">1v1 · the deck you know</p>
           </div>
           <span
             aria-hidden

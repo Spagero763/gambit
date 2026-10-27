@@ -85,7 +85,7 @@ export function Onboarding() {
           <Icon className="h-7 w-7" />
         </span>
         <h3 className="mt-4 text-lg font-semibold tracking-tight text-ink">{step.title}</h3>
-        <p className="mx-auto mt-2 max-w-sm text-[14px] leading-relaxed text-ink-dim">{step.body}</p>
+        <p className="mx-auto mt-2 max-w-sm text-[16px] leading-relaxed text-ink-dim">{step.body}</p>
 
         {"connect" in step && step.connect && (
           <div className="mt-4">
@@ -111,7 +111,7 @@ export function Onboarding() {
 
       {/* controls */}
       <div className="mt-5 flex items-center justify-between">
-        <button onClick={finish} className="text-[13px] font-medium text-ink-faint transition-colors hover:text-ink-dim">
+        <button onClick={finish} className="text-[14px] font-medium text-ink-faint transition-colors hover:text-ink-dim">
           Skip
         </button>
         <div className="flex items-center gap-2">

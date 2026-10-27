@@ -33,11 +33,11 @@ export function PlayerBar({
       <div className="min-w-0 flex-1">
         <div className="flex items-center gap-2">
           <p className="truncate text-body font-semibold leading-tight text-ink">{name}</p>
-          {edge > 0 && <span className="display nums text-micro font-bold text-ink-soft">+{edge}</span>}
+          {edge > 0 && <span className="display nums text-sm font-bold text-ink-soft">+{edge}</span>}
         </div>
         <div className="mt-0.5 flex h-4 items-center">
           {captured.length === 0 ? (
-            <span className={cn("flex items-center gap-1.5 text-micro", active ? (you ? "text-you" : "text-them") : "text-ink-faint")}>
+            <span className={cn("flex items-center gap-1.5 text-sm", active ? (you ? "text-you" : "text-them") : "text-ink-faint")}>
               {active && <TurnDot />}
               {active ? (you ? "Your turn" : "Thinking") : you ? "White" : "Computer · Black"}
             </span>

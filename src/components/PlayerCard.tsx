@@ -64,7 +64,7 @@ export function PlayerCard() {
 
         <div className="min-w-0 flex-1">
           <p className="truncate text-base font-bold tracking-tight text-ink">{name}</p>
-          <p className="text-[13px] font-semibold" style={{ color: rank.color }}>
+          <p className="text-[14px] font-semibold" style={{ color: rank.color }}>
             {rank.name} · Level {level}
           </p>
         </div>
@@ -72,7 +72,7 @@ export function PlayerCard() {
         <ShareButton
           text={flex}
           url={inviteUrl(address)}
-          className="pressable inline-flex shrink-0 items-center gap-1.5 rounded-xl border border-line bg-void-800 px-3 py-2 text-[12px] font-medium text-ink-dim transition-colors hover:text-ink"
+          className="pressable inline-flex shrink-0 items-center gap-1.5 rounded-xl border border-line bg-void-800 px-3 py-2 text-[14px] font-medium text-ink-dim transition-colors hover:text-ink"
         >
           <Share2 className="h-3.5 w-3.5" /> Share
         </ShareButton>
@@ -80,7 +80,7 @@ export function PlayerCard() {
 
       {/* progress to next rank */}
       <div className="relative mt-4">
-        <div className="flex items-center justify-between text-[11px] text-ink-faint">
+        <div className="flex items-center justify-between text-[14px] text-ink-faint">
           <span>{rank.next ? `Climbing to ${rank.next.name}` : "Top rank reached"}</span>
           <span className="nums">{Math.round(rank.progress * 100)}%</span>
         </div>
@@ -105,12 +105,12 @@ export function PlayerCard() {
       {/* monthly season: a fresh climb every month, rank stays forever */}
       <div className="relative mt-3 flex items-center justify-between rounded-2xl border border-line bg-void-800/60 px-3.5 py-2.5">
         <div>
-          <p className="text-[11px] font-semibold uppercase tracking-wide text-ink-faint">{seasonName()} season</p>
-          <p className="text-[13px] font-bold text-ink">
-            +{seasonXp(p.xp).toLocaleString()} <span className="text-[11px] font-medium text-ink-dim">XP this month</span>
+          <p className="text-[14px] font-semibold uppercase tracking-wide text-ink-faint">{seasonName()} season</p>
+          <p className="text-[14px] font-bold text-ink">
+            +{seasonXp(p.xp).toLocaleString()} <span className="text-[14px] font-medium text-ink-dim">XP this month</span>
           </p>
         </div>
-        <p className="text-[11px] text-ink-faint">resets in {seasonDaysLeft()}d</p>
+        <p className="text-[14px] text-ink-faint">resets in {seasonDaysLeft()}d</p>
       </div>
     </motion.div>
   );
@@ -120,7 +120,7 @@ function Stat({ label, value, suffix }: { label: string; value: number; suffix?:
   return (
     <div className="rounded-2xl border border-line bg-void-800/60 px-3 py-2.5 text-center">
       <AnimatedNumber value={value} suffix={suffix} className="block text-lg font-bold text-ink" />
-      <p className="mt-0.5 text-[10px] text-ink-faint">{label}</p>
+      <p className="mt-0.5 text-[14px] text-ink-faint">{label}</p>
     </div>
   );
 }

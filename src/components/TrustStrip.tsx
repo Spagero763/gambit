@@ -45,7 +45,7 @@ export function TrustStrip() {
         className="pressable flex w-full items-center gap-2.5 rounded-2xl border border-line bg-void-800/60 px-4 py-3 transition-colors hover:border-teal/40"
       >
         <ShieldCheck className="h-4 w-4 shrink-0 text-teal" />
-        <span className="min-w-0 flex-1 text-left text-[12px] text-ink-dim">
+        <span className="min-w-0 flex-1 text-left text-[14px] text-ink-dim">
           <span className="font-semibold text-ink">Don&apos;t trust us. Verify it.</span> Every stake and payout is public
           on-chain.
         </span>
@@ -73,11 +73,11 @@ export function TrustStrip() {
                 <div className="mx-auto mb-4 h-1 w-10 rounded-full bg-line sm:hidden" />
                 <div className="mb-1 flex items-center justify-between">
                   <p className="text-[15px] font-semibold tracking-tight text-ink">Don&apos;t trust us. Verify it.</p>
-                  <button onClick={() => setOpen(false)} aria-label="Close" className="text-ink-faint hover:text-ink">
+                  <button onClick={() => setOpen(false)} aria-label="Close" className="-mr-3 grid h-11 w-11 place-items-center text-ink-faint hover:text-ink">
                     <X className="h-4 w-4" />
                   </button>
                 </div>
-                <p className="mb-4 text-[12px] leading-snug text-ink-faint">
+                <p className="mb-4 text-[14px] leading-snug text-ink-faint">
                   Your stake sits in a contract nobody can touch, and the winner is paid on-chain. All of it is public.
                 </p>
 
@@ -96,17 +96,17 @@ export function TrustStrip() {
                         <l.icon className="h-4 w-4" />
                       </span>
                       <span className="min-w-0 flex-1">
-                        <span className="flex items-center gap-1 text-[13px] font-semibold text-ink">
+                        <span className="flex items-center gap-1 text-[14px] font-semibold text-ink">
                           {l.label}
                           <ExternalLink className="h-3 w-3 text-ink-faint transition-colors group-hover:text-teal" />
                         </span>
-                        <span className="mt-0.5 block text-[11px] leading-snug text-ink-faint">{l.sub}</span>
+                        <span className="mt-0.5 block text-[14px] leading-snug text-ink-faint">{l.sub}</span>
                       </span>
                     </motion.a>
                   ))}
                 </div>
 
-                <p className="mt-3 text-center text-[11px] text-ink-faint">
+                <p className="mt-3 text-center text-[14px] text-ink-faint">
                   Prefer the in-app view?{" "}
                   <Link
                     href="/stats"

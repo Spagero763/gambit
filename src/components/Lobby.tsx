@@ -40,7 +40,7 @@ export function Lobby() {
         </button>
       </div>
 
-      <h2 className="mb-2.5 mt-7 flex items-center gap-2 text-[12px] font-bold uppercase tracking-[0.08em] text-ink-dim">
+      <h2 className="mb-2.5 mt-7 flex items-center gap-2 text-[14px] font-bold uppercase tracking-[0.08em] text-ink-dim">
         <span className="relative inline-flex h-2 w-2">
           <span className="absolute inset-0 rounded-full bg-teal" style={{ animation: "ring 1.6s cubic-bezier(0.23,1,0.32,1) infinite" }} />
           <span className="relative h-2 w-2 rounded-full bg-teal" />
@@ -54,7 +54,7 @@ export function Lobby() {
       ) : rooms.length === 0 ? (
         <div className="glass rounded-tile px-5 py-6 text-center">
           <p className="text-[15px] font-semibold text-ink">Nobody&apos;s waiting right now</p>
-          <p className="mx-auto mt-1 max-w-xs text-[13px] leading-snug text-ink-faint">
+          <p className="mx-auto mt-1 max-w-xs text-[16px] leading-snug text-ink-faint">
             Open a room below and share the link. The first person to join plays you.
           </p>
         </div>
@@ -77,7 +77,7 @@ export function Lobby() {
                         {stake.toFixed(2)} {symbolForToken(r.token)}
                       </span>
                     </p>
-                    <p className="truncate text-[12px] text-ink-faint">
+                    <p className="truncate text-[14px] text-ink-faint">
                       {mine ? "Your room" : displayName(r.creator, profiles[r.creator.toLowerCase()])} · #{r.id} · {mins} min left
                     </p>
                   </div>
@@ -89,7 +89,7 @@ export function Lobby() {
         </ul>
       )}
 
-      <h2 className="mb-2.5 mt-8 text-[12px] font-bold uppercase tracking-[0.08em] text-ink-dim">Open a room</h2>
+      <h2 className="mb-2.5 mt-8 text-[14px] font-bold uppercase tracking-[0.08em] text-ink-dim">Open a room</h2>
       <div className="grid grid-cols-2 gap-3">
         {MONEY_GAMES.map((g) => (
           <Link key={g.slug} href={`/play/${g.slug}?mode=staked`} className="glass pressable relative block overflow-hidden rounded-tile">
@@ -105,12 +105,12 @@ export function Lobby() {
         <span className="grid h-10 w-10 shrink-0 place-items-center rounded-2xl bg-teal/15 text-teal">
           <Share2 className="h-[18px] w-[18px]" />
         </span>
-        <p className="text-[13px] leading-snug text-ink-dim">
+        <p className="text-[16px] leading-snug text-ink-dim">
           <span className="font-semibold text-ink">Fastest way to a match:</span> open a room, then tap Challenge a friend and send the link on WhatsApp.
         </p>
       </div>
 
-      <p className="mt-5 flex items-center justify-center gap-1.5 text-center text-[12px] text-ink-faint">
+      <p className="mt-5 flex items-center justify-center gap-1.5 text-center text-[14px] text-ink-faint">
         <ShieldCheck className="h-3.5 w-3.5" /> Both entries are locked in a contract until the game ends.
       </p>
     </section>

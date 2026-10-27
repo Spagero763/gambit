@@ -52,11 +52,11 @@ export function RankUpCelebration() {
             <RankBadge rank={rankedUp} size={92} />
           </motion.div>
 
-          <p className="mt-4 text-[11px] font-bold uppercase tracking-[0.22em]" style={{ color: rankedUp.color }}>
+          <p className="mt-4 text-[14px] font-bold uppercase tracking-[0.22em]" style={{ color: rankedUp.color }}>
             Rank up
           </p>
           <p className="mt-1 font-display text-3xl font-black text-ink">{rankedUp.name}</p>
-          <p className="mt-1 text-[13px] leading-snug text-ink-dim">
+          <p className="mt-1 text-[16px] leading-snug text-ink-dim">
             You climbed to {rankedUp.name}. Keep winning to reach {rankedUp.next?.name ?? "the very top"}.
           </p>
 

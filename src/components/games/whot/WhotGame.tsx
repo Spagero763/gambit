@@ -105,7 +105,7 @@ export function WhotGame() {
         </Link>
         <div className="min-w-0">
           <h1 className="display truncate text-[24px] font-extrabold leading-tight text-ink">Naija Whot</h1>
-          <p className="text-[13px] text-ink-dim">Practice against the computer</p>
+          <p className="text-[14px] text-ink-dim">Practice against the computer</p>
         </div>
       </div>
 
@@ -136,7 +136,7 @@ export function WhotGame() {
 
       {mode === "free" ? (
         <div key="free" className="enter mt-5">
-          <p className="mb-2 text-[12px] font-bold uppercase tracking-[0.08em] text-ink-dim">Players at the table</p>
+          <p className="mb-2 text-[14px] font-bold uppercase tracking-[0.08em] text-ink-dim">Players at the table</p>
           <div className="grid grid-cols-3 gap-2.5">
             {[2, 4, 6].map((c) => (
               <button
@@ -149,12 +149,12 @@ export function WhotGame() {
               >
                 <Users className={cn("h-5 w-5", count === c ? "text-teal" : "text-ink-faint")} />
                 <span className={cn("display text-[20px] font-bold", count === c ? "text-ink" : "text-ink-dim")}>{c}</span>
-                <span className="text-[11px] text-ink-faint">{c === 2 ? "1 on 1" : `you + ${c - 1}`}</span>
+                <span className="text-[14px] text-ink-faint">{c === 2 ? "1 on 1" : `you + ${c - 1}`}</span>
               </button>
             ))}
           </div>
 
-          <p className="mb-2 mt-5 text-[12px] font-bold uppercase tracking-[0.08em] text-ink-dim">House rules</p>
+          <p className="mb-2 mt-5 text-[14px] font-bold uppercase tracking-[0.08em] text-ink-dim">House rules</p>
           <div className="glass divide-y divide-white/[0.06] overflow-hidden rounded-[20px]">
             {RULE_ITEMS.map((r) => {
               const on = rules[r.key];
@@ -168,7 +168,7 @@ export function WhotGame() {
                 >
                   <span>
                     <span className="block text-[14px] font-semibold text-ink">{r.label}</span>
-                    <span className="block text-[12px] text-ink-faint">{r.note}</span>
+                    <span className="block text-[14px] text-ink-faint">{r.note}</span>
                   </span>
                   <span className={cn("relative h-7 w-12 shrink-0 rounded-full transition-colors", on ? "bg-teal shadow-[0_0_14px_rgba(62,224,155,0.5)]" : "bg-white/10")}>
                     <span className={cn("absolute top-1 h-5 w-5 rounded-full transition-transform duration-200 ease-out", on ? "translate-x-6 bg-white" : "translate-x-1 bg-ink-faint")} />
@@ -185,11 +185,11 @@ export function WhotGame() {
       ) : (
         <div key="tournament" className="enter mt-5">
           <div className="glass rounded-[24px] p-5">
-            <p className="text-[14px] leading-relaxed text-ink-dim">
+            <p className="text-[16px] leading-relaxed text-ink-dim">
               Four players per table. Win your <span className="text-ink">Semi-final</span> to reach the{" "}
               <span className="text-ink">Final</span>. Win the final to be crowned champion.
             </p>
-            <div className="mt-4 flex items-center gap-2 text-[12px] text-ink-faint">
+            <div className="mt-4 flex items-center gap-2 text-[14px] text-ink-faint">
               <span className="rounded-full bg-white/5 px-3 py-1">Semi-final</span>
               <span>→</span>
               <span className="rounded-full bg-white/5 px-3 py-1">Final</span>

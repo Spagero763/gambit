@@ -91,7 +91,7 @@ export function VersusIntro({ matchId, you, onDone }: { matchId: bigint; you: `0
         animate={{ y: 0, opacity: pot !== null ? 1 : 0 }}
         transition={{ delay: 0.62, duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
       >
-        <p className="text-[13px] font-semibold text-ink-dim">
+        <p className="text-[14px] font-semibold text-ink-dim">
           Winner takes{" "}
           {pot !== null && (
             <AnimatedNumber value={pot} from={0} decimals={2} durationMs={1000} suffix={` ${symbol}`} className="display text-[17px] font-extrabold text-teal" />
@@ -100,7 +100,7 @@ export function VersusIntro({ matchId, you, onDone }: { matchId: bigint; you: `0
       </motion.div>
 
       <motion.p
-        className="absolute bottom-[calc(28px+env(safe-area-inset-bottom))] text-[13px] text-ink-faint"
+        className="absolute bottom-[calc(28px+env(safe-area-inset-bottom))] text-[14px] text-ink-faint"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 1.2 }}

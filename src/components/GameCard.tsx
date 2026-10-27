@@ -77,7 +77,7 @@ export function GameCard({
               className="absolute inset-x-0 top-0 flex items-center justify-between p-3"
               style={{ transform: "translateZ(22px)" }}
             >
-              <span className="rounded-md border border-white/10 bg-black/40 px-2 py-1 text-[9px] font-semibold uppercase tracking-[0.14em] text-white/70 backdrop-blur-sm">
+              <span className="rounded-md border border-white/10 bg-black/40 px-2 py-1 text-[14px] font-semibold uppercase tracking-[0.14em] text-white/70 backdrop-blur-sm">
                 {game.mode}
               </span>
               <span className="grid h-7 w-7 place-items-center rounded-full border border-white/10 bg-black/40 text-white/80 backdrop-blur-sm transition-all duration-300 group-hover:rotate-45 group-hover:bg-white group-hover:text-black">
@@ -93,15 +93,15 @@ export function GameCard({
               <h3 className="text-[17px] font-semibold leading-tight tracking-[-0.01em] text-white">
                 {game.name}
               </h3>
-              <p className={cn("mt-0.5 text-[12px] font-medium", a.text)}>{game.tagline}</p>
+              <p className={cn("mt-0.5 text-[14px] font-medium", a.text)}>{game.tagline}</p>
 
               {featured && (
-                <p className="mt-1.5 max-w-[82%] text-[12px] leading-relaxed text-white/60">
+                <p className="mt-1.5 max-w-[82%] text-[16px] leading-relaxed text-white/60">
                   {game.description}
                 </p>
               )}
 
-              <div className="mt-2.5 flex items-center gap-1.5 text-[11px] text-white/55">
+              <div className="mt-2.5 flex items-center gap-1.5 text-[14px] text-white/55">
                 {game.mode === "solo" ? (
                   <span>Solo · score to climb</span>
                 ) : (

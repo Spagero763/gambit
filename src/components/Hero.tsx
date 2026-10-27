@@ -26,7 +26,7 @@ export function Hero() {
         </span>
       </h1>
 
-      <p className="hero-in mt-3 max-w-md text-[15px] leading-relaxed text-ink-dim" style={{ animationDelay: "60ms" }}>
+      <p className="hero-in mt-3 max-w-md text-[16px] leading-relaxed text-ink-dim" style={{ animationDelay: "60ms" }}>
         Whot, chess and more against real people. Winner takes 95%, paid to your wallet in seconds.
       </p>
 
@@ -39,7 +39,7 @@ export function Hero() {
         </Link>
       </div>
 
-      <p className="hero-in mt-3 flex flex-wrap items-center gap-x-2 text-[12px] text-ink-faint" style={{ animationDelay: "180ms" }}>
+      <p className="hero-in mt-3 flex flex-wrap items-center gap-x-2 text-[14px] text-ink-faint" style={{ animationDelay: "180ms" }}>
         Free against the bot, no sign in. <HowItWorks />
       </p>
     </section>

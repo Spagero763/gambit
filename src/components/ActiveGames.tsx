@@ -89,7 +89,7 @@ export function ActiveGames() {
 
   return (
     <section className="mx-auto mt-5 w-full max-w-2xl">
-      <p className="mb-2 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-ink-faint">
+      <p className="mb-2 flex items-center gap-1.5 text-sm font-semibold uppercase tracking-wide text-ink-faint">
         <Swords className="h-3.5 w-3.5 text-teal" /> Your games
       </p>
       <div className="flex gap-2.5 overflow-x-auto pb-1.5 [-webkit-overflow-scrolling:touch]">
@@ -153,10 +153,10 @@ function Card({
           {art ? <GameCover art={art} className="h-full w-full" /> : null}
         </span>
         <span className="min-w-0">
-          <span className="block truncate text-[12px] font-semibold text-ink">{title}</span>
+          <span className="block truncate text-[14px] font-semibold text-ink">{title}</span>
           <span
             className={cn(
-              "mt-0.5 inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wide",
+              "mt-0.5 inline-flex items-center gap-1 text-[14px] font-bold uppercase tracking-wide",
               urgent ? "text-teal" : "text-ink-faint"
             )}
           >

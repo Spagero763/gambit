@@ -83,7 +83,7 @@ export function ShareButton({
                 <p className="flex items-center gap-2 text-sm font-semibold text-ink">
                   <Share2 className="h-4 w-4 text-teal" /> Share to
                 </p>
-                <button onClick={() => setOpen(false)} aria-label="Close" className="text-ink-faint hover:text-ink">
+                <button onClick={() => setOpen(false)} aria-label="Close" className="-mr-3 grid h-11 w-11 place-items-center text-ink-faint hover:text-ink">
                   <CloseIcon className="h-4 w-4" />
                 </button>
               </div>

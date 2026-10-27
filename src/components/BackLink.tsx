@@ -14,7 +14,7 @@ export function BackLink({ href = "/profile", label = "Back" }: { href?: string;
     <Link
       href={href}
       data-nav="back"
-      className="glass pressable inline-flex h-10 items-center gap-1.5 rounded-full px-4 text-[14px] font-semibold text-ink-dim transition-colors hover:text-ink"
+      className="glass pressable inline-flex h-11 items-center gap-1.5 rounded-full px-4 text-[14px] font-semibold text-ink-dim transition-colors hover:text-ink"
     >
       <ArrowLeft className="h-4 w-4" /> {label}
     </Link>

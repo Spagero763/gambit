@@ -183,11 +183,11 @@ export function TournamentRoom({ id }: { id: string }) {
             finally { setBusy(false); }
           }}
           disabled={busy || !isConnected}
-          className="mt-4 inline-flex items-center justify-center gap-1.5 rounded-xl border border-line bg-void-800 px-4 py-2 text-[12px] font-medium text-ink-dim transition-colors hover:text-rose disabled:opacity-60"
+          className="mt-4 inline-flex items-center justify-center gap-1.5 rounded-xl border border-line bg-void-800 px-4 py-2 text-[14px] font-medium text-ink-dim transition-colors hover:text-rose disabled:opacity-60"
         >
           {busy ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : null} Refund my stake (on-chain)
         </button>
-        {msg && <p role="alert" className="mt-2 text-[11px] text-teal">{msg}</p>}
+        {msg && <p role="alert" className="mt-2 text-[14px] text-teal">{msg}</p>}
         <Link href="/tournaments" className="mt-5 inline-flex items-center gap-2 text-teal"><ArrowLeft className="h-4 w-4" /> All tournaments</Link>
       </div>
     );
@@ -364,7 +364,7 @@ export function TournamentRoom({ id }: { id: string }) {
           ⚔️ Cup in progress: you&apos;re at the table
         </span>
       ) : (
-        <Link href="/tournaments" className="inline-flex w-fit items-center gap-2 rounded-full glass px-3 py-1.5 text-sm text-ink-dim">
+        <Link href="/tournaments" className="inline-flex h-11 w-fit items-center gap-2 rounded-full glass px-4 text-sm text-ink-dim">
           <ArrowLeft className="h-4 w-4" /> Tournaments
         </Link>
       )}
@@ -379,10 +379,10 @@ export function TournamentRoom({ id }: { id: string }) {
             <p className="text-sm text-ink-dim">Knockout bracket · semis → bronze + final · top 3 paid</p>
           ) : t.status === "active" ? (
             <p className="mt-0.5 flex items-center gap-1.5 text-sm">
-              <span className={cn("rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide", isFinal ? "bg-amber/20 text-amber" : "bg-violet/15 text-violet-bright")}>
+              <span className={cn("rounded-full px-2 py-0.5 text-[14px] font-bold uppercase tracking-wide", isFinal ? "bg-amber/20 text-amber" : "bg-violet/15 text-violet-bright")}>
                 {stage}
               </span>
-              <span className="text-ink-faint text-[12px]">
+              <span className="text-ink-faint text-[14px]">
                 Round {round} · {alive.length} still in{isFinal ? " · winners take the pot" : ` · top ${Math.max(3, Math.ceil(alive.length / 2))} advance`}
               </span>
             </p>
@@ -392,7 +392,7 @@ export function TournamentRoom({ id }: { id: string }) {
         </div>
         <button
           onClick={() => { navigator.clipboard?.writeText(typeof window !== "undefined" ? window.location.href : ""); setCopied(true); setTimeout(() => setCopied(false), 1500); }}
-          className="ml-auto inline-flex items-center gap-1.5 rounded-full border border-line bg-void-800 px-3 py-1.5 text-[12px] text-ink-dim transition-colors hover:text-ink"
+          className="ml-auto inline-flex items-center gap-1.5 rounded-full border border-line bg-void-800 px-3 py-1.5 text-[14px] text-ink-dim transition-colors hover:text-ink"
         >
           {copied ? <Check className="h-3.5 w-3.5 text-teal" /> : <Copy className="h-3.5 w-3.5" />} Invite
         </button>
@@ -405,7 +405,7 @@ export function TournamentRoom({ id }: { id: string }) {
         <Stat label="Pool" value={`${pot.toFixed(2)}`} sub={sym} teal />
       </div>
 
-      <p className="mt-3 text-[11px] text-ink-faint">
+      <p className="mt-3 text-[14px] text-ink-faint">
         Payouts · 1st {(pot * SPLIT[0]).toFixed(2)} · 2nd {(pot * SPLIT[1]).toFixed(2)} · 3rd {(pot * SPLIT[2]).toFixed(2)} {sym}
       </p>
 
@@ -422,12 +422,12 @@ export function TournamentRoom({ id }: { id: string }) {
             <p className="mt-1 font-semibold text-ink">Tournament settled</p>
             <p className="text-sm text-ink-dim">The pot has been paid out on-chain.</p>
             {explorer && t.settle_tx && (
-              <ExternalA href={`${explorer}${t.settle_tx}`} className="mt-2 inline-flex items-center gap-1.5 text-[12px] text-teal">
+              <ExternalA href={`${explorer}${t.settle_tx}`} className="mt-2 inline-flex items-center gap-1.5 text-[14px] text-teal">
                 View payout <ExternalLink className="h-3.5 w-3.5" />
               </ExternalA>
             )}
             {winners.length >= 3 && (
-              <button onClick={() => setPodium(true)} className="mx-auto mt-3 block rounded-xl border border-line bg-void-800 px-4 py-2 text-[12px] font-medium text-ink-dim transition-colors hover:text-ink">
+              <button onClick={() => setPodium(true)} className="mx-auto mt-3 block rounded-xl border border-line bg-void-800 px-4 py-2 text-[14px] font-medium text-ink-dim transition-colors hover:text-ink">
                 Replay the celebration 🎉
               </button>
             )}
@@ -460,24 +460,24 @@ export function TournamentRoom({ id }: { id: string }) {
         ) : t.status === "open" ? (
           <div className="text-center">
             <p className="flex items-center justify-center gap-1.5 text-sm text-ink-dim"><Loader2 className="h-4 w-4 animate-spin" /> Waiting for players</p>
-            <p className="mt-1 text-[12px] text-ink-faint">Starts automatically when all {t.capacity} seats are filled. Share the invite link.</p>
+            <p className="mt-1 text-[14px] text-ink-faint">Starts automatically when all {t.capacity} seats are filled. Share the invite link.</p>
             {(() => {
               const left = new Date(t.created_at).getTime() + JOIN_WINDOW_MS - now;
               if (left <= 0)
                 return (
-                  <p className="mt-2 text-[12px] font-semibold text-rose">
+                  <p className="mt-2 text-[14px] font-semibold text-rose">
                     Join window closed. Refunding everyone on-chain (takes ~15 seconds)…
                   </p>
                 );
               const m = Math.floor(left / 60000);
               const s = Math.floor((left % 60000) / 1000);
               return (
-                <p className={cn("nums mt-2 text-[12px] font-semibold", left < 120000 ? "text-rose" : "text-amber")}>
+                <p className={cn("nums mt-2 text-[14px] font-semibold", left < 120000 ? "text-rose" : "text-amber")}>
                   ⏱ Join window closes in {m}:{s.toString().padStart(2, "0")}. Everyone must stake before then
                 </p>
               );
             })()}
-            <button onClick={cancelCup} disabled={busy} className="mx-auto mt-3 flex items-center justify-center gap-1.5 rounded-xl border border-line bg-void-800 px-4 py-2 text-[12px] font-medium text-ink-dim transition-colors hover:text-rose disabled:opacity-60">
+            <button onClick={cancelCup} disabled={busy} className="mx-auto mt-3 flex items-center justify-center gap-1.5 rounded-xl border border-line bg-void-800 px-4 py-2 text-[14px] font-medium text-ink-dim transition-colors hover:text-rose disabled:opacity-60">
               {busy ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : null} {isCreator ? "Cancel & refund everyone" : "Refund everyone (after join window)"}
             </button>
           </div>
@@ -490,7 +490,7 @@ export function TournamentRoom({ id }: { id: string }) {
                 <p className="mt-1 text-sm text-ink-dim">Stay and watch the table play out, or bow out now.</p>
                 <Link
                   href="/tournaments"
-                  className="mt-3 inline-flex items-center justify-center gap-1.5 rounded-xl border border-line bg-void-800 px-5 py-2.5 text-[13px] font-medium text-ink-dim transition-colors hover:text-rose"
+                  className="mt-3 inline-flex items-center justify-center gap-1.5 rounded-xl border border-line bg-void-800 px-5 py-2.5 text-[14px] font-medium text-ink-dim transition-colors hover:text-rose"
                 >
                   Exit tournament
                 </Link>
@@ -509,10 +509,10 @@ export function TournamentRoom({ id }: { id: string }) {
                   : "You're through. Waiting for the other matches. Watch the table below."}
               </p>
             )}
-            <button onClick={settle} disabled={busy} className="flex w-full items-center justify-center gap-2 rounded-2xl border border-line bg-void-800 py-2.5 text-[12px] text-ink-dim transition-colors hover:text-ink disabled:opacity-60">
+            <button onClick={settle} disabled={busy} className="flex w-full items-center justify-center gap-2 rounded-2xl border border-line bg-void-800 py-2.5 text-[14px] text-ink-dim transition-colors hover:text-ink disabled:opacity-60">
               {busy ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : null} Resolve stuck matches
             </button>
-            <button onClick={reclaim} disabled={busy} className="mx-auto block text-[11px] font-medium text-ink-faint underline-offset-2 transition-colors hover:text-ink hover:underline disabled:opacity-60">
+            <button onClick={reclaim} disabled={busy} className="mx-auto block text-[14px] font-medium text-ink-faint underline-offset-2 transition-colors hover:text-ink hover:underline disabled:opacity-60">
               Payout stuck? Reclaim all stakes (refund everyone, after 1h)
             </button>
           </div>
@@ -550,10 +550,10 @@ export function TournamentRoom({ id }: { id: string }) {
                     <Play className="h-4 w-4" /> Sit at the table 🃏
                   </button>
                 )}
-                <button onClick={settle} disabled={busy} className="flex w-full items-center justify-center gap-2 rounded-2xl border border-line bg-void-800 py-2.5 text-[12px] text-ink-dim transition-colors hover:text-ink disabled:opacity-60">
+                <button onClick={settle} disabled={busy} className="flex w-full items-center justify-center gap-2 rounded-2xl border border-line bg-void-800 py-2.5 text-[14px] text-ink-dim transition-colors hover:text-ink disabled:opacity-60">
                   {busy ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : null} Nudge a stalled player
                 </button>
-                <button onClick={reclaim} disabled={busy} className="mx-auto block text-[11px] font-medium text-ink-faint underline-offset-2 transition-colors hover:text-ink hover:underline disabled:opacity-60">
+                <button onClick={reclaim} disabled={busy} className="mx-auto block text-[14px] font-medium text-ink-faint underline-offset-2 transition-colors hover:text-ink hover:underline disabled:opacity-60">
                   Payout stuck? Reclaim all stakes (refund everyone, after 1h)
                 </button>
               </div>
@@ -573,18 +573,18 @@ export function TournamentRoom({ id }: { id: string }) {
             <button onClick={() => setPlaying(true)} className="btn-primary flex w-full items-center justify-center gap-2 rounded-2xl py-3.5 text-sm shadow-glow">
               <Play className="h-4 w-4" /> {myScore === null ? `Play your ${stage} run` : "Improve your run"}
             </button>
-            {myScore !== null && <p className="text-center text-[12px] text-ink-faint">Your best this round: <span className="nums font-semibold text-ink">{myScore.toLocaleString()}</span></p>}
-            <button onClick={settle} disabled={busy} className="flex w-full items-center justify-center gap-2 rounded-2xl border border-line bg-void-800 py-2.5 text-[12px] text-ink-dim transition-colors hover:text-ink disabled:opacity-60">
+            {myScore !== null && <p className="text-center text-[14px] text-ink-faint">Your best this round: <span className="nums font-semibold text-ink">{myScore.toLocaleString()}</span></p>}
+            <button onClick={settle} disabled={busy} className="flex w-full items-center justify-center gap-2 rounded-2xl border border-line bg-void-800 py-2.5 text-[14px] text-ink-dim transition-colors hover:text-ink disabled:opacity-60">
               {busy ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : null} {isFinal ? "Finish final & pay out" : "Close this round"}
             </button>
-            <button onClick={reclaim} disabled={busy} className="mx-auto block text-[11px] font-medium text-ink-faint underline-offset-2 transition-colors hover:text-ink hover:underline disabled:opacity-60">
+            <button onClick={reclaim} disabled={busy} className="mx-auto block text-[14px] font-medium text-ink-faint underline-offset-2 transition-colors hover:text-ink hover:underline disabled:opacity-60">
               Payout stuck? Reclaim all stakes (refund everyone, after 1h)
             </button>
           </div>
         )}
-        {(msg || error) && <p className="mt-2 text-center text-[11px] text-rose">{msg ?? error}</p>}
+        {(msg || error) && <p className="mt-2 text-center text-[14px] text-rose">{msg ?? error}</p>}
         {t.settle_error && t.status !== "cancelled" && t.status !== "settled" && (
-          <p className="mt-2 text-center text-[11px] text-amber">
+          <p className="mt-2 text-center text-[14px] text-amber">
             Last payout attempt didn&apos;t go through: {friendlyError(t.settle_error, "the network rejected it")}. Anyone may retry above.
           </p>
         )}
@@ -598,7 +598,7 @@ export function TournamentRoom({ id }: { id: string }) {
       {/* survival table, live seats, card counts, locked podium places */}
       {isTableCup && tableMatch && (
         <div className="mt-6">
-          <p className="mb-3 flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-ink-faint">
+          <p className="mb-3 flex items-center gap-2 text-sm font-semibold uppercase tracking-wide text-ink-faint">
             <Trophy className="h-3.5 w-3.5" /> The table
           </p>
           <div className="space-y-2">
@@ -634,7 +634,7 @@ export function TournamentRoom({ id }: { id: string }) {
                           {displayName(a, p)}
                           {a.toLowerCase() === me ? <span className="text-teal"> (you)</span> : ""}
                         </p>
-                        <p className="text-[11px] text-ink-faint">
+                        <p className="text-[14px] text-ink-faint">
                           {place >= 0 ? `Finished ${["1st", "2nd", "3rd"][place] ?? `${place + 1}th`}` : theirTurn ? "Playing now…" : `${st.counts?.[a] ?? 0} cards`}
                         </p>
                       </div>
@@ -650,7 +650,7 @@ export function TournamentRoom({ id }: { id: string }) {
 
       {/* standings (score cups; bracket/table cups show it only until the draw) */}
       <div className={cn("mt-6", ((isBracketCup && bracket.length > 0) || (isTableCup && tableMatch)) && "hidden")}>
-        <p className="mb-3 flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-ink-faint"><Users className="h-3.5 w-3.5" /> Standings</p>
+        <p className="mb-3 flex items-center gap-2 text-sm font-semibold uppercase tracking-wide text-ink-faint"><Users className="h-3.5 w-3.5" /> Standings</p>
         <div className="space-y-2">
           {standings.map((p, i) => {
             const out = p.eliminated_round !== null && p.eliminated_round !== undefined;
@@ -691,7 +691,7 @@ export function TournamentRoom({ id }: { id: string }) {
                       {displayName(p.address, profiles[p.address.toLowerCase()])}
                       {p.address.toLowerCase() === me ? <span className="text-teal"> (you)</span> : ""}
                     </p>
-                    <p className="text-[11px] text-ink-faint">
+                    <p className="text-[14px] text-ink-faint">
                       {out
                         ? `Out in round ${p.eliminated_round}`
                         : p.round_score === null || p.round_score === undefined
@@ -705,7 +705,7 @@ export function TournamentRoom({ id }: { id: string }) {
             );
           })}
           {Array.from({ length: Math.max(0, t.capacity - standings.length) }).map((_, i) => (
-            <div key={`empty-${i}`} className="flex items-center gap-3 rounded-2xl border border-dashed border-line px-4 py-3 text-[12px] text-ink-faint">
+            <div key={`empty-${i}`} className="flex items-center gap-3 rounded-2xl border border-dashed border-line px-4 py-3 text-[14px] text-ink-faint">
               <span className="w-6 text-center">{standings.length + i + 1}</span> Open seat
             </div>
           ))}
@@ -741,8 +741,8 @@ export function TournamentRoom({ id }: { id: string }) {
 function Stat({ label, value, sub, teal }: { label: string; value: string; sub?: string; teal?: boolean }) {
   return (
     <div className="rounded-2xl border border-line bg-void-700 px-4 py-3">
-      <p className="text-[10px] font-semibold uppercase tracking-wide text-ink-faint">{label}</p>
-      <p className={cn("nums text-lg font-bold", teal ? "text-teal" : "text-ink")}>{value}{sub ? <span className="ml-1 text-[11px] font-medium text-ink-faint">{sub}</span> : null}</p>
+      <p className="text-[14px] font-semibold uppercase tracking-wide text-ink-faint">{label}</p>
+      <p className={cn("nums text-lg font-bold", teal ? "text-teal" : "text-ink")}>{value}{sub ? <span className="ml-1 text-[14px] font-medium text-ink-faint">{sub}</span> : null}</p>
     </div>
   );
 }

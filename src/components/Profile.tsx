@@ -81,7 +81,7 @@ function CopyAddress({ address }: { address: string }) {
     <button
       onClick={copy}
       title="Copy your full wallet address"
-      className="group inline-flex items-center gap-1.5 font-mono text-xs text-ink-faint transition-colors hover:text-ink"
+      className="group inline-flex items-center gap-1.5 font-mono text-sm text-ink-faint transition-colors hover:text-ink"
     >
       {short(address)}
       {copied ? (
@@ -237,7 +237,7 @@ export function Profile() {
           {/* MiniPay: no raw address and no copy control. On the web the address
               is still needed to fund an embedded wallet, so it stays. */}
           {miniPay ? (
-            <p className="text-[11px] text-ink-faint">Celo wallet</p>
+            <p className="text-[14px] text-ink-faint">Celo wallet</p>
           ) : (
             <CopyAddress address={address} />
           )}
@@ -245,14 +245,14 @@ export function Profile() {
         <div className="ml-auto flex flex-col items-end gap-1.5">
           <div className="text-right">
             <AnimatedNumber value={amount} decimals={2} className="text-lg font-semibold text-ink" />
-            <p className="text-[11px] text-ink-faint">{preferred.token.symbol} balance</p>
+            <p className="text-[14px] text-ink-faint">{preferred.token.symbol} balance</p>
           </div>
           {/* Withdraw lives outside MiniPay only: MiniPay has its own withdraw
               screen, and duplicating it inside the Mini App was flagged in review. */}
           {!miniPay && (
             <button
               onClick={() => setSendOpen(true)}
-              className="inline-flex items-center gap-1.5 rounded-full border border-line bg-void-700 px-3 py-1.5 text-[12px] font-medium text-ink-dim transition-colors hover:border-line-strong hover:text-ink"
+              className="inline-flex items-center gap-1.5 rounded-full border border-line bg-void-700 px-3 py-1.5 text-[14px] font-medium text-ink-dim transition-colors hover:border-line-strong hover:text-ink"
             >
               <Send className="h-3.5 w-3.5" /> Withdraw
             </button>
@@ -302,7 +302,7 @@ export function Profile() {
       ) : played.length === 0 ? (
         <div className="rounded-2xl border border-line bg-void-700 px-4 py-8 text-center">
           <p className="text-sm text-ink-dim">No staked matches yet.</p>
-          <p className="mt-1 text-[12px] text-ink-faint">
+          <p className="mt-1 text-[14px] text-ink-faint">
             Play a staked 1v1 and your settled results show up here.
           </p>
         </div>
@@ -318,12 +318,12 @@ export function Profile() {
             >
               <div>
                 <p className="text-sm font-medium text-ink">{m.game}</p>
-                <p className="text-[11px] text-ink-faint">Room #{m.id} · {m.when}</p>
+                <p className="text-[14px] text-ink-faint">Room #{m.id} · {m.when}</p>
               </div>
               <div className="flex items-center gap-3">
                 <span
                   className={cn(
-                    "rounded-full px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wide",
+                    "rounded-full px-2.5 py-1 text-[14px] font-semibold uppercase tracking-wide",
                     m.result === "win" && "bg-teal/12 text-teal",
                     m.result === "lose" && "bg-rose/12 text-rose",
                     m.result === "draw" && "bg-white/8 text-ink-dim"
@@ -341,7 +341,7 @@ export function Profile() {
                 >
                   {m.delta > 0 ? "+" : ""}
                   {m.delta.toFixed(2)}
-                  <span className="ml-0.5 text-[9px] text-ink-faint">{m.unit}</span>
+                  <span className="ml-0.5 text-[14px] text-ink-faint">{m.unit}</span>
                 </span>
               </div>
             </motion.li>
@@ -394,7 +394,7 @@ function AccountLinks() {
         </span>
         <span className="min-w-0 flex-1">
           <span className="block text-sm font-medium text-ink">Account</span>
-          <span className="block truncate text-[11px] text-ink-faint">Profile, sound, wallet key</span>
+          <span className="block truncate text-[14px] text-ink-faint">Profile, sound, wallet key</span>
         </span>
         <ChevronRight className="h-4 w-4 shrink-0 text-ink-faint" />
       </button>
@@ -421,7 +421,7 @@ function AccountLinks() {
                 <div className="mb-4 flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     {view !== "grid" && (
-                      <button onClick={() => setView("grid")} aria-label="Back" className="text-ink-faint hover:text-ink">
+                      <button onClick={() => setView("grid")} aria-label="Back" className="-ml-3 grid h-11 w-11 place-items-center text-ink-faint hover:text-ink">
                         <ArrowLeft className="h-4 w-4" />
                       </button>
                     )}
@@ -429,7 +429,7 @@ function AccountLinks() {
                       {view === "grid" ? "Account" : view === "wallet" ? "Wallet key" : view}
                     </p>
                   </div>
-                  <button onClick={close} aria-label="Close" className="text-ink-faint hover:text-ink">
+                  <button onClick={close} aria-label="Close" className="-mr-3 grid h-11 w-11 place-items-center text-ink-faint hover:text-ink">
                     <X className="h-4 w-4" />
                   </button>
                 </div>
@@ -457,8 +457,8 @@ function AccountLinks() {
                               <t.icon className="h-4 w-4" />
                             </span>
                             <span>
-                              <span className="block text-[13px] font-semibold text-ink">{t.label}</span>
-                              <span className="block text-[11px] text-ink-faint">{t.sub}</span>
+                              <span className="block text-[14px] font-semibold text-ink">{t.label}</span>
+                              <span className="block text-[14px] text-ink-faint">{t.sub}</span>
                             </span>
                           </motion.button>
                         ))}
@@ -473,7 +473,7 @@ function AccountLinks() {
                       (embedded?.address ? (
                         <WalletPanel onExport={() => exportWallet({ address: embedded.address as string })} />
                       ) : (
-                        <p className="py-6 text-center text-[13px] text-ink-dim">
+                        <p className="py-6 text-center text-[14px] text-ink-dim">
                           {authenticated
                             ? "You are using an external wallet, so you already hold your own key."
                             : "Sign in first to manage your wallet."}
@@ -505,7 +505,7 @@ function ProfilePanel({
   const [err, setErr] = useState<string | null>(null);
   return (
     <div>
-      <label className="text-[11px] font-semibold uppercase tracking-wide text-ink-faint">Display name</label>
+      <label className="text-[14px] font-semibold uppercase tracking-wide text-ink-faint">Display name</label>
       <input
         value={settings.name}
         onChange={(e) => update({ name: e.target.value.slice(0, 24) })}
@@ -513,7 +513,7 @@ function ProfilePanel({
         className="mt-1.5 w-full rounded-xl border border-line bg-void-800 px-3 py-2.5 text-sm text-ink outline-none placeholder:text-ink-faint focus:border-teal/50"
       />
 
-      <p className="mt-4 text-[11px] font-semibold uppercase tracking-wide text-ink-faint">Avatar colour</p>
+      <p className="mt-4 text-[14px] font-semibold uppercase tracking-wide text-ink-faint">Avatar colour</p>
       <div className="mt-1.5 flex flex-wrap gap-2">
         {AVATARS.map((a) => (
           <button
@@ -552,8 +552,8 @@ function ProfilePanel({
           {busy ? "Check your wallet…" : saved ? "Saved to leaderboards" : "Save"}
         </button>
       )}
-      {err && <p role="alert" className="mt-2 text-[11px] text-rose">{err}</p>}
-      <p className="mt-2 text-[11px] text-ink-faint">
+      {err && <p role="alert" className="mt-2 text-[14px] text-rose">{err}</p>}
+      <p className="mt-2 text-[14px] text-ink-faint">
         {onSave ? "Your name shows on every leaderboard and match." : "Kept on this phone. It goes on your account after your first money match."}
       </p>
     </div>
@@ -593,7 +593,7 @@ function SoundPanel({
       </div>
 
       <div>
-        <p className="mb-1.5 flex items-center justify-between text-xs text-ink-faint">
+        <p className="mb-1.5 flex items-center justify-between text-sm text-ink-faint">
           <span>Game sounds</span>
           <span className="nums text-ink-dim">{Math.round(settings.volume * 100)}%</span>
         </p>
@@ -609,7 +609,7 @@ function SoundPanel({
 
       {settings.musicOn && (
         <div>
-          <p className="mb-1.5 flex items-center justify-between text-xs text-ink-faint">
+          <p className="mb-1.5 flex items-center justify-between text-sm text-ink-faint">
             <span>Music</span>
             <span className="nums text-ink-dim">{Math.round((settings.musicVolume ?? 0.3) * 100)}%</span>
           </p>
@@ -623,7 +623,7 @@ function SoundPanel({
           />
         </div>
       )}
-      <p className="text-[11px] text-ink-faint">Music streams only while it&apos;s on, and stays mixed under the game.</p>
+      <p className="text-[14px] text-ink-faint">Music streams only while it&apos;s on, and stays mixed under the game.</p>
     </div>
   );
 }
@@ -634,27 +634,27 @@ function WalletPanel({ onExport }: { onExport: () => Promise<void> }) {
   const [busy, setBusy] = useState(false);
   return (
     <div>
-      <p className="text-[13px] leading-snug text-ink-dim">
+      <p className="text-[14px] leading-snug text-ink-dim">
         This wallet is yours. You can export the key and use it in any wallet app. We never see it or store it.
       </p>
       {!confirming ? (
         <button
           onClick={() => setConfirming(true)}
-          className="mt-4 w-full rounded-xl border border-line bg-void-800 py-2.5 text-[13px] font-semibold text-ink transition-colors hover:border-amber/40"
+          className="mt-4 w-full rounded-xl border border-line bg-void-800 py-2.5 text-[14px] font-semibold text-ink transition-colors hover:border-amber/40"
         >
           Show my private key
         </button>
       ) : (
         <div className="mt-4 rounded-xl border border-rose/40 bg-rose/[0.07] p-3">
-          <p className="text-[12px] font-semibold text-rose">Read this first</p>
-          <p className="mt-1 text-[11px] leading-snug text-ink-dim">
+          <p className="text-[14px] font-semibold text-rose">Read this first</p>
+          <p className="mt-1 text-[14px] leading-snug text-ink-dim">
             Anyone with this key can take everything in your wallet. Never share it, and never send it to anyone,
             including us. If you lose it, nobody can recover it for you.
           </p>
           <div className="mt-3 flex gap-2">
             <button
               onClick={() => setConfirming(false)}
-              className="flex-1 rounded-xl border border-line bg-void-700 py-2.5 text-[12px] font-semibold text-ink-dim transition-colors hover:text-ink"
+              className="flex-1 rounded-xl border border-line bg-void-700 py-2.5 text-[14px] font-semibold text-ink-dim transition-colors hover:text-ink"
             >
               Cancel
             </button>
@@ -670,7 +670,7 @@ function WalletPanel({ onExport }: { onExport: () => Promise<void> }) {
                 }
               }}
               disabled={busy}
-              className="flex-1 inline-flex items-center justify-center gap-1.5 rounded-xl bg-rose py-2.5 text-[12px] font-bold text-white disabled:opacity-60"
+              className="flex-1 inline-flex items-center justify-center gap-1.5 rounded-xl bg-rose py-2.5 text-[14px] font-bold text-white disabled:opacity-60"
             >
               {busy ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : null}
               I understand
@@ -720,9 +720,9 @@ function InviteCard({ refCode, address }: { refCode: string | null; address: str
     <div className="rounded-2xl border border-line bg-void-700 p-5 shadow-card">
       <div className="flex items-center gap-2">
         <p className="text-sm font-semibold text-ink">Invite friends, earn {sym}</p>
-        <span className="rounded-full bg-teal/15 px-2 py-0.5 text-[10px] font-semibold text-teal">LIVE</span>
+        <span className="rounded-full bg-teal/15 px-2 py-0.5 text-[14px] font-semibold text-teal">LIVE</span>
       </div>
-      <p className="mt-0.5 text-[12px] text-ink-dim">
+      <p className="mt-0.5 text-[14px] text-ink-dim">
         {per > 0
           ? `You earn ${fmt(per)} ${sym} for every friend who joins with your link and plays a staked match. That is the only condition. Paid straight to your wallet from an on chain vault.`
           : `You earn a bonus for every friend who joins with your link and plays a staked match, paid straight to your wallet from an on chain vault.`}{" "}
@@ -731,7 +731,7 @@ function InviteCard({ refCode, address }: { refCode: string | null; address: str
       {per > 0 && (
         <div className="mt-2.5 flex flex-wrap gap-1.5">
           {[5, 10, 25].map((n) => (
-            <span key={n} className="rounded-full border border-teal/25 bg-teal/[0.07] px-2.5 py-1 text-[11px] font-semibold text-teal">
+            <span key={n} className="rounded-full border border-teal/25 bg-teal/[0.07] px-2.5 py-1 text-[14px] font-semibold text-teal">
               {n} friends = {fmt(per * n)} {sym}
             </span>
           ))}
@@ -742,7 +742,7 @@ function InviteCard({ refCode, address }: { refCode: string | null; address: str
           onClick={copy}
           disabled={!pretty}
           title={pretty ? "Copy your invite link" : "Your link is being created"}
-          className="flex min-w-0 flex-1 items-center gap-1.5 rounded-xl border border-line bg-void-800 px-3 py-2.5 text-left text-[12px] text-ink-dim transition-colors hover:border-line-strong hover:text-ink disabled:opacity-60 disabled:hover:border-line"
+          className="flex min-w-0 flex-1 items-center gap-1.5 rounded-xl border border-line bg-void-800 px-3 py-2.5 text-left text-[14px] text-ink-dim transition-colors hover:border-line-strong hover:text-ink disabled:opacity-60 disabled:hover:border-line"
         >
           <span className="truncate">{pretty ?? "Creating your link…"}</span>
           {pretty ? (
@@ -766,9 +766,9 @@ function InviteCard({ refCode, address }: { refCode: string | null; address: str
 function Stat({ label, value, sub, accent }: { label: string; value: string; sub: string; accent: string }) {
   return (
     <div className="rounded-2xl border border-line bg-void-700 p-3.5 shadow-card">
-      <p className="text-[11px] text-ink-faint">{label}</p>
+      <p className="text-[14px] text-ink-faint">{label}</p>
       <p className={cn("nums mt-2 text-xl font-semibold tracking-tight", accent)}>{value}</p>
-      <p className="mt-0.5 text-[10px] text-ink-faint">{sub}</p>
+      <p className="mt-0.5 text-[14px] text-ink-faint">{sub}</p>
     </div>
   );
 }
@@ -784,7 +784,7 @@ function ProfileSaveCard({ mode, onSave }: { mode: "save" | "sign" | "later"; on
         </span>
         <div className="min-w-0 flex-1">
           <p className="text-sm font-semibold text-ink">{mode === "later" ? "Your progress is on this phone" : "Save your profile"}</p>
-          <p className="mt-0.5 text-[12px] text-ink-dim">
+          <p className="mt-0.5 text-[14px] text-ink-dim">
             {mode === "later"
               ? "Your name, photo and streak save to your account, and join the leaderboard, after your first money match."
               : mode === "save"
@@ -809,7 +809,7 @@ function ProfileSaveCard({ mode, onSave }: { mode: "save" | "sign" | "later"; on
             {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />}
             {busy ? (mode === "sign" ? "Check your wallet…" : "Saving…") : mode === "sign" ? "Sign & save profile" : "Save profile"}
           </button>}
-          {err && <p role="alert" className="mt-2 text-[11px] text-rose">{err}</p>}
+          {err && <p role="alert" className="mt-2 text-[14px] text-rose">{err}</p>}
         </div>
       </div>
     </div>

@@ -32,7 +32,7 @@ export function ResignButton({ matchId, you }: { matchId: bigint; you: string })
       <button
         onClick={() => setOpen(true)}
         title="Forfeit the match"
-        className="glass pressable inline-flex h-10 items-center gap-1.5 rounded-full px-3.5 text-[13px] font-semibold text-ink-dim transition-colors hover:text-rose"
+        className="glass pressable inline-flex h-10 items-center gap-1.5 rounded-full px-3.5 text-[14px] font-semibold text-ink-dim transition-colors hover:text-rose"
       >
         <Flag className="h-3.5 w-3.5" /> Resign
       </button>
@@ -50,7 +50,7 @@ export function ResignButton({ matchId, you }: { matchId: bigint; you: string })
                 <Flag className="h-5 w-5" />
               </span>
               <p className="display mt-3 text-center text-[24px] font-extrabold text-ink">Give up this match?</p>
-              <p className="mt-1 text-center text-[14px] leading-snug text-ink-dim">
+              <p className="mt-1 text-center text-[16px] leading-snug text-ink-dim">
                 Your opponent wins the whole pot, paid to their wallet right away. This can&apos;t be undone.
               </p>
               <div className="mt-5 flex flex-col gap-2.5">

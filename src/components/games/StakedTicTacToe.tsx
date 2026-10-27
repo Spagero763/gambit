@@ -156,7 +156,7 @@ export function StakedTicTacToe({ matchId, you, onExit }: { matchId: bigint; you
           />
         </div>
         <p className="mt-3 text-center text-[14px] text-ink-dim">{status}</p>
-        {err && <p role="alert" className="mt-1 text-center text-[12px] text-rose">{err}</p>}
+        {err && <p role="alert" className="mt-1 text-center text-[14px] text-rose">{err}</p>}
       </div>
 
       <MoneySeat

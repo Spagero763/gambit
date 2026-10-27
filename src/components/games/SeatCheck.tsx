@@ -43,7 +43,7 @@ export function SeatCheck({ you }: { you: `0x${string}` }) {
         <p className="flex items-center gap-2 text-[16px] font-bold text-ink">
           <ShieldCheck className="h-5 w-5 text-teal" /> Confirm this seat is yours
         </p>
-        <p className="mt-1.5 text-[14px] leading-snug text-ink-dim">
+        <p className="mt-1.5 text-[16px] leading-snug text-ink-dim">
           This phone doesn&apos;t have your stake on record, so moves can&apos;t be sent from it yet. One free confirmation fixes that. No money moves.
         </p>
         <button

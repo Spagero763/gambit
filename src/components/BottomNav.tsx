@@ -79,7 +79,7 @@ export function BottomNav() {
               </motion.span>
               <span
                 className={cn(
-                  "relative text-[11px] font-semibold transition-colors",
+                  "relative text-[14px] font-semibold transition-colors",
                   isActive ? "text-ink" : "text-ink-faint"
                 )}
               >

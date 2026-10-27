@@ -87,7 +87,7 @@ export function DailyChallenge() {
 
   return (
     <section className="mx-auto w-full max-w-2xl px-5 pb-28 pt-4">
-      <Link href="/" className="glass pressable inline-flex h-10 w-fit items-center gap-2 rounded-full px-4 text-[14px] font-semibold text-ink-dim">
+      <Link href="/" className="glass pressable inline-flex h-11 w-fit items-center gap-2 rounded-full px-4 text-[14px] font-semibold text-ink-dim">
         <ArrowLeft className="h-4 w-4" /> Home
       </Link>
 
@@ -107,7 +107,7 @@ export function DailyChallenge() {
         </p>
 
         {streak > 1 && (
-          <p className="mt-3 inline-flex items-center gap-1.5 rounded-full bg-amber/15 px-3 py-1 text-[13px] font-semibold text-amber">
+          <p className="mt-3 inline-flex items-center gap-1.5 rounded-full bg-amber/15 px-3 py-1 text-[14px] font-semibold text-amber">
             <Flame className="h-4 w-4" /> {streak} day streak
           </p>
         )}
@@ -115,7 +115,7 @@ export function DailyChallenge() {
         {done ? (
           <>
             <div className="mx-auto mt-5 max-w-[16rem] rounded-2xl border border-line bg-void-800 p-4">
-              <p className="text-[11px] uppercase tracking-wide text-ink-faint">Your result today</p>
+              <p className="text-[14px] uppercase tracking-wide text-ink-faint">Your result today</p>
               {isBlocks || result.score !== WIN_SCORE ? (
                 <p className="nums mt-1 text-3xl font-bold text-ink">{result.score.toLocaleString()}</p>
               ) : (
@@ -150,7 +150,7 @@ export function DailyChallenge() {
                   <Play className="h-4 w-4" /> Play more {gameName}
                 </Link>
               )}
-              <p className="text-[11px] text-ink-faint">
+              <p className="text-[14px] text-ink-faint">
                 New challenge in {countdown(msToNextBoard())}
                 {isBlocks && practice ? " · practice runs don't change your result" : ""}
               </p>
@@ -173,7 +173,7 @@ export function DailyChallenge() {
                 <Swords className="h-4 w-4" /> Go beat the bot at {gameName}
               </Link>
             )}
-            <p className="text-[11px] text-ink-faint">New challenge in {countdown(msToNextBoard())}</p>
+            <p className="text-[14px] text-ink-faint">New challenge in {countdown(msToNextBoard())}</p>
           </div>
         )}
       </motion.div>

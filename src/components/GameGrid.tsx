@@ -13,13 +13,13 @@ export function GameGrid() {
       <div className="mb-3.5 flex items-end justify-between">
         <h2 className="display text-[22px] font-extrabold text-ink">Games</h2>
         <div className="flex items-center gap-3.5">
-          <Link href="/stats" className="flex items-center gap-1 text-[12px] font-semibold text-ink-dim transition-colors hover:text-ink">
+          <Link href="/stats" className="flex min-h-11 items-center gap-1 text-[14px] font-semibold text-ink-dim transition-colors hover:text-ink">
             <BarChart3 className="h-3.5 w-3.5" /> Stats
           </Link>
-          <Link href="/tournaments" className="flex items-center gap-1 text-[12px] font-semibold text-amber">
+          <Link href="/tournaments" className="flex min-h-11 items-center gap-1 text-[14px] font-semibold text-amber">
             <Trophy className="h-3.5 w-3.5" /> Cups
           </Link>
-          <Link href="/lobby" className="flex items-center gap-1 text-[12px] font-semibold text-teal">
+          <Link href="/lobby" className="flex min-h-11 items-center gap-1 text-[14px] font-semibold text-teal">
             <Swords className="h-3.5 w-3.5" /> Live rooms
           </Link>
         </div>

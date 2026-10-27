@@ -138,16 +138,16 @@ export function Tour() {
           style={cardStyle}
         >
           <p className="text-sm font-bold text-ink">{s.title}</p>
-          <p className="mt-1 text-[13px] leading-snug text-ink-dim">{s.body}</p>
+          <p className="mt-1 text-[16px] leading-snug text-ink-dim">{s.body}</p>
           <div className="mt-4 flex items-center justify-between">
-            <button onClick={finish} className="text-[12px] font-medium text-ink-faint transition-colors hover:text-ink-dim">
+            <button onClick={finish} className="text-[14px] font-medium text-ink-faint transition-colors hover:text-ink-dim">
               Skip
             </button>
             <div className="flex items-center gap-2">
-              <span className="text-[11px] text-ink-faint">
+              <span className="text-[14px] text-ink-faint">
                 {step + 1}/{STEPS.length}
               </span>
-              <button onClick={next} className="btn-primary rounded-xl px-4 py-2 text-[13px] shadow-glow">
+              <button onClick={next} className="btn-primary rounded-xl px-4 py-2 text-[14px] shadow-glow">
                 {step >= STEPS.length - 1 ? "Got it" : "Next"}
               </button>
             </div>

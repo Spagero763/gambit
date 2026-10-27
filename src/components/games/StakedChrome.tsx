@@ -44,7 +44,7 @@ export function StakedHeader({
       )}
       <div className="min-w-0 flex-1">
         <h1 className="display truncate text-[22px] font-extrabold leading-tight text-ink">{title}</h1>
-        <p className="nums truncate text-[12px] text-ink-faint">
+        <p className="nums truncate text-[14px] text-ink-faint">
           Room #{matchId.toString()}
           {stake !== null && (
             <>
@@ -80,7 +80,7 @@ export function MoneySeat({
       {icon && <span className="grid h-10 w-10 shrink-0 place-items-center overflow-hidden rounded-xl bg-white/[0.06]">{icon}</span>}
       <div className="min-w-0 flex-1">
         <p className="truncate text-[15px] font-semibold leading-tight text-ink">{name}</p>
-        <p className={cn("flex items-center gap-1.5 truncate text-[12px]", active ? (role === "you" ? "text-you" : "text-them") : "text-ink-faint")}>
+        <p className={cn("flex items-center gap-1.5 truncate text-[14px]", active ? (role === "you" ? "text-you" : "text-them") : "text-ink-faint")}>
           {active && <TurnDot />}
           {active ? (role === "you" ? "Your turn" : "Their turn") : detail ?? "Waiting"}
         </p>

@@ -197,7 +197,7 @@ export function Stats() {
         Real activity, settled on Celo.
         <ExternalA
           href="https://celoscan.io/address/0xB34548Ad3A45C2a571f99341e5fb32abB4FACd05"
-          className="text-teal underline decoration-teal/40 underline-offset-2 hover:decoration-teal"
+          className="inline-flex min-h-11 items-center text-teal underline decoration-teal/40 underline-offset-2 hover:decoration-teal"
         >
           Verify it yourself
         </ExternalA>
@@ -245,12 +245,12 @@ export function Stats() {
                   <li key={i} className="flex items-center justify-between rounded-xl border border-line bg-void-800 px-4 py-3">
                     <div>
                       <p className="text-sm font-medium text-ink">{NAME[m.game] ?? m.game}</p>
-                      <p className="text-[11px] text-ink-faint">
+                      <p className="text-[14px] text-ink-faint">
                         {draw ? "Draw · refunded" : `${displayName(m.winner!, winnerProfiles[m.winner!.toLowerCase()])} won`} · {relTime(m.created_at)} ago
                       </p>
                     </div>
                     <p className="nums text-sm font-semibold text-teal">
-                      {(draw ? stake : stake * 2 * (1 - FEE)).toFixed(2)} <span className="text-[10px] text-ink-faint">{sym}</span>
+                      {(draw ? stake : stake * 2 * (1 - FEE)).toFixed(2)} <span className="text-[14px] text-ink-faint">{sym}</span>
                     </p>
                   </li>
                 );
@@ -276,7 +276,7 @@ function Card({ icon: Icon, label, value, accent, i = 0 }: { icon: any; label: s
       <p className={cn("nums mt-2 text-2xl font-semibold tracking-tight", accent ?? "text-ink")}>
         <Counter to={value} />
       </p>
-      <p className="mt-0.5 text-[11px] text-ink-faint">{label}</p>
+      <p className="mt-0.5 text-[14px] text-ink-faint">{label}</p>
     </motion.div>
   );
 }
@@ -284,7 +284,7 @@ function Card({ icon: Icon, label, value, accent, i = 0 }: { icon: any; label: s
 function TokenCard({ label, entries, accent }: { label: string; entries: [string, number][]; accent?: string }) {
   return (
     <div className="rounded-2xl border border-line bg-void-700 p-4 shadow-card">
-      <span className="flex items-center gap-1.5 text-[11px] text-ink-faint">
+      <span className="flex items-center gap-1.5 text-[14px] text-ink-faint">
         <Coins className="h-3.5 w-3.5" /> {label}
       </span>
       {entries.length === 0 ? (
@@ -293,7 +293,7 @@ function TokenCard({ label, entries, accent }: { label: string; entries: [string
         <div className="mt-2 space-y-0.5">
           {entries.map(([sym, n]) => (
             <p key={sym} className={cn("nums text-xl font-semibold tracking-tight", accent ?? "text-ink")}>
-              {money(n)} <span className="text-[11px] text-ink-faint">{sym}</span>
+              {money(n)} <span className="text-[14px] text-ink-faint">{sym}</span>
             </p>
           ))}
         </div>

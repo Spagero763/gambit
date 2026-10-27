@@ -84,7 +84,7 @@ function Chip({
       )}
     >
       <Avatar image={p?.avatar_image || undefined} color={avatarHex(p)} name={displayName(a, p)} size={big ? 30 : 24} rounded="rounded-md" />
-      <p className={cn("truncate font-medium text-ink", big ? "text-[13px]" : "text-[12px]")}>
+      <p className={cn("truncate font-medium text-ink", big ? "text-[14px]" : "text-[14px]")}>
         {displayName(a, p)}
         {a === me ? <span className="text-teal"> (you)</span> : ""}
       </p>
@@ -97,7 +97,7 @@ function Placeholder({ text, big }: { text: string; big?: boolean }) {
   return (
     <div
       className={cn(
-        "flex min-w-0 flex-1 items-center justify-center rounded-xl border border-dashed border-line bg-void-800/50 px-2.5 text-[11px] text-ink-faint",
+        "flex min-w-0 flex-1 items-center justify-center rounded-xl border border-dashed border-line bg-void-800/50 px-2.5 text-[14px] text-ink-faint",
         big ? "py-3" : "py-2.5"
       )}
     >
@@ -134,7 +134,7 @@ export function BracketTree({
           )}
           <p
             className={cn(
-              "mb-2 text-center text-[11px] font-bold uppercase tracking-[0.18em]",
+              "mb-2 text-center text-[14px] font-bold uppercase tracking-[0.18em]",
               round.final ? "text-amber" : round.bronze ? "text-[#c08457]" : "text-ink-faint"
             )}
           >
@@ -164,8 +164,8 @@ export function BracketTree({
                   )}
                 >
                   <div className="mb-2 flex items-center justify-between">
-                    <span className="text-[10px] font-bold uppercase tracking-wide text-ink-faint">{shortLabel(t.capacity, slot)}</span>
-                    <span className={cn("text-[10px] font-semibold", m?.status === "active" ? "text-teal" : "text-ink-faint")}>
+                    <span className="text-[14px] font-bold uppercase tracking-wide text-ink-faint">{shortLabel(t.capacity, slot)}</span>
+                    <span className={cn("text-[14px] font-semibold", m?.status === "active" ? "text-teal" : "text-ink-faint")}>
                       {!m
                         ? "Waiting"
                         : m.status === "settled"
@@ -186,7 +186,7 @@ export function BracketTree({
                         <Placeholder key="pa" text={f ? `${f.losers ? "Loser" : "Winner"} of ${shortLabel(t.capacity, f.from[0])}` : "TBD"} big={round.final} />
                       )}
                     </AnimatePresence>
-                    <span className={cn("shrink-0 font-display text-[11px] font-black", round.final ? "text-amber" : "text-ink-faint")}>VS</span>
+                    <span className={cn("shrink-0 font-display text-[14px] font-black", round.final ? "text-amber" : "text-ink-faint")}>VS</span>
                     <AnimatePresence mode="popLayout">
                       {m?.opponent ? (
                         <Chip key={m.opponent} addr={m.opponent} me={me} profiles={profiles} won={w === m.opponent.toLowerCase()} lost={!!w && w !== m.opponent.toLowerCase()} big={round.final} />
@@ -201,7 +201,7 @@ export function BracketTree({
                       initial={{ opacity: 0 }}
                       animate={{ opacity: 1 }}
                       onClick={() => onPlay(m)}
-                      className="btn-primary mt-2.5 flex w-full items-center justify-center gap-1.5 rounded-xl py-2 text-[13px] shadow-glow"
+                      className="btn-primary mt-2.5 flex w-full items-center justify-center gap-1.5 rounded-xl py-2 text-[14px] shadow-glow"
                     >
                       <Play className="h-3.5 w-3.5" /> Play this match
                     </motion.button>

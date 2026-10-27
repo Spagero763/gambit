@@ -135,14 +135,14 @@ export function Leaderboard() {
           </span>
           <span className="min-w-0">
             <span className="block text-sm font-semibold text-ink">Claim your player name</span>
-            <span className="block text-[12px] text-ink-dim">Set a name and photo so the board shows you, not your 0x address.</span>
+            <span className="block text-[14px] text-ink-dim">Set a name and photo so the board shows you, not your 0x address.</span>
           </span>
         </Link>
       )}
 
       <div className="mt-5 grid grid-cols-3 gap-1 rounded-xl border border-line bg-void-800 p-1">
         {TABS.map((t) => (
-          <button key={t.id} onClick={() => setSort(t.id)} className="relative rounded-lg py-2 text-sm font-medium">
+          <button key={t.id} onClick={() => setSort(t.id)} className="relative h-11 rounded-lg text-sm font-medium">
             {sort === t.id && (
               <motion.span
                 layoutId="lbTab"
@@ -168,7 +168,7 @@ export function Leaderboard() {
               key={r.id}
               onClick={() => setRange(r.id)}
               className={cn(
-                "rounded-full border px-3 py-1.5 text-xs font-medium transition-colors",
+                "h-11 rounded-full border px-4 text-sm font-medium transition-colors",
                 range === r.id ? "border-line-strong bg-void-600 text-ink" : "border-line text-ink-faint"
               )}
             >
@@ -188,7 +188,7 @@ export function Leaderboard() {
                 key={t.address}
                 onClick={() => setTokenAddr(t.address.toLowerCase())}
                 className={cn(
-                  "rounded-full border px-3 py-1.5 text-xs font-medium transition-colors",
+                  "h-11 rounded-full border px-4 text-sm font-medium transition-colors",
                   active ? "border-teal/50 bg-teal/[0.1] text-ink" : "border-line text-ink-faint"
                 )}
               >
@@ -238,7 +238,7 @@ function Empty({ title, sub }: { title: string; sub: string }) {
         <Trophy className="h-5 w-5" />
       </span>
       <p className="mt-4 text-sm text-ink-dim">{title}</p>
-      <p className="mt-1 text-[12px] text-ink-faint">{sub}</p>
+      <p className="mt-1 text-[14px] text-ink-faint">{sub}</p>
     </div>
   );
 }
@@ -261,10 +261,10 @@ function PointsRowItem({ p, rank, isMe }: { p: PointsRow; rank: number; isMe: bo
       </div>
       <Avatar image={p.avatar_image || undefined} color={avatarHex({ avatar: p.avatar } as PublicProfile)} name={name} size={36} rounded="rounded-lg" />
       <div className="min-w-0 flex-1 leading-tight">
-        <p className={cn("truncate text-[13px] font-medium text-ink", !p.name?.trim() && "font-mono")}>
+        <p className={cn("truncate text-[14px] font-medium text-ink", !p.name?.trim() && "font-mono")}>
           {name} {isMe && <span className="text-teal">· you</span>}
         </p>
-        <p className="flex items-center gap-1.5 text-[11px] text-ink-faint">
+        <p className="flex items-center gap-1.5 text-[14px] text-ink-faint">
           <RankBadge rank={tier} size={15} />
           <span className="font-semibold" style={{ color: tier.color }}>{tier.name}</span>
           <span>Lv {lvl.level}</span>
@@ -276,7 +276,7 @@ function PointsRowItem({ p, rank, isMe }: { p: PointsRow; rank: number; isMe: bo
         </p>
       </div>
       <p className="nums text-sm font-semibold text-ink">
-        {p.xp.toLocaleString()} <span className="text-[10px] text-ink-faint">XP</span>
+        {p.xp.toLocaleString()} <span className="text-[14px] text-ink-faint">XP</span>
       </p>
     </motion.li>
   );
@@ -300,10 +300,10 @@ function Row({ row, rank, sort, isMe, profile, unit }: { row: Standing; rank: nu
       <Avatar image={profile?.avatar_image || undefined} color={avatarHex(profile)} name={displayName(row.handle, profile)} size={36} rounded="rounded-lg" />
 
       <div className="min-w-0 flex-1 leading-tight">
-        <p className={cn("truncate text-[13px] font-medium text-ink", !named && "font-mono")}>
+        <p className={cn("truncate text-[14px] font-medium text-ink", !named && "font-mono")}>
           {displayName(row.handle, profile)} {isMe && <span className="text-teal">· you</span>}
         </p>
-        <p className="text-[11px] text-ink-faint">
+        <p className="text-[14px] text-ink-faint">
           {row.wins}W · {row.losses}L
         </p>
       </div>
@@ -312,11 +312,11 @@ function Row({ row, rank, sort, isMe, profile, unit }: { row: Standing; rank: nu
         {sort === "earnings" ? (
           <p className={cn("nums text-sm font-semibold", row.net >= 0 ? "text-teal" : "text-rose")}>
             {row.net >= 0 ? "+" : ""}
-            {row.net.toFixed(2)} <span className="text-[10px] text-ink-faint">{unit}</span>
+            {row.net.toFixed(2)} <span className="text-[14px] text-ink-faint">{unit}</span>
           </p>
         ) : (
           <p className="nums text-sm font-semibold text-ink">
-            {row.wins} <span className="text-[10px] text-ink-faint">wins</span>
+            {row.wins} <span className="text-[14px] text-ink-faint">wins</span>
           </p>
         )}
       </div>

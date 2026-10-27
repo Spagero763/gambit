@@ -26,19 +26,19 @@ const TERMS = [
 export function StakeRules({ game, open, onClose }: { game: Game; open: boolean; onClose: () => void }) {
   return (
     <Modal open={open} onClose={onClose} title={`${game.name} · staked`}>
-      <p className="rounded-xl border border-line bg-void-800 px-3.5 py-2.5 text-[13px] leading-relaxed text-ink-dim">
+      <p className="rounded-xl border border-line bg-void-800 px-3.5 py-2.5 text-[16px] leading-relaxed text-ink-dim">
         <span className="font-semibold text-ink">How to win: </span>
         {GAME_RULES[game.slug] ?? game.description}
       </p>
 
-      <p className="mb-2 mt-4 text-xs font-semibold uppercase tracking-wide text-ink-faint">Staking terms</p>
+      <p className="mb-2 mt-4 text-sm font-semibold uppercase tracking-wide text-ink-faint">Staking terms</p>
       <ul className="space-y-2.5">
         {TERMS.map((t, i) => {
           const Icon = t.icon;
           return (
             <li key={i} className="flex gap-2.5">
               <Icon className="mt-0.5 h-4 w-4 shrink-0 text-teal" />
-              <span className="text-[13px] leading-relaxed text-ink-dim">{t.text}</span>
+              <span className="text-[16px] leading-relaxed text-ink-dim">{t.text}</span>
             </li>
           );
         })}

@@ -46,7 +46,7 @@ export function Modal({
               <button
                 onClick={onClose}
                 aria-label="Close"
-                className="grid h-8 w-8 place-items-center rounded-lg border border-line bg-void-800 text-ink-dim transition-colors hover:text-ink"
+                className="-mr-1.5 grid h-11 w-11 place-items-center rounded-xl border border-line bg-void-800 text-ink-dim transition-colors hover:text-ink"
               >
                 <X className="h-4 w-4" />
               </button>

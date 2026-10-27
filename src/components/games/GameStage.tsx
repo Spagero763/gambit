@@ -67,7 +67,7 @@ function ComingSoon({ game }: { game: Game }) {
     <div className="mx-auto flex w-full max-w-2xl flex-col px-5 py-5">
       <Link
         href="/"
-        className="glass pressable inline-flex h-10 w-fit items-center gap-2 rounded-full px-4 text-[14px] font-semibold text-ink-dim"
+        className="glass pressable inline-flex h-11 w-fit items-center gap-2 rounded-full px-4 text-[14px] font-semibold text-ink-dim"
       >
         <ArrowLeft className="h-4 w-4" /> Home
       </Link>
@@ -77,7 +77,7 @@ function ComingSoon({ game }: { game: Game }) {
         </div>
         <h1 className="mt-4 font-display text-2xl font-bold">{game.name}</h1>
         <p className="mt-1 text-sm text-ink-dim">{game.tagline}</p>
-        <p className="mx-auto mt-4 max-w-sm text-[13px] leading-relaxed text-ink-faint">
+        <p className="mx-auto mt-4 max-w-sm text-[16px] leading-relaxed text-ink-faint">
           The table is being set. The board and live play land in the next build.
         </p>
       </div>

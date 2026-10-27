@@ -93,14 +93,14 @@ export function GameIntro({ slug }: { slug: string }) {
               onClick={(e) => e.stopPropagation()}
               className="relative w-[min(90%,24rem)] rounded-3xl border border-line bg-void-700 p-6 shadow-pop"
             >
-              <button onClick={close} aria-label="Close" className="absolute right-3 top-3 text-ink-faint hover:text-ink">
+              <button onClick={close} aria-label="Close" className="absolute right-1 top-1 grid h-11 w-11 place-items-center text-ink-faint hover:text-ink">
                 <X className="h-4 w-4" />
               </button>
               <p className="text-lg font-bold text-ink">👆 {intro.title}</p>
               <ul className="mt-3 space-y-2.5">
                 {intro.lines.map((l, i) => (
-                  <li key={i} className="flex gap-2.5 text-[13px] leading-snug text-ink-dim">
-                    <span className="mt-0.5 grid h-4 w-4 shrink-0 place-items-center rounded-full bg-teal/20 text-[9px] font-bold text-teal">
+                  <li key={i} className="flex gap-2.5 text-[14px] leading-snug text-ink-dim">
+                    <span className="mt-0.5 grid h-4 w-4 shrink-0 place-items-center rounded-full bg-teal/20 text-[14px] font-bold text-teal">
                       {i + 1}
                     </span>
                     {l}

@@ -95,7 +95,7 @@ export function SettleOverlay({
             <Loader2 className="h-3.5 w-3.5 animate-spin" /> {result === "draw" ? "Refunding…" : "Paying out…"}
           </p>
           {(settleError || msg) && (
-            <p className="mx-auto mt-2 max-w-[16rem] text-[11px] leading-snug text-rose">
+            <p className="mx-auto mt-2 max-w-[16rem] text-[14px] leading-snug text-rose">
               {friendlyError(msg || settleError, "The payout hit a snag. Tap retry.")}
             </p>
           )}
@@ -107,7 +107,7 @@ export function SettleOverlay({
             {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <RotateCcw className="h-4 w-4" />}
             {busy ? "Settling…" : "Retry payout"}
           </button>
-          <p className="mx-auto mt-3 max-w-[16rem] text-[10px] leading-snug text-ink-faint">
+          <p className="mx-auto mt-3 max-w-[16rem] text-[14px] leading-snug text-ink-faint">
             Your stake is safe in escrow until this settles.
           </p>
           <button
@@ -117,11 +117,11 @@ export function SettleOverlay({
               setReclaiming(false);
             }}
             disabled={reclaiming}
-            className="mx-auto mt-2 block text-[11px] font-medium text-ink-faint underline-offset-2 transition-colors hover:text-ink hover:underline disabled:opacity-60"
+            className="mx-auto mt-2 block text-[14px] font-medium text-ink-faint underline-offset-2 transition-colors hover:text-ink hover:underline disabled:opacity-60"
           >
             {reclaiming ? "Reclaiming…" : "Still stuck? Reclaim stakes (refund both, after 1h)"}
           </button>
-          {reclaimError && <p role="alert" className="mx-auto mt-1 max-w-[16rem] text-[10px] text-rose">{reclaimError}</p>}
+          {reclaimError && <p role="alert" className="mx-auto mt-1 max-w-[16rem] text-[14px] text-rose">{reclaimError}</p>}
         </div>
       ) : (
         <div className="mt-1">
@@ -154,7 +154,7 @@ export function SettleOverlay({
           {settleTx && chainId && (
             <ExternalA
               href={`${EXPLORER[chainId] ?? ""}${settleTx}`}
-              className="mt-3 inline-flex items-center gap-1.5 rounded-full bg-white/10 px-3 py-1.5 text-xs font-semibold text-ink"
+              className="mt-3 inline-flex items-center gap-1.5 rounded-full bg-white/10 px-3 py-1.5 text-sm font-semibold text-ink"
             >
               {result === "lose" ? "View result" : "View payout on Celoscan"} <ExternalLink className="h-3 w-3" />
             </ExternalA>

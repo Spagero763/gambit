@@ -51,7 +51,7 @@ export function HowItWorks() {
     <>
       <button
         onClick={() => setOpen(true)}
-        className="inline-flex items-center gap-1 text-[12px] font-semibold text-teal transition-opacity hover:opacity-80"
+        className="inline-flex min-h-11 items-center gap-1 text-[14px] font-semibold text-teal transition-opacity hover:opacity-80"
       >
         <HelpCircle className="h-3.5 w-3.5" /> How it works
       </button>
@@ -67,7 +67,7 @@ export function HowItWorks() {
                 </span>
                 <div>
                   <p className="text-sm font-semibold text-ink">{s.title}</p>
-                  <p className="mt-0.5 text-[13px] leading-relaxed text-ink-dim">{s.body}</p>
+                  <p className="mt-0.5 text-[16px] leading-relaxed text-ink-dim">{s.body}</p>
                 </div>
               </li>
             );

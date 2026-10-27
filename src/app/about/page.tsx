@@ -36,7 +36,7 @@ export default function AboutPage() {
     <main className="mx-auto w-full max-w-2xl px-5 pb-28" style={{ paddingTop: "calc(1.5rem + env(safe-area-inset-top))" }}>
       <BackLink />
       <h1 className="mt-4 font-display text-2xl font-bold">About Gambit</h1>
-      <p className="mt-2 text-sm leading-relaxed text-ink-dim">
+      <p className="mt-2 text-[16px] leading-relaxed text-ink-dim">
         The games you grew up playing, with a real opponent and a real pot. Play free against the bot for as long as you
         like, and put money on it only when you want to.
       </p>
@@ -49,7 +49,7 @@ export default function AboutPage() {
             </span>
             <div className="min-w-0">
               <h2 className="text-sm font-semibold text-ink">{f.title}</h2>
-              <p className="mt-1 text-[13px] leading-relaxed text-ink-dim">{f.body}</p>
+              <p className="mt-1 text-[16px] leading-relaxed text-ink-dim">{f.body}</p>
             </div>
           </section>
         ))}
@@ -57,7 +57,7 @@ export default function AboutPage() {
 
       <section className="mt-6 rounded-2xl border border-line bg-void-800 p-4">
         <h2 className="text-sm font-semibold text-ink">Who runs it</h2>
-        <p className="mt-1 text-[13px] leading-relaxed text-ink-dim">
+        <p className="mt-1 text-[16px] leading-relaxed text-ink-dim">
           Gambit is built and operated by Spagero, an independent developer. It is not operated, endorsed or backed
           by Opera or MiniPay. If something goes wrong, come to us and we will sort it out.
         </p>
@@ -65,22 +65,22 @@ export default function AboutPage() {
 
       <section className="mt-3 rounded-2xl border border-line bg-void-800 p-4">
         <h2 className="text-sm font-semibold text-ink">Play responsibly</h2>
-        <p className="mt-1 text-[13px] leading-relaxed text-ink-dim">
+        <p className="mt-1 text-[16px] leading-relaxed text-ink-dim">
           Staked matches put real money at risk and you can lose it. Only stake what you can afford to lose, and if
           playing stops being fun, stop. Gambit is for adults.
         </p>
       </section>
 
-      <div className="mt-6 flex flex-wrap gap-2 text-[13px]">
-        <Link className="text-teal underline decoration-teal/40 underline-offset-2" href="/how-to-play">
+      <div className="mt-4 flex flex-wrap items-center gap-x-1 text-[16px]">
+        <Link className="inline-flex min-h-11 items-center px-1 text-teal underline decoration-teal/40 underline-offset-2" href="/how-to-play">
           How to play
         </Link>
         <span className="text-ink-faint">·</span>
-        <Link className="text-teal underline decoration-teal/40 underline-offset-2" href="/terms">
+        <Link className="inline-flex min-h-11 items-center px-1 text-teal underline decoration-teal/40 underline-offset-2" href="/terms">
           Terms
         </Link>
         <span className="text-ink-faint">·</span>
-        <Link className="text-teal underline decoration-teal/40 underline-offset-2" href="/privacy">
+        <Link className="inline-flex min-h-11 items-center px-1 text-teal underline decoration-teal/40 underline-offset-2" href="/privacy">
           Privacy
         </Link>
       </div>

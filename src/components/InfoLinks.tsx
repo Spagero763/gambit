@@ -24,7 +24,7 @@ const LINKS = [
 export function InfoLinks() {
   return (
     <div className="mt-7">
-      <p className="mb-2.5 text-xs font-semibold uppercase tracking-wide text-ink-faint">Help & info</p>
+      <p className="mb-2.5 text-sm font-semibold uppercase tracking-wide text-ink-faint">Help & info</p>
 
       <div className="space-y-2">
         {/* support first: someone opening this block usually wants a person */}
@@ -36,8 +36,8 @@ export function InfoLinks() {
             <LifeBuoy className="h-4 w-4" />
           </span>
           <span className="min-w-0 flex-1">
-            <span className="block text-[13px] font-semibold text-ink">Support</span>
-            <span className="block truncate text-[11px] text-ink-faint">Message us on WhatsApp, a real person replies</span>
+            <span className="block text-[14px] font-semibold text-ink">Support</span>
+            <span className="block truncate text-[14px] text-ink-faint">Message us on WhatsApp, a real person replies</span>
           </span>
           <ExternalLink className="h-4 w-4 shrink-0 text-ink-faint" />
         </ExternalA>
@@ -52,8 +52,8 @@ export function InfoLinks() {
               <l.icon className={`h-4 w-4 ${l.tint}`} />
             </span>
             <span className="min-w-0 flex-1">
-              <span className="block text-[13px] font-semibold text-ink">{l.label}</span>
-              <span className="block truncate text-[11px] text-ink-faint">{l.sub}</span>
+              <span className="block text-[14px] font-semibold text-ink">{l.label}</span>
+              <span className="block truncate text-[14px] text-ink-faint">{l.sub}</span>
             </span>
             <ChevronRight className="h-4 w-4 shrink-0 text-ink-faint" />
           </Link>

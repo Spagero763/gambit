@@ -18,7 +18,7 @@ const variants: Record<Variant, string> = {
 const sizes: Record<Size, string> = {
   lg: "h-[54px] px-6 text-[17px]",
   md: "h-11 px-5 text-[15px]",
-  sm: "h-9 px-4 text-[14px]",
+  sm: "h-11 px-4 text-[14px]",
 };
 
 export function buttonClass(variant: Variant = "primary", size: Size = "lg", className?: string) {

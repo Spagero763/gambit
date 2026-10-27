@@ -169,7 +169,7 @@ export function MatchChat({ matchId, me }: { matchId: bigint; me: string }) {
               initial={{ scale: 0 }}
               animate={{ scale: 1 }}
               exit={{ scale: 0 }}
-              className="absolute -right-1 -top-1 grid h-5 min-w-5 place-items-center rounded-full bg-teal px-1 text-[10px] font-bold text-void"
+              className="absolute -right-1 -top-1 grid h-5 min-w-5 place-items-center rounded-full bg-teal px-1 text-[14px] font-bold text-void"
             >
               {unread}
             </motion.span>
@@ -189,14 +189,14 @@ export function MatchChat({ matchId, me }: { matchId: bigint; me: string }) {
           >
             <div className="flex items-center justify-between border-b border-line px-3.5 py-2.5">
               <p className="text-sm font-semibold text-ink">Match chat</p>
-              <button onClick={() => setOpen(false)} aria-label="Close chat" className="text-ink-faint transition-colors hover:text-ink">
+              <button onClick={() => setOpen(false)} aria-label="Close chat" className="-mr-3 grid h-11 w-11 place-items-center text-ink-faint transition-colors hover:text-ink">
                 <X className="h-4 w-4" />
               </button>
             </div>
 
             <div ref={listRef} className="flex-1 space-y-2 overflow-y-auto px-3 py-3">
               {msgs.length === 0 && (
-                <p className="py-4 text-center text-[12px] text-ink-faint">Say hi. Only you two can see this.</p>
+                <p className="py-4 text-center text-[14px] text-ink-faint">Say hi. Only you two can see this.</p>
               )}
               {msgs.map((m) => {
                 const mine = m.sender === meLower;
@@ -208,7 +208,7 @@ export function MatchChat({ matchId, me }: { matchId: bigint; me: string }) {
                     )}
                     <div
                       className={cn(
-                        "max-w-[75%] rounded-2xl px-3 py-1.5 text-[13px] leading-snug",
+                        "max-w-[75%] rounded-2xl px-3 py-1.5 text-[14px] leading-snug",
                         mine ? "rounded-br-md bg-teal text-void" : "rounded-bl-md bg-void-600 text-ink"
                       )}
                     >
@@ -225,7 +225,7 @@ export function MatchChat({ matchId, me }: { matchId: bigint; me: string }) {
                 <button
                   key={q}
                   onClick={() => send(q)}
-                  className="shrink-0 rounded-full border border-line bg-void-700 px-2.5 py-1 text-[11px] text-ink-dim transition-colors hover:text-ink"
+                  className="shrink-0 rounded-full border border-line bg-void-700 px-2.5 py-1 text-[14px] text-ink-dim transition-colors hover:text-ink"
                 >
                   {q}
                 </button>
@@ -244,7 +244,7 @@ export function MatchChat({ matchId, me }: { matchId: bigint; me: string }) {
                 onChange={(e) => setDraft(e.target.value)}
                 maxLength={200}
                 placeholder="Message…"
-                className="min-w-0 flex-1 rounded-xl border border-line bg-void-700 px-3 py-2 text-[13px] text-ink outline-none placeholder:text-ink-faint focus:border-teal/50"
+                className="min-w-0 flex-1 rounded-xl border border-line bg-void-700 px-3 py-2 text-[14px] text-ink outline-none placeholder:text-ink-faint focus:border-teal/50"
               />
               <button
                 type="submit"

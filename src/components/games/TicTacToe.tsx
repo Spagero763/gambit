@@ -121,7 +121,7 @@ export function TicTacToe({ difficulty = "normal" }: { difficulty?: Difficulty }
           ].map((s) => (
             <div key={s.label} className="glass flex-1 rounded-[16px] py-2">
               <p className={cn("display nums text-[22px] font-bold", s.c)}>{s.val}</p>
-              <p className="text-[11px] text-ink-faint">{s.label}</p>
+              <p className="text-[14px] text-ink-faint">{s.label}</p>
             </div>
           ))}
         </div>

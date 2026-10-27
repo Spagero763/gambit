@@ -64,7 +64,7 @@ export function SaveProgressPrompt() {
             </span>
             <div className="min-w-0 flex-1">
               <p className="text-sm font-bold text-ink">Save your progress before you lose it</p>
-              <p className="mt-0.5 text-[12px] leading-snug text-ink-dim">
+              <p className="mt-0.5 text-[14px] leading-snug text-ink-dim">
                 You&apos;re <span className="font-semibold text-ink">Level {lvl.level}</span> with{" "}
                 <span className="nums font-semibold text-ink">{p.xp.toLocaleString()} XP</span>
                 {p.streak > 0 ? <> and a <span className="font-semibold text-amber">{p.streak}-day streak</span></> : null}. Right now that lives
@@ -73,7 +73,7 @@ export function SaveProgressPrompt() {
               </p>
               <Link
                 href="/profile"
-                className="btn-primary mt-3 inline-flex items-center gap-1.5 rounded-xl px-4 py-2 text-[13px] shadow-glow"
+                className="btn-primary mt-3 inline-flex items-center gap-1.5 rounded-xl px-4 py-2 text-[14px] shadow-glow"
               >
                 <ShieldCheck className="h-3.5 w-3.5" /> Create your profile
               </Link>

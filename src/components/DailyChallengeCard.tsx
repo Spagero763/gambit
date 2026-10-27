@@ -33,7 +33,7 @@ export function DailyChallengeCard() {
       </span>
       <div className="min-w-0 flex-1">
         <p className="text-sm font-semibold text-ink">Daily Challenge #{state.n} · {gameName}</p>
-        <p className="text-[12px] text-ink-dim">
+        <p className="text-[14px] text-ink-dim">
           {state.done
             ? isBlocks || state.score !== WIN_SCORE
               ? `Done today: ${state.score.toLocaleString()} points. Dare a friend.`
@@ -44,7 +44,7 @@ export function DailyChallengeCard() {
         </p>
       </div>
       {state.streak > 1 && (
-        <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-amber/15 px-2 py-0.5 text-[11px] font-semibold text-amber">
+        <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-amber/15 px-2 py-0.5 text-[14px] font-semibold text-amber">
           <Flame className="h-3 w-3" /> {state.streak}
         </span>
       )}
