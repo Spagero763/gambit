@@ -57,7 +57,7 @@ export function GameStage({
     <>
       {!stake && <BoardCoach slug={game.slug} />}
       {body}
-      {stake && <SeatCheck you={stake.you} />}
+      {stake && <SeatCheck you={stake.you} matchId={stake.matchId} />}
     </>
   );
 }
