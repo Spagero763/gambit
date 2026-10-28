@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { creditReferrals } from "@/lib/server/referral";
+import { creditRewards } from "@/lib/server/rewards";
 import { supabaseAdmin } from "@/lib/supabase";
 import { settleOnChain, relayerConfigured } from "@/lib/server/settle";
 import { advanceBracket } from "@/lib/server/bracket";
@@ -62,7 +62,7 @@ export async function POST(req: NextRequest) {
     try {
       const settleTx = await settleOnChain(BigInt(id), winner, Number(match.chain_id), [match.creator, match.opponent]);
       await db.from("matches").update({ status: "settled", settle_tx: settleTx, settle_error: null }).eq("id", Number(id));
-      void creditReferrals({ ...match, winner });
+      await creditRewards({ ...match, winner });
       void notify([winner], {
         title: "Opponent resigned. You win! 💰",
         body: `Room #${id}: the pot is on its way to your wallet.`,

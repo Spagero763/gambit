@@ -14,7 +14,7 @@ import { notify } from "@/lib/server/push";
 import { verifyToken } from "@/lib/server/profileToken";
 import { limited } from "@/lib/server/rateLimit";
 import { symbolForToken } from "@/lib/tokens";
-import { creditReferrals } from "@/lib/server/referral";
+import { creditRewards } from "@/lib/server/rewards";
 
 export const runtime = "nodejs";
 
@@ -28,6 +28,9 @@ function view(match: any, priv: WhotPrivate | null, player: string) {
     winner: (match.winner as string | null) ?? null,
     settleTx: (match.settle_tx as string | null) ?? null,
     chainId: match.chain_id as number,
+    stake: (match.stake as string | null) ?? null,
+    decimals: (match.decimals as number | null) ?? 18,
+    token: (match.token as string | null) ?? null,
     turn: pub.turn ?? null,
     top: pub.top ?? null,
     active: pub.active ?? null,
@@ -179,7 +182,7 @@ export async function POST(req: NextRequest) {
       }
     }
     await db.from("matches").update({ status: "settled", settle_tx: settleTx, settle_error: null }).eq("id", Number(id));
-    void creditReferrals({ ...match, winner: outcome.winner });
+    await creditRewards({ ...match, winner: outcome.winner });
     if (outcome.winner) {
       const dec = match.decimals ?? 18;
       const pot = (Number(BigInt(match.stake || "0") * BigInt(2)) / 10 ** dec) * 0.95;

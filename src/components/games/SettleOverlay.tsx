@@ -11,6 +11,7 @@ import { Confetti } from "@/components/motion/Confetti";
 import { AnimatedNumber } from "@/components/motion/AnimatedNumber";
 import { friendlyError } from "@/lib/errors";
 import { symbolForToken } from "@/lib/tokens";
+import { cashbackOf } from "@/lib/games";
 import { inviteUrl } from "@/lib/share";
 import { ShareButton } from "@/components/ShareButton";
 import { ExternalA } from "@/components/ExternalA";
@@ -58,6 +59,8 @@ export function SettleOverlay({
   // a draw refunds your own stake. (1v1 only, this overlay is per-match.)
   const stake = stakeWei ? Number(formatUnits(BigInt(stakeWei), decimals ?? 18)) : null;
   const payout = stake === null ? null : result === "win" ? stake * 2 * (1 - FEE) : result === "draw" ? stake : null;
+  // a draw takes no fee, so there is nothing to give back
+  const cashback = stake !== null && result !== "draw" ? cashbackOf(stake) : null;
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState<string | null>(null);
   const { reclaimStalled, error: reclaimError } = useStakeMatch();
@@ -119,7 +122,7 @@ export function SettleOverlay({
             disabled={reclaiming}
             className="mx-auto mt-2 block text-[14px] font-medium text-ink-faint underline-offset-2 transition-colors hover:text-ink hover:underline disabled:opacity-60"
           >
-            {reclaiming ? "Reclaiming…" : "Still stuck? Reclaim stakes (refund both, after 1h)"}
+            {reclaiming ? "Reclaiming…" : "Still stuck? Refund both stakes"}
           </button>
           {reclaimError && <p role="alert" className="mx-auto mt-1 max-w-[16rem] text-[14px] text-rose">{reclaimError}</p>}
         </div>
@@ -151,6 +154,11 @@ export function SettleOverlay({
               </div>
             </>
           )}
+          {cashback ? (
+            <p className="mt-2 text-[14px] text-ink-dim">
+              {result === "lose" ? "You still get" : "Plus"} <span className="nums font-semibold text-teal">{cashback} {symbol}</span> cashback, paid daily.
+            </p>
+          ) : null}
           {settleTx && chainId && (
             <ExternalA
               href={`${EXPLORER[chainId] ?? ""}${settleTx}`}

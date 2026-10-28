@@ -120,6 +120,21 @@ export const ESCROW_ABI = [
     outputs: [],
   },
   {
+    // Where the 5% fee goes the moment a match settles.
+    type: "function",
+    name: "feeRecipient",
+    stateMutability: "view",
+    inputs: [],
+    outputs: [{ name: "", type: "address" }],
+  },
+  {
+    type: "function",
+    name: "setFeeRecipient",
+    stateMutability: "nonpayable",
+    inputs: [{ name: "f", type: "address" }],
+    outputs: [],
+  },
+  {
     // The id the next createMatch will take, so a server sweep can walk the
     // recent range without depending on a database row existing for every match.
     type: "function",

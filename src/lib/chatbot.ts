@@ -42,7 +42,7 @@ const ENTRIES: Entry[] = [
     q: "How do I earn?",
     keywords: ["earn", "make money", "get paid", "win money", "reward", "profit", "cash"],
     a: () =>
-      "Two ways. Win a staked match and take the pot, paid the second the game ends. And claim your free daily reward every day to build XP and keep your streak alive.",
+      "Win a 1v1 for money and take the pot, paid the second the game ends. Every money match also gives you 1% of your entry back as cashback, win or lose, and you get 1% of every entry your invited friends play. Your free daily reward builds XP and keeps your streak alive.",
   },
   {
     id: "crypto",
@@ -91,7 +91,14 @@ const ENTRIES: Entry[] = [
     q: "How do referrals work?",
     keywords: ["refer", "referral", "invite", "friend", "link", "code", "bring people"],
     a: () =>
-      "Share your invite link from your profile. When a friend joins and plays their first staked match, your bonus is paid straight to your wallet. That is the only condition, and it pays once per friend.",
+      "Share your invite link from your profile. Every time a friend who joined with it plays 1v1 for money, you get 1% of their entry, for as long as they keep playing. It is paid to your wallet daily once it reaches 0.10.",
+  },
+  {
+    id: "cashback",
+    q: "What is cashback?",
+    keywords: ["cashback", "cash back", "money back", "rebate"],
+    a: () =>
+      "Every 1v1 for money gives you back 1% of your entry, win or lose. It adds up on your profile and is paid to your wallet daily once it reaches 0.10. A draw refunds your whole entry instead.",
   },
   {
     id: "safe",

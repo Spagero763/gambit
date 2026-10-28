@@ -13,7 +13,7 @@ export default function TermsPage() {
     <main className="mx-auto w-full max-w-2xl px-5 pb-28" style={{ paddingTop: "calc(1.5rem + env(safe-area-inset-top))" }}>
       <BackLink />
       <h1 className="mt-4 font-display text-2xl font-bold">Terms of Service</h1>
-      <p className="mt-1 text-sm text-ink-faint">Last updated: July 2026</p>
+      <p className="mt-1 text-sm text-ink-faint">Last updated: October 2026</p>
 
       <div className="mt-6 space-y-5 text-[16px] leading-relaxed text-ink-dim">
         <section>
@@ -70,6 +70,18 @@ export default function TermsPage() {
             Match results are reported to the escrow contract, which pays the winner automatically. Unfilled
             rooms can be cancelled for a full refund, and stalled matches can be reclaimed after a waiting
             period, both enforced by the contract itself. The platform fee is 5% of the pot.
+          </p>
+        </section>
+
+        <section>
+          <h2 className="mb-1 font-semibold text-ink">Cashback and invite rewards</h2>
+          <p>
+            Every 1v1 money match that has a winner gives each player cashback of 1% of their entry, and gives
+            whoever invited each player 1% of that player&apos;s entry. Both come out of the platform fee. A draw
+            refunds both entries and takes no fee, so it earns no rewards. Rewards are paid to your wallet in the
+            stablecoin the match was played in once they reach 0.10, usually within a day. Wallets excluded under
+            fair play lose their rewards, and inviting yourself or the person you play earns nothing. We may
+            change or end these rewards, but anything already earned will still be paid.
           </p>
         </section>
 

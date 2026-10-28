@@ -1,6 +1,6 @@
 "use client";
 
-import { Coins, Trophy, Scale, AlarmClock, ShieldCheck } from "lucide-react";
+import { Coins, Trophy, Gift, Scale, AlarmClock, ShieldCheck } from "lucide-react";
 import { Modal } from "@/components/Modal";
 import { Game } from "@/lib/games";
 
@@ -18,6 +18,7 @@ const TERMS = [
   // picker sitting right behind it.
   { icon: Coins, text: "Both players stake the same amount, in the same stablecoin, into an on-chain escrow." },
   { icon: Trophy, text: "Win and you take the pot: both stakes, minus a 5% fee." },
+  { icon: Gift, text: "Win or lose, 1% of your entry comes back to you as cashback." },
   { icon: Scale, text: "A draw refunds both players in full." },
   { icon: AlarmClock, text: "If your opponent abandons, you can claim the win after 2 minutes." },
   { icon: ShieldCheck, text: "Funds are held in a verified, open-source escrow and pay out automatically. Nothing can get stuck, and stalled stakes are always reclaimable." },

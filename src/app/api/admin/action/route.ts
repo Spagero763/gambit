@@ -3,6 +3,7 @@ import { supabaseAdmin } from "@/lib/supabase";
 import { isOwner } from "@/lib/server/admin";
 import { settleOnChain, settleRanking, readMatchOnChain, relayerConfigured } from "@/lib/server/settle";
 import { rankTop3, TPlayer } from "@/lib/server/tournament";
+import { creditRewards } from "@/lib/server/rewards";
 import { weekIndex, weekKey } from "@/lib/cup";
 
 export const runtime = "nodejs";
@@ -85,6 +86,7 @@ export async function POST(req: NextRequest) {
       try {
         const tx = await settleOnChain(BigInt(id), winner, settleChainId, [m.creator, m.opponent]);
         await db.from("matches").update({ status: "settled", settle_tx: tx, winner, chain_id: settleChainId, settle_error: null }).eq("id", Number(id));
+        await creditRewards({ ...m, winner });
         return NextResponse.json({ ok: true, settled: true, refunded: !winner, settleTx: tx, chainId: settleChainId });
       } catch (e: any) {
         const settle_error = String(e?.shortMessage ?? e?.message ?? "settle failed").slice(0, 300);

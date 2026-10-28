@@ -13,7 +13,7 @@ import { WalletUnreachable } from "@/components/WalletUnreachable";
 import { useAllowedTokens } from "@/hooks/useAllowedTokens";
 import { useStableBalances } from "@/hooks/useStableBalances";
 import { useOpenRooms } from "@/hooks/useOpenRooms";
-import { Game, STAKE_CHIPS, STAKE_MAX } from "@/lib/games";
+import { Game, STAKE_CHIPS, STAKE_MAX, cashbackOf } from "@/lib/games";
 import { GameArt } from "@/components/art/TileArt";
 import { Difficulty, DIFFICULTIES, SUPPORTS_DIFFICULTY } from "@/lib/difficulty";
 import { useStakeMatch, useMatchState } from "@/hooks/useStakeMatch";
@@ -533,6 +533,7 @@ export function MatchSetup({
                   <Row label="You put in" value={`${(validStake ? stake : 0).toFixed(2)} ${token.symbol}`} />
                   <Row label="Your opponent puts in" value={`${(validStake ? stake : 0).toFixed(2)} ${token.symbol}`} />
                   <Row label="Gambit fee" value="5%" muted />
+                  <Row label="Cashback to you, win or lose" value={`+${cashbackOf(validStake ? stake : 0)} ${token.symbol}`} />
                   <div className="my-3 h-px bg-white/10" />
                   <div className="flex items-center justify-between">
                     <span className="text-[15px] font-semibold text-ink">Winner takes</span>

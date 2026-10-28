@@ -9,6 +9,7 @@ import { ExternalA } from "@/components/ExternalA";
 import { AdminVaultActions } from "@/components/AdminVaultActions";
 import { AdminTokenAllowlist } from "@/components/AdminTokenAllowlist";
 import { AdminSettleWindow } from "@/components/AdminSettleWindow";
+import { AdminRewards, RewardsStatus } from "@/components/AdminRewards";
 import { OWNER_ADDRESS as OWNER } from "@/lib/owner";
 import { cn } from "@/lib/cn";
 
@@ -25,6 +26,7 @@ interface Vault {
 interface Status {
   relayer: { address: string; balanceCELO: number; lowGas: boolean } | null;
   vaults: { cup: Vault | null; referral: Vault | null } | null;
+  rewards?: RewardsStatus | null;
   cup?: { address: string; score: number; name: string | null; banned: boolean }[];
   week?: string;
   matches: any[];
@@ -137,6 +139,7 @@ export function AdminPanel() {
           </div>
         </>
       )}
+      {data?.rewards && <AdminRewards status={data.rewards} owner={OWNER} onChange={load} />}
       <button
         onClick={async () => {
           setBusyId("settleCup");

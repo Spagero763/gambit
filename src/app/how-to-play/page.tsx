@@ -36,6 +36,7 @@ const JOURNEY = [
 const TERMS = [
   "You can stake in USDT, USDC or USDm. 1 of each is worth about 1 dollar, and Gambit reads which one you hold, so just pick the stablecoin you have.",
   "Every transaction has a tiny network fee. In MiniPay it comes out of your stablecoin balance, so there is nothing else to get. Other wallets pay it in a little CELO.",
+  "Every 1v1 for money pays you cashback: 1% of your entry, win or lose. Invite friends and you also get 1% of their entry every time they play. Rewards are paid to your wallet daily once they reach 0.10.",
   "Cashing out is done from your wallet, not from Gambit. In MiniPay, open your wallet and withdraw there. On the web, use the Withdraw button on your profile.",
 ];
 

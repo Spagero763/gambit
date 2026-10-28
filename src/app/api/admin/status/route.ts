@@ -5,8 +5,10 @@ import { isOwner } from "@/lib/server/admin";
 import { relayerConfigured, relayerDiagnostics } from "@/lib/server/settle";
 import { celoReadTransport } from "@/lib/server/rpc";
 import { weekIndex, weekKey } from "@/lib/cup";
-import { decimalsForToken, symbolForToken } from "@/lib/tokens";
-import { referralAmount } from "@/lib/server/referral";
+import { decimalsForToken, symbolForToken, tokensFor } from "@/lib/tokens";
+import { ESCROW_ADDRESS } from "@/lib/escrow";
+import { rewardsOwed } from "@/lib/server/rewards";
+import { treasuryAddress, treasuryBalances, treasuryConfigured } from "@/lib/server/treasury";
 import { celo } from "viem/chains";
 
 export const runtime = "nodejs";
@@ -49,7 +51,6 @@ async function vaultStatus() {
   const [cup, referral] = await Promise.all([readVault(cupAddr, USDM), readVault(refAddr, USDM)]);
 
   const cupPrize = Number(process.env.CUP_PRIZE_USDM ?? "10");
-  const refPer = referralAmount();
   // `token` is the ERC20 each vault pays out in, the admin UI needs it to
   // sweep (withdraw) or fund the vault from the owner's own wallet.
   return {
@@ -62,9 +63,32 @@ async function vaultStatus() {
             token: referral.token,
             symbol: referral.symbol,
             balance: referral.balance,
-            // fewer than 5 payouts left is the point to top up, not the point to panic
-            low: refPer > 0 && referral.balance < refPer * 5,
+            // the one-time invite bonus was replaced by the rewards ledger; this vault only holds leftovers
+            low: false,
           },
+  };
+}
+
+/** Rewards owed per coin against what the rewards wallet holds, and where the escrow sends its fees. */
+async function rewardsStatus() {
+  const list = tokensFor(celo.id).map((t) => t.address.toLowerCase() as `0x${string}`);
+  const wallet = treasuryConfigured() ? treasuryAddress() : null;
+  const pub = createPublicClient({ chain: celo, transport: celoReadTransport() });
+  const [owed, held, feeRecipient] = await Promise.all([
+    rewardsOwed(),
+    wallet ? treasuryBalances(list) : Promise.resolve(null),
+    pub.readContract({ address: ESCROW_ADDRESS[celo.id], abi: parseAbi(["function feeRecipient() view returns (address)"]), functionName: "feeRecipient" }) as Promise<string>,
+  ]);
+  return {
+    wallet,
+    feeRecipient,
+    feesToWallet: !!wallet && feeRecipient.toLowerCase() === wallet.toLowerCase(),
+    celo: held ? Number(formatUnits(held.celo, 18)) : null,
+    coins: list.map((t) => ({
+      symbol: symbolForToken(t),
+      owed: Number(formatUnits(owed[t] ?? BigInt(0), decimalsForToken(t))),
+      held: held ? Number(formatUnits(held.tokens[t] ?? BigInt(0), decimalsForToken(t))) : null,
+    })),
   };
 }
 
@@ -105,6 +129,13 @@ export async function GET(req: NextRequest) {
       /* vault reads are best-effort, the panel still works without them */
     }
 
+    let rewards = null;
+    try {
+      rewards = await rewardsStatus();
+    } catch {
+      /* the rewards table may not exist until the schema is applied */
+    }
+
     // this week's cup entries with names + ban flags, for moderation
     const wk = weekKey(weekIndex());
     const { data: entries } = await db
@@ -123,7 +154,7 @@ export async function GET(req: NextRequest) {
       cup = cup.map((e) => ({ ...e, name: byAddr[e.address]?.name || null, banned: !!byAddr[e.address]?.banned }));
     }
 
-    return NextResponse.json({ relayer, vaults, cup, week: wk, matches: matches ?? [], tournaments: tournaments ?? [] });
+    return NextResponse.json({ relayer, vaults, rewards, cup, week: wk, matches: matches ?? [], tournaments: tournaments ?? [] });
   } catch (e: any) {
     return NextResponse.json({ error: e?.message ?? "Failed" }, { status: 500 });
   }

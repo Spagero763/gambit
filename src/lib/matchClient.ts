@@ -76,6 +76,9 @@ export interface WhotView {
   settleTx: string | null;
   settleError: string | null;
   chainId: number;
+  stake: string | null;
+  decimals: number;
+  token: string | null;
   turn: string | null;
   top: Card | null;
   active: Shape | null;

@@ -18,6 +18,11 @@ export interface Game {
 export const STAKE_CHIPS = [2, 4, 5];
 export const STAKE_MAX = 5;
 
+// each player of a decided money match gets back a tenth of the 5% pot fee
+export const CASHBACK = 0.01;
+export const cashbackOf = (stake: number) =>
+  (stake * CASHBACK).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 4 });
+
 export const GAMES: Game[] = [
   {
     slug: "chess",

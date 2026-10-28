@@ -236,7 +236,7 @@ begin
 end $$;
 
 -- push_subs: web-push device registrations per wallet. Server-only access
--- (RLS deny-all — endpoints are capability URLs and must never leak).
+-- (RLS deny-all: endpoints are capability URLs and must never leak).
 create table if not exists push_subs (
   endpoint   text primary key,             -- push endpoint URL (unique per device)
   address    text not null,                -- wallet (lowercase), token-verified
@@ -257,3 +257,31 @@ create table if not exists match_private (
 
 alter table match_private enable row level security;
 -- (intentionally NO select/insert/update policies => anon clients get nothing)
+
+-- rewards: what each decided money match gives back. Every player gets 1% of
+-- their entry as cashback and their inviter 1% of it as a referral share, both
+-- out of the 5% pot fee. One row per (match, earner, kind, source wallet), so a
+-- settlement that runs twice can't credit twice.
+-- payout_tx: null = waiting, 'sending-…' = picked up by a payout run,
+-- 0x… = transfer signed and sent at payout_nonce. paid_at is set only once the
+-- chain confirms it.
+create table if not exists rewards (
+  id            bigserial primary key,
+  match_id      bigint not null,
+  address       text not null,                  -- who is paid (lowercase)
+  kind          text not null check (kind in ('cashback', 'referral')),
+  source        text not null,                  -- whose entry earned it (lowercase)
+  token         text not null,                  -- ERC-20 the match was played in
+  amount        text not null,                  -- base units of that token
+  created_at    timestamptz not null default now(),
+  payout_tx     text,
+  payout_nonce  bigint,
+  payout_at     timestamptz,
+  paid_at       timestamptz,
+  unique (match_id, address, kind, source)
+);
+create index if not exists rewards_address_idx on rewards (address);
+create index if not exists rewards_unpaid_idx on rewards (id) where paid_at is null;
+
+alter table rewards enable row level security;
+-- (no policies: players read their own totals through the API)

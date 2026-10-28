@@ -24,7 +24,7 @@ import { SendFunds } from "@/components/SendFunds";
 import { InfoLinks } from "@/components/InfoLinks";
 import { AnimatedNumber } from "@/components/motion/AnimatedNumber";
 import { PlayerCard } from "@/components/PlayerCard";
-import { ReferralBoard } from "@/components/ReferralBoard";
+import { RewardsBoard } from "@/components/RewardsBoard";
 import { symbolForToken, isRetiredToken } from "@/lib/tokens";
 import { ProgressCard } from "@/components/Daily";
 import { Achievements } from "@/components/Achievements";
@@ -282,8 +282,8 @@ export function Profile() {
         {/* No address fallback. A wallet in a link people paste into group chats
             is a privacy leak and a MiniPay listing flag, so the card waits for
             the real short code rather than quietly using the address. */}
-        <InviteCard refCode={(myProfile as any)?.ref_code ?? null} address={address.toLowerCase()} />
-        <ReferralBoard address={address.toLowerCase()} />
+        <InviteCard refCode={(myProfile as any)?.ref_code ?? null} />
+        <RewardsBoard address={address.toLowerCase()} />
       </div>
 
       <Achievements />
@@ -682,27 +682,13 @@ function WalletPanel({ onExport }: { onExport: () => Promise<void> }) {
   );
 }
 
-function InviteCard({ refCode, address }: { refCode: string | null; address: string }) {
+function InviteCard({ refCode }: { refCode: string | null }) {
   const url = inviteUrl(refCode);
   // What the player reads on the card: the domain and their code, without the
   // https:// and without a query string. Copying still puts the full URL on the
   // clipboard, this is only what fits on one line and stays memorable.
   const pretty = refCode ? `bestgambit.live/?ref=${refCode}` : null;
   const [copied, setCopied] = useState(false);
-  const [per, setPer] = useState(0);
-  // the vault's own payout token, so the card never names one it cannot pay
-  const [sym, setSym] = useState("USDm");
-
-  // live bonus amount from the server, so the card always tells the truth
-  useEffect(() => {
-    fetch(`/api/referrals?address=${address}`)
-      .then((r) => r.json())
-      .then((d) => {
-        setPer(Number(d?.perFriend) || 0);
-        if (d?.symbol) setSym(String(d.symbol));
-      })
-      .catch(() => {});
-  }, [address]);
 
   const copy = async () => {
     try {
@@ -714,35 +700,21 @@ function InviteCard({ refCode, address }: { refCode: string | null; address: str
     }
   };
 
-  const fmt = (n: number) => Number(n.toFixed(2)).toString();
-
   return (
     <div className="rounded-2xl border border-line bg-void-700 p-5 shadow-card">
-      <div className="flex items-center gap-2">
-        <p className="text-sm font-semibold text-ink">Invite friends, earn {sym}</p>
-        <span className="rounded-full bg-teal/15 px-2 py-0.5 text-[14px] font-semibold text-teal">LIVE</span>
-      </div>
+      <p className="text-sm font-semibold text-ink">Invite friends, earn on every match</p>
       <p className="mt-0.5 text-[14px] text-ink-dim">
-        {per > 0
-          ? `You earn ${fmt(per)} ${sym} for every friend who joins with your link and plays a staked match. That is the only condition. Paid straight to your wallet from an on chain vault.`
-          : `You earn a bonus for every friend who joins with your link and plays a staked match, paid straight to your wallet from an on chain vault.`}{" "}
-        Tap the link to copy it.
+        You get 1% of your friend&apos;s entry every time they play 1v1 for money, for as long as they play.
       </p>
-      {per > 0 && (
-        <div className="mt-2.5 flex flex-wrap gap-1.5">
-          {[5, 10, 25].map((n) => (
-            <span key={n} className="rounded-full border border-teal/25 bg-teal/[0.07] px-2.5 py-1 text-[14px] font-semibold text-teal">
-              {n} friends = {fmt(per * n)} {sym}
-            </span>
-          ))}
-        </div>
-      )}
+      <p className="mt-2.5 rounded-xl border border-teal/25 bg-teal/[0.07] px-3 py-2 text-[14px] font-semibold leading-snug text-teal">
+        A friend who plays ten $2 matches earns you $0.20
+      </p>
       <div className="mt-3 flex items-center gap-2">
         <button
           onClick={copy}
           disabled={!pretty}
           title={pretty ? "Copy your invite link" : "Your link is being created"}
-          className="flex min-w-0 flex-1 items-center gap-1.5 rounded-xl border border-line bg-void-800 px-3 py-2.5 text-left text-[14px] text-ink-dim transition-colors hover:border-line-strong hover:text-ink disabled:opacity-60 disabled:hover:border-line"
+          className="flex h-11 min-w-0 flex-1 items-center gap-1.5 rounded-xl border border-line bg-void-800 px-3 text-left text-[14px] text-ink-dim transition-colors hover:border-line-strong hover:text-ink disabled:opacity-60 disabled:hover:border-line"
         >
           <span className="truncate">{pretty ?? "Creating your link…"}</span>
           {pretty ? (
@@ -753,7 +725,7 @@ function InviteCard({ refCode, address }: { refCode: string | null; address: str
           <ShareButton
             text="Come play me on Gambit. Real games, real money, and you can start free. Use my link."
             url={url}
-            className="btn-primary flex shrink-0 items-center gap-1.5 rounded-xl px-3.5 py-2.5 text-sm shadow-glow"
+            className="btn-primary flex h-11 shrink-0 items-center gap-1.5 rounded-xl px-3.5 text-sm shadow-glow"
           >
             <Share2 className="h-4 w-4" /> Share
           </ShareButton>

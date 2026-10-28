@@ -1,15 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase";
-import { referralPaid, referralSymbol, referralAmount } from "@/lib/server/referral";
+import { rewardsSummary } from "@/lib/server/rewards";
 import { limited } from "@/lib/server/rateLimit";
 
 export const runtime = "nodejs";
 
 /**
- * GET /api/referrals?address=0x..., the inviter's referral scoreboard:
- * everyone who joined with their link, whether each has activated (bonus paid
- * on-chain), and the running total earned. Public-read; addresses are only
- * echoed back as display data the inviter already owns.
+ * GET /api/referrals?address=0x… → everyone who joined with this player's link
+ * and what each has earned them so far (1% of the friend's entry on every
+ * decided money match), plus the inviter's totals. Public read; friends are
+ * returned by name only.
  */
 export async function GET(req: NextRequest) {
   const rl = limited(req, "referrals", 20, 60_000);
@@ -20,42 +20,16 @@ export async function GET(req: NextRequest) {
   }
   try {
     const db = supabaseAdmin();
-    const { data } = await db
-      .from("profiles")
-      .select("address,name,avatar,played")
-      .eq("referred_by", address)
-      .order("created_at", { ascending: false })
-      .limit(50);
-    const friends = data ?? [];
-
-    // on-chain paid status per friend (capped; the list is small in practice)
-    const perFriend = await Promise.all(
-      friends.slice(0, 30).map(async (f) => {
-        let paid = false;
-        try {
-          paid = await referralPaid(f.address);
-        } catch {
-          /* leave as pending on read failure */
-        }
-        return { name: f.name || null, played: f.played ?? 0, paid };
-      })
-    );
-
-    const activated = perFriend.filter((f) => f.paid).length;
-    // Shared with the payout path, reading the env here directly is exactly how
-    // this drifted before, showing 0 on the card while payouts were configured.
-    const per = referralAmount();
-    return NextResponse.json({
-      invited: friends.length,
-      activated,
-      earned: Number((activated * per).toFixed(2)),
-      perFriend: per,
-      // The vault decides the payout token, not the copy. Sending the symbol
-      // means swapping the vault later needs no UI change, and the card can
-      // never name a token the contract does not actually pay.
-      symbol: await referralSymbol(),
-      friends: perFriend,
-    });
+    const [{ data }, summary] = await Promise.all([
+      db.from("profiles").select("address,name,played").eq("referred_by", address).order("created_at", { ascending: false }).limit(50),
+      rewardsSummary(address),
+    ]);
+    const friends = (data ?? []).map((f: any) => ({
+      name: f.name || null,
+      played: f.played ?? 0,
+      earned: summary.byFriend[f.address] ?? 0,
+    }));
+    return NextResponse.json({ invited: friends.length, earned: summary.referral, minimum: summary.minimum, friends });
   } catch (e: any) {
     return NextResponse.json({ error: e?.message ?? "Failed" }, { status: 500 });
   }

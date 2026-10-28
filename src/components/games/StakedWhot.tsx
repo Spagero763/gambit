@@ -355,6 +355,9 @@ export function StakedWhot({ matchId, you, onExit }: { matchId: bigint; you: `0x
           chainId={view?.chainId}
           matchId={matchId}
           shareAddress={me}
+          stakeWei={view?.stake}
+          decimals={view?.decimals}
+          token={view?.token}
         />
       </ResultLayer>
     </div>
