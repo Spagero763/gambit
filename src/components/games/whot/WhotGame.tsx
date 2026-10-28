@@ -250,7 +250,7 @@ function Celebration({
         <div className="mt-6 grid gap-2.5">
           {youWon && onMoney && (
             <button onClick={onMoney} className={buttonClass("primary", "lg", "w-full")}>
-              Play someone for money
+              Try 1v1 for money
             </button>
           )}
           <button onClick={onAgain} className={buttonClass(youWon && onMoney ? "secondary" : "primary", "lg", "w-full")}>

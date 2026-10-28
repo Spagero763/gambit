@@ -13,7 +13,7 @@ import { WalletUnreachable } from "@/components/WalletUnreachable";
 import { useAllowedTokens } from "@/hooks/useAllowedTokens";
 import { useStableBalances } from "@/hooks/useStableBalances";
 import { useOpenRooms } from "@/hooks/useOpenRooms";
-import { Game } from "@/lib/games";
+import { Game, STAKE_CHIPS, STAKE_MAX } from "@/lib/games";
 import { GameArt } from "@/components/art/TileArt";
 import { Difficulty, DIFFICULTIES, SUPPORTS_DIFFICULTY } from "@/lib/difficulty";
 import { useStakeMatch, useMatchState } from "@/hooks/useStakeMatch";
@@ -44,7 +44,7 @@ export function MatchSetup({
   const [mode, setMode] = useState<Mode>(initialMode);
   const [rulesOpen, setRulesOpen] = useState(false);
   const [rulesSeen, setRulesSeen] = useState(false);
-  const [stake, setStake] = useState<number>(game.minStake);
+  const [stake, setStake] = useState<number>(STAKE_CHIPS[0]);
   const [custom, setCustom] = useState("");
   const [difficulty, setDifficulty] = useState<Difficulty>("normal");
   const [joinId, setJoinId] = useState("");
@@ -59,13 +59,13 @@ export function MatchSetup({
   // Which tokens the escrow actually accepts, and what this player holds. Both
   // read live: a token the contract rejects must never reach the picker (the
   // player would pay gas on the approve and then watch the stake revert), and
-  // the default should be the stablecoin they already have money in.
+  // USDT is the default, as MiniPay asked; each pill shows what they hold in it.
   const { tokens } = useAllowedTokens();
-  const { balances, preferred } = useStableBalances(address);
+  const { balances } = useStableBalances(address);
   // null = "nobody has chosen yet", so the live default below can still apply
   const [picked, setPicked] = useState<StakeToken | null>(null);
-  const preferredAllowed = tokens.find((t) => t.address === preferred?.token.address);
-  const token = picked && tokens.some((t) => t.address === picked.address) ? picked : preferredAllowed ?? tokens[0];
+  const usdt = tokens.find((t) => t.symbol === "USDT");
+  const token = picked && tokens.some((t) => t.address === picked.address) ? picked : usdt ?? tokens[0];
 
   // show the rules the first time a player opens the staked tab
   useEffect(() => {
@@ -78,9 +78,9 @@ export function MatchSetup({
   const { data: tokenBal } = useBalance({ address, token: token.address, query: { enabled: !!address } });
   const hasDifficulty = SUPPORTS_DIFFICULTY.has(game.slug);
 
-  const chips = [0.1, 0.5, 1, 2, 5].filter((v) => v >= game.minStake);
+  const chips = STAKE_CHIPS;
   const payout = +(stake * 2 * (1 - FEE)).toFixed(2);
-  const validStake = Number.isFinite(stake) && stake >= game.minStake;
+  const validStake = Number.isFinite(stake) && stake >= game.minStake && stake <= STAKE_MAX;
 
   const busy = step === "approving" || step === "creating" || step === "joining";
   // tuple index 9 = status (2 = Active, both seats filled)
@@ -211,7 +211,7 @@ export function MatchSetup({
   const gate = !isConnected ? (
     canSignIn ? (
       <button onClick={signInWallet} className={buttonClass("primary", "lg", "w-full")}>
-        <Wallet className="h-4 w-4" /> Connect to play for money
+        <Wallet className="h-4 w-4" /> Connect to play 1v1
       </button>
     ) : reach.failed ? (
       <WalletUnreachable onRetry={reach.retry} />
@@ -273,8 +273,8 @@ export function MatchSetup({
         <div className="glass mt-5 grid grid-cols-2 gap-1 rounded-full p-1">
           {(
             [
-              { id: "free", label: "Practice free", icon: Bot },
-              { id: "staked", label: "Play for money", icon: Swords },
+              { id: "free", label: "Play vs AI", icon: Bot },
+              { id: "staked", label: "1v1 for money", icon: Swords },
             ] as const
           ).map((m) => {
             const Icon = m.icon;
@@ -298,7 +298,7 @@ export function MatchSetup({
 
         {mode === "free" ? (
           <div key="free" className="enter mt-5">
-            <p className="text-[16px] leading-relaxed text-ink-dim">Against the computer. No wallet, no money, just the game.</p>
+            <p className="text-[16px] leading-relaxed text-ink-dim">Free against the computer. No wallet needed.</p>
 
             {hasDifficulty && (
               <div className="mt-4 grid grid-cols-3 gap-2.5">
@@ -327,7 +327,7 @@ export function MatchSetup({
             )}
 
             <button onClick={() => onStart(difficulty)} className={buttonClass("primary", "lg", "mt-5 w-full")}>
-              Start practice
+              Start game
             </button>
           </div>
         ) : (
@@ -484,7 +484,7 @@ export function MatchSetup({
                     <HelpCircle className="h-3.5 w-3.5" /> Rules
                   </button>
                 </div>
-                <div className="grid grid-cols-5 gap-2">
+                <div className="grid grid-cols-3 gap-2">
                   {chips.map((v) => {
                     const on = !custom && stake === v;
                     return (
@@ -520,7 +520,9 @@ export function MatchSetup({
                 </label>
                 {custom && !validStake && (
                   <p className="mt-1.5 text-[14px] text-rose">
-                    The smallest entry is {game.minStake.toFixed(2)} {token.symbol}.
+                    {stake > STAKE_MAX
+                      ? `The most you can put in is ${STAKE_MAX.toFixed(2)} ${token.symbol}.`
+                      : `The smallest entry is ${game.minStake.toFixed(2)} ${token.symbol}.`}
                   </p>
                 )}
 

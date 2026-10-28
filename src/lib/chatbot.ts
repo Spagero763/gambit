@@ -63,7 +63,7 @@ const ENTRIES: Entry[] = [
     q: "How does a staked match work?",
     keywords: ["stake", "staked", "bet", "wager", "opponent", "versus", "against someone", "1v1", "real match"],
     a: () =>
-      "Pick a game and a stake, as little as 0.10. Both players put in the same amount, the winner takes 95 percent, and it is paid to their wallet the second the game ends. A draw refunds both players.",
+      "Pick a game and an amount: 2, 4 or 5, or type anything from 0.50 up to 5. Both players put in the same amount, the winner takes 95 percent, and it is paid to their wallet the second the game ends. A draw refunds both players.",
   },
   {
     id: "tokens",

@@ -51,10 +51,10 @@ export function WhotHero() {
         </Link>
         <div className="relative grid grid-cols-2 gap-2.5 border-t border-white/10 p-4">
           <Link href="/play/whot?practice=1" className={buttonClass("secondary", "md", "h-12")}>
-            Practice free
+            Play vs AI
           </Link>
           <Link href="/play/whot?mode=staked" className={buttonClass("primary", "md", "h-12")}>
-            Play for money
+            1v1 for money
           </Link>
         </div>
       </div>

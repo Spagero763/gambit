@@ -13,7 +13,7 @@ export function generateMetadata({ params }: { params: { slug: string } }): Meta
   const title = game.mode === "1v1" ? `Play ${game.name} online, free or for real money` : `Play ${game.name} online free`;
   const description =
     game.mode === "1v1"
-      ? `${game.description} Practice free against the computer, or play a real person for USDT, USDC or USDm. Winner takes 95%, paid in seconds.`
+      ? `${game.description} Play vs AI for free, or 1v1 against a real person for USDT, USDC or USDm. Winner takes 95%, paid in seconds.`
       : `${game.description} Free to play, no sign up.`;
   return {
     title,

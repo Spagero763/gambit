@@ -9,7 +9,6 @@ import { LiveNow } from "@/components/LiveNow";
 import {
   LazyActiveGames,
   LazyDailyStrip,
-  LazyGameShowcase,
   LazySaveProgressPrompt,
 } from "@/components/HomeLazy";
 
@@ -31,7 +30,6 @@ export default function Home() {
         </div>
       </div>
       <GameGrid />
-      <LazyGameShowcase />
       <TrustStrip />
       <BottomNav />
     </main>

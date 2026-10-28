@@ -32,7 +32,7 @@ export function Lobby() {
     <section className="mx-auto w-full max-w-2xl px-5 pb-28 pt-2 lg:max-w-3xl">
       <div className="flex items-start justify-between gap-3">
         <div>
-          <h1 className="display text-[34px] font-extrabold leading-none text-ink">Play for money</h1>
+          <h1 className="display text-[34px] font-extrabold leading-none text-ink">1v1 for money</h1>
           <p className="mt-2 text-[14px] text-ink-dim">Real people, one pot. Winner takes 95%, paid in seconds.</p>
         </div>
         <button onClick={refresh} aria-label="Refresh" className="glass pressable grid h-11 w-11 shrink-0 place-items-center rounded-full text-ink-dim">

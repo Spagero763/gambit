@@ -25,7 +25,7 @@ import { InfoLinks } from "@/components/InfoLinks";
 import { AnimatedNumber } from "@/components/motion/AnimatedNumber";
 import { PlayerCard } from "@/components/PlayerCard";
 import { ReferralBoard } from "@/components/ReferralBoard";
-import { symbolForToken } from "@/lib/tokens";
+import { symbolForToken, isRetiredToken } from "@/lib/tokens";
 import { ProgressCard } from "@/components/Daily";
 import { Achievements } from "@/components/Achievements";
 import { SkeletonList } from "@/components/Skeleton";
@@ -128,7 +128,7 @@ export function Profile() {
         .in("status", ["settling", "settled"])
         .order("created_at", { ascending: false })
         .limit(50);
-      if (active) setRows((data as MatchRow[]) ?? []);
+      if (active) setRows(((data as MatchRow[]) ?? []).filter((r) => !isRetiredToken(r.token)));
     })();
     return () => {
       active = false;

@@ -32,16 +32,12 @@ export function DailyChallengeCard() {
         {state.done ? <Check className="h-5 w-5" /> : <CalendarDays className="h-5 w-5" />}
       </span>
       <div className="min-w-0 flex-1">
-        <p className="text-sm font-semibold text-ink">Daily Challenge #{state.n} · {gameName}</p>
-        <p className="text-[14px] text-ink-dim">
-          {state.done
-            ? isBlocks || state.score !== WIN_SCORE
-              ? `Done today: ${state.score.toLocaleString()} points. Dare a friend.`
-              : `Done today: you beat the bot at ${gameName}. Dare a friend.`
-            : isBlocks
-              ? "Same board for everyone. One shot at your score."
-              : `Beat the bot at ${gameName} today to clear it.`}
-        </p>
+        <p className="text-[16px] font-semibold text-ink">Daily challenge · {gameName}</p>
+        {state.done && (
+          <p className="text-[14px] text-ink-dim">
+            {isBlocks || state.score !== WIN_SCORE ? `Done today: ${state.score.toLocaleString()} points` : "Done today"}
+          </p>
+        )}
       </div>
       {state.streak > 1 && (
         <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-amber/15 px-2 py-0.5 text-[14px] font-semibold text-amber">

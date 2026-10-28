@@ -7,9 +7,9 @@ import { Modal } from "./Modal";
 
 // The whole money journey in five steps a first-timer can follow.
 const STEPS = [
-  { icon: Gamepad2, title: "Warm up free", body: "Every game is free against the bot. No deposit, no catch, play all day." },
-  { icon: Coins, title: "Enter a real match", body: "Ready? Pay a small entry fee to face a real person. Both entries sit locked in a contract nobody can touch, not even us. Pure skill, no luck, no house playing against you." },
-  { icon: Trophy, title: "Winner takes 95%", body: "Win and the prize lands in your wallet in seconds. A draw refunds both players. If a game stalls, your money is always reclaimable." },
+  { icon: Gamepad2, title: "Play vs AI", body: "Every game, free, as long as you like." },
+  { icon: Coins, title: "1v1 for money", body: "Face a real person. Both entries stay locked until the game ends." },
+  { icon: Trophy, title: "Winner takes 95%", body: "Paid to your wallet in seconds. A draw refunds both." },
 ];
 
 // Step one reads differently depending on where you opened Gambit: in MiniPay
@@ -17,12 +17,12 @@ const STEPS = [
 const FIRST_MINIPAY = {
   icon: Wallet,
   title: "You are already in",
-  body: "MiniPay signs you in the moment you open Gambit. Your wallet and your stablecoins come with you, nothing to create and nothing to sign up for.",
+  body: "MiniPay signs you in. Nothing to set up.",
 };
 const FIRST_WEB = {
   icon: Wallet,
   title: "Sign in, get a wallet",
-  body: "Just your email. A wallet is created for you, think of it as your game account. Add money from MiniPay or any Celo wallet whenever you want.",
+  body: "Just your email. A wallet is made for you.",
 };
 
 // Cashing out is MiniPay's own screen inside the Mini App, so pointing at a
@@ -31,12 +31,12 @@ const FIRST_WEB = {
 const LAST_MINIPAY = {
   icon: ArrowDownToLine,
   title: "Cash out anytime",
-  body: "Your winnings are yours the second they land. Withdraw them from your MiniPay wallet whenever you like.",
+  body: "Withdraw from your MiniPay wallet whenever you like.",
 };
 const LAST_WEB = {
   icon: ArrowDownToLine,
   title: "Cash out anytime",
-  body: "Your money is yours. Withdraw your winnings to any wallet from your profile whenever you like.",
+  body: "Withdraw to any wallet from your profile.",
 };
 
 /** "How it works" button + modal. Manual only, the first-run tour is Onboarding. */

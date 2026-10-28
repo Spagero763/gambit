@@ -5,7 +5,7 @@ import { motion } from "framer-motion";
 import { formatUnits } from "viem";
 import { Users, Activity, Swords, Coins, Trophy, Flame, ShieldCheck } from "lucide-react";
 import { supabase } from "@/lib/supabase";
-import { symbolForToken, decimalsForToken } from "@/lib/tokens";
+import { symbolForToken, decimalsForToken, isRetiredToken } from "@/lib/tokens";
 import { GAMES } from "@/lib/games";
 import { useProfiles, displayName } from "@/lib/profiles";
 import { Skeleton } from "@/components/Skeleton";
@@ -103,9 +103,9 @@ export function Stats() {
         supabase!.from("tournament_players").select("tournament_id,address").limit(5000),
       ]);
       if (!active) return;
-      setMatches((m.data as MatchRow[]) ?? []);
+      setMatches(((m.data as MatchRow[]) ?? []).filter((r) => !isRetiredToken(r.token)));
       setProfiles((p.data as ProfileRow[]) ?? []);
-      setTournaments((t.data as TournamentRow[]) ?? []);
+      setTournaments(((t.data as TournamentRow[]) ?? []).filter((r) => !isRetiredToken(r.token)));
       setCupPlayers((tp.data as TournamentPlayerRow[]) ?? []);
     })();
     return () => {

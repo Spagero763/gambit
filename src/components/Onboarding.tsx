@@ -24,7 +24,7 @@ const STEPS = [
   {
     icon: Gamepad2,
     title: "Pick a game & play",
-    body: "Tap any game to start instantly vs the bot. Choose “Play for money” to put money on the line, set your stake in USDT, USDC or USDm, and play.",
+    body: "Tap any game to start instantly vs the bot. Choose “1v1 for money” to put money on the line, set your stake in USDT, USDC or USDm, and play.",
   },
   {
     icon: Swords,

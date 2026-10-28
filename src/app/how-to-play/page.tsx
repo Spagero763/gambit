@@ -13,13 +13,13 @@ export const metadata: Metadata = {
 const JOURNEY = [
   {
     icon: Gamepad2,
-    title: "Play free first",
+    title: "Play vs AI first",
     body: "Every game is free against the bot, with no wallet and no sign in. Warm up as long as you like. Your progress is saved on this device.",
   },
   {
     icon: Coins,
     title: "Stake when you are ready",
-    body: "Open any game and pick Play for money. Choose how much to put in, and the same amount comes from the opponent you are matched with. Both entries are locked in an on-chain escrow the moment the match starts.",
+    body: "Open any game and pick 1v1 for money. Choose how much to put in, and the same amount comes from the opponent you are matched with. Both entries are locked in an on-chain escrow the moment the match starts.",
   },
   {
     icon: Trophy,

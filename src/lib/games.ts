@@ -14,6 +14,10 @@ export interface Game {
   art: "chess" | "xo" | "snakes" | "blocks" | "whot";
 }
 
+// MiniPay's amounts: three one-tap entries, and nothing typed goes over the cap
+export const STAKE_CHIPS = [2, 4, 5];
+export const STAKE_MAX = 5;
+
 export const GAMES: Game[] = [
   {
     slug: "chess",
@@ -22,7 +26,7 @@ export const GAMES: Game[] = [
     description: "1 v 1 on an 8 by 8 board with a clock. No luck, just the board.",
     mode: "1v1",
     status: "live",
-    minStake: 0.1,
+    minStake: 0.5,
     players: 128,
     accent: "violet",
     art: "chess",
@@ -34,7 +38,7 @@ export const GAMES: Game[] = [
     description: "Three in a row wins. Fast games against a bot that plays back.",
     mode: "1v1",
     status: "live",
-    minStake: 0.1,
+    minStake: 0.5,
     players: 214,
     accent: "teal",
     art: "xo",
@@ -46,7 +50,7 @@ export const GAMES: Game[] = [
     description: "Race to square 100 with a die. Ladders lift, snakes drop, first to the top wins.",
     mode: "1v1",
     status: "live",
-    minStake: 0.1,
+    minStake: 0.5,
     players: 173,
     accent: "amber",
     art: "snakes",
@@ -58,7 +62,7 @@ export const GAMES: Game[] = [
     description: "Drop blocks onto an 8 by 8 grid, fill rows and columns to clear them, chain clears for a rising multiplier. Ends when nothing fits.",
     mode: "solo",
     status: "live",
-    minStake: 0.1,
+    minStake: 0.5,
     players: 96,
     accent: "rose",
     art: "blocks",
@@ -70,7 +74,7 @@ export const GAMES: Game[] = [
     description: "The shape-and-number card game. Match, hit with specials and shed every card before the table does.",
     mode: "1v1",
     status: "live",
-    minStake: 0.1,
+    minStake: 0.5,
     players: 187,
     accent: "violet",
     art: "whot",

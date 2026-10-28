@@ -69,6 +69,11 @@ const RETIRED: Record<string, StakeToken> = {
   },
 };
 
+/** GoodDollar was removed at MiniPay's request, so nothing may show matches staked in it. */
+export function isRetiredToken(address?: string | null): boolean {
+  return !!address && address.toLowerCase() in RETIRED;
+}
+
 /** Decimals for a stored stake token address (defaults to 18 = USDm). */
 export function decimalsForToken(address?: string | null): number {
   return lookup(address)?.decimals ?? 18;

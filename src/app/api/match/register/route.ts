@@ -3,7 +3,7 @@ import { formatUnits } from "viem";
 import { supabaseAdmin } from "@/lib/supabase";
 import { broadcast } from "@/lib/server/push";
 import { decimalsForToken, symbolForToken } from "@/lib/tokens";
-import { GAMES } from "@/lib/games";
+import { GAMES, STAKE_MAX } from "@/lib/games";
 import { GAME_TYPE } from "@/lib/escrow";
 import { readMatchOnChain } from "@/lib/server/settle";
 import { limited } from "@/lib/server/rateLimit";
@@ -47,8 +47,11 @@ export async function POST(req: NextRequest) {
     }
     const dec = decimalsForToken(oc.token);
     const human = Number(formatUnits(oc.stake, dec));
-    if (human < (MIN_STAKE[game] ?? 0.1)) {
+    if (human < (MIN_STAKE[game] ?? 0.5)) {
       return NextResponse.json({ error: "Below the minimum stake" }, { status: 400 });
+    }
+    if (human > STAKE_MAX) {
+      return NextResponse.json({ error: "Above the maximum stake" }, { status: 400 });
     }
 
     const db = supabaseAdmin();

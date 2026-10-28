@@ -46,8 +46,7 @@ export function TrustStrip() {
       >
         <ShieldCheck className="h-4 w-4 shrink-0 text-teal" />
         <span className="min-w-0 flex-1 text-left text-[14px] text-ink-dim">
-          <span className="font-semibold text-ink">Don&apos;t trust us. Verify it.</span> Every stake and payout is public
-          on-chain.
+          Every stake and payout is public on-chain.
         </span>
         <ChevronRight className="h-4 w-4 shrink-0 text-ink-faint" />
       </button>

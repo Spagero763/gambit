@@ -28,21 +28,21 @@ export function Hero() {
       </h1>
 
       <p className="mt-3 max-w-md text-[16px] leading-relaxed text-ink-dim">
-        Whot, chess and more against real people. Winner takes 95%, paid to your wallet in seconds.
+        Real opponents. Winner takes 95%.
       </p>
 
       <div className="hero-in mt-5 grid grid-cols-2 gap-2.5 sm:max-w-md" style={{ animationDelay: "60ms" }}>
         <a href="#games" onClick={toGames} className={buttonClass("primary", "lg", "w-full whitespace-nowrap px-3 text-[16px]")}>
-          <Play className="h-4 w-4 shrink-0 fill-current" /> Play free
+          <Play className="h-4 w-4 shrink-0 fill-current" /> Play vs AI
         </a>
         <Link href="/lobby" className={buttonClass("secondary", "lg", "w-full whitespace-nowrap px-3 text-[16px]")}>
-          <Swords className="h-4 w-4 shrink-0" /> Play for money
+          <Swords className="h-4 w-4 shrink-0" /> 1v1 for money
         </Link>
       </div>
 
-      <p className="hero-in mt-3 flex flex-wrap items-center gap-x-2 text-[14px] text-ink-faint" style={{ animationDelay: "120ms" }}>
-        Free against the bot, no sign in. <HowItWorks />
-      </p>
+      <div className="hero-in mt-2" style={{ animationDelay: "120ms" }}>
+        <HowItWorks />
+      </div>
     </section>
   );
 }

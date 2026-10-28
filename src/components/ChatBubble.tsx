@@ -131,7 +131,7 @@ export function ChatBubble() {
         animate={{ scale: 1, opacity: 1 }}
         transition={{ type: "spring", stiffness: 300, damping: 20 }}
         whileTap={{ scale: dragging ? 1 : 0.9 }}
-        className="fixed z-[140] grid touch-none place-items-center rounded-2xl border border-teal/30 bg-void-800"
+        className="fixed z-[60] grid touch-none place-items-center rounded-2xl border border-teal/30 bg-void-800"
         style={{
           left: pos.x,
           top: pos.y,
@@ -169,7 +169,7 @@ export function ChatBubble() {
             exit={{ opacity: 0, scale: 0.94, y: 8 }}
             transition={{ type: "spring", stiffness: 300, damping: 26 }}
             className={cn(
-              "fixed z-[139] flex w-[min(92vw,22rem)] flex-col overflow-hidden rounded-3xl border border-line bg-void-800 shadow-pop",
+              "fixed z-[59] flex w-[min(92vw,22rem)] flex-col overflow-hidden rounded-3xl border border-line bg-void-800 shadow-pop",
               onLeft ? "origin-bottom-left" : "origin-bottom-right"
             )}
             style={{

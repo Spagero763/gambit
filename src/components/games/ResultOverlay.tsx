@@ -52,7 +52,7 @@ export function ResultOverlay({
             </p>
             <p className="mt-2 text-body text-ink-soft">{COPY[result].sub}</p>
             <div className="mt-6 grid gap-2.5">
-              {nudge && <Button onClick={onMoney}>Play someone for money</Button>}
+              {nudge && <Button onClick={onMoney}>Try 1v1 for money</Button>}
               <Button variant={nudge ? "secondary" : "primary"} onClick={onRematch}>
                 Play again
               </Button>

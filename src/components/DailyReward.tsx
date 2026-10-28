@@ -52,12 +52,7 @@ export function DailyReward() {
             <Gift className="h-5 w-5" />
           </span>
           <span className="min-w-0 flex-1">
-            <span className="block text-sm font-bold text-ink">Daily reward ready 🎁</span>
-            <span className="block text-[14px] text-ink-dim">
-              {p.streak > 0
-                ? `Day ${p.streak + (p.lastPlayed === today() ? 0 : 1)}. Tap to claim your XP`
-                : "Tap to claim free XP and start a streak"}
-            </span>
+            <span className="block text-[16px] font-bold text-ink">Daily reward ready 🎁</span>
           </span>
           <span className="rounded-full bg-amber px-3 py-1.5 text-[14px] font-bold text-void">Claim</span>
         </motion.button>

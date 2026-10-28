@@ -53,8 +53,7 @@ export function LiveNow() {
             <Swords className="h-5 w-5" />
           </span>
           <div className={cn("min-w-0 flex-1", rooms === null && "invisible")}>
-            <p className="text-[14px] font-semibold text-ink">Nobody&apos;s waiting right now</p>
-            <p className="text-[14px] leading-snug text-ink-faint">Open a room. The first person to join plays you.</p>
+            <p className="text-[16px] font-semibold text-ink">No one is waiting yet</p>
           </div>
           <Link href="/lobby" tabIndex={rooms === null ? -1 : undefined} className={buttonClass("primary", "sm", cn("shrink-0", rooms === null && "invisible"))}>
             Open
