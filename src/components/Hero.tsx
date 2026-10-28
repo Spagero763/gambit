@@ -12,25 +12,26 @@ function toGames(e: React.MouseEvent) {
 }
 
 /**
- * Renders visible from the server HTML and animates in with CSS (`hero-in`),
- * so the headline paints before the wallet SDK hydrates. Nothing here needs
- * JS to become visible.
+ * Renders visible from the server HTML, so the headline paints before the
+ * wallet SDK hydrates; the lines under it ease in with CSS (`hero-in`).
+ * Nothing here needs JS to become visible.
  */
 export function Hero() {
   return (
     <section className="mx-auto w-full max-w-2xl px-5 pt-3">
-      <h1 className="hero-in display text-[42px] font-extrabold leading-[1.02] text-ink min-[400px]:text-[46px]">
+      {/* no entrance on the headline or the line under it: they are the first paint */}
+      <h1 className="display text-[42px] font-extrabold leading-[1.02] text-ink min-[400px]:text-[46px]">
         Think you&apos;d win?
         <span className="block">
           <span className="text-ink-soft">Put money</span> <span className="text-shimmer">on it.</span>
         </span>
       </h1>
 
-      <p className="hero-in mt-3 max-w-md text-[16px] leading-relaxed text-ink-dim" style={{ animationDelay: "60ms" }}>
+      <p className="mt-3 max-w-md text-[16px] leading-relaxed text-ink-dim">
         Whot, chess and more against real people. Winner takes 95%, paid to your wallet in seconds.
       </p>
 
-      <div className="hero-in mt-5 grid grid-cols-2 gap-2.5 sm:max-w-md" style={{ animationDelay: "120ms" }}>
+      <div className="hero-in mt-5 grid grid-cols-2 gap-2.5 sm:max-w-md" style={{ animationDelay: "60ms" }}>
         <a href="#games" onClick={toGames} className={buttonClass("primary", "lg", "w-full whitespace-nowrap px-3 text-[16px]")}>
           <Play className="h-4 w-4 shrink-0 fill-current" /> Play free
         </a>
@@ -39,7 +40,7 @@ export function Hero() {
         </Link>
       </div>
 
-      <p className="hero-in mt-3 flex flex-wrap items-center gap-x-2 text-[14px] text-ink-faint" style={{ animationDelay: "180ms" }}>
+      <p className="hero-in mt-3 flex flex-wrap items-center gap-x-2 text-[14px] text-ink-faint" style={{ animationDelay: "120ms" }}>
         Free against the bot, no sign in. <HowItWorks />
       </p>
     </section>

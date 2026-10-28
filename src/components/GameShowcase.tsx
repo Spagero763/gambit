@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { AnimatePresence, motion } from "framer-motion";
+import { AnimatePresence, motion, useInView } from "framer-motion";
 import { Play } from "lucide-react";
 import Link from "next/link";
 import { ChessScene } from "./showcase/ChessScene";
@@ -25,20 +25,28 @@ export function GameShowcase() {
   const [i, setI] = useState(0);
   const [paused, setPaused] = useState(false);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // off-screen it holds still, so it costs nothing while you're elsewhere on the page
+  const ref = useRef<HTMLElement>(null);
+  const inView = useInView(ref);
+  const still = paused || !inView;
+  const [seen, setSeen] = useState(false);
+  useEffect(() => {
+    if (inView) setSeen(true);
+  }, [inView]);
 
   useEffect(() => {
-    if (paused) return;
+    if (still) return;
     timer.current = setTimeout(() => setI((p) => (p + 1) % SHOW.length), DURATION);
     return () => {
       if (timer.current) clearTimeout(timer.current);
     };
-  }, [i, paused]);
+  }, [i, still]);
 
   const active = SHOW[i];
   const Scene = active.Scene;
 
   return (
-    <section className="mx-auto w-full max-w-2xl px-5 pt-4 lg:max-w-4xl">
+    <section ref={ref} className="mx-auto w-full max-w-2xl px-5 pt-4 lg:max-w-4xl">
       <div
         className="relative overflow-hidden rounded-3xl border border-line bg-void-700 shadow-pop"
         onMouseEnter={() => setPaused(true)}
@@ -58,9 +66,9 @@ export function GameShowcase() {
             <AnimatePresence mode="wait">
               <motion.div
                 key={active.slug}
-                initial={{ opacity: 0, x: 42, scale: 0.97, filter: "blur(8px)" }}
-                animate={{ opacity: 1, x: 0, scale: 1, filter: "blur(0px)" }}
-                exit={{ opacity: 0, x: -32, scale: 1.02, filter: "blur(6px)" }}
+                initial={{ opacity: 0, x: 42, scale: 0.97 }}
+                animate={{ opacity: 1, x: 0, scale: 1 }}
+                exit={{ opacity: 0, x: -32, scale: 1.02 }}
                 transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
                 className="absolute inset-0"
               >
@@ -69,10 +77,10 @@ export function GameShowcase() {
                   key={`kb-${active.slug}`}
                   className="absolute inset-0"
                   initial={{ scale: 1 }}
-                  animate={{ scale: paused ? 1.02 : 1.055 }}
+                  animate={{ scale: still ? 1.02 : 1.055 }}
                   transition={{ duration: DURATION / 1000, ease: "linear" }}
                 >
-                  <Scene />
+                  {seen && <Scene />}
                 </motion.div>
               </motion.div>
             </AnimatePresence>
@@ -100,8 +108,8 @@ export function GameShowcase() {
                     aria-hidden
                     className="absolute inset-0 rounded-full"
                     style={{ background: active.accent }}
-                    animate={{ scale: [1, 1.35], opacity: [0.45, 0] }}
-                    transition={{ duration: 1.8, repeat: Infinity, ease: "easeOut" }}
+                    animate={still ? { scale: 1, opacity: 0 } : { scale: [1, 1.35], opacity: [0.45, 0] }}
+                    transition={still ? { duration: 0.2 } : { duration: 1.8, repeat: Infinity, ease: "easeOut" }}
                   />
                   <motion.span
                     whileHover={{ scale: 1.06 }}
@@ -118,8 +126,7 @@ export function GameShowcase() {
           </div>
         </Link>
 
-        {/* segmented progress / tabs */}
-        {/* the bar is 4px; the button around it is a full thumb tall */}
+        {/* segmented progress / tabs: a 4px bar inside a full thumb-tall button */}
         <div className="flex gap-1.5 px-4">
           {SHOW.map((s, idx) => (
             <button key={s.slug} onClick={() => setI(idx)} className="group flex h-11 flex-1 items-center" aria-label={`Show ${s.name}`}>
@@ -127,12 +134,12 @@ export function GameShowcase() {
                 {idx < i && <span className="absolute inset-0 bg-white/40" />}
                 {idx === i && (
                   <motion.span
-                    key={`fill-${i}-${paused}`}
-                    className="absolute inset-y-0 left-0"
+                    key={`fill-${i}-${still}`}
+                    className="absolute inset-0 origin-left"
                     style={{ background: s.accent }}
-                    initial={{ width: "0%" }}
-                    animate={{ width: paused ? "30%" : "100%" }}
-                    transition={{ duration: paused ? 0.3 : DURATION / 1000, ease: "linear" }}
+                    initial={{ scaleX: 0 }}
+                    animate={{ scaleX: still ? 0.3 : 1 }}
+                    transition={{ duration: still ? 0.3 : DURATION / 1000, ease: "linear" }}
                   />
                 )}
               </span>

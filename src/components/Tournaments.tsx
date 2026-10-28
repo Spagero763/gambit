@@ -93,7 +93,7 @@ export function Tournaments() {
             </span>
             <p className="mt-3 text-sm font-semibold text-ink">Tournaments are on the way</p>
             <p className="mx-auto mt-1 max-w-xs text-[16px] leading-snug text-ink-dim">
-              Knockout brackets with a real pot are next up. Staked 1v1 is live already and pays the same way, so you
+              Knockout brackets with a real pot are next up. Play for money is live already and pays the same way, so you
               can put money on a game today.
             </p>
             <Link

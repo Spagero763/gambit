@@ -10,6 +10,7 @@ import { useOpenRooms, secondsLeft, Room } from "@/hooks/useOpenRooms";
 import { useProfiles, displayName } from "@/lib/profiles";
 import { symbolForToken } from "@/lib/tokens";
 import { buttonClass } from "@/components/ui/Button";
+import { cn } from "@/lib/cn";
 
 const NAME = Object.fromEntries(GAMES.map((g) => [g.slug, g.name]));
 
@@ -28,8 +29,6 @@ export function LiveNow() {
   const list = (rooms ?? []).slice(0, 3);
   const profiles = useProfiles(list.map((r) => r.creator));
 
-  if (rooms === null) return null;
-
   return (
     <section className="mx-auto mt-6 w-full max-w-2xl px-5">
       <div className="mb-2.5 flex items-center justify-between">
@@ -39,23 +38,25 @@ export function LiveNow() {
             <span className="relative h-2 w-2 rounded-full bg-teal" />
           </span>
           Live now
-          {rooms.length > 0 && <span className="nums normal-case tracking-normal text-ink-faint">· {rooms.length} waiting</span>}
+          {!!rooms?.length && <span className="nums normal-case tracking-normal text-ink-faint">· {rooms.length} waiting</span>}
         </h2>
         <Link href="/lobby" className="flex min-h-11 items-center pl-3 text-[14px] font-semibold text-teal">
           All rooms <ChevronRight className="h-3.5 w-3.5" />
         </Link>
       </div>
 
-      {list.length === 0 ? (
-        <div className="glass flex items-center gap-3 rounded-tile p-4">
-          <span className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-teal/15 text-teal">
+      {rooms === null || list.length === 0 ? (
+        // while rooms load this is the same card with its contents hidden, so it
+        // already has the right height and nothing jumps when the answer lands
+        <div key={rooms === null ? "loading" : "empty"} aria-hidden={rooms === null || undefined} className={cn("glass flex items-center gap-3 rounded-tile p-4", rooms === null && "animate-pulse")}>
+          <span className={cn("grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-teal/15 text-teal", rooms === null && "invisible")}>
             <Swords className="h-5 w-5" />
           </span>
-          <div className="min-w-0 flex-1">
+          <div className={cn("min-w-0 flex-1", rooms === null && "invisible")}>
             <p className="text-[14px] font-semibold text-ink">Nobody&apos;s waiting right now</p>
-            <p className="text-[16px] leading-snug text-ink-faint">Open a room. The first person to join plays you.</p>
+            <p className="text-[14px] leading-snug text-ink-faint">Open a room. The first person to join plays you.</p>
           </div>
-          <Link href="/lobby" className={buttonClass("primary", "sm", "shrink-0")}>
+          <Link href="/lobby" tabIndex={rooms === null ? -1 : undefined} className={buttonClass("primary", "sm", cn("shrink-0", rooms === null && "invisible"))}>
             Open
           </Link>
         </div>

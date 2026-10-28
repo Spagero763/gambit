@@ -17,7 +17,7 @@ const STEPS: Step[] = [
   { sel: '[data-tour="wallet"]', title: "Your money lives here", body: "Think of it as your game account. Tap anytime to see what you are holding and add more. No experience needed." },
   { sel: '[data-tour="daily"]', title: "Free XP, daily", body: "Come back every day and tap this. One tap, instant XP, and your streak keeps growing. It costs you nothing." },
   { sel: '[data-tour="challenge"]', title: "The Daily Challenge", body: "One board, the whole world plays it, you get one shot at your score. Beat your friends and rub it in." },
-  { sel: '[data-tour="games"]', title: "Pick your game", body: "Tap any game to play free. When you're ready, choose Staked 1v1, put money on it, and the winner takes 95% of the pot." },
+  { sel: '[data-tour="games"]', title: "Pick your game", body: "Tap any game to play free. When you're ready, choose Play for money, put money on it, and the winner takes 95% of the pot." },
   { sel: '[data-tour="cups"]', title: "Cups", body: "Tournaments with bigger pots. Join one, play your rounds, and the top finishers get paid." },
   { sel: '[data-tour="ranks"]', title: "Ranks", body: "The leaderboard. Win matches to climb it." },
   { sel: '[data-tour="you"]', title: "You", body: "Your profile, match history, winnings and settings. How to play, support and the rest live here too. Now go play!" },
@@ -138,16 +138,16 @@ export function Tour() {
           style={cardStyle}
         >
           <p className="text-sm font-bold text-ink">{s.title}</p>
-          <p className="mt-1 text-[16px] leading-snug text-ink-dim">{s.body}</p>
+          <p className="mt-1 text-[14px] leading-snug text-ink-dim">{s.body}</p>
           <div className="mt-4 flex items-center justify-between">
-            <button onClick={finish} className="text-[14px] font-medium text-ink-faint transition-colors hover:text-ink-dim">
+            <button onClick={finish} className="-ml-2 min-h-11 px-2 text-[14px] font-medium text-ink-faint transition-colors hover:text-ink-dim">
               Skip
             </button>
             <div className="flex items-center gap-2">
               <span className="text-[14px] text-ink-faint">
                 {step + 1}/{STEPS.length}
               </span>
-              <button onClick={next} className="btn-primary rounded-xl px-4 py-2 text-[14px] shadow-glow">
+              <button onClick={next} className="btn-primary h-11 rounded-xl px-5 text-[14px] shadow-glow">
                 {step >= STEPS.length - 1 ? "Got it" : "Next"}
               </button>
             </div>

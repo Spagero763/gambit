@@ -44,13 +44,13 @@ export function DailyReward() {
         >
           {/* shine sweep */}
           <span className="pointer-events-none absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/15 to-transparent transition-transform duration-1000 group-hover:translate-x-full" />
-          <motion.span
-            animate={{ rotate: [0, -10, 10, -6, 0], scale: [1, 1.08, 1] }}
-            transition={{ duration: 1.4, repeat: Infinity, repeatDelay: 1.2 }}
+          {/* CSS, so the wiggle runs on the compositor instead of the main thread */}
+          <span
             className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-amber/20 text-amber"
+            style={{ animation: "wiggle 1.4s ease-in-out 1.2s 2" }}
           >
             <Gift className="h-5 w-5" />
-          </motion.span>
+          </span>
           <span className="min-w-0 flex-1">
             <span className="block text-sm font-bold text-ink">Daily reward ready 🎁</span>
             <span className="block text-[14px] text-ink-dim">

@@ -28,10 +28,9 @@ export function useNavDirection() {
       arrived(el);
       clear();
     };
-    // the first page usually finished arriving before this ran
-    document.querySelectorAll(".page-in").forEach((el) => {
-      if (!el.getAnimations?.().length) arrived(el);
-    });
+    // the first page arrived without an entrance; later pages get one
+    document.querySelectorAll(".page-in").forEach(arrived);
+    html.dataset.ready = "";
     document.addEventListener("click", onClick, true);
     window.addEventListener("popstate", onPop);
     document.addEventListener("animationend", onEnd);
