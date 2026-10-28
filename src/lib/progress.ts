@@ -199,20 +199,27 @@ export function recordResult(game: string, result: GameResult): Progress {
   return p;
 }
 
-/** Merge server-side progression into local (keeps the higher of each value). */
-export function hydrateProgress(server: {
-  xp?: number;
-  streak?: number;
-  lastPlayed?: string;
-  played?: number;
-  wins?: number;
-}): Progress {
+/**
+ * Merge server-side progression into local (keeps the higher of each value).
+ * `before` sees the merged progress ahead of anyone listening for changes.
+ */
+export function hydrateProgress(
+  server: {
+    xp?: number;
+    streak?: number;
+    lastPlayed?: string;
+    played?: number;
+    wins?: number;
+  },
+  before?: (merged: Progress) => void
+): Progress {
   const p = loadProgress();
   if (typeof server.xp === "number") p.xp = Math.max(p.xp, server.xp);
   if (typeof server.streak === "number") p.streak = Math.max(p.streak, server.streak);
   if (typeof server.played === "number") p.played = Math.max(p.played, server.played);
   if (typeof server.wins === "number") p.wins = Math.max(p.wins, server.wins);
   if (server.lastPlayed && server.lastPlayed > (p.lastPlayed || "")) p.lastPlayed = server.lastPlayed;
+  before?.(p);
   save(p);
   return p;
 }

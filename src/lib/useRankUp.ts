@@ -28,6 +28,12 @@ function saveSeen(idx: number) {
   }
 }
 
+/** A rank that arrives with the saved profile (a new phone, a reinstall) was earned before, not just now. */
+export function markRankSeen(xp: number) {
+  const idx = rankForXp(xp).index;
+  if (loadSeen() < idx) saveSeen(idx);
+}
+
 /** Fires once when the player crosses into a higher rank tier. */
 export function useRankUp(p: Progress): { rankedUp: RankState | null; dismiss: () => void } {
   const [rankedUp, setRankedUp] = useState<RankState | null>(null);
@@ -38,8 +44,7 @@ export function useRankUp(p: Progress): { rankedUp: RankState | null; dismiss: (
       seededRef.current = true;
       // seed from the REAL stored progress, not the hook's default snapshot,
       // so an existing player isn't congratulated for a rank they already hold
-      const idx = rankForXp(loadProgress().xp).index;
-      if (loadSeen() < idx) saveSeen(idx);
+      markRankSeen(loadProgress().xp);
       return;
     }
     const cur = rankForXp(p.xp);

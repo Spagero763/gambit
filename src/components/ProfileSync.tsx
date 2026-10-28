@@ -14,6 +14,8 @@ import {
   useProfile,
 } from "@/lib/profile";
 import { useProgress, hydrateProgress } from "@/lib/progress";
+import { markRankSeen } from "@/lib/useRankUp";
+import { markAchievementsSeen } from "@/lib/achievements";
 import { loadSettings, saveSettings } from "@/lib/settings";
 import { captureRef } from "@/lib/share";
 
@@ -71,13 +73,21 @@ export function ProfileSync() {
             avatar: p.avatar || s.avatar,
             avatarImage: p.avatar_image || s.avatarImage,
           });
-          hydrateProgress({
-            xp: p.xp,
-            streak: p.streak,
-            lastPlayed: p.last_played ?? undefined,
-            played: p.played,
-            wins: p.wins,
-          });
+          // what the saved profile brings was earned before, on another phone:
+          // it shouldn't arrive as a fresh rank-up or achievement
+          hydrateProgress(
+            {
+              xp: p.xp,
+              streak: p.streak,
+              lastPlayed: p.last_played ?? undefined,
+              played: p.played,
+              wins: p.wins,
+            },
+            (merged) => {
+              markRankSeen(merged.xp);
+              markAchievementsSeen(merged);
+            }
+          );
         } else if (!s.name) {
           // brand-new (often social) sign-in with no saved profile and no name
           // yet, seed a friendly default from their Google/Farcaster/email id

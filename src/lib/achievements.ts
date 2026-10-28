@@ -59,6 +59,12 @@ function saveSeen(ids: string[]) {
   if (typeof window !== "undefined") localStorage.setItem(SEEN_KEY, JSON.stringify(ids));
 }
 
+/** Everything this progress has unlocked counts as already celebrated. */
+export function markAchievementsSeen(p: Progress) {
+  const already = ACHIEVEMENTS.filter((a) => isUnlocked(a, p)).map((a) => a.id);
+  saveSeen(Array.from(new Set([...loadSeen(), ...already])));
+}
+
 /**
  * Watches progress and surfaces achievements that JUST unlocked (so we can
  * celebrate them once). First load seeds "seen" silently so we don't spam a
@@ -74,9 +80,7 @@ export function useNewAchievements(p: Progress): { newly: Achievement[]; dismiss
     // returning player has already earned would fire as "new" on first load.
     if (!seededRef.current) {
       seededRef.current = true;
-      const real = loadProgress();
-      const already = ACHIEVEMENTS.filter((a) => isUnlocked(a, real)).map((a) => a.id);
-      saveSeen(Array.from(new Set([...loadSeen(), ...already])));
+      markAchievementsSeen(loadProgress());
       return;
     }
     const seen = loadSeen();
