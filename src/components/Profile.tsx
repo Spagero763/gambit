@@ -10,7 +10,7 @@ import { inviteUrl } from "@/lib/share";
 import { ShareButton } from "@/components/ShareButton";
 import { formatUnits } from "viem";
 import { useAccount } from "wagmi";
-import { usePrivy } from "@privy-io/react-auth";
+import { useAuth } from "@/lib/auth";
 import { useInMiniPay } from "@/lib/minipay";
 import { useStableBalances } from "@/hooks/useStableBalances";
 import { supabase } from "@/lib/supabase";
@@ -104,7 +104,7 @@ function relTime(iso: string) {
 
 export function Profile() {
   const { address, isConnected } = useAccount();
-  const { login } = usePrivy();
+  const { login } = useAuth();
   // the stablecoin they actually hold the most of, not a hard-coded one
   const { preferred } = useStableBalances(address);
   const miniPay = useInMiniPay();
@@ -363,7 +363,7 @@ function AccountLinks() {
   const [open, setOpen] = useState(false);
   const [view, setView] = useState<AccountView>("grid");
   const { address } = useAccount();
-  const { user, exportWallet, authenticated, login } = usePrivy();
+  const { user, exportWallet, authenticated, login } = useAuth();
   const [settings, update] = useSettings();
   const { save: saveProfile } = useSaveProfile();
   const miniPay = useInMiniPay();

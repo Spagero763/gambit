@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { ShieldCheck, Wallet, Loader2, Fuel, RefreshCw, ExternalLink } from "lucide-react";
 import { useAccount, useSignMessage } from "wagmi";
-import { usePrivy } from "@privy-io/react-auth";
+import { useAuth } from "@/lib/auth";
 import { hasToken, signIn, getToken } from "@/lib/profile";
 import { ExternalA } from "@/components/ExternalA";
 import { AdminVaultActions } from "@/components/AdminVaultActions";
@@ -33,7 +33,7 @@ interface Status {
 
 export function AdminPanel() {
   const { address, isConnected } = useAccount();
-  const { login } = usePrivy();
+  const { login } = useAuth();
   const { signMessageAsync } = useSignMessage();
   const [authed, setAuthed] = useState(false);
   const [data, setData] = useState<Status | null>(null);

@@ -4,7 +4,7 @@ import { useState } from "react";
 import { Wallet, Loader2, RotateCcw } from "lucide-react";
 import { useWalletReach } from "@/hooks/useWalletReach";
 import { useAccount } from "wagmi";
-import { usePrivy } from "@privy-io/react-auth";
+import { useAuth } from "@/lib/auth";
 import { useSettings, AVATAR_HEX } from "@/lib/settings";
 import { useProgress } from "@/lib/progress";
 import { rankForXp } from "@/lib/rank";
@@ -28,7 +28,7 @@ import { WalletSheet } from "@/components/WalletSheet";
  *    enough that it cannot crowd the wordmark on a 360px screen.
  */
 export function WalletPill() {
-  const { ready, authenticated, login } = usePrivy();
+  const { ready, authenticated, login } = useAuth();
   const { address } = useAccount();
   const miniPay = useInMiniPay();
   const reach = useWalletReach();

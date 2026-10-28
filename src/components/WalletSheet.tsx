@@ -3,7 +3,7 @@
 import { motion } from "framer-motion";
 import { X, User as UserIcon, LogOut } from "lucide-react";
 import Link from "next/link";
-import { usePrivy } from "@privy-io/react-auth";
+import { useAuth } from "@/lib/auth";
 import { useInMiniPay, ADD_CASH_URL } from "@/lib/minipay";
 import { useStableBalances } from "@/hooks/useStableBalances";
 import { useSettings, AVATAR_HEX } from "@/lib/settings";
@@ -22,7 +22,7 @@ import { Portal } from "@/components/Portal";
  * Profile), because funds must not be trapped outside MiniPay.
  */
 export function WalletSheet({ address, onClose }: { address: `0x${string}`; onClose: () => void }) {
-  const { logout } = usePrivy();
+  const { logout } = useAuth();
   const [settings] = useSettings();
   const miniPay = useInMiniPay();
   const { balances, total, loading } = useStableBalances(address);

@@ -2,7 +2,7 @@
 
 import { useCallback } from "react";
 import { useAccount } from "wagmi";
-import { usePrivy } from "@privy-io/react-auth";
+import { useAuth } from "@/lib/auth";
 import { useInMiniPay } from "@/lib/minipay";
 
 /**
@@ -19,7 +19,7 @@ import { useInMiniPay } from "@/lib/minipay";
  */
 export function useWalletAuth() {
   const { address } = useAccount();
-  const { ready, authenticated, login } = usePrivy();
+  const { ready, authenticated, login } = useAuth();
   const miniPay = useInMiniPay();
 
   const signIn = useCallback(() => {

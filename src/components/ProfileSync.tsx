@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useAccount } from "wagmi";
-import { usePrivy } from "@privy-io/react-auth";
+import { useAuth } from "@/lib/auth";
 import {
   fetchProfile,
   syncProgress,
@@ -43,7 +43,7 @@ function suggestedName(user: any): string {
  */
 export function ProfileSync() {
   const { address } = useAccount();
-  const { user } = usePrivy();
+  const { user } = useAuth();
   const progress = useProgress();
 
   // remember who invited this visitor (?ref=0x…) until they sign up

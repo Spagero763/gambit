@@ -1,56 +1,29 @@
 "use client";
 
 import { ReactNode, useState } from "react";
-import { PrivyProvider } from "@privy-io/react-auth";
-import { WagmiProvider } from "@privy-io/wagmi";
+import { WagmiProvider } from "wagmi";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { MotionConfig } from "framer-motion";
-import { celo, celoSepolia } from "viem/chains";
-import { config, ACTIVE_CHAIN_ID } from "@/lib/wagmi";
-import { inMiniPay } from "@/lib/minipay";
+import { config } from "@/lib/wagmi";
 import { MiniPayConnect } from "@/components/MiniPayConnect";
+import { AuthHost } from "@/components/AuthHost";
 import { useNavDirection } from "@/lib/navDirection";
-
-// Public Privy app id (safe in the client). Override via env if it ever rotates.
-const PRIVY_APP_ID = process.env.NEXT_PUBLIC_PRIVY_APP_ID ?? "cmqkrw0fi000l0dldcurqz6nt";
-const defaultChain = ACTIVE_CHAIN_ID === celo.id ? celo : celoSepolia;
 
 export function Providers({ children }: { children: ReactNode }) {
   const [queryClient] = useState(() => new QueryClient());
-  // Read once, at mount, so the login config never changes under Privy.
-  // Inside MiniPay the wallet is already there and MiniPayConnect attaches it on
-  // load, so email and social sign-in are removed entirely (MiniPay review item
-  // 2: users land signed in, no other sign-in options).
-  const [miniPay] = useState(() => inMiniPay());
   useNavDirection();
 
+  // Plain wagmi with the injected wallet: MiniPay attaches itself here on load
+  // (no button, no modal, no signature). Web sign-in sits beside the app in
+  // AuthHost and is only loaded when it's needed.
   return (
-    <PrivyProvider
-      appId={PRIVY_APP_ID}
-      config={{
-        // web: email + socials create an invisible embedded wallet for newcomers,
-        // "wallet" keeps MetaMask / injected working in the same flow.
-        loginMethods: miniPay ? ["wallet"] : ["email", "google", "farcaster", "wallet"],
-        appearance: {
-          theme: "dark",
-          accentColor: "#3ecf8e",
-          logo: "https://www.bestgambit.live/logo.svg",
-          walletChainType: "ethereum-only",
-        },
-        embeddedWallets: {
-          ethereum: { createOnLogin: miniPay ? "off" : "users-without-wallets" },
-        },
-        defaultChain,
-        supportedChains: [celo, celoSepolia],
-      }}
-    >
-      <QueryClientProvider client={queryClient}>
-        <WagmiProvider config={config}>
-          <MiniPayConnect />
-          {/* framer animations follow the phone's reduce-motion setting, like the CSS ones */}
-          <MotionConfig reducedMotion="user">{children}</MotionConfig>
-        </WagmiProvider>
-      </QueryClientProvider>
-    </PrivyProvider>
+    <QueryClientProvider client={queryClient}>
+      <WagmiProvider config={config}>
+        <MiniPayConnect />
+        <AuthHost />
+        {/* framer animations follow the phone's reduce-motion setting, like the CSS ones */}
+        <MotionConfig reducedMotion="user">{children}</MotionConfig>
+      </WagmiProvider>
+    </QueryClientProvider>
   );
 }

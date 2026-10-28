@@ -5,7 +5,7 @@ import Link from "next/link";
 import { Volume2, Music, User as UserIcon, Check, Camera, Trash2, ShieldCheck, Loader2, Wallet, Bell, LifeBuoy, KeyRound } from "lucide-react";
 import { PushToggle } from "@/components/PushToggle";
 import { useAccount } from "wagmi";
-import { usePrivy } from "@privy-io/react-auth";
+import { useAuth } from "@/lib/auth";
 import { useWalletAuth } from "@/hooks/useWalletAuth";
 import { useSaveProfile } from "@/hooks/useSaveProfile";
 import { useWalletReach } from "@/hooks/useWalletReach";
@@ -44,7 +44,7 @@ function fileToAvatar(file: File): Promise<string> {
 export function Settings() {
   const [s, update] = useSettings();
   const { address, isConnected } = useAccount();
-  const { logout, authenticated } = usePrivy();
+  const { logout, authenticated } = useAuth();
   const { canSignIn, signIn: signInWallet } = useWalletAuth();
   const { hasProfile } = useProfile();
   const { mode: saveMode, save: saveProfile } = useSaveProfile();
@@ -277,7 +277,7 @@ export function Settings() {
  * another wallet already hold their own keys, so there is nothing to export.
  */
 function ExportWallet() {
-  const { exportWallet, user, authenticated } = usePrivy();
+  const { exportWallet, user, authenticated } = useAuth();
   const [confirming, setConfirming] = useState(false);
   const [busy, setBusy] = useState(false);
 
