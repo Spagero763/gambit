@@ -29,6 +29,8 @@ const ZERO = BigInt(0);
 export const PAYOUT_MIN = 0.1;
 // a payout this old that the chain has never heard of is not coming
 const STALE_MS = 10 * 60_000;
+// how far back a payout run looks for settled matches that never got their rewards
+const BACKFILL_MS = 7 * 86_400_000;
 
 export interface SettledMatch {
   id: number | string;
@@ -123,6 +125,33 @@ export async function rewardsOwed(): Promise<Record<string, bigint>> {
 type Db = ReturnType<typeof supabaseAdmin>;
 
 /**
+ * Credit settled matches that have no rewards yet: a settle that hit a database
+ * blip, or ran before the ledger existed. Crediting is idempotent per match.
+ */
+async function backfill(db: Db, deadline: number) {
+  const since = new Date(Date.now() - BACKFILL_MS).toISOString();
+  const { data } = await db
+    .from("matches")
+    .select("id,creator,opponent,winner,stake,token")
+    .eq("status", "settled")
+    .not("winner", "is", null)
+    .is("tournament_id", null)
+    .gt("updated_at", since)
+    .limit(10000);
+  const matches = (data ?? []) as SettledMatch[];
+  for (let i = 0; i < matches.length && Date.now() < deadline; i += 200) {
+    const chunk = matches.slice(i, i + 200);
+    const { data: have, error } = await db
+      .from("rewards")
+      .select("match_id")
+      .in("match_id", chunk.map((m) => Number(m.id)));
+    if (error) return;
+    const done = new Set((have ?? []).map((r: any) => Number(r.match_id)));
+    for (const m of chunk) if (!done.has(Number(m.id))) await creditRewards(m);
+  }
+}
+
+/**
  * Settle earlier payouts against the chain. A transfer that landed is marked
  * paid; one that reverted, or whose nonce went to another transfer, can never
  * land and goes back in the queue. A claim that never reached signing is freed
@@ -185,7 +214,8 @@ export async function payRewards(budgetMs = 40_000) {
   const started = Date.now();
   if (!treasuryConfigured()) return { sent: 0, paid: 0, waiting: 0, short: [] as string[], error: "Rewards wallet not set up" };
   const db = supabaseAdmin();
-  let paid = await reconcile(db, started + budgetMs / 4);
+  await backfill(db, started + 8_000);
+  let paid = await reconcile(db, started + 16_000);
 
   const { data } = await db.from("rewards").select("id,address,token,amount").is("payout_tx", null).order("id").limit(20000);
   const groups = new Map<string, { address: string; token: string; total: bigint; ids: number[] }>();
@@ -245,8 +275,8 @@ export async function payRewards(budgetMs = 40_000) {
   }
 
   if (last) {
-    await landed(last, 8_000).catch(() => {});
-    paid += await reconcile(db, Date.now() + 8_000);
+    await landed(last, 6_000).catch(() => {});
+    paid += await reconcile(db, Date.now() + 6_000);
   }
   return { sent, paid, waiting: groups.size - sent, short: Array.from(short), error: null as string | null };
 }
