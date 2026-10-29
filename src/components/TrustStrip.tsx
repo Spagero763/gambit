@@ -17,7 +17,7 @@ const LINKS = [
     href: `https://celoscan.io/address/${ESCROW}`,
     icon: ShieldCheck,
     label: "Verified contract",
-    sub: "The escrow that holds every stake",
+    sub: "The escrow that holds every entry",
   },
   {
     href: "https://dune.com/spagero763/gambit-analytics",

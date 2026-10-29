@@ -27,7 +27,7 @@ const mono = JetBrains_Mono({
 });
 
 const DESCRIPTION =
-  "The games you grew up playing, now with real opponents and a real pot on Celo. Open it and you are already in, nothing to sign up for. Warm up free, then stake USDT, USDC or USDm and the winner takes 95%, paid in seconds.";
+  "The games you grew up playing, now with real opponents and a real pot on Celo. Open it and you are already in, nothing to sign up for. Play free against the AI, then go 1v1 for USDT, USDC or USDm and the winner takes 95%, paid in seconds.";
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://www.bestgambit.live"),

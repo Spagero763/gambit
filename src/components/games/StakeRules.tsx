@@ -9,14 +9,14 @@ const GAME_RULES: Record<string, string> = {
   "tic-tac-toe": "Get three of your marks in a row, across, down, or diagonally.",
   snakes: "Take turns rolling a die toward square 100. Ladders lift you up, snakes drop you down. Land exactly on 100 to win.",
   whot: "Match the top card by shape or number, and use specials (Pick Two, Hold On, Suspension). First to shed every card wins.",
-  blocks: "Solo puzzle, scored not staked.",
+  blocks: "Solo puzzle, played for score, not money.",
 };
 
 const TERMS = [
   // No token named here on purpose. Which stablecoin a player stakes depends on
   // what they hold (USDT first), so naming one made this panel contradict the
   // picker sitting right behind it.
-  { icon: Coins, text: "Both players stake the same amount, in the same stablecoin, into an on-chain escrow." },
+  { icon: Coins, text: "Both players put in the same amount, in the same stablecoin, held in an on-chain escrow." },
   { icon: Trophy, text: "Win and you take the pot: both stakes, minus a 5% fee." },
   { icon: Gift, text: "Win or lose, 1% of your entry comes back to you as cashback." },
   { icon: Scale, text: "A draw refunds both players in full." },
@@ -26,13 +26,13 @@ const TERMS = [
 
 export function StakeRules({ game, open, onClose }: { game: Game; open: boolean; onClose: () => void }) {
   return (
-    <Modal open={open} onClose={onClose} title={`${game.name} · staked`}>
+    <Modal open={open} onClose={onClose} title={`${game.name} · 1v1 for money`}>
       <p className="rounded-xl border border-line bg-void-800 px-3.5 py-2.5 text-[16px] leading-relaxed text-ink-dim">
         <span className="font-semibold text-ink">How to win: </span>
         {GAME_RULES[game.slug] ?? game.description}
       </p>
 
-      <p className="mb-2 mt-4 text-sm font-semibold uppercase tracking-wide text-ink-faint">Staking terms</p>
+      <p className="mb-2 mt-4 text-sm font-semibold uppercase tracking-wide text-ink-faint">How the money works</p>
       <ul className="space-y-2.5">
         {TERMS.map((t, i) => {
           const Icon = t.icon;

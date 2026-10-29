@@ -81,7 +81,7 @@ export async function POST(req: NextRequest) {
       void broadcast(
         {
           title: `⚔️ ${human} ${symbol} ${name} challenge`,
-          body: "Someone just opened a staked room. First to join plays for the pot.",
+          body: "Someone just opened a 1v1 for money. First to join plays for the pot.",
           url: `/play/${game}?room=${Number(id)}&stake=${human}&token=${oc.token}`,
           tag: "open-challenge", // newer challenges replace older pings
         },

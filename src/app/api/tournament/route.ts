@@ -461,7 +461,7 @@ export async function POST(req: NextRequest) {
           players.map((p) => p.address),
           {
             title: "Cup cancelled: stakes refunded",
-            body: `Cup #${id} didn't fill on-chain. Every stake was returned to its wallet.`,
+            body: `Cup #${id} didn't fill on-chain. Every entry was returned to its wallet.`,
             url: `/tournament/${id}`,
           }
         );

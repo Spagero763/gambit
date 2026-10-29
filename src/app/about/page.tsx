@@ -17,12 +17,12 @@ const FACTS = [
   {
     icon: ShieldCheck,
     title: "Nobody can touch the pot",
-    body: "Both entry fees go into a contract on Celo the moment a match starts. Not a company account, a contract. It pays the winner automatically and it has no withdraw function, so even we cannot move your stake.",
+    body: "Both entry fees go into a contract on Celo the moment a match starts. Not a company account, a contract. It pays the winner automatically and it has no withdraw function, so even we cannot move your entry.",
   },
   {
     icon: Coins,
     title: "Winner takes 95%",
-    body: "The remaining 5% keeps Gambit running. A draw refunds both players in full, and if a match stalls, either player can reclaim their money from the contract without asking anyone.",
+    body: "The 5% fee keeps Gambit running, and part of it comes back to players as cashback and invite rewards. A draw refunds both players in full, and if a match stalls, either player can reclaim their money from the contract without asking anyone.",
   },
   {
     icon: Users,
@@ -66,7 +66,7 @@ export default function AboutPage() {
       <section className="mt-3 rounded-2xl border border-line bg-void-800 p-4">
         <h2 className="text-sm font-semibold text-ink">Play responsibly</h2>
         <p className="mt-1 text-[16px] leading-relaxed text-ink-dim">
-          Staked matches put real money at risk and you can lose it. Only stake what you can afford to lose, and if
+          Matches for money put real money at risk and you can lose it. Only put in what you can afford to lose, and if
           playing stops being fun, stop. Gambit is for adults.
         </p>
       </section>

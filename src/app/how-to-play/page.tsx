@@ -18,7 +18,7 @@ const JOURNEY = [
   },
   {
     icon: Coins,
-    title: "Stake when you are ready",
+    title: "Play for money when you are ready",
     body: "Open any game and pick 1v1 for money. Choose how much to put in, and the same amount comes from the opponent you are matched with. Both entries are locked in an on-chain escrow the moment the match starts.",
   },
   {
@@ -34,7 +34,7 @@ const JOURNEY = [
 ];
 
 const TERMS = [
-  "You can stake in USDT, USDC or USDm. 1 of each is worth about 1 dollar, and Gambit reads which one you hold, so just pick the stablecoin you have.",
+  "You can play in USDT, USDC or USDm. 1 of each is worth about 1 dollar, and Gambit reads which one you hold, so just pick the stablecoin you have.",
   "Every transaction has a tiny network fee. In MiniPay it comes out of your stablecoin balance, so there is nothing else to get. Other wallets pay it in a little CELO.",
   "Every 1v1 for money pays you cashback: 1% of your entry, win or lose. Invite friends and you also get 1% of their entry every time they play. Rewards are paid to your wallet daily once they reach 0.10.",
   "Cashing out is done from your wallet, not from Gambit. In MiniPay, open your wallet and withdraw there. On the web, use the Withdraw button on your profile.",
@@ -71,7 +71,7 @@ export default function HowToPlayPage() {
         ))}
       </div>
 
-      <h2 className="mt-6 text-sm font-semibold text-ink">Staking in short</h2>
+      <h2 className="mt-6 text-sm font-semibold text-ink">Money matches in short</h2>
       <ul className="mt-3 space-y-2.5">
         {TERMS.map((t, i) => (
           <li key={i} className="flex gap-2.5 rounded-2xl border border-line bg-void-800 p-4">

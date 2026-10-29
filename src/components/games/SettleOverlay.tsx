@@ -150,7 +150,7 @@ export function SettleOverlay({
               ) : null}
               <div className="mx-auto mt-3 flex max-w-[19rem] items-center justify-center gap-2 rounded-full border border-teal/35 bg-teal/[0.1] px-4 py-2 shadow-[0_0_28px_-10px_rgba(62,224,155,0.7)]">
                 <CheckCircle2 className="h-4 w-4 shrink-0 text-teal" />
-                <p className="text-[14px] font-semibold text-teal">{result === "draw" ? "Stake refunded to your wallet" : "Paid to your wallet"}</p>
+                <p className="text-[14px] font-semibold text-teal">{result === "draw" ? "Entry refunded to your wallet" : "Paid to your wallet"}</p>
               </div>
             </>
           )}
@@ -170,7 +170,7 @@ export function SettleOverlay({
           <div className="mt-4 flex items-center justify-center gap-2">
             {result === "win" && (
               <ShareButton
-                text="Just won a staked match on Gambit and got paid on the spot. Who is next?"
+                text="Just won a 1v1 for money on Gambit and got paid on the spot. Who is next?"
                 url={inviteUrl(shareAddress)}
                 className="btn-glass inline-flex h-12 items-center gap-1.5 rounded-full px-5 text-[15px]"
               >

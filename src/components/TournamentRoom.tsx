@@ -174,11 +174,11 @@ export function TournamentRoom({ id }: { id: string }) {
     return (
       <div className="mx-auto w-full max-w-md px-5 py-10 text-center">
         <p className="font-semibold text-ink">Tournament not found</p>
-        <p className="mt-1 text-sm text-ink-dim">If you just created this cup and it didn&apos;t save, your stake is still safe in escrow. You can refund it on-chain below.</p>
+        <p className="mt-1 text-sm text-ink-dim">If you just created this cup and it didn&apos;t save, your entry is still safe in escrow. You can refund it on-chain below.</p>
         <button
           onClick={async () => {
             setBusy(true); setMsg(null);
-            try { const ok = await cancelMatch(tid); if (ok) setMsg("Refunded. Your stake was returned to your wallet."); }
+            try { const ok = await cancelMatch(tid); if (ok) setMsg("Refunded. Your entry was returned to your wallet."); }
             catch (e: any) { setMsg(e?.message ?? "Refund failed. You may not be the creator, or the cup already started."); }
             finally { setBusy(false); }
           }}
@@ -414,7 +414,7 @@ export function TournamentRoom({ id }: { id: string }) {
         {t.status === "cancelled" ? (
           <div className="text-center">
             <p className="font-semibold text-ink">Tournament cancelled</p>
-            <p className="text-sm text-ink-dim">Every stake was refunded on-chain. Nothing is owed.</p>
+            <p className="text-sm text-ink-dim">Every entry was refunded on-chain. Nothing is owed.</p>
           </div>
         ) : t.status === "settled" ? (
           <div className="text-center">
@@ -454,7 +454,7 @@ export function TournamentRoom({ id }: { id: string }) {
           ) : (
             <button onClick={join} disabled={busy || !ready} className="btn-primary flex w-full items-center justify-center gap-2 rounded-2xl py-3.5 text-sm shadow-glow disabled:opacity-60">
               {busy || step === "approving" || step === "joining" ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trophy className="h-4 w-4" />}
-              {step === "approving" ? `Approving ${sym}…` : `Join & stake ${stake.toFixed(2)} ${sym}`}
+              {step === "approving" ? `Approving ${sym}…` : `Join for ${stake.toFixed(2)} ${sym}`}
             </button>
           )
         ) : t.status === "open" ? (

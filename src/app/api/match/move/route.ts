@@ -183,7 +183,7 @@ export async function POST(req: NextRequest) {
         });
       }
     } else {
-      void notify(seats, { title: "Draw: stakes refunded", body: "Your stake is back in your wallet.", url: "/" });
+      void notify(seats, { title: "Draw: entries refunded", body: "Your entry is back in your wallet.", url: "/" });
     }
 
     return NextResponse.json({

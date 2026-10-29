@@ -301,9 +301,9 @@ export function Profile() {
         <SkeletonList rows={3} />
       ) : played.length === 0 ? (
         <div className="rounded-2xl border border-line bg-void-700 px-4 py-8 text-center">
-          <p className="text-sm text-ink-dim">No staked matches yet.</p>
+          <p className="text-sm text-ink-dim">No matches for money yet.</p>
           <p className="mt-1 text-[14px] text-ink-faint">
-            Play a staked 1v1 and your settled results show up here.
+            Play 1v1 for money and your results show up here.
           </p>
         </div>
       ) : (

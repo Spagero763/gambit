@@ -218,14 +218,14 @@ export function Stats() {
           <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-3">
             <Card icon={Users} label="Players" value={s.totalPlayers} i={0} />
             <Card icon={Activity} label="Active today" value={s.dau} accent="text-teal" i={1} />
-            <Card icon={Swords} label="Staked matches" value={s.matches} i={2} />
+            <Card icon={Swords} label="Matches for money" value={s.matches} i={2} />
             <Card icon={Trophy} label="Settled" value={s.settled} i={3} />
             <Card icon={Flame} label="Top streak" value={s.topStreak} accent="text-amber" i={4} />
             <Card icon={Users} label="Stakers" value={s.stakedPlayers} i={5} />
           </div>
 
           <div className="mt-3 grid grid-cols-2 gap-3">
-            <TokenCard label="Volume staked" entries={volEntries} />
+            <TokenCard label="Money played" entries={volEntries} />
             <TokenCard label="Paid to winners" entries={paidEntries} accent="text-teal" />
           </div>
 

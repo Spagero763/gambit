@@ -122,7 +122,7 @@ export function Leaderboard() {
     <section className="mx-auto w-full max-w-2xl px-5 pb-28 pt-2 lg:max-w-3xl">
       <h1 className="text-2xl font-semibold tracking-tight">Leaderboard</h1>
       <p className="mt-1 text-sm text-ink-dim">
-        {isPoints ? "Top players by XP, earned just by playing." : "Top players by settled staked matches."}
+        {isPoints ? "Top players by XP, earned just by playing." : "Top players by 1v1 matches for money."}
       </p>
 
       {needsName && (
@@ -214,7 +214,7 @@ export function Leaderboard() {
       ) : raw === null ? (
         <Loading />
       ) : rows.length === 0 ? (
-        <Empty title="No ranked matches yet." sub="Win a staked 1v1 to claim the top spot." />
+        <Empty title="No ranked matches yet." sub="Win a 1v1 for money to claim the top spot." />
       ) : (
         <AnimatePresence mode="wait">
           <motion.ul key={sort + range} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="mt-4 space-y-2">
