@@ -38,6 +38,11 @@ export function registerMatch(args: { id: bigint; game: string; chainId: number;
   return postRetry("/api/match/register", { id: args.id.toString(), game: args.game, chainId: args.chainId, creator: args.creator }, 4);
 }
 
+/** A creator cancelled on-chain; the server checks the escrow and drops the room from the lobby. */
+export function markCancelled(id: bigint) {
+  return postRetry("/api/match/cancelled", { id: id.toString() }, 3);
+}
+
 /** Start a match once both seats are filled on-chain. Safe for either player to call. */
 export function joinServerMatch(id: bigint) {
   return postRetry("/api/match/join", { id: id.toString() }, 5);

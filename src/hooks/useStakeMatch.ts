@@ -27,6 +27,7 @@ const MIN_GAS_WEI = BigInt(2_000_000_000_000_000); // 0.002 CELO
 export type StakeStep =
   | "idle"
   | "approving"
+  | "confirming" // the wallet has the transaction and hasn't sent it yet
   | "creating"
   | "joining"
   | "waiting"
@@ -105,7 +106,7 @@ export function useStakeMatch() {
         await preflight(amount, stakeToken.address, stakeToken.symbol);
         await ensureAllowance(amount, stakeToken.address);
 
-        setStep("creating");
+        setStep("confirming");
         const hash = await writeContractAsync({
           address: escrow,
           abi: ESCROW_ABI,
@@ -114,6 +115,7 @@ export function useStakeMatch() {
           dataSuffix: proofSuffix(address!),
           ...miniPayTx(),
         });
+        setStep("creating");
         const receipt = await publicClient.waitForTransactionReceipt({ hash });
         // waitForTransactionReceipt does NOT throw on revert, a reverted
         // create/join silently "succeeding" is how phantom seats happen.
@@ -176,7 +178,7 @@ export function useStakeMatch() {
         await preflight(amount, stakeToken.address, stakeToken.symbol);
         await ensureAllowance(amount, stakeToken.address);
 
-        setStep("joining");
+        setStep("confirming");
         const hash = await writeContractAsync({
           address: escrow,
           abi: ESCROW_ABI,
@@ -185,6 +187,7 @@ export function useStakeMatch() {
           dataSuffix: proofSuffix(address!),
           ...miniPayTx(),
         });
+        setStep("joining");
         const receipt = await publicClient.waitForTransactionReceipt({ hash });
         if (receipt.status !== "success") {
           throw new Error("Join failed on-chain. The room may be full or its join window expired");

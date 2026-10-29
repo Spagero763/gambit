@@ -62,12 +62,15 @@ async function sweep(_req: NextRequest) {
     const now = Math.floor(Date.now() / 1000);
     const refunded: { id: number; tx: string }[] = [];
     const failed: { id: number; why: string }[] = [];
+    // cancelled by their creator: the money is back, only the row still says open
+    const cancelled: number[] = [];
     let stillOpen = 0;
 
     for (let id = from; id < nextId; id++) {
       if (refunded.length >= MAX_PER_RUN) break;
       try {
         const m = await readMatchOnChain(BigInt(id), chainId);
+        if (m.status === 4) cancelled.push(id);
         if (m.status !== 1) continue; // not Open: settled, cancelled, or never created
         if (now <= m.joinDeadline) {
           stillOpen += 1; // genuinely live, leave it alone
@@ -84,16 +87,11 @@ async function sweep(_req: NextRequest) {
 
     // Best effort only. The refund already happened on-chain, and a stale row is
     // cosmetic next to that, so a database hiccup must not fail the response.
-    if (refunded.length) {
+    const closed = [...refunded.map((r) => r.id), ...cancelled];
+    if (closed.length) {
       try {
         const db = supabaseAdmin();
-        await db
-          .from("matches")
-          .update({ status: "cancelled" })
-          .in(
-            "id",
-            refunded.map((r) => r.id)
-          );
+        await db.from("matches").update({ status: "cancelled" }).in("id", closed).eq("status", "open");
       } catch {
         /* rows stay stale; the next sweep reads the chain regardless */
       }

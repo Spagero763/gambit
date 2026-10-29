@@ -453,7 +453,7 @@ export function TournamentRoom({ id }: { id: string }) {
             <p className="text-center text-sm text-ink-faint">This tournament is full.</p>
           ) : (
             <button onClick={join} disabled={busy || !ready} className="btn-primary flex w-full items-center justify-center gap-2 rounded-2xl py-3.5 text-sm shadow-glow disabled:opacity-60">
-              {busy || step === "approving" || step === "joining" ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trophy className="h-4 w-4" />}
+              {busy || step === "approving" || step === "confirming" || step === "joining" ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trophy className="h-4 w-4" />}
               {step === "approving" ? `Approving ${sym}…` : `Join for ${stake.toFixed(2)} ${sym}`}
             </button>
           )

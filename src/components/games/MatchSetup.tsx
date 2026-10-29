@@ -17,7 +17,7 @@ import { Game, STAKE_CHIPS, STAKE_MAX, cashbackOf } from "@/lib/games";
 import { GameArt } from "@/components/art/TileArt";
 import { Difficulty, DIFFICULTIES, SUPPORTS_DIFFICULTY } from "@/lib/difficulty";
 import { useStakeMatch, useMatchState } from "@/hooks/useStakeMatch";
-import { registerMatch, joinServerMatch } from "@/lib/matchClient";
+import { registerMatch, joinServerMatch, markCancelled } from "@/lib/matchClient";
 import { useProfiles, displayName } from "@/lib/profiles";
 import { ShareButton } from "@/components/ShareButton";
 import { buttonClass } from "@/components/ui/Button";
@@ -82,7 +82,9 @@ export function MatchSetup({
   const payout = +(stake * 2 * (1 - FEE)).toFixed(2);
   const validStake = Number.isFinite(stake) && stake >= game.minStake && stake <= STAKE_MAX;
 
-  const busy = step === "approving" || step === "creating" || step === "joining";
+  const busy = step === "approving" || step === "confirming" || step === "creating" || step === "joining";
+  // until the wallet sends it nothing has happened yet, so say where the ball is
+  const confirmLabel = reach.miniPay ? "Confirm in MiniPay…" : "Confirm in your wallet…";
   // tuple index 9 = status (2 = Active, both seats filled)
   const opponentJoined = created ? Number((created as readonly unknown[])[9]) === 2 : false;
 
@@ -382,7 +384,11 @@ export function MatchSetup({
                         setCancelling(true);
                         const ok = await cancelMatch(matchId);
                         setCancelling(false);
-                        if (ok) reset();
+                        if (ok) {
+                          // so the room leaves "Live now" for everyone at once
+                          void markCancelled(matchId).catch(() => {});
+                          reset();
+                        }
                       }}
                       disabled={cancelling}
                       className="mx-auto mt-2 flex min-h-11 items-center justify-center gap-1.5 px-3 text-[14px] font-semibold text-ink-faint transition-colors hover:text-rose disabled:opacity-60"
@@ -416,7 +422,13 @@ export function MatchSetup({
                   {gate ?? (busy ? null : topUp) ?? (
                     <button onClick={join} disabled={busy} className={buttonClass("primary", "lg", "w-full")}>
                       {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Swords className="h-4 w-4" />}
-                      {step === "approving" ? `Approving ${room.tok?.symbol ?? ""}…` : step === "joining" ? "Joining…" : "Join and play"}
+                      {step === "approving"
+                        ? `Approving ${room.tok?.symbol ?? ""}…`
+                        : step === "confirming"
+                          ? confirmLabel
+                          : step === "joining"
+                            ? "Joining…"
+                            : "Join and play"}
                     </button>
                   )}
                 </div>
@@ -547,7 +559,13 @@ export function MatchSetup({
                   {gate ?? (busy ? null : topUp) ?? (
                     <button onClick={create} disabled={busy || !ready || !validStake} className={buttonClass("primary", "lg", "w-full")}>
                       {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Swords className="h-4 w-4" />}
-                      {step === "approving" ? `Approving ${token.symbol}…` : step === "creating" ? "Opening your room…" : "Open a room"}
+                      {step === "approving"
+                        ? `Approving ${token.symbol}…`
+                        : step === "confirming"
+                          ? confirmLabel
+                          : step === "creating"
+                            ? "Opening your room…"
+                            : "Open a room"}
                     </button>
                   )}
                 </div>
