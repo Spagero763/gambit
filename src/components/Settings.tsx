@@ -94,7 +94,7 @@ export function Settings() {
             {s.avatarImage && (
               <button
                 onClick={() => update({ avatarImage: "" })}
-                className="inline-flex w-fit items-center gap-1.5 text-[14px] text-ink-faint transition-colors hover:text-rose"
+                className="inline-flex h-11 w-fit items-center gap-1.5 text-[14px] text-ink-faint transition-colors hover:text-rose"
               >
                 <Trash2 className="h-3 w-3" /> Remove photo
               </button>

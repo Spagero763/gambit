@@ -98,9 +98,9 @@ export function Tournaments() {
             </p>
             <Link
               href="/"
-              className="mt-4 inline-flex items-center justify-center gap-1.5 text-[14px] font-semibold text-teal underline decoration-teal/40 underline-offset-4"
+              className="mt-2 inline-flex h-11 items-center justify-center gap-1.5 text-[14px] font-semibold text-teal underline decoration-teal/40 underline-offset-4"
             >
-              Play a staked 1v1 <ArrowRight className="h-3.5 w-3.5" />
+              Play 1v1 for money <ArrowRight className="h-3.5 w-3.5" />
             </Link>
           </div>
         ) : (

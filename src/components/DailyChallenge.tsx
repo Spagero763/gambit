@@ -30,6 +30,14 @@ function countdown(ms: number) {
   return h > 0 ? `${h}h ${m}m` : `${m}m`;
 }
 
+function HomeLink() {
+  return (
+    <Link href="/" className="glass pressable inline-flex h-11 w-fit items-center gap-2 rounded-full px-4 text-[14px] font-semibold text-ink-dim">
+      <ArrowLeft className="h-4 w-4" /> Home
+    </Link>
+  );
+}
+
 /**
  * The Daily Challenge rotates through the games. Block Blitz days are a score
  * battle on the same seeded board for everyone; the other days are beat-the-bot
@@ -37,7 +45,23 @@ function countdown(ms: number) {
  * way the share card is the growth loop.
  */
 export function DailyChallenge() {
-  const n = dayNumber();
+  // today's board follows the visitor's clock and this page is prerendered, so
+  // the day is picked after mount, or the HTML and the first render disagree
+  const [n, setN] = useState<number | null>(null);
+  useEffect(() => setN(dayNumber()), []);
+  if (n === null) {
+    return (
+      <section className="mx-auto w-full max-w-2xl px-5 pb-28 pt-4">
+        <HomeLink />
+        <div className="mt-6 h-72 rounded-3xl border border-amber/25 bg-gradient-to-br from-amber/[0.08] to-transparent shadow-card" />
+        <BottomNav />
+      </section>
+    );
+  }
+  return <DailyBoard n={n} />;
+}
+
+function DailyBoard({ n }: { n: number }) {
   const game = dailyGameFor(n);
   const gameName = NAME[game] ?? game;
   const isBlocks = game === "blocks";
@@ -87,9 +111,7 @@ export function DailyChallenge() {
 
   return (
     <section className="mx-auto w-full max-w-2xl px-5 pb-28 pt-4">
-      <Link href="/" className="glass pressable inline-flex h-11 w-fit items-center gap-2 rounded-full px-4 text-[14px] font-semibold text-ink-dim">
-        <ArrowLeft className="h-4 w-4" /> Home
-      </Link>
+      <HomeLink />
 
       <motion.div
         initial={{ opacity: 0, y: 10 }}

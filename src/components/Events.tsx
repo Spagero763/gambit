@@ -17,12 +17,16 @@ interface ScoreRow {
 }
 
 
+// null until mounted: the page is prerendered, and a time from the build would
+// never match the first render
 function useCountdown(target: Date) {
-  const [now, setNow] = useState(() => Date.now());
+  const [now, setNow] = useState<number | null>(null);
   useEffect(() => {
+    setNow(Date.now());
     const t = setInterval(() => setNow(Date.now()), 1000);
     return () => clearInterval(t);
   }, []);
+  if (now === null) return null;
   const ms = Math.max(0, target.getTime() - now);
   const d = Math.floor(ms / 86400000);
   const h = Math.floor((ms % 86400000) / 3600000);
@@ -85,7 +89,7 @@ export function Events() {
               This week
             </span>
             <span className="inline-flex items-center gap-1.5 text-[14px] text-ink-dim">
-              <Timer className="h-3.5 w-3.5" /> resets in {left}
+              <Timer className="h-3.5 w-3.5" /> {left ? `resets in ${left}` : "resets weekly"}
             </span>
           </div>
           <h2 className="mt-3 text-xl font-semibold tracking-tight text-ink">Block Blitz · Weekly Showdown</h2>
@@ -93,7 +97,7 @@ export function Events() {
             Highest single-game score wins the week. Free to enter. Connect your wallet to put your score on the board.
           </p>
           <div className="mt-4 flex items-center gap-3">
-            <Link href="/play/blocks" className="btn-primary inline-flex items-center gap-1.5 rounded-xl px-4 py-2.5 text-sm shadow-glow">
+            <Link href="/play/blocks" className="btn-primary inline-flex h-11 items-center gap-1.5 rounded-xl px-4 text-sm shadow-glow">
               <Play className="h-4 w-4 fill-void" /> Play now
             </Link>
             {me && (
@@ -151,7 +155,7 @@ export function Events() {
         <Swords className="mt-0.5 h-5 w-5 shrink-0 text-ink-faint" />
         <div>
           <p className="text-sm font-semibold text-ink">More formats coming</p>
-          <p className="mt-0.5 text-[14px] text-ink-dim">Staked knockout brackets and per-game weekly ladders are on the way.</p>
+          <p className="mt-0.5 text-[14px] text-ink-dim">Knockout cups for money and weekly ladders for every game are on the way.</p>
         </div>
       </div>
     </section>

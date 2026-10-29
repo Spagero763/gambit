@@ -72,7 +72,7 @@ export function PlayerCard() {
         <ShareButton
           text={flex}
           url={inviteUrl(address)}
-          className="pressable inline-flex shrink-0 items-center gap-1.5 rounded-xl border border-line bg-void-800 px-3 py-2 text-[14px] font-medium text-ink-dim transition-colors hover:text-ink"
+          className="pressable inline-flex h-11 shrink-0 items-center gap-1.5 rounded-xl border border-line bg-void-800 px-3 text-[14px] font-medium text-ink-dim transition-colors hover:text-ink"
         >
           <Share2 className="h-3.5 w-3.5" /> Share
         </ShareButton>
