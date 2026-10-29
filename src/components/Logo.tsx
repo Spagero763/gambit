@@ -29,11 +29,13 @@ export function GambitMark({ size = 30, className }: { size?: number; className?
   );
 }
 
+// The wordmark only fits beside the header controls on wide screens; on a phone
+// the mark stands alone (inside MiniPay the app name is already in its top bar).
 export function Logo({ className }: { className?: string }) {
   return (
     <span className={cn("flex min-w-0 items-center gap-2.5", className)}>
       <GambitMark size={32} className="shrink-0 drop-shadow-[0_6px_14px_rgba(62,224,155,0.25)]" />
-      <span className="display truncate text-[22px] font-extrabold leading-none text-ink">Gambit</span>
+      <span className="display hidden truncate text-[22px] font-extrabold leading-none text-ink min-[460px]:block">Gambit</span>
     </span>
   );
 }

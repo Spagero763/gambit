@@ -10,11 +10,11 @@ import { useSettings } from "@/lib/settings";
 /**
  * Sticky header that condenses as you scroll.
  *
- * Layout note: the brand and the controls are separate flex children and the
- * brand is allowed to shrink (`min-w-0` + a truncating wordmark). Previously the
- * logo could not shrink, so on a 360px screen the control cluster was pushed
- * left and the sound button sat on top of the "Gambit" wordmark. The controls
- * are `shrink-0`, so the brand gives up space instead of overlapping.
+ * Layout note: a phone can't fit the wordmark, two 44px buttons and the wallet
+ * chip in one row, so below 460px the brand is the G mark alone. Every box from
+ * the link down may shrink (`min-w-0`), so if anything ever runs short the
+ * wordmark truncates instead of sliding under the sound button. The controls
+ * are `shrink-0`.
  */
 export function Header() {
   const { scrollY } = useScroll();
@@ -34,8 +34,8 @@ export function Header() {
         style={{ paddingTop: padY, paddingBottom: padY }}
         className="relative mx-auto flex w-full max-w-2xl items-center gap-2 px-4 min-[380px]:px-5 lg:max-w-6xl"
       >
-        <Link href="/" aria-label="Home" className="flex h-11 min-w-0 shrink items-center">
-          <motion.div style={{ scale: logoScale, transformOrigin: "left center" }} whileTap={{ scale: 0.94 }}>
+        <Link href="/" aria-label="Home" className="flex h-11 min-w-11 shrink items-center">
+          <motion.div style={{ scale: logoScale, transformOrigin: "left center" }} whileTap={{ scale: 0.94 }} className="min-w-0">
             <Logo />
           </motion.div>
         </Link>

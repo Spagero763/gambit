@@ -24,8 +24,8 @@ import { WalletSheet } from "@/components/WalletSheet";
  *    MiniPayConnect wires up on load) instead of Privy's `authenticated`, which
  *    stays false for an injected wallet and used to leave a stray Sign in button.
  *  - A raw 0x… address is never the primary identifier. We show the profile name,
- *    falling back to a stable generated handle, which also keeps the chip narrow
- *    enough that it cannot crowd the wordmark on a 360px screen.
+ *    falling back to a stable generated handle. The chip has a fixed cap so a
+ *    long name truncates rather than pushing into the brand.
  */
 export function WalletPill() {
   const { ready, authenticated, login } = useAuth();
@@ -48,7 +48,7 @@ export function WalletPill() {
         <button
           onClick={() => setOpen(true)}
           data-tour="wallet"
-          className="glass pressable flex h-11 max-w-[46vw] items-center gap-2 rounded-full py-1 pl-1 pr-3 text-left min-[380px]:max-w-none"
+          className="glass pressable flex h-11 max-w-[11rem] items-center gap-2 rounded-full py-1 pl-1 pr-3 text-left"
         >
           <span className="relative shrink-0">
             <Avatar
