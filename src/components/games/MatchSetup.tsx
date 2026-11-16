@@ -1,12 +1,12 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { motion } from "framer-motion";
 import { ArrowLeft, Bot, Swords, Wallet, Loader2, ShieldCheck, Copy, Check, AlertTriangle, HelpCircle, Share2, Clock, Plus } from "lucide-react";
-import { addCashUrl } from "@/lib/minipay";
+import { addCashUrl, OPEN_IN_MINIPAY } from "@/lib/minipay";
 import Link from "next/link";
 import { StakeRules } from "./StakeRules";
-import { useAccount, useSwitchChain, useBalance } from "wagmi";
+import { useAccount, useSwitchChain, useBalance, useReadContract } from "wagmi";
 import { useWalletAuth } from "@/hooks/useWalletAuth";
 import { useWalletReach } from "@/hooks/useWalletReach";
 import { WalletUnreachable } from "@/components/WalletUnreachable";
@@ -22,9 +22,9 @@ import { useProfiles, displayName } from "@/lib/profiles";
 import { ShareButton } from "@/components/ShareButton";
 import { buttonClass } from "@/components/ui/Button";
 import { ACTIVE_CHAIN_ID } from "@/lib/wagmi";
-import { GAME_TYPE } from "@/lib/escrow";
+import { GAME_TYPE, ESCROW_ADDRESS, ERC20_ABI } from "@/lib/escrow";
 import { StakeToken, symbolForToken } from "@/lib/tokens";
-import { formatUnits } from "viem";
+import { formatUnits, parseUnits } from "viem";
 import { cn } from "@/lib/cn";
 
 const FEE = 0.05;
@@ -52,7 +52,7 @@ export function MatchSetup({
   const { address, isConnected } = useAccount();
   const { canSignIn, signIn: signInWallet } = useWalletAuth();
   const { switchChain } = useSwitchChain();
-  const { createMatch, joinMatch, cancelMatch, step, error, matchId, ready, onActiveChain, reset } = useStakeMatch();
+  const { createMatch, joinMatch, cancelMatch, step, error, matchId, ready, onActiveChain, reset, resume } = useStakeMatch();
   const [cancelling, setCancelling] = useState(false);
   const reach = useWalletReach();
 
@@ -185,6 +185,43 @@ export function MatchSetup({
   const waiting = (rooms ?? []).filter((r) => r.game === game.slug && r.creator?.toLowerCase() !== me).slice(0, 4);
   const profiles = useProfiles(waiting.map((r) => r.creator).concat(room?.creator ? [room.creator] : []));
 
+  // A room this wallet already opened. Going back drops the waiting screen but
+  // not the room, and the escrow refuses to let you join yourself, so return to
+  // the waiting screen instead of offering the join. `gone` holds rooms closed
+  // from here, which the list can still carry for a moment.
+  const gone = useRef(new Set<string>());
+  const mine = (rooms ?? []).find((r) => r.game === game.slug && r.creator?.toLowerCase() === me && !gone.current.has(String(r.id)));
+  useEffect(() => {
+    if (!mine || matchId !== null || busy) return;
+    const tok = tokens.find((t) => t.address.toLowerCase() === (mine.token ?? "").toLowerCase());
+    if (tok) setPicked(tok);
+    setStake(Number(formatUnits(BigInt(mine.stake || "0"), mine.decimals ?? 18)));
+    setCustom("");
+    setJoinId("");
+    setRulesSeen(true);
+    setMode("staked");
+    resume(BigInt(mine.id));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [mine?.id, matchId, busy]);
+  // the same when they arrive by their own link or type their own room number
+  useEffect(() => {
+    if (!joinId || !room || !me || matchId !== null || busy) return;
+    if (room.creator === me && room.status === 1 && !gone.current.has(joinId)) {
+      resume(BigInt(joinId));
+      setJoinId("");
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [joinId, room?.creator, room?.status, me, matchId, busy]);
+  // cancelled or paid out on-chain: there is nothing left to wait in
+  useEffect(() => {
+    if (matchId === null || !created) return;
+    const status = Number((created as readonly unknown[])[9]);
+    if (status === 3 || status === 4) {
+      gone.current.add(matchId.toString());
+      reset();
+    }
+  }, [created, matchId, reset]);
+
   const join = async () => {
     if (!joinId) return;
     const ok = await joinMatch(BigInt(joinId), stake, token);
@@ -242,6 +279,36 @@ export function MatchSetup({
       This wallet has {held!.toFixed(2)} {token.symbol}. Add at least {(stake - held!).toFixed(2)} more to play.
     </p>
   );
+
+  // The first entry in a coin needs the escrow allowed to take it, which is a
+  // second wallet prompt. It happens once per coin; say so before it appears.
+  const escrow = ESCROW_ADDRESS[ACTIVE_CHAIN_ID];
+  const { data: allowance } = useReadContract({
+    address: token.address,
+    abi: ERC20_ABI,
+    functionName: "allowance",
+    args: address && escrow ? [address, escrow] : undefined,
+    chainId: ACTIVE_CHAIN_ID,
+    query: { enabled: !!address && !!escrow },
+  });
+  const firstTime = validStake && allowance !== undefined && (allowance as bigint) < parseUnits(stake.toString(), token.decimals);
+  const wallet = reach.miniPay ? "MiniPay" : "your wallet";
+  const twoSteps =
+    firstTime && !gate && !short ? (
+      <p className="mt-2 text-center text-[14px] text-ink-faint">
+        First time with {token.symbol}, {wallet} asks twice: once to allow {token.symbol}, once to enter. After that it is a single tap.
+      </p>
+    ) : null;
+
+  // someone who followed a shared link in another browser: MiniPay is where the money is
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
+  const toMiniPay =
+    mounted && !reach.miniPay && !isConnected && OPEN_IN_MINIPAY ? (
+      <a href={OPEN_IN_MINIPAY} className={buttonClass("secondary", "lg", "mt-2 w-full")}>
+        Open in MiniPay
+      </a>
+    ) : null;
 
   const joinDeadline = created ? Number((created as readonly unknown[])[4]) * 1000 : 0;
 
@@ -385,6 +452,7 @@ export function MatchSetup({
                         const ok = await cancelMatch(matchId);
                         setCancelling(false);
                         if (ok) {
+                          gone.current.add(matchId.toString());
                           // so the room leaves "Live now" for everyone at once
                           void markCancelled(matchId).catch(() => {});
                           reset();
@@ -423,7 +491,7 @@ export function MatchSetup({
                     <button onClick={join} disabled={busy} className={buttonClass("primary", "lg", "w-full")}>
                       {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Swords className="h-4 w-4" />}
                       {step === "approving"
-                        ? `Approving ${room.tok?.symbol ?? ""}…`
+                        ? `Step 1 of 2: allow ${room.tok?.symbol ?? ""}…`
                         : step === "confirming"
                           ? confirmLabel
                           : step === "joining"
@@ -431,6 +499,9 @@ export function MatchSetup({
                             : "Join and play"}
                     </button>
                   )}
+                  {!busy && twoSteps}
+                  {toMiniPay}
+                  {toMiniPay && <p className="mt-2 text-center text-[14px] text-ink-faint">Room #{joinId} is under Live now when Gambit opens.</p>}
                 </div>
                 <button onClick={() => setJoinId("")} className="mx-auto mt-1 flex min-h-11 items-center px-3 text-[14px] font-semibold text-ink-faint">
                   Open my own room instead
@@ -560,7 +631,7 @@ export function MatchSetup({
                     <button onClick={create} disabled={busy || !ready || !validStake} className={buttonClass("primary", "lg", "w-full")}>
                       {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Swords className="h-4 w-4" />}
                       {step === "approving"
-                        ? `Approving ${token.symbol}…`
+                        ? `Step 1 of 2: allow ${token.symbol}…`
                         : step === "confirming"
                           ? confirmLabel
                           : step === "creating"
@@ -568,6 +639,8 @@ export function MatchSetup({
                             : "Open a room"}
                     </button>
                   )}
+                  {!busy && twoSteps}
+                  {toMiniPay}
                 </div>
 
                 <div className="mt-3 flex items-center gap-2">

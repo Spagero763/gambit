@@ -50,6 +50,14 @@ export function addCashUrl(symbol: string) {
   return `https://link.minipay.xyz/add_cash?tokens=${symbol.toUpperCase()}`;
 }
 
+/**
+ * Opens Gambit inside MiniPay from any other browser. MiniPay's deeplink for a
+ * listed mini app is link.minipay.xyz/miniapp?id=<Discover id> (browse?url= is
+ * deprecated). The link is theirs to hand out, so it comes from the
+ * environment and nothing is offered until it is set.
+ */
+export const OPEN_IN_MINIPAY = process.env.NEXT_PUBLIC_MINIPAY_DEEPLINK?.trim() || "";
+
 /** Open the deposit screen (MiniPay) or fall back to a new tab elsewhere. */
 export function openDeposit() {
   if (typeof window !== "undefined") window.location.href = ADD_CASH_URL;

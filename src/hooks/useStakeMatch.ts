@@ -261,10 +261,17 @@ export function useStakeMatch() {
     setMatchId(null);
   }, []);
 
+  /** Back to the waiting room of a room this wallet already opened. */
+  const resume = useCallback((id: bigint) => {
+    setError(null);
+    setMatchId(id);
+    setStep("waiting");
+  }, []);
+
   const ready = !!escrowFor(chainId).address;
   const onActiveChain = chainId === ACTIVE_CHAIN_ID;
 
-  return { createMatch, joinMatch, cancelMatch, reclaimStalled, step, error, matchId, reset, ready, onActiveChain };
+  return { createMatch, joinMatch, cancelMatch, reclaimStalled, step, error, matchId, reset, resume, ready, onActiveChain };
 }
 
 /** Read a match's on-chain state (status, joined, stake). */
