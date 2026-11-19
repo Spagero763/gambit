@@ -22,3 +22,5 @@ build.log
 # are not part of it. Keeps `git add -A` from sweeping binaries into the repo.
 *.docx
 ~$*
+
+skills-lock.json
